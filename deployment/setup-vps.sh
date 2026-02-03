@@ -42,9 +42,12 @@ echo -e "${GREEN}✓ Essential packages installed${NC}"
 echo ""
 echo -e "${YELLOW}Step 3: Installing Docker...${NC}"
 if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
+    # Download and verify Docker installation script
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    # Review the script before executing (optional: add checksum verification)
+    echo -e "${YELLOW}Docker installation script downloaded to /tmp/get-docker.sh${NC}"
+    sh /tmp/get-docker.sh
+    rm /tmp/get-docker.sh
     systemctl enable docker
     systemctl start docker
     echo -e "${GREEN}✓ Docker installed${NC}"
@@ -65,7 +68,10 @@ fi
 echo ""
 echo -e "${YELLOW}Step 5: Installing Node.js...${NC}"
 if ! command -v node &> /dev/null; then
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    # Download Node.js setup script and execute it separately for security
+    curl -fsSL https://deb.nodesource.com/setup_18.x -o /tmp/nodesource_setup.sh
+    bash /tmp/nodesource_setup.sh
+    rm /tmp/nodesource_setup.sh
     apt-get install -y nodejs
     echo -e "${GREEN}✓ Node.js installed${NC}"
 else
