@@ -58,8 +58,8 @@ public/
 - **Orc**: +4 STR, +2 VIT, +2 END (Bloodrage trait)
 - **Elf**: +3 INT, +2 DEX, +2 AGI, +1 WIS (Arcane Affinity trait)
 - **Undead**: +3 VIT, +2 END, +2 WIS, +1 STR (Undying Will trait)
-- **Demon**: +3 INT, +2 STR, +1 DEX, +1 AGI, +1 TAC (Infernal Blood trait)
-- **Dragonkin**: +3 TAC, +2 VIT, +1 STR, +1 END, +1 DEX (Dragon Scales trait)
+- **Barbarian**: +3 STR, +2 AGI, +1 VIT, +1 END, +1 TAC (Berserker Rage trait)
+- **Dwarf**: +3 END, +2 VIT, +1 STR, +1 DEX, +1 WIS (Stoneborn trait)
 - Race bonuses stack with class starting attributes during character creation
 
 ## Battle System (Multi-Unit Tactical)
@@ -92,7 +92,7 @@ public/
 - **8 Attributes**: Strength, Intellect, Vitality, Dexterity, Endurance, Wisdom, Agility, Tactics
 - **Diminishing Returns**: 100% efficiency up to 25 points, 50% from 25-50, 25% after 50
 - **Level Progression**: 0-20, 20 starting points + 7 per level (160 total at max)
-- **6 Races**: Human, Orc, Elf, Undead, Demon, Dragonkin
+- **6 Races**: Human, Orc, Elf, Undead, Barbarian, Dwarf
 - **4 Classes**: Warrior, Mage Priest, Worg Rider, Ranger
 - **24 Warlord Combinations**: 6 races × 4 classes
 - **9 Enemy Types**: Goblin, Skeleton, Wolf, Dark Mage, Orc, Dragon Whelp, Lich, Demon Lord, Void King
@@ -100,7 +100,7 @@ public/
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
 ## Recent Changes
-- Added 6 playable races: Human, Orc, Elf, Undead, Demon, Dragonkin (6 × 4 = 24 combinations)
+- Added 6 playable races: Human, Orc, Elf, Undead, Barbarian, Dwarf (6 × 4 = 24 combinations)
 - Rewrote character creation to 4-step flow: Name → Race → Class → Attributes
 - Race attribute bonuses stack with class starting attributes
 - Class selection step previews combined race+class attribute totals
