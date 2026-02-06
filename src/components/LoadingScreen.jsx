@@ -1,13 +1,37 @@
 import React, { useRef, useEffect } from 'react';
+import { createVideoElement } from '../utils/assetManager';
 
-export default function LoadingScreen({ message = 'Loading...' }) {
-  const videoRef = useRef(null);
+export default function LoadingScreen({ progress = 0, total = 1, message = 'Loading...' }) {
+  const holderRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
+    const holder = holderRef.current;
+    const video = createVideoElement('/videos/loading.mp4');
+
+    if (video && holder) {
+      video.style.position = 'absolute';
+      video.style.top = '50%';
+      video.style.left = '50%';
+      video.style.transform = 'translate(-50%, -50%)';
+      video.style.minWidth = '100%';
+      video.style.minHeight = '100%';
+      video.style.width = 'auto';
+      video.style.height = 'auto';
+      video.style.objectFit = 'cover';
+      video.style.opacity = '0.7';
+      holder.appendChild(video);
+      video.play().catch(() => {});
+
+      return () => {
+        if (holder.contains(video)) {
+          video.pause();
+          holder.removeChild(video);
+        }
+      };
     }
   }, []);
+
+  const pct = total > 0 ? Math.round((progress / total) * 100) : 0;
 
   return (
     <div style={{
@@ -16,22 +40,10 @@ export default function LoadingScreen({ message = 'Loading...' }) {
       alignItems: 'center', justifyContent: 'center',
       background: '#050a15', overflow: 'hidden'
     }}>
-      <video
-        ref={videoRef}
-        src="/videos/loading.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          minWidth: '100%', minHeight: '100%',
-          width: 'auto', height: 'auto',
-          objectFit: 'cover',
-          opacity: 0.7
-        }}
-      />
+      <div ref={holderRef} style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        overflow: 'hidden'
+      }} />
       <div style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
         background: 'rgba(5,10,21,0.4)',
@@ -45,15 +57,27 @@ export default function LoadingScreen({ message = 'Loading...' }) {
           fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
           background: 'linear-gradient(135deg, #6ee7b7, #ffd700, #ef4444)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          marginBottom: 16
+          marginBottom: 24
         }}>
           GRUDGE WARLORDS
         </h2>
+
         <div style={{
-          color: 'var(--accent)', fontSize: '1rem', letterSpacing: 2,
-          animation: 'pulse 1.5s ease-in-out infinite'
+          width: 260, height: 6, background: 'rgba(255,255,255,0.1)',
+          borderRadius: 3, overflow: 'hidden', margin: '0 auto 12px'
         }}>
-          {message}
+          <div style={{
+            width: `${pct}%`, height: '100%',
+            background: 'linear-gradient(90deg, #6ee7b7, #ffd700)',
+            borderRadius: 3, transition: 'width 0.3s ease'
+          }} />
+        </div>
+
+        <div style={{
+          color: 'var(--accent)', fontSize: '0.85rem', letterSpacing: 2,
+          opacity: 0.8
+        }}>
+          {message} {pct}%
         </div>
       </div>
     </div>

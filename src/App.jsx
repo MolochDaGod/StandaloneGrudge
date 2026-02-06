@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from './stores/gameStore';
+import { startPreload, isReady } from './utils/assetManager';
 import VideoBackground from './components/VideoBackground';
 import LoadingScreen from './components/LoadingScreen';
 import TitleScreen from './components/TitleScreen';
@@ -10,22 +11,27 @@ import BattleScreen from './components/BattleScreen';
 import CharacterSheet from './components/CharacterSheet';
 import SkillTreeView from './components/SkillTreeView';
 
-let appHasLoaded = false;
-
 export default function App() {
   const screen = useGameStore(s => s.screen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
-  const [loading, setLoading] = useState(!appHasLoaded);
-  const [transitioning, setTransitioning] = useState(false);
+
+  const [ready, setReady] = useState(isReady());
+  const [progress, setProgress] = useState({ loaded: 0, total: 1 });
   const prevScreenRef = useRef(screen);
+  const [transitioning, setTransitioning] = useState(false);
 
   useEffect(() => {
-    if (!appHasLoaded) {
-      appHasLoaded = true;
-      const timer = setTimeout(() => setLoading(false), 2200);
-      return () => clearTimeout(timer);
+    if (isReady()) {
+      setReady(true);
+      return;
     }
+
+    startPreload((loaded, total) => {
+      setProgress({ loaded, total });
+    }).then(() => {
+      setReady(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -47,6 +53,16 @@ export default function App() {
     }
   }, [screen]);
 
+  if (!ready) {
+    return (
+      <LoadingScreen
+        progress={progress.loaded}
+        total={progress.total}
+        message="Entering the Realm..."
+      />
+    );
+  }
+
   const bgBlurred = screen !== 'title';
 
   const renderScreen = () => {
@@ -62,17 +78,14 @@ export default function App() {
     }
   };
 
-  if (loading) {
-    return <LoadingScreen message="Entering the Realm..." />;
-  }
-
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <VideoBackground blurred={bgBlurred} />
       <div style={{
         position: 'relative', zIndex: 1, width: '100%', height: '100%',
         opacity: transitioning ? 0 : 1,
-        transition: 'opacity 0.3s ease'
+        transition: 'opacity 0.3s ease',
+        animation: 'fadeIn 0.5s ease'
       }}>
         {renderScreen()}
       </div>
