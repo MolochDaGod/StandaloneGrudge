@@ -84,11 +84,13 @@ function chooseAIAction(unit, allUnits) {
   const allies = allUnits.filter(u => u.team === unit.team && u.alive && u.health > 0);
   const enemies = allUnits.filter(u => u.team !== unit.team && u.alive && u.health > 0);
   if (enemies.length === 0) return null;
+  if (!unit.abilities || unit.abilities.length === 0) return null;
 
-  if (unit.classId === 'mage' && unit.team === 'player') {
-    const lowAlly = allies.find(a => a.health / a.maxHealth < 0.4);
+  if (unit.team === 'player' && (unit.classId === 'mage' || unit.classId === 'priest')) {
+    const lowAlly = allies.find(a => a.health / a.maxHealth < 0.45);
     const healAbility = unit.abilities.find(a =>
-      (a.type === 'heal') && (unit.cooldowns[a.id] || 0) <= 0 && (a.manaCost || 0) <= unit.mana
+      (a.type === 'heal' || a.type === 'heal_over_time') &&
+      (unit.cooldowns[a.id] || 0) <= 0 && (a.manaCost || 0) <= unit.mana
     );
     if (lowAlly && healAbility) {
       return { abilityId: healAbility.id, targetId: lowAlly.id };
@@ -100,13 +102,20 @@ function chooseAIAction(unit, allUnits) {
     (a.manaCost || 0) <= unit.mana &&
     (a.staminaCost || 0) <= unit.stamina
   );
+  if (availableAbilities.length === 0) return null;
 
   const attackAbilities = availableAbilities.filter(a => a.type === 'physical' || a.type === 'magical');
   const buffAbilities = availableAbilities.filter(a => a.type === 'buff');
   const hotAbilities = availableAbilities.filter(a => a.type === 'heal_over_time');
+  const healAbilities = availableAbilities.filter(a => a.type === 'heal');
 
   if (buffAbilities.length > 0 && unit.buffs.length === 0 && Math.random() < 0.3) {
     return { abilityId: buffAbilities[0].id, targetId: unit.id };
+  }
+
+  if (unit.team === 'player' && healAbilities.length > 0) {
+    const lowAlly = allies.find(a => a.health / a.maxHealth < 0.45);
+    if (lowAlly) return { abilityId: healAbilities[0].id, targetId: lowAlly.id };
   }
 
   if (unit.team === 'player' && hotAbilities.length > 0 && unit.health / unit.maxHealth < 0.5 && Math.random() < 0.5) {
@@ -120,8 +129,10 @@ function chooseAIAction(unit, allUnits) {
   } else if (attackAbilities.length > 0) {
     ability = attackAbilities[0];
   } else {
-    ability = availableAbilities[0] || unit.abilities[0];
+    ability = availableAbilities[0];
   }
+
+  if (!ability) return null;
 
   let target;
   if (Math.random() < 0.6) {
@@ -717,7 +728,12 @@ const useGameStore = create((set, get) => ({
     }
 
     if (unit.stunned) {
-      get().useAbility(unit.abilities[0]?.id);
+      const firstAbility = unit.abilities?.[0];
+      if (firstAbility) {
+        get().useAbility(firstAbility.id);
+      } else {
+        get().advanceTurn();
+      }
       return;
     }
 

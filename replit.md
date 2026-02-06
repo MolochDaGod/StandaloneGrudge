@@ -1,7 +1,7 @@
 # Grudge Warlords
 
 ## Overview
-A Final Fantasy 7-inspired turn-based RPG with dark fantasy aesthetic. Built with React + Vite + Zustand.
+A Final Fantasy 7-inspired turn-based RPG with dark fantasy aesthetic. Built with React + Vite + Zustand. Features multi-unit tactical battles with AI-controlled allies and multiple enemies per encounter.
 
 ## Project Architecture
 - **Frontend**: React 19 with Vite dev server on port 5000
@@ -29,7 +29,7 @@ src/
     CharacterCreate.jsx - 2-step character creation (Name+Faction, Attributes)
     WorldMap.jsx        - World map with locations, inn, navigation
     LocationView.jsx    - Location detail with fight/boss buttons
-    BattleScreen.jsx    - Turn-based battle UI with sprites & keyboard hotkeys
+    BattleScreen.jsx    - Multi-unit tactical battle with 2D positioning
     CharacterSheet.jsx  - Stats view + attribute allocation
     SkillTreeView.jsx   - Skill tree UI
     SpriteAnimation.jsx - Reusable sprite sheet animation component
@@ -52,6 +52,17 @@ public/
     elite-orc/         - Elite Orc enemy sprites
 ```
 
+## Battle System (Multi-Unit Tactical)
+- **Formation**: Player team (left side, 10-22% horizontal) vs enemies (right side, 70-84%)
+- **Turn Order**: Speed-based initiative, units sorted by speed attribute descending
+- **AI Allies**: 1-2 AI companions per battle, scaled to ~55% player stats
+  - Mage/Priest allies prioritize healing low-health teammates
+  - Warrior/Worg allies use buff abilities and attack
+  - Ranger allies focus DPS on weakest enemies
+- **Enemy AI**: Random targeting, 40-50% chance to use special abilities off cooldown
+- **Animations**: Melee dash-to-target, ranged colored projectiles, floating damage numbers
+- **Combat States**: intro → player_turn / ai_turn / animating → victory / defeat
+
 ## Sprite System
 - Sprite sheets are horizontal strips, each frame is 100x100px
 - SpriteAnimation component handles frame-based animation with configurable speed, scale, flip, loop
@@ -71,15 +82,13 @@ public/
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
 ## Recent Changes
-- Redesigned CharacterCreate to 2-step flow: Name + Faction selection (step 1), Attribute allocation (step 2)
-- Added 8 battle background images for each location (Verdant Plains through Void Throne)
-- Fixed BattleScreen layout stability: player/enemy cards in fixed containers, no more layout shift during attacks
-- Replaced shake animation with flash/glow visual effects on cards
-- Added battle log with auto-scroll and header label
-- Turn indicator moved to header bar for cleaner UX
-- Added backdrop blur effects throughout battle UI
-- Added sprite-based animations replacing emoji visuals throughout the game
-- Added MMO-style keyboard hotkeys (1-5) for abilities in battle
-- Created SpriteAnimation component and spriteMap.js for sprite management
-- Fixed diminishing returns (calculateEffectivePoints) being applied in stat calculations
-- Added defeat penalty system (50% HP recovery, 10% gold loss)
+- Major architectural rewrite: 1v1 battles → multi-unit tactical battles (player + 1-2 AI allies vs 2-4 enemies)
+- New 2D tactical battlefield with percentage-based positioning and formation system
+- Combat animations: melee dash-to-target-and-return, ranged colored projectile effects
+- Floating damage numbers with CRIT/BLOCK/DODGE indicators
+- AI decision-making: ally healers prioritize low-health targets, warriors buff/tank, DPS attacks weakest
+- Enemy AI: random targeting with 40-50% special ability usage
+- Speed-based turn order system (units sorted by speed attribute)
+- Compact unit cards with mini HP/MP/SP bars displayed beneath sprites on battlefield
+- Boss battles spawn extra enemies alongside the boss
+- returnToWorld properly preserves HP/MP/SP when leaving location view without battling
