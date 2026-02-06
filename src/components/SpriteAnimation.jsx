@@ -61,14 +61,13 @@ export default function SpriteAnimation({
       transform: flip ? 'scaleX(-1)' : 'none',
     }}>
       <div style={{
-        width: totalFrames * displayWidth,
+        width: displayWidth,
         height: displayHeight,
         backgroundImage: `url(${anim.src})`,
         backgroundSize: `${totalFrames * displayWidth}px ${displayHeight}px`,
         backgroundRepeat: 'no-repeat',
         backgroundPosition: `-${frame * displayWidth}px 0`,
         imageRendering: 'pixelated',
-        width: displayWidth,
       }} />
     </div>
   );

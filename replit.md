@@ -8,6 +8,7 @@ A Final Fantasy 7-inspired turn-based RPG with dark fantasy aesthetic. Built wit
 - **State Management**: Zustand (single store at `src/stores/gameStore.js`)
 - **Styling**: Inline styles + CSS variables in `src/index.css`
 - **Fonts**: Cinzel (headings) + Jost (body) via Google Fonts
+- **Sprites**: Pixel art sprite sheets in `public/sprites/`, animated via SpriteAnimation component
 
 ## File Structure
 ```
@@ -22,15 +23,42 @@ src/
     classes.js          - 4 class definitions with abilities
     enemies.js          - 9 enemy types, 8 locations, enemy factory
     skillTrees.js       - Class skill trees with tiers
+    spriteMap.js        - Sprite sheet mappings for classes and enemies
   components/
     TitleScreen.jsx     - Title screen with New Game button
-    CharacterCreate.jsx - 3-step character creation
+    CharacterCreate.jsx - 3-step character creation with sprite previews
     WorldMap.jsx        - World map with locations, inn, navigation
     LocationView.jsx    - Location detail with fight/boss buttons
-    BattleScreen.jsx    - Turn-based battle UI
+    BattleScreen.jsx    - Turn-based battle UI with sprites & keyboard hotkeys
     CharacterSheet.jsx  - Stats view + attribute allocation
     SkillTreeView.jsx   - Skill tree UI
+    SpriteAnimation.jsx - Reusable sprite sheet animation component
+public/
+  sprites/             - Organized sprite sheets per character
+    knight/            - Warrior class sprites
+    priest/            - Mage Priest class sprites
+    orc-rider/         - Worg Rider class sprites
+    archer/            - Ranger class sprites
+    slime/             - Goblin enemy sprites
+    skeleton/          - Skeleton enemy sprites
+    werewolf/          - Dire Wolf enemy sprites
+    wizard/            - Dark Mage enemy sprites
+    orc/               - Orc enemy sprites
+    werebear/          - Dragon Whelp enemy sprites
+    armored-skeleton/  - Lich enemy sprites
+    knight-templar/    - Demon Lord enemy sprites
+    swordsman/         - Void King enemy sprites
+    elite-orc/         - Elite Orc enemy sprites
 ```
+
+## Sprite System
+- Sprite sheets are horizontal strips, each frame is 100x100px
+- SpriteAnimation component handles frame-based animation with configurable speed, scale, flip, loop
+- spriteMap.js maps class IDs (warrior, mage, worg, ranger) and enemy template IDs to their sprite data
+- Animations available: idle, attack1, attack2, attack3, hurt, death, walk, block, heal
+
+## Keyboard Hotkeys
+- In battle, press 1-5 to use corresponding ability (when player's turn)
 
 ## Game Systems
 - **8 Attributes**: Strength, Intellect, Vitality, Dexterity, Endurance, Wisdom, Agility, Tactics
@@ -42,10 +70,11 @@ src/
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
 ## Recent Changes
+- Added sprite-based animations replacing emoji visuals throughout the game
+- Added MMO-style keyboard hotkeys (1-5) for abilities in battle
+- Created SpriteAnimation component and spriteMap.js for sprite management
+- Updated BattleScreen, CharacterCreate, CharacterSheet, WorldMap with sprite visuals
 - Fixed diminishing returns (calculateEffectivePoints) being applied in stat calculations
 - Added enemy turn visual indicator in battles
 - Added defeat penalty system (50% HP recovery, 10% gold loss)
-- Cleaned up package.json (removed unused phaser, howler, node packages)
-- Added proper npm scripts (dev, build, preview)
-- Added .gitignore
 - Fixed vite config with allowedHosts: true

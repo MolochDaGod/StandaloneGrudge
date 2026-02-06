@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import SpriteAnimation from './SpriteAnimation';
@@ -49,20 +49,28 @@ export default function BattleScreen() {
   const playerSprite = getPlayerSprite(playerClass);
   const enemySprite = enemy ? getEnemySprite(enemy.templateId) : null;
 
+  const isDeadRef = useRef({ player: false, enemy: false });
+
   useEffect(() => {
     if (floatingTexts.length > 0) {
       setDisplayFloats(floatingTexts.map((f, i) => ({ ...f, id: Date.now() + i })));
       const isPlayerHit = floatingTexts.some(f => f.x < 40);
       const isEnemyHit = floatingTexts.some(f => f.x > 40);
-      if (isPlayerHit) {
+      if (isPlayerHit && !isDeadRef.current.player) {
         setShakePlayer(true);
         setPlayerAnim('hurt');
-        setTimeout(() => { setShakePlayer(false); setPlayerAnim('idle'); }, 500);
+        setTimeout(() => {
+          setShakePlayer(false);
+          if (!isDeadRef.current.player) setPlayerAnim('idle');
+        }, 500);
       }
-      if (isEnemyHit) {
+      if (isEnemyHit && !isDeadRef.current.enemy) {
         setShakeEnemy(true);
         setEnemyAnim('hurt');
-        setTimeout(() => { setShakeEnemy(false); setEnemyAnim('idle'); }, 500);
+        setTimeout(() => {
+          setShakeEnemy(false);
+          if (!isDeadRef.current.enemy) setEnemyAnim('idle');
+        }, 500);
       }
       setTimeout(() => setDisplayFloats([]), 1500);
     }
@@ -71,28 +79,57 @@ export default function BattleScreen() {
   useEffect(() => {
     if (phase === 'enemy_turn' && enemy && enemy.health > 0) {
       setEnemyAnim('attack1');
-      setTimeout(() => setEnemyAnim('idle'), 800);
+      setTimeout(() => {
+        if (!isDeadRef.current.enemy) setEnemyAnim('idle');
+      }, 800);
     }
   }, [phase]);
 
   useEffect(() => {
     if (enemy && enemy.health <= 0) {
+      isDeadRef.current.enemy = true;
       setEnemyAnim('death');
     }
   }, [enemy?.health]);
 
   useEffect(() => {
     if (phase === 'defeat') {
+      isDeadRef.current.player = true;
       setPlayerAnim('death');
     }
   }, [phase]);
 
+  useEffect(() => {
+    if (phase === 'player_turn' || phase === 'enemy_turn') {
+      isDeadRef.current = { player: false, enemy: false };
+    }
+  }, []);
+
+  const getAbilityAnim = useCallback((ability) => {
+    if (!ability) return 'attack1';
+    if (ability.type === 'heal' || ability.id === 'heal' || ability.id === 'divine_heal') {
+      return playerSprite.heal ? 'heal' : 'attack1';
+    }
+    if (ability.type === 'buff' || ability.id === 'war_cry' || ability.id === 'howl') {
+      return playerSprite.block ? 'block' : 'attack1';
+    }
+    const attackAnims = ['attack1', 'attack2', 'attack3'].filter(a => playerSprite[a]);
+    if (attackAnims.length <= 1) return 'attack1';
+    if (ability.damage >= 2.0) return attackAnims[attackAnims.length - 1];
+    if (ability.damage >= 1.5 && attackAnims.length > 1) return attackAnims[1];
+    return 'attack1';
+  }, [playerSprite]);
+
   const handleAbility = useCallback((abilityId) => {
     if (phase !== 'player_turn') return;
-    setPlayerAnim('attack1');
-    setTimeout(() => setPlayerAnim('idle'), 600);
+    const ability = cls?.abilities.find(a => a.id === abilityId);
+    const anim = getAbilityAnim(ability);
+    setPlayerAnim(anim);
+    setTimeout(() => {
+      if (!isDeadRef.current.player) setPlayerAnim('idle');
+    }, 600);
     useAbility(abilityId);
-  }, [phase, useAbility]);
+  }, [phase, useAbility, cls, getAbilityAnim]);
 
   useEffect(() => {
     if (phase !== 'player_turn') return;
