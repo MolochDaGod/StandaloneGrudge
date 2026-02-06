@@ -189,7 +189,7 @@ export default function BattleScreen() {
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           backgroundImage: `url(${bgImage})`,
           backgroundSize: 'cover', backgroundPosition: 'center',
-          opacity: 0.35, zIndex: 0,
+          opacity: 0.5, zIndex: 0,
         }} />
       )}
       <div style={{
