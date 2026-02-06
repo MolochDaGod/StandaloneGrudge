@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from './stores/gameStore';
 import VideoBackground from './components/VideoBackground';
 import LoadingScreen from './components/LoadingScreen';
@@ -10,36 +10,42 @@ import BattleScreen from './components/BattleScreen';
 import CharacterSheet from './components/CharacterSheet';
 import SkillTreeView from './components/SkillTreeView';
 
+let appHasLoaded = false;
+
 export default function App() {
   const screen = useGameStore(s => s.screen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!appHasLoaded);
   const [transitioning, setTransitioning] = useState(false);
-  const [prevScreen, setPrevScreen] = useState(screen);
+  const prevScreenRef = useRef(screen);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2200);
-    return () => clearTimeout(timer);
+    if (!appHasLoaded) {
+      appHasLoaded = true;
+      const timer = setTimeout(() => setLoading(false), 2200);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   useEffect(() => {
-    if (screen !== prevScreen) {
+    const prev = prevScreenRef.current;
+    if (screen !== prev) {
       const needsTransition = (
-        (prevScreen === 'title' && screen === 'create') ||
-        (prevScreen === 'create' && screen === 'world') ||
+        (prev === 'title' && screen === 'create') ||
+        (prev === 'create' && screen === 'world') ||
         (screen === 'battle') ||
-        (prevScreen === 'battle' && (screen === 'world' || screen === 'location'))
+        (prev === 'battle' && (screen === 'world' || screen === 'location'))
       );
       if (needsTransition) {
         setTransitioning(true);
         const timer = setTimeout(() => setTransitioning(false), 600);
-        setPrevScreen(screen);
+        prevScreenRef.current = screen;
         return () => clearTimeout(timer);
       }
-      setPrevScreen(screen);
+      prevScreenRef.current = screen;
     }
-  }, [screen, prevScreen]);
+  }, [screen]);
 
   const bgBlurred = screen !== 'title';
 
