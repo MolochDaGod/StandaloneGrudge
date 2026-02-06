@@ -30,7 +30,7 @@ export default function WorldMap() {
   return (
     <div style={{
       width: '100%', height: '100%', overflow: 'auto',
-      background: 'radial-gradient(circle at 30% 20%, rgba(110,231,183,0.04), transparent 50%), var(--bg)',
+      background: 'radial-gradient(circle at 30% 20%, rgba(110,231,183,0.04), transparent 50%), rgba(11,16,32,0.75)',
     }}>
       <header style={{
         background: 'linear-gradient(135deg, rgba(14,22,48,0.9), rgba(20,26,43,0.7))',

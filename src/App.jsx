@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import useGameStore from './stores/gameStore';
+import VideoBackground from './components/VideoBackground';
+import LoadingScreen from './components/LoadingScreen';
 import TitleScreen from './components/TitleScreen';
 import CharacterCreate from './components/CharacterCreate';
 import WorldMap from './components/WorldMap';
@@ -12,6 +14,34 @@ export default function App() {
   const screen = useGameStore(s => s.screen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
+  const [loading, setLoading] = useState(true);
+  const [transitioning, setTransitioning] = useState(false);
+  const [prevScreen, setPrevScreen] = useState(screen);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (screen !== prevScreen) {
+      const needsTransition = (
+        (prevScreen === 'title' && screen === 'create') ||
+        (prevScreen === 'create' && screen === 'world') ||
+        (screen === 'battle') ||
+        (prevScreen === 'battle' && (screen === 'world' || screen === 'location'))
+      );
+      if (needsTransition) {
+        setTransitioning(true);
+        const timer = setTimeout(() => setTransitioning(false), 600);
+        setPrevScreen(screen);
+        return () => clearTimeout(timer);
+      }
+      setPrevScreen(screen);
+    }
+  }, [screen, prevScreen]);
+
+  const bgBlurred = screen !== 'title';
 
   const renderScreen = () => {
     switch (screen) {
@@ -26,9 +56,20 @@ export default function App() {
     }
   };
 
+  if (loading) {
+    return <LoadingScreen message="Entering the Realm..." />;
+  }
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-      {renderScreen()}
+      <VideoBackground blurred={bgBlurred} />
+      <div style={{
+        position: 'relative', zIndex: 1, width: '100%', height: '100%',
+        opacity: transitioning ? 0 : 1,
+        transition: 'opacity 0.3s ease'
+      }}>
+        {renderScreen()}
+      </div>
       {gameMessage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

@@ -13,19 +13,9 @@ export default function TitleScreen() {
   return (
     <div style={{
       width: '100%', height: '100%',
-      background: 'radial-gradient(ellipse at 50% 30%, rgba(110,231,183,0.08), transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(139,92,246,0.08), transparent 50%), linear-gradient(180deg, #050a15 0%, #0b1020 40%, #141a2b 100%)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       position: 'relative', overflow: 'hidden'
     }}>
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: `
-          radial-gradient(circle at 20% 50%, rgba(239,68,68,0.03) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(168,85,247,0.03) 0%, transparent 50%),
-          radial-gradient(circle at 50% 80%, rgba(110,231,183,0.03) 0%, transparent 50%)
-        `
-      }} />
-
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
         <div style={{
           fontSize: '1rem', color: 'var(--muted)', letterSpacing: 6,

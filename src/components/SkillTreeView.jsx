@@ -23,7 +23,7 @@ export default function SkillTreeView() {
   return (
     <div style={{
       width: '100%', height: '100%', overflow: 'auto',
-      background: 'linear-gradient(180deg, #050a15, #0b1020, #141a2b)'
+      background: 'linear-gradient(180deg, rgba(5,10,21,0.8), rgba(11,16,32,0.75), rgba(20,26,43,0.7))'
     }}>
       <header style={{
         background: 'linear-gradient(135deg, rgba(14,22,48,0.9), rgba(20,26,43,0.7))',
