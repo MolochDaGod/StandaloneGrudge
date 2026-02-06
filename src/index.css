@@ -82,3 +82,8 @@ body {
 @keyframes atbFill {
   from { width: 0%; }
 }
+
+@keyframes unitSlideIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) translateX(var(--slide-offset, -60px)) scale(0.7); }
+  100% { opacity: 1; transform: translate(-50%, -50%) translateX(0) scale(1); }
+}

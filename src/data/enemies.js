@@ -2,7 +2,7 @@ export const enemyTemplates = {
   goblin: {
     name: 'Goblin Scout', icon: '👺', color: '#84cc16',
     baseHealth: 80, baseDamage: 12, baseDefense: 5, baseMana: 20,
-    xpReward: 15, goldReward: 8,
+    xpReward: 15, goldReward: 8, speed: 14,
     abilities: [
       { id: 'scratch', name: 'Scratch', icon: '🔪', type: 'physical', damage: 1.0, description: 'A quick scratch' },
       { id: 'sneak_stab', name: 'Sneak Stab', icon: '🗡️', type: 'physical', damage: 1.8, cooldown: 3, description: 'A backstab attempt' },
@@ -11,7 +11,7 @@ export const enemyTemplates = {
   skeleton: {
     name: 'Skeleton Warrior', icon: '💀', color: '#d4d4d8',
     baseHealth: 120, baseDamage: 18, baseDefense: 15, baseMana: 0,
-    xpReward: 22, goldReward: 12,
+    xpReward: 22, goldReward: 12, speed: 10,
     abilities: [
       { id: 'bone_strike', name: 'Bone Strike', icon: '🦴', type: 'physical', damage: 1.1, description: 'A bony slam' },
       { id: 'shield_block', name: 'Shield Block', icon: '🛡️', type: 'buff', damage: 0, cooldown: 4, description: 'Raises defense', effect: { stat: 'defense', flat: 20, duration: 2 } },
@@ -20,7 +20,7 @@ export const enemyTemplates = {
   wolf: {
     name: 'Dire Wolf', icon: '🐺', color: '#78716c',
     baseHealth: 100, baseDamage: 22, baseDefense: 8, baseMana: 0,
-    xpReward: 18, goldReward: 6,
+    xpReward: 18, goldReward: 6, speed: 18,
     abilities: [
       { id: 'bite', name: 'Bite', icon: '🦷', type: 'physical', damage: 1.2, description: 'A savage bite' },
       { id: 'howl_buff', name: 'Feral Howl', icon: '🌙', type: 'buff', damage: 0, cooldown: 5, description: 'Increases damage', effect: { stat: 'damage', multiplier: 1.4, duration: 2 } },
@@ -29,7 +29,7 @@ export const enemyTemplates = {
   dark_mage: {
     name: 'Dark Mage', icon: '🧙', color: '#7c3aed',
     baseHealth: 90, baseDamage: 25, baseDefense: 6, baseMana: 100,
-    xpReward: 30, goldReward: 20,
+    xpReward: 30, goldReward: 20, speed: 12,
     abilities: [
       { id: 'shadow_bolt', name: 'Shadow Bolt', icon: '🌑', type: 'magical', damage: 1.3, description: 'A bolt of dark energy' },
       { id: 'dark_nova', name: 'Dark Nova', icon: '💥', type: 'magical', damage: 2.2, cooldown: 3, description: 'An explosion of shadow' },
@@ -39,7 +39,7 @@ export const enemyTemplates = {
   orc: {
     name: 'Orc Berserker', icon: '👹', color: '#65a30d',
     baseHealth: 180, baseDamage: 28, baseDefense: 20, baseMana: 0,
-    xpReward: 35, goldReward: 18,
+    xpReward: 35, goldReward: 18, speed: 8,
     abilities: [
       { id: 'smash', name: 'Smash', icon: '💪', type: 'physical', damage: 1.2, description: 'A powerful smash' },
       { id: 'berserk', name: 'Berserk', icon: '🔴', type: 'buff', damage: 0, cooldown: 5, description: 'Goes berserk', effect: { stat: 'damage', multiplier: 1.6, duration: 3 } },
@@ -49,7 +49,7 @@ export const enemyTemplates = {
   dragon_whelp: {
     name: 'Dragon Whelp', icon: '🐉', color: '#dc2626',
     baseHealth: 150, baseDamage: 30, baseDefense: 18, baseMana: 80,
-    xpReward: 45, goldReward: 30,
+    xpReward: 45, goldReward: 30, speed: 15,
     abilities: [
       { id: 'claw', name: 'Claw', icon: '🦎', type: 'physical', damage: 1.1, description: 'A claw swipe' },
       { id: 'fire_breath', name: 'Fire Breath', icon: '🔥', type: 'magical', damage: 2.0, cooldown: 3, description: 'Breathes fire' },
@@ -59,7 +59,7 @@ export const enemyTemplates = {
   lich: {
     name: 'Lich Lord', icon: '👻', color: '#6366f1',
     baseHealth: 200, baseDamage: 35, baseDefense: 15, baseMana: 200,
-    xpReward: 60, goldReward: 45,
+    xpReward: 60, goldReward: 45, speed: 11,
     abilities: [
       { id: 'soul_bolt', name: 'Soul Bolt', icon: '💀', type: 'magical', damage: 1.4, description: 'A bolt of soul energy' },
       { id: 'death_coil', name: 'Death Coil', icon: '☠️', type: 'magical', damage: 2.5, cooldown: 4, description: 'Devastating necrotic blast', drainPercent: 0.3 },
@@ -69,7 +69,7 @@ export const enemyTemplates = {
   demon_lord: {
     name: 'Demon Lord', icon: '😈', color: '#b91c1c',
     baseHealth: 350, baseDamage: 45, baseDefense: 30, baseMana: 150,
-    xpReward: 100, goldReward: 80,
+    xpReward: 100, goldReward: 80, speed: 13,
     abilities: [
       { id: 'hellfire', name: 'Hellfire', icon: '🔥', type: 'magical', damage: 1.5, description: 'Infernal flames' },
       { id: 'doom_strike', name: 'Doom Strike', icon: '⚡', type: 'physical', damage: 2.8, cooldown: 4, description: 'A strike of pure doom' },
@@ -80,7 +80,7 @@ export const enemyTemplates = {
   void_king: {
     name: 'The Void King', icon: '👑', color: '#fbbf24',
     baseHealth: 500, baseDamage: 55, baseDefense: 40, baseMana: 300,
-    xpReward: 200, goldReward: 150,
+    xpReward: 200, goldReward: 150, speed: 16,
     abilities: [
       { id: 'void_slash', name: 'Void Slash', icon: '🌀', type: 'physical', damage: 1.6, description: 'A slash through reality' },
       { id: 'annihilate', name: 'Annihilate', icon: '💥', type: 'magical', damage: 3.0, cooldown: 4, description: 'Pure destruction' },
@@ -100,7 +100,9 @@ export const locations = [
     bgGradient: 'linear-gradient(135deg, #1a472a 0%, #2d5a27 50%, #1a3a1a 100%)',
     icon: '🌿',
     unlocked: true,
-    boss: null
+    boss: null,
+    enemyCount: [2, 2],
+    allyCount: 1,
   },
   {
     id: 'dark_forest',
@@ -111,7 +113,9 @@ export const locations = [
     bgGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
     icon: '🌲',
     unlocked: true,
-    boss: null
+    boss: null,
+    enemyCount: [2, 3],
+    allyCount: 1,
   },
   {
     id: 'cursed_ruins',
@@ -123,7 +127,9 @@ export const locations = [
     icon: '🏚️',
     unlocked: false,
     unlockLevel: 4,
-    boss: null
+    boss: null,
+    enemyCount: [2, 3],
+    allyCount: 1,
   },
   {
     id: 'blood_canyon',
@@ -135,7 +141,9 @@ export const locations = [
     icon: '🏔️',
     unlocked: false,
     unlockLevel: 7,
-    boss: null
+    boss: null,
+    enemyCount: [2, 3],
+    allyCount: 2,
   },
   {
     id: 'dragon_peaks',
@@ -147,7 +155,9 @@ export const locations = [
     icon: '🌋',
     unlocked: false,
     unlockLevel: 10,
-    boss: null
+    boss: null,
+    enemyCount: [3, 3],
+    allyCount: 2,
   },
   {
     id: 'shadow_citadel',
@@ -159,7 +169,9 @@ export const locations = [
     icon: '🏰',
     unlocked: false,
     unlockLevel: 13,
-    boss: 'lich'
+    boss: 'lich',
+    enemyCount: [3, 4],
+    allyCount: 2,
   },
   {
     id: 'demon_gate',
@@ -171,7 +183,9 @@ export const locations = [
     icon: '🌀',
     unlocked: false,
     unlockLevel: 15,
-    boss: 'demon_lord'
+    boss: 'demon_lord',
+    enemyCount: [3, 4],
+    allyCount: 2,
   },
   {
     id: 'void_throne',
@@ -183,7 +197,9 @@ export const locations = [
     icon: '👑',
     unlocked: false,
     unlockLevel: 18,
-    boss: 'void_king'
+    boss: 'void_king',
+    enemyCount: [3, 4],
+    allyCount: 2,
   }
 ];
 
@@ -193,23 +209,38 @@ export function createEnemy(templateId, playerLevel) {
 
   const levelScale = 1 + (playerLevel * 0.15);
   return {
-    id: templateId + '_' + Date.now(),
+    id: `enemy_${templateId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
     templateId,
     name: template.name,
     icon: template.icon,
     color: template.color,
+    team: 'enemy',
+    isPlayerControlled: false,
+    classId: null,
     maxHealth: Math.floor(template.baseHealth * levelScale),
     health: Math.floor(template.baseHealth * levelScale),
     damage: Math.floor(template.baseDamage * levelScale),
     defense: Math.floor(template.baseDefense * levelScale),
     mana: template.baseMana,
     maxMana: template.baseMana,
+    stamina: 100,
+    maxStamina: 100,
+    speed: (template.speed || 12) + Math.floor(Math.random() * 6),
     abilities: template.abilities.map(a => ({ ...a, currentCooldown: 0 })),
+    cooldowns: {},
     xpReward: Math.floor(template.xpReward * levelScale),
     goldReward: Math.floor(template.goldReward * levelScale),
     buffs: [],
     dots: [],
     stunned: false,
-    atb: 0,
+    alive: true,
+    level: playerLevel,
+    critChance: 5,
+    evasion: 3,
+    block: 0,
+    damageReduction: 0,
+    drainHealth: 0,
+    healthRegen: 0,
+    manaRegen: 0,
   };
 }

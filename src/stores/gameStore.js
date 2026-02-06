@@ -4,6 +4,153 @@ import { classDefinitions } from '../data/classes';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 
+const allyNamePool = {
+  warrior: ['Sir Aldric', 'Dame Brenna', 'Rolf', 'Greta'],
+  mage: ['Theron', 'Lyra', 'Seraphina', 'Ewan'],
+  worg: ['Grukk', 'Snarl', 'Ragnar', 'Ursa'],
+  ranger: ['Fenn', 'Elara', 'Hawk', 'Willow'],
+};
+
+function createAllyUnit(classId, playerLevel) {
+  const cls = classDefinitions[classId];
+  if (!cls) return null;
+  const names = allyNamePool[classId] || ['Ally'];
+  const name = names[Math.floor(Math.random() * names.length)];
+  const s = 0.55;
+  const lvl = 1 + playerLevel * 0.12;
+  return {
+    id: `ally_${classId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    name, team: 'player', isPlayerControlled: false,
+    classId, templateId: null,
+    health: Math.floor(180 * s * lvl), maxHealth: Math.floor(180 * s * lvl),
+    mana: 80, maxMana: 80, stamina: 80, maxStamina: 80,
+    damage: Math.floor(16 * s * lvl), defense: Math.floor(10 * s * lvl),
+    speed: 10 + Math.floor(Math.random() * 10),
+    critChance: 6, evasion: 4, block: 3,
+    damageReduction: 0, drainHealth: 0, healthRegen: 2, manaRegen: 3,
+    abilities: cls.abilities.slice(0, 3),
+    cooldowns: {},
+    buffs: [], dots: [], stunned: false, alive: true,
+    level: Math.max(1, playerLevel - 1),
+  };
+}
+
+function calculateAttackDamage(attacker, defender, ability) {
+  let evasionBonus = 0;
+  (defender.buffs || []).forEach(b => {
+    if (b.stat === 'evasion' && b.flat) evasionBonus += b.flat;
+  });
+  const totalEvasion = (defender.evasion || 0) + evasionBonus;
+  if (Math.random() * 100 < totalEvasion) {
+    return { totalDmg: 0, isCrit: false, blocked: false, evaded: true };
+  }
+
+  let baseDmg = (attacker.damage || 0) + ((attacker.level || 1) * 2);
+  let dmgMult = 1;
+  (attacker.buffs || []).forEach(b => {
+    if (b.stat === 'damage' && b.multiplier) dmgMult *= b.multiplier;
+  });
+  baseDmg = Math.floor(baseDmg * dmgMult);
+
+  let totalDmg = Math.floor(baseDmg * (ability.damage || 1));
+  const isCrit = ability.guaranteedCrit || Math.random() * 100 < (attacker.critChance || 5);
+  if (isCrit) {
+    totalDmg = Math.floor(totalDmg * 1.5);
+  }
+
+  if (!isCrit) {
+    let defenseVal = defender.defense || 0;
+    (defender.buffs || []).forEach(b => {
+      if (b.stat === 'defense' && b.flat) defenseVal += b.flat;
+    });
+    totalDmg = Math.max(1, totalDmg - Math.floor(defenseVal * 0.5));
+  }
+
+  if (defender.damageReduction > 0) {
+    totalDmg = Math.floor(totalDmg * (1 - defender.damageReduction / 100));
+  }
+
+  let blocked = false;
+  if (Math.random() * 100 < (defender.block || 0)) {
+    totalDmg = Math.floor(totalDmg * 0.4);
+    blocked = true;
+  }
+
+  totalDmg = Math.max(1, totalDmg);
+  return { totalDmg, isCrit, blocked, evaded: false };
+}
+
+function chooseAIAction(unit, allUnits) {
+  const allies = allUnits.filter(u => u.team === unit.team && u.alive && u.health > 0);
+  const enemies = allUnits.filter(u => u.team !== unit.team && u.alive && u.health > 0);
+  if (enemies.length === 0) return null;
+
+  if (unit.classId === 'mage' && unit.team === 'player') {
+    const lowAlly = allies.find(a => a.health / a.maxHealth < 0.4);
+    const healAbility = unit.abilities.find(a =>
+      (a.type === 'heal') && (unit.cooldowns[a.id] || 0) <= 0 && (a.manaCost || 0) <= unit.mana
+    );
+    if (lowAlly && healAbility) {
+      return { abilityId: healAbility.id, targetId: lowAlly.id };
+    }
+  }
+
+  const availableAbilities = unit.abilities.filter(a =>
+    (unit.cooldowns[a.id] || 0) <= 0 &&
+    (a.manaCost || 0) <= unit.mana &&
+    (a.staminaCost || 0) <= unit.stamina
+  );
+
+  const attackAbilities = availableAbilities.filter(a => a.type === 'physical' || a.type === 'magical');
+  const buffAbilities = availableAbilities.filter(a => a.type === 'buff');
+  const hotAbilities = availableAbilities.filter(a => a.type === 'heal_over_time');
+
+  if (buffAbilities.length > 0 && unit.buffs.length === 0 && Math.random() < 0.3) {
+    return { abilityId: buffAbilities[0].id, targetId: unit.id };
+  }
+
+  if (unit.team === 'player' && hotAbilities.length > 0 && unit.health / unit.maxHealth < 0.5 && Math.random() < 0.5) {
+    return { abilityId: hotAbilities[0].id, targetId: unit.id };
+  }
+
+  const specials = attackAbilities.filter(a => a.cooldown && a.cooldown > 0);
+  let ability;
+  if (specials.length > 0 && Math.random() < 0.45) {
+    ability = specials[Math.floor(Math.random() * specials.length)];
+  } else if (attackAbilities.length > 0) {
+    ability = attackAbilities[0];
+  } else {
+    ability = availableAbilities[0] || unit.abilities[0];
+  }
+
+  let target;
+  if (Math.random() < 0.6) {
+    target = enemies.reduce((low, e) => e.health < low.health ? e : low, enemies[0]);
+  } else {
+    target = enemies[Math.floor(Math.random() * enemies.length)];
+  }
+
+  return { abilityId: ability.id, targetId: target.id };
+}
+
+function getFormationPositions(count, side) {
+  const p = {
+    player: {
+      1: [{x:20,y:50}],
+      2: [{x:16,y:35},{x:22,y:65}],
+      3: [{x:13,y:25},{x:22,y:50},{x:13,y:75}],
+    },
+    enemy: {
+      1: [{x:80,y:50}],
+      2: [{x:78,y:35},{x:84,y:65}],
+      3: [{x:75,y:25},{x:84,y:50},{x:75,y:75}],
+      4: [{x:72,y:18},{x:84,y:36},{x:72,y:56},{x:84,y:76}],
+    }
+  };
+  const maxCount = side === 'player' ? 3 : 4;
+  return p[side][Math.min(count, maxCount)] || p[side][1];
+}
+
 const useGameStore = create((set, get) => ({
   screen: 'title',
   playerName: 'Hero',
@@ -18,6 +165,11 @@ const useGameStore = create((set, get) => ({
   unlockedSkills: {},
   currentLocation: null,
   battleState: null,
+  battleUnits: [],
+  battleTurnOrder: [],
+  battleCurrentTurn: 0,
+  selectedTargetId: null,
+  lastAction: null,
   battleLog: [],
   playerBuffs: [],
   playerDots: [],
@@ -155,321 +307,436 @@ const useGameStore = create((set, get) => ({
     const state = get();
     const loc = locations.find(l => l.id === locationId);
     if (!loc) return;
-    const enemyPool = loc.enemies;
-    const templateId = enemyPool[Math.floor(Math.random() * enemyPool.length)];
-    const enemy = createEnemy(templateId, state.level);
+
     const stats = state.getStats();
+    const cls = classDefinitions[state.playerClass];
+
+    const playerUnit = {
+      id: 'player',
+      name: state.playerName,
+      team: 'player',
+      isPlayerControlled: true,
+      classId: state.playerClass,
+      templateId: null,
+      health: Math.min(state.playerHealth, Math.floor(stats.health)),
+      maxHealth: Math.floor(stats.health),
+      mana: Math.min(state.playerMana, Math.floor(stats.mana)),
+      maxMana: Math.floor(stats.mana),
+      stamina: Math.min(state.playerStamina, Math.floor(stats.stamina)),
+      maxStamina: Math.floor(stats.stamina),
+      damage: stats.damage,
+      defense: stats.defense,
+      speed: 20 + Math.floor((state.attributePoints.Agility || 0) * 0.3),
+      critChance: stats.criticalChance || 5,
+      evasion: stats.evasion || 0,
+      block: stats.block || 0,
+      damageReduction: stats.damageReduction || 0,
+      drainHealth: stats.drainHealth || 0,
+      healthRegen: stats.healthRegen || 0,
+      manaRegen: stats.manaRegen || 0,
+      abilities: cls.abilities,
+      cooldowns: {},
+      buffs: [], dots: [], stunned: false, alive: true,
+      level: state.level,
+    };
+
+    const allyCount = loc.allyCount || 1;
+    const availableClasses = ['warrior', 'mage', 'worg', 'ranger'].filter(c => c !== state.playerClass);
+    const allies = [];
+    for (let i = 0; i < allyCount; i++) {
+      const allyClass = availableClasses[i % availableClasses.length];
+      const ally = createAllyUnit(allyClass, state.level);
+      if (ally) allies.push(ally);
+    }
+
+    const [minEnemies, maxEnemies] = loc.enemyCount || [2, 3];
+    const enemyCount = minEnemies + Math.floor(Math.random() * (maxEnemies - minEnemies + 1));
+    const enemyUnits = [];
+    for (let i = 0; i < enemyCount; i++) {
+      const templateId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
+      const enemy = createEnemy(templateId, state.level);
+      if (enemy) enemyUnits.push(enemy);
+    }
+
+    const playerTeam = [playerUnit, ...allies];
+    const allUnits = [...playerTeam, ...enemyUnits];
+
+    const pPositions = getFormationPositions(playerTeam.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits]
+      .sort((a, b) => b.speed - a.speed)
+      .map(u => u.id);
+
     set({
       screen: 'battle',
-      battleState: { enemy, phase: 'player_turn', turnCount: 0 },
-      battleLog: [`A wild ${enemy.name} appears!`],
-      playerHealth: Math.min(state.playerHealth, Math.floor(stats.health)),
-      playerMaxHealth: Math.floor(stats.health),
-      playerMana: Math.min(state.playerMana, Math.floor(stats.mana)),
-      playerMaxMana: Math.floor(stats.mana),
-      playerStamina: Math.min(state.playerStamina, Math.floor(stats.stamina)),
-      playerMaxStamina: Math.floor(stats.stamina),
-      playerBuffs: [],
-      playerDots: [],
-      playerStunned: false,
+      battleState: { phase: 'intro', turnCount: 0, isBoss: false },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [`Battle begins! ${enemyUnits.length} enemies appear!`],
+      playerHealth: playerUnit.health,
+      playerMaxHealth: playerUnit.maxHealth,
+      playerMana: playerUnit.mana,
+      playerMaxMana: playerUnit.maxMana,
+      playerStamina: playerUnit.stamina,
+      playerMaxStamina: playerUnit.maxStamina,
       cooldowns: {},
-      turnCount: 0,
       floatingTexts: [],
     });
   },
 
   startBossBattle: (bossTemplateId) => {
     const state = get();
-    const enemy = createEnemy(bossTemplateId, state.level + 2);
-    enemy.maxHealth = Math.floor(enemy.maxHealth * 1.8);
-    enemy.health = enemy.maxHealth;
-    enemy.damage = Math.floor(enemy.damage * 1.3);
-    enemy.defense = Math.floor(enemy.defense * 1.3);
-    enemy.name = '★ ' + enemy.name + ' ★';
-    enemy.xpReward = Math.floor(enemy.xpReward * 3);
-    enemy.goldReward = Math.floor(enemy.goldReward * 3);
+    const loc = locations.find(l => l.id === state.currentLocation);
     const stats = state.getStats();
-    set({
-      screen: 'battle',
-      battleState: { enemy, phase: 'player_turn', turnCount: 0, isBoss: true },
-      battleLog: [`BOSS BATTLE: ${enemy.name} challenges you!`],
-      playerHealth: Math.floor(stats.health),
-      playerMaxHealth: Math.floor(stats.health),
-      playerMana: Math.floor(stats.mana),
-      playerMaxMana: Math.floor(stats.mana),
-      playerStamina: Math.floor(stats.stamina),
-      playerMaxStamina: Math.floor(stats.stamina),
-      playerBuffs: [],
-      playerDots: [],
-      playerStunned: false,
-      cooldowns: {},
-      turnCount: 0,
-      floatingTexts: [],
-    });
-  },
+    const cls = classDefinitions[state.playerClass];
 
-  useAbility: (abilityId) => {
-    const state = get();
-    if (!state.battleState || state.battleState.phase !== 'player_turn') return;
-    const classDef = classDefinitions[state.playerClass];
-    const ability = classDef.abilities.find(a => a.id === abilityId);
-    if (!ability) return;
-    if ((state.cooldowns[abilityId] || 0) > 0) return;
-    if (ability.manaCost > state.playerMana) return;
-    if (ability.staminaCost > state.playerStamina) return;
-
-    const stats = state.getStats();
-    const enemy = { ...state.battleState.enemy };
-    let log = [...state.battleLog];
-    let newHealth = state.playerHealth;
-    let newMana = state.playerMana - ability.manaCost;
-    let newStamina = state.playerStamina - ability.staminaCost;
-    let newBuffs = [...state.playerBuffs];
-    let newDots = [...state.playerDots];
-    let cooldowns = { ...state.cooldowns };
-    let floats = [];
-
-    cooldowns[abilityId] = ability.cooldown || 0;
-
-    if (ability.type === 'physical' || ability.type === 'magical') {
-      let baseDmg = stats.damage + (state.level * 2);
-      let totalDmg = Math.floor(baseDmg * ability.damage);
-      let isCrit = ability.guaranteedCrit || Math.random() * 100 < stats.criticalChance;
-      if (isCrit) {
-        totalDmg = Math.floor(totalDmg * 1.5);
-        floats.push({ text: `CRIT! ${totalDmg}`, color: '#fbbf24', x: 60, y: 30 });
-        log.push(`💥 CRITICAL HIT! ${ability.name} deals ${totalDmg} damage!`);
-      } else {
-        let mitigated = Math.max(0, totalDmg - Math.floor(enemy.defense * 0.5));
-        totalDmg = Math.max(1, mitigated);
-        floats.push({ text: `-${totalDmg}`, color: '#ef4444', x: 60, y: 30 });
-        log.push(`⚔️ ${ability.name} deals ${totalDmg} damage to ${enemy.name}.`);
-      }
-      enemy.health = Math.max(0, enemy.health - totalDmg);
-      if (stats.drainHealth > 0) {
-        const heal = Math.floor(totalDmg * stats.drainHealth / 100);
-        newHealth = Math.min(state.playerMaxHealth, newHealth + heal);
-        if (heal > 0) log.push(`💚 Lifesteal heals you for ${heal} HP.`);
-      }
-      if (ability.effect?.type === 'stun') {
-        enemy.stunned = true;
-        log.push(`💫 ${enemy.name} is stunned!`);
-      }
-      if (ability.effect?.type === 'dot') {
-        enemy.dots = [...(enemy.dots || []), { damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name }];
-        log.push(`🩸 ${enemy.name} is bleeding!`);
-      }
-      if (ability.effect?.stat) {
-        enemy.buffs = [...(enemy.buffs || [])];
-        if (ability.effect.multiplier && ability.effect.multiplier < 1) {
-          enemy.buffs.push({ ...ability.effect, source: ability.name });
-          log.push(`❄️ ${enemy.name}'s ${ability.effect.stat} is reduced!`);
-        }
-      }
-    } else if (ability.type === 'heal') {
-      const healAmt = Math.floor(state.playerMaxHealth * ability.healPercent);
-      newHealth = Math.min(state.playerMaxHealth, newHealth + healAmt);
-      floats.push({ text: `+${healAmt}`, color: '#22c55e', x: 20, y: 30 });
-      log.push(`💚 ${ability.name} heals you for ${healAmt} HP!`);
-    } else if (ability.type === 'heal_over_time') {
-      newDots.push({ heal: true, healPercent: ability.healPercent, duration: ability.duration, source: ability.name });
-      log.push(`💚 ${ability.name} will heal you over ${ability.duration} turns.`);
-    } else if (ability.type === 'buff') {
-      if (ability.effect) {
-        newBuffs.push({ ...ability.effect, source: ability.name });
-        log.push(`⬆️ ${ability.name} activated! ${ability.description}`);
-        floats.push({ text: 'BUFF!', color: '#6ee7b7', x: 20, y: 30 });
-      }
-    }
-
-    const newBattleState = {
-      ...state.battleState,
-      enemy,
-      phase: enemy.health <= 0 ? 'victory' : 'enemy_turn',
-      turnCount: state.battleState.turnCount + 1,
+    const playerUnit = {
+      id: 'player',
+      name: state.playerName,
+      team: 'player', isPlayerControlled: true,
+      classId: state.playerClass, templateId: null,
+      health: Math.floor(stats.health), maxHealth: Math.floor(stats.health),
+      mana: Math.floor(stats.mana), maxMana: Math.floor(stats.mana),
+      stamina: Math.floor(stats.stamina), maxStamina: Math.floor(stats.stamina),
+      damage: stats.damage, defense: stats.defense,
+      speed: 20 + Math.floor((state.attributePoints.Agility || 0) * 0.3),
+      critChance: stats.criticalChance || 5, evasion: stats.evasion || 0,
+      block: stats.block || 0, damageReduction: stats.damageReduction || 0,
+      drainHealth: stats.drainHealth || 0, healthRegen: stats.healthRegen || 0,
+      manaRegen: stats.manaRegen || 0,
+      abilities: cls.abilities, cooldowns: {},
+      buffs: [], dots: [], stunned: false, alive: true,
+      level: state.level,
     };
 
-    set({
-      battleState: newBattleState,
-      battleLog: log.slice(-8),
-      playerHealth: newHealth,
-      playerMana: newMana,
-      playerStamina: newStamina,
-      playerBuffs: newBuffs,
-      playerDots: newDots,
-      cooldowns,
-      turnCount: state.turnCount + 1,
-      floatingTexts: floats,
-    });
-
-    if (enemy.health <= 0) {
-      setTimeout(() => get().handleVictory(), 800);
-    } else {
-      setTimeout(() => get().enemyTurn(), 1000);
+    const availableClasses = ['warrior', 'mage', 'worg', 'ranger'].filter(c => c !== state.playerClass);
+    const allies = [];
+    for (let i = 0; i < 2; i++) {
+      const ally = createAllyUnit(availableClasses[i % availableClasses.length], state.level);
+      if (ally) allies.push(ally);
     }
+
+    const boss = createEnemy(bossTemplateId, state.level + 2);
+    boss.maxHealth = Math.floor(boss.maxHealth * 1.8);
+    boss.health = boss.maxHealth;
+    boss.damage = Math.floor(boss.damage * 1.3);
+    boss.defense = Math.floor(boss.defense * 1.3);
+    boss.name = '★ ' + boss.name + ' ★';
+    boss.xpReward = Math.floor(boss.xpReward * 3);
+    boss.goldReward = Math.floor(boss.goldReward * 3);
+    boss.speed += 5;
+
+    const addEnemies = [];
+    if (loc) {
+      const addPool = loc.enemies.filter(e => e !== bossTemplateId);
+      if (addPool.length > 0) {
+        const addCount = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < addCount; i++) {
+          const tId = addPool[Math.floor(Math.random() * addPool.length)];
+          const add = createEnemy(tId, state.level);
+          if (add) addEnemies.push(add);
+        }
+      }
+    }
+
+    const enemyUnits = [boss, ...addEnemies];
+    const playerTeam = [playerUnit, ...allies];
+    const allUnits = [...playerTeam, ...enemyUnits];
+
+    const pPositions = getFormationPositions(playerTeam.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+
+    set({
+      screen: 'battle',
+      battleState: { phase: 'intro', turnCount: 0, isBoss: true },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: boss.id,
+      lastAction: null,
+      battleLog: [`BOSS BATTLE: ${boss.name} appears with ${addEnemies.length} allies!`],
+      playerHealth: playerUnit.health, playerMaxHealth: playerUnit.maxHealth,
+      playerMana: playerUnit.mana, playerMaxMana: playerUnit.maxMana,
+      playerStamina: playerUnit.stamina, playerMaxStamina: playerUnit.maxStamina,
+      cooldowns: {}, floatingTexts: [],
+    });
   },
 
-  enemyTurn: () => {
+  setSelectedTarget: (unitId) => set({ selectedTargetId: unitId }),
+
+  advanceTurn: () => {
     const state = get();
-    if (!state.battleState || state.battleState.phase !== 'enemy_turn') return;
-    const enemy = { ...state.battleState.enemy };
-    let log = [...state.battleLog];
-    let newHealth = state.playerHealth;
-    let floats = [];
-    let newBuffs = [...state.playerBuffs];
-    let newDots = [...state.playerDots];
-    let cooldowns = { ...state.cooldowns };
+    if (!state.battleState) return;
+    const units = state.battleUnits;
+    const order = state.battleTurnOrder;
 
-    Object.keys(cooldowns).forEach(k => {
-      if (cooldowns[k] > 0) cooldowns[k]--;
-    });
+    const alivePlayerUnits = units.filter(u => u.team === 'player' && u.alive && u.health > 0);
+    const aliveEnemyUnits = units.filter(u => u.team === 'enemy' && u.alive && u.health > 0);
 
-    newBuffs = newBuffs.map(b => ({ ...b, duration: b.duration - 1 })).filter(b => b.duration > 0);
-    newDots = newDots.filter(d => {
-      if (d.heal && d.duration > 0) {
-        const healAmt = Math.floor(state.playerMaxHealth * d.healPercent);
-        newHealth = Math.min(state.playerMaxHealth, newHealth + healAmt);
-        log.push(`💚 ${d.source} heals you for ${healAmt} HP.`);
-        d.duration--;
-        return d.duration > 0;
-      }
-      return true;
-    });
+    if (aliveEnemyUnits.length === 0) {
+      get().handleVictory();
+      return;
+    }
+    if (alivePlayerUnits.length === 0) {
+      get().handleDefeat();
+      return;
+    }
 
-    if (enemy.dots && enemy.dots.length > 0) {
-      enemy.dots = enemy.dots.filter(d => {
+    let nextIndex = (state.battleCurrentTurn + 1) % order.length;
+    let attempts = 0;
+    while (attempts < order.length) {
+      const unit = units.find(u => u.id === order[nextIndex]);
+      if (unit && unit.alive && unit.health > 0) break;
+      nextIndex = (nextIndex + 1) % order.length;
+      attempts++;
+    }
+
+    const nextUnit = units.find(u => u.id === order[nextIndex]);
+    if (!nextUnit) return;
+
+    const newUnits = units.map(u => {
+      if (u.id !== nextUnit.id) return u;
+      const updated = { ...u };
+      Object.keys(updated.cooldowns).forEach(k => {
+        if (updated.cooldowns[k] > 0) updated.cooldowns[k]--;
+      });
+      updated.buffs = (updated.buffs || [])
+        .map(b => ({ ...b, duration: b.duration - 1 }))
+        .filter(b => b.duration > 0);
+
+      let hp = updated.health;
+      updated.dots = (updated.dots || []).filter(d => {
         if (d.duration > 0) {
-          const dotDmg = Math.floor(enemy.maxHealth * d.damage * 0.1);
-          enemy.health = Math.max(0, enemy.health - dotDmg);
-          log.push(`🩸 ${d.source} deals ${dotDmg} to ${enemy.name}.`);
+          if (d.heal) {
+            const healAmt = Math.floor(updated.maxHealth * d.healPercent);
+            hp = Math.min(updated.maxHealth, hp + healAmt);
+          } else {
+            const dotDmg = Math.floor(updated.maxHealth * d.damage * 0.1);
+            hp = Math.max(0, hp - dotDmg);
+          }
           d.duration--;
           return d.duration > 0;
         }
         return false;
       });
-    }
+      updated.health = hp;
+      if (hp <= 0) updated.alive = false;
 
-    enemy.buffs = (enemy.buffs || []).map(b => ({ ...b, duration: b.duration - 1 })).filter(b => b.duration > 0);
+      if (updated.alive && updated.team === 'player') {
+        updated.health = Math.min(updated.maxHealth, updated.health + Math.floor(updated.healthRegen || 0));
+        updated.mana = Math.min(updated.maxMana, updated.mana + Math.floor(updated.manaRegen || 0) + 3);
+        updated.stamina = Math.min(updated.maxStamina, updated.stamina + 5);
+      }
 
-    if (enemy.health <= 0) {
-      set({
-        battleState: { ...state.battleState, enemy, phase: 'victory' },
-        battleLog: log.slice(-8),
-        playerHealth: newHealth,
-        playerBuffs: newBuffs,
-        playerDots: newDots,
-        cooldowns,
-      });
-      setTimeout(() => get().handleVictory(), 800);
+      if (updated.stunned) {
+        updated.stunned = false;
+      }
+
+      return updated;
+    });
+
+    const refreshedUnit = newUnits.find(u => u.id === nextUnit.id);
+    if (!refreshedUnit || !refreshedUnit.alive) {
+      set({ battleUnits: newUnits, battleCurrentTurn: nextIndex });
+      setTimeout(() => get().advanceTurn(), 50);
       return;
     }
 
-    if (enemy.stunned) {
-      enemy.stunned = false;
-      log.push(`💫 ${enemy.name} is stunned and cannot act!`);
+    const phase = refreshedUnit.isPlayerControlled ? 'player_turn' : 'ai_turn';
+
+    const firstAliveEnemy = newUnits.find(u => u.team === 'enemy' && u.alive && u.health > 0);
+    const currentTarget = state.selectedTargetId;
+    const targetStillAlive = newUnits.find(u => u.id === currentTarget && u.alive && u.health > 0);
+    const selTarget = targetStillAlive ? currentTarget : (firstAliveEnemy?.id || null);
+
+    set({
+      battleUnits: newUnits,
+      battleCurrentTurn: nextIndex,
+      battleState: { ...state.battleState, phase },
+      selectedTargetId: selTarget,
+      lastAction: null,
+    });
+  },
+
+  useAbility: (abilityId, targetIdOverride) => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || (bs.phase !== 'player_turn' && bs.phase !== 'ai_turn')) return;
+
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const units = state.battleUnits.map(u => ({ ...u, buffs: [...(u.buffs || [])], dots: [...(u.dots || [])], cooldowns: { ...u.cooldowns } }));
+    const attacker = units.find(u => u.id === currentUnitId);
+    if (!attacker || !attacker.alive) return;
+
+    if (attacker.stunned) {
+      const log = [...state.battleLog, `💫 ${attacker.name} is stunned and cannot act!`];
       set({
-        battleState: { ...state.battleState, enemy, phase: 'player_turn' },
-        battleLog: log.slice(-8),
-        playerHealth: newHealth,
-        playerBuffs: newBuffs,
-        playerDots: newDots,
-        cooldowns,
+        battleUnits: units,
+        battleLog: log.slice(-12),
+        battleState: { ...bs, phase: 'animating' },
+        lastAction: { attackerId: currentUnitId, type: 'stunned' },
       });
       return;
     }
 
-    const availableAbilities = enemy.abilities.filter(a => (a.currentCooldown || 0) <= 0);
-    const specialAbilities = availableAbilities.filter(a => a.cooldown && a.cooldown > 0);
-    let chosenAbility;
-    if (specialAbilities.length > 0 && Math.random() < 0.5) {
-      chosenAbility = specialAbilities[Math.floor(Math.random() * specialAbilities.length)];
-    } else {
-      chosenAbility = availableAbilities[0] || enemy.abilities[0];
-    }
+    const ability = attacker.abilities.find(a => a.id === abilityId);
+    if (!ability) return;
+    if ((attacker.cooldowns[abilityId] || 0) > 0) return;
+    if ((ability.manaCost || 0) > attacker.mana) return;
+    if ((ability.staminaCost || 0) > attacker.stamina) return;
 
-    enemy.abilities = enemy.abilities.map(a => {
-      if (a.id === chosenAbility.id) return { ...a, currentCooldown: a.cooldown || 0 };
-      return { ...a, currentCooldown: Math.max(0, (a.currentCooldown || 0) - 1) };
-    });
+    attacker.mana -= (ability.manaCost || 0);
+    attacker.stamina -= (ability.staminaCost || 0);
+    attacker.cooldowns[abilityId] = ability.cooldown || 0;
 
-    const stats = state.getStats();
-    let buffedDmgMult = 1;
-    (enemy.buffs || []).forEach(b => {
-      if (b.stat === 'damage' && b.multiplier) buffedDmgMult *= b.multiplier;
-    });
-    let playerDefMult = 1;
-    newBuffs.forEach(b => {
-      if (b.stat === 'evasion' && b.flat) { /* evasion handled below */ }
-    });
+    let log = [...state.battleLog];
+    let targetId = targetIdOverride || state.selectedTargetId;
+    let actionResult = {
+      attackerId: currentUnitId,
+      targetId,
+      abilityId,
+      abilityType: ability.type,
+      abilityName: ability.name,
+    };
 
-    if (chosenAbility.type === 'buff' && chosenAbility.effect) {
-      enemy.buffs = [...(enemy.buffs || []), { ...chosenAbility.effect, source: chosenAbility.name }];
-      log.push(`⬆️ ${enemy.name} uses ${chosenAbility.name}!`);
-      floats.push({ text: 'BUFF!', color: '#fbbf24', x: 60, y: 50 });
-    } else {
-      let evasionChance = stats.evasion;
-      newBuffs.forEach(b => { if (b.stat === 'evasion' && b.flat) evasionChance += b.flat; });
-      if (Math.random() * 100 < evasionChance) {
-        log.push(`💨 You dodge ${enemy.name}'s ${chosenAbility.name}!`);
-        floats.push({ text: 'DODGE!', color: '#6ee7b7', x: 20, y: 50 });
+    if (ability.type === 'physical' || ability.type === 'magical') {
+      const target = units.find(u => u.id === targetId);
+      if (!target || !target.alive) {
+        const fallback = units.find(u => u.team !== attacker.team && u.alive && u.health > 0);
+        if (!fallback) return;
+        targetId = fallback.id;
+        actionResult.targetId = targetId;
+      }
+      const actualTarget = units.find(u => u.id === targetId);
+      if (!actualTarget) return;
+
+      const result = calculateAttackDamage(attacker, actualTarget, ability);
+      actionResult = { ...actionResult, ...result };
+
+      if (result.evaded) {
+        log.push(`💨 ${actualTarget.name} dodges ${attacker.name}'s ${ability.name}!`);
+      } else if (result.blocked) {
+        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
+        log.push(`🛡️ ${actualTarget.name} blocks! ${ability.name} deals ${result.totalDmg} damage.`);
+      } else if (result.isCrit) {
+        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
+        log.push(`💥 CRIT! ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}!`);
       } else {
-        let rawDmg = Math.floor(enemy.damage * (chosenAbility.damage || 1) * buffedDmgMult);
-        let reduction = Math.floor(stats.defense * 0.3);
-        let finalDmg = Math.max(1, rawDmg - reduction);
-        if (stats.damageReduction > 0) {
-          finalDmg = Math.floor(finalDmg * (1 - stats.damageReduction / 100));
-        }
-        if (Math.random() * 100 < stats.block) {
-          finalDmg = Math.floor(finalDmg * 0.4);
-          log.push(`🛡️ You block! ${chosenAbility.name} deals only ${finalDmg} damage.`);
-          floats.push({ text: `BLOCK! -${finalDmg}`, color: '#3b82f6', x: 20, y: 50 });
-        } else {
-          log.push(`${chosenAbility.icon || '⚔️'} ${enemy.name} uses ${chosenAbility.name} for ${finalDmg} damage!`);
-          floats.push({ text: `-${finalDmg}`, color: '#ef4444', x: 20, y: 50 });
-        }
-        newHealth = Math.max(0, newHealth - finalDmg);
-        if (chosenAbility.drainPercent) {
-          const heal = Math.floor(finalDmg * chosenAbility.drainPercent);
-          enemy.health = Math.min(enemy.maxHealth, enemy.health + heal);
-          log.push(`💜 ${enemy.name} drains ${heal} HP!`);
-        }
+        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
+        log.push(`⚔️ ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}.`);
+      }
+
+      if (actualTarget.health <= 0) {
+        actualTarget.alive = false;
+        log.push(`☠️ ${actualTarget.name} has been slain!`);
+      }
+
+      if (ability.effect?.type === 'stun' && actualTarget.alive) {
+        actualTarget.stunned = true;
+        log.push(`💫 ${actualTarget.name} is stunned!`);
+      }
+      if (ability.effect?.type === 'dot' && actualTarget.alive) {
+        actualTarget.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name });
+        log.push(`🩸 ${actualTarget.name} is bleeding!`);
+      }
+      if (ability.effect?.stat && ability.effect?.multiplier && ability.effect.multiplier < 1 && actualTarget.alive) {
+        actualTarget.buffs.push({ ...ability.effect, source: ability.name });
+      }
+
+      if (attacker.drainHealth > 0 && result.totalDmg > 0) {
+        const heal = Math.floor(result.totalDmg * attacker.drainHealth / 100);
+        attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
+      }
+      if (ability.drainPercent && result.totalDmg > 0) {
+        const heal = Math.floor(result.totalDmg * ability.drainPercent);
+        attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
+        log.push(`💜 ${attacker.name} drains ${heal} HP!`);
+      }
+
+    } else if (ability.type === 'heal') {
+      let healTargetId = currentUnitId;
+      if (attacker.team === 'player') {
+        const lowAlly = units.filter(u => u.team === 'player' && u.alive).sort((a, b) => (a.health / a.maxHealth) - (b.health / b.maxHealth))[0];
+        if (lowAlly) healTargetId = lowAlly.id;
+      }
+      const healTarget = units.find(u => u.id === healTargetId) || attacker;
+      const healAmt = Math.floor(healTarget.maxHealth * ability.healPercent);
+      healTarget.health = Math.min(healTarget.maxHealth, healTarget.health + healAmt);
+      actionResult.targetId = healTarget.id;
+      actionResult.healAmt = healAmt;
+      log.push(`💚 ${attacker.name} heals ${healTarget.name} for ${healAmt}!`);
+
+    } else if (ability.type === 'heal_over_time') {
+      attacker.dots.push({ heal: true, healPercent: ability.healPercent, duration: ability.duration, source: ability.name });
+      actionResult.targetId = currentUnitId;
+      log.push(`💚 ${attacker.name} uses ${ability.name}!`);
+
+    } else if (ability.type === 'buff') {
+      if (ability.effect) {
+        attacker.buffs.push({ ...ability.effect, source: ability.name });
+        actionResult.targetId = currentUnitId;
+        log.push(`⬆️ ${attacker.name} uses ${ability.name}!`);
       }
     }
 
-    const newPhase = newHealth <= 0 ? 'defeat' : 'player_turn';
-
-    let regenHealth = newHealth;
-    let regenMana = state.playerMana;
-    let regenStamina = state.playerStamina;
-    if (newPhase === 'player_turn') {
-      regenHealth = Math.min(state.playerMaxHealth, newHealth + Math.floor(stats.healthRegen));
-      regenMana = Math.min(state.playerMaxMana, regenMana + Math.floor(stats.manaRegen) + 5);
-      regenStamina = Math.min(state.playerMaxStamina, regenStamina + 8);
+    if (attacker.id === 'player') {
+      set({
+        playerHealth: attacker.health,
+        playerMana: attacker.mana,
+        playerStamina: attacker.stamina,
+      });
     }
 
     set({
-      battleState: { ...state.battleState, enemy, phase: newPhase },
-      battleLog: log.slice(-8),
-      playerHealth: regenHealth,
-      playerMana: regenMana,
-      playerStamina: regenStamina,
-      playerBuffs: newBuffs,
-      playerDots: newDots,
-      cooldowns,
-      floatingTexts: floats,
+      battleUnits: units,
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating', turnCount: bs.turnCount + 1 },
+      lastAction: actionResult,
     });
+  },
 
-    if (newHealth <= 0) {
-      setTimeout(() => get().handleDefeat(), 1000);
+  processAIAction: () => {
+    const state = get();
+    if (!state.battleState || state.battleState.phase !== 'ai_turn') return;
+
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const unit = state.battleUnits.find(u => u.id === currentUnitId);
+    if (!unit || !unit.alive) {
+      get().advanceTurn();
+      return;
     }
+
+    if (unit.stunned) {
+      get().useAbility(unit.abilities[0]?.id);
+      return;
+    }
+
+    const action = chooseAIAction(unit, state.battleUnits);
+    if (!action) {
+      get().advanceTurn();
+      return;
+    }
+
+    get().useAbility(action.abilityId, action.targetId);
   },
 
   handleVictory: () => {
     const state = get();
-    const enemy = state.battleState.enemy;
-    const xpGained = enemy.xpReward;
-    const goldGained = enemy.goldReward;
-    let newXp = state.xp + xpGained;
+    const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
+    const totalXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
+    const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
+
+    let newXp = state.xp + totalXp;
     let newLevel = state.level;
     let newXpToNext = state.xpToNext;
     let newUnspent = state.unspentPoints;
@@ -478,8 +745,9 @@ const useGameStore = create((set, get) => ({
     let log = [...state.battleLog];
     let bossesDefeated = [...state.bossesDefeated];
 
-    if (state.battleState.isBoss && enemy.templateId) {
-      bossesDefeated.push(enemy.templateId);
+    if (state.battleState.isBoss) {
+      const bossUnit = enemyUnits.find(u => u.name.includes('★'));
+      if (bossUnit?.templateId) bossesDefeated.push(bossUnit.templateId);
     }
 
     while (newXp >= newXpToNext && newLevel < 20) {
@@ -492,20 +760,25 @@ const useGameStore = create((set, get) => ({
       log.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
     }
 
-    log.push(`✨ Victory! Gained ${xpGained} XP and ${goldGained} Gold.`);
+    log.push(`✨ Victory! Gained ${totalXp} XP and ${totalGold} Gold.`);
+
+    const playerUnit = state.battleUnits.find(u => u.id === 'player');
 
     set({
       battleState: { ...state.battleState, phase: 'victory' },
       xp: newXp,
       level: newLevel,
       xpToNext: newXpToNext,
-      gold: state.gold + goldGained,
+      gold: state.gold + totalGold,
       unspentPoints: newUnspent,
       skillPoints: newSkillPoints,
       victories: state.victories + 1,
       bossesDefeated,
-      battleLog: log.slice(-8),
+      battleLog: log.slice(-12),
       gameMessage: leveledUp ? `Level Up! You are now level ${newLevel}!` : null,
+      playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
+      playerMana: playerUnit ? playerUnit.mana : state.playerMana,
+      playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
     });
 
     if (leveledUp) {
@@ -526,27 +799,51 @@ const useGameStore = create((set, get) => ({
     set({
       battleState: { ...state.battleState, phase: 'defeat' },
       losses: state.losses + 1,
-      battleLog: [...state.battleLog, '💀 You have been defeated...'],
+      battleLog: [...state.battleLog, '💀 Your party has been defeated...'],
     });
   },
 
   returnToWorld: () => {
     const state = get();
     const stats = state.getStats();
+    const wasBattle = state.battleState !== null;
     const wasDefeat = state.battleState?.phase === 'defeat';
-    const recoveredHealth = wasDefeat
-      ? Math.floor(stats.health * 0.5)
-      : Math.floor(stats.health);
-    const goldLost = wasDefeat ? Math.floor(state.gold * 0.1) : 0;
+    const playerUnit = state.battleUnits.find(u => u.id === 'player');
+
+    let newHealth = state.playerHealth;
+    let newMana = state.playerMana;
+    let newStamina = state.playerStamina;
+    let goldLost = 0;
+    let msg = null;
+
+    if (wasBattle) {
+      if (wasDefeat) {
+        newHealth = Math.floor(stats.health * 0.5);
+        newMana = Math.floor(stats.mana);
+        newStamina = Math.floor(stats.stamina);
+        goldLost = Math.floor(state.gold * 0.1);
+        msg = `You retreat wounded. Lost ${goldLost} gold.`;
+      } else if (playerUnit) {
+        newHealth = playerUnit.health;
+        newMana = playerUnit.mana;
+        newStamina = playerUnit.stamina;
+      }
+    }
+
     set({
       screen: 'world',
       battleState: null,
+      battleUnits: [],
+      battleTurnOrder: [],
+      battleCurrentTurn: 0,
+      selectedTargetId: null,
+      lastAction: null,
       currentLocation: null,
-      playerHealth: recoveredHealth,
-      playerMana: Math.floor(stats.mana),
-      playerStamina: Math.floor(stats.stamina),
+      playerHealth: newHealth,
+      playerMana: newMana,
+      playerStamina: newStamina,
       gold: Math.max(0, state.gold - goldLost),
-      gameMessage: wasDefeat ? `You retreat wounded. Lost ${goldLost} gold.` : null,
+      gameMessage: msg,
       floatingTexts: [],
     });
   },
