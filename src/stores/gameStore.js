@@ -173,7 +173,8 @@ const useGameStore = create((set, get) => ({
   xpToNext: 50,
   gold: 0,
   attributePoints: { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 },
-  unspentPoints: 20,
+  baseAttributePoints: { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 },
+  unspentPoints: 7,
   skillPoints: 0,
   unlockedSkills: {},
   currentLocation: null,
@@ -209,8 +210,9 @@ const useGameStore = create((set, get) => ({
   selectRace: (raceId) => set({ playerRace: raceId }),
 
   selectClass: (classId) => {
+    const zero = { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 };
     if (!classId) {
-      set({ playerClass: null, attributePoints: { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 }, unspentPoints: 20 });
+      set({ playerClass: null, attributePoints: { ...zero }, baseAttributePoints: { ...zero }, unspentPoints: 7 });
       return;
     }
     const state = get();
@@ -223,11 +225,11 @@ const useGameStore = create((set, get) => ({
         if (attrs[attr] !== undefined) attrs[attr] += val;
       });
     }
-    const totalSpent = Object.values(attrs).reduce((a, b) => a + b, 0);
     set({
       playerClass: classId,
-      attributePoints: attrs,
-      unspentPoints: 20 - totalSpent,
+      attributePoints: { ...attrs },
+      baseAttributePoints: { ...attrs },
+      unspentPoints: 7,
     });
   },
 
@@ -242,7 +244,8 @@ const useGameStore = create((set, get) => ({
 
   deallocatePoint: (attr) => {
     const state = get();
-    if (state.attributePoints[attr] <= 0) return;
+    const floor = (state.baseAttributePoints && state.baseAttributePoints[attr]) || 0;
+    if (state.attributePoints[attr] <= floor) return;
     set({
       attributePoints: { ...state.attributePoints, [attr]: state.attributePoints[attr] - 1 },
       unspentPoints: state.unspentPoints + 1,

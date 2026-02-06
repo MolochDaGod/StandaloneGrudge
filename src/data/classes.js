@@ -5,7 +5,7 @@ export const classDefinitions = {
     color: '#ef4444',
     description: 'A fearless frontline fighter specializing in raw power and defense.',
     lore: 'Forged in the crucible of the Grudge Wars, Warriors are the backbone of any warband. Their strength and endurance are unmatched on the battlefield.',
-    startingAttributes: { Strength: 8, Vitality: 5, Endurance: 4, Dexterity: 2, Agility: 1, Intellect: 0, Wisdom: 0, Tactics: 0 },
+    startingAttributes: { Strength: 5, Vitality: 3, Endurance: 2, Dexterity: 1, Agility: 1, Intellect: 0, Wisdom: 0, Tactics: 0 },
     abilities: [
       { id: 'slash', name: 'Slash', icon: '⚔️', description: 'A powerful sword strike', type: 'physical', damage: 1.2, manaCost: 0, staminaCost: 10, cooldown: 0, target: 'enemy' },
       { id: 'power_strike', name: 'Power Strike', icon: '💥', description: 'A devastating blow dealing 2x damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 2, target: 'enemy' },
@@ -19,7 +19,7 @@ export const classDefinitions = {
     color: '#8b5cf6',
     description: 'Master of arcane magic and divine healing arts.',
     lore: 'Drawing power from ancient ley lines and forgotten gods, Mage Priests wield destructive magic alongside sacred healing — a balance few can master.',
-    startingAttributes: { Strength: 0, Vitality: 2, Endurance: 1, Dexterity: 1, Agility: 0, Intellect: 8, Wisdom: 6, Tactics: 2 },
+    startingAttributes: { Strength: 0, Vitality: 1, Endurance: 1, Dexterity: 0, Agility: 0, Intellect: 5, Wisdom: 4, Tactics: 1 },
     abilities: [
       { id: 'arcane_bolt', name: 'Arcane Bolt', icon: '✨', description: 'A burst of arcane energy', type: 'magical', damage: 1.4, manaCost: 15, staminaCost: 0, cooldown: 0, target: 'enemy' },
       { id: 'fireball', name: 'Fireball', icon: '🔥', description: 'Hurls a ball of fire dealing massive damage', type: 'magical', damage: 2.5, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy' },
@@ -33,7 +33,7 @@ export const classDefinitions = {
     color: '#d97706',
     description: 'A savage beast-rider with devastating dual attacks.',
     lore: 'Bonded to their great worg companion since birth, these fierce warriors attack as one — a blur of fangs, claws, and steel.',
-    startingAttributes: { Strength: 5, Vitality: 3, Endurance: 2, Dexterity: 3, Agility: 4, Intellect: 0, Wisdom: 1, Tactics: 2 },
+    startingAttributes: { Strength: 3, Vitality: 2, Endurance: 1, Dexterity: 2, Agility: 3, Intellect: 0, Wisdom: 0, Tactics: 1 },
     abilities: [
       { id: 'savage_bite', name: 'Savage Bite', icon: '🐺', description: 'Your worg lunges with a vicious bite', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 12, cooldown: 0, target: 'enemy' },
       { id: 'feral_charge', name: 'Feral Charge', icon: '💨', description: 'Charge the enemy dealing heavy damage', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
@@ -47,7 +47,7 @@ export const classDefinitions = {
     color: '#22c55e',
     description: 'A deadly marksman with precise long-range attacks.',
     lore: 'Silent and patient, Rangers strike from the shadows with lethal precision. Their arrows find gaps in even the thickest armor.',
-    startingAttributes: { Strength: 2, Vitality: 2, Endurance: 1, Dexterity: 7, Agility: 5, Intellect: 1, Wisdom: 0, Tactics: 2 },
+    startingAttributes: { Strength: 1, Vitality: 1, Endurance: 1, Dexterity: 4, Agility: 3, Intellect: 1, Wisdom: 0, Tactics: 1 },
     abilities: [
       { id: 'quick_shot', name: 'Quick Shot', icon: '🏹', description: 'A fast, precise arrow', type: 'physical', damage: 1.1, manaCost: 0, staminaCost: 8, cooldown: 0, target: 'enemy' },
       { id: 'aimed_shot', name: 'Aimed Shot', icon: '🎯', description: 'A carefully aimed shot that always crits', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 20, cooldown: 2, target: 'enemy', guaranteedCrit: true },

@@ -12,7 +12,7 @@ export default function CharacterCreate() {
   const {
     setScreen, setPlayerName, selectRace, selectClass,
     playerClass, playerRace, playerName,
-    attributePoints, unspentPoints, allocatePoint, deallocatePoint, startGame,
+    attributePoints, baseAttributePoints, unspentPoints, allocatePoint, deallocatePoint, startGame,
   } = useGameStore();
 
   const [step, setStep] = useState(1);
@@ -295,45 +295,66 @@ export default function CharacterCreate() {
           </div>
         )}
 
-        {step === 4 && playerClass && (
+        {step === 4 && playerClass && (() => {
+          const cls = classDefinitions[playerClass];
+          const raceDef = playerRace ? raceDefinitions[playerRace] : null;
+          return (
           <div style={{ animation: 'fadeIn 0.4s ease' }}>
             <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16,
-              flexWrap: 'wrap', gap: 10
+              display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20,
+              background: 'linear-gradient(135deg, rgba(14,22,48,0.9), rgba(20,26,43,0.7))',
+              border: `2px solid ${cls.color}40`, borderRadius: 14, padding: 18,
+              flexWrap: 'wrap', justifyContent: 'center'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 10,
-                  background: `${classDefinitions[playerClass].color}20`,
-                  border: `2px solid ${classDefinitions[playerClass].color}40`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
-                }}>
-                  <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={0.9} speed={150} />
-                </div>
-                <div>
-                  <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.1rem' }}>
-                    Allocate Attributes
-                  </h2>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
-                    {playerName} the {playerRace ? raceDefinitions[playerRace]?.name + ' ' : ''}{classDefinitions[playerClass].name}
-                  </div>
-                </div>
-              </div>
               <div style={{
-                background: unspentPoints === 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                border: `2px solid ${unspentPoints === 0 ? 'var(--success)' : 'var(--danger)'}`,
-                borderRadius: 10, padding: '6px 16px', textAlign: 'center'
+                width: 120, height: 120, borderRadius: 14,
+                background: `radial-gradient(circle, ${cls.color}15, transparent)`,
+                border: `2px solid ${cls.color}30`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
               }}>
-                <div style={{ color: 'var(--muted)', fontSize: '0.65rem' }}>Unspent</div>
+                <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={2.2} speed={150} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180, textAlign: 'center' }}>
+                <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>
+                  {playerName}
+                </h2>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                  {raceDef && (
+                    <span style={{
+                      background: `${raceDef.color}20`, border: `1px solid ${raceDef.color}40`,
+                      padding: '3px 10px', borderRadius: 20, fontSize: '0.75rem', color: raceDef.color
+                    }}>{raceDef.icon} {raceDef.name}</span>
+                  )}
+                  <span style={{
+                    background: `${cls.color}20`, border: `1px solid ${cls.color}40`,
+                    padding: '3px 10px', borderRadius: 20, fontSize: '0.75rem', color: cls.color
+                  }}>{cls.icon} {cls.name}</span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: 6 }}>
+                  Base stats: 20 from Race + Class
+                </div>
                 <div style={{
-                  fontSize: '1.3rem', fontWeight: 700,
-                  color: unspentPoints === 0 ? 'var(--success)' : 'var(--danger)'
-                }}>{unspentPoints}</div>
+                  background: unspentPoints === 0 ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                  border: `2px solid ${unspentPoints === 0 ? 'var(--success)' : 'var(--gold)'}`,
+                  borderRadius: 10, padding: '6px 16px', display: 'inline-block'
+                }}>
+                  <span style={{
+                    fontSize: '1.1rem', fontWeight: 700,
+                    color: unspentPoints === 0 ? 'var(--success)' : 'var(--gold)'
+                  }}>{unspentPoints}</span>
+                  <span style={{ color: 'var(--muted)', fontSize: '0.7rem', marginLeft: 6 }}>points to allocate</span>
+                </div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
-              {Object.entries(attributeDefinitions).map(([name, def]) => (
+              {Object.entries(attributeDefinitions).map(([name, def]) => {
+                const base = (baseAttributePoints && baseAttributePoints[name]) || 0;
+                const current = attributePoints[name];
+                const added = current - base;
+                const canRemove = current > base;
+                return (
                 <div key={name} style={{
                   background: 'rgba(20,26,43,0.8)', border: '1px solid var(--border)',
                   borderRadius: 10, padding: 12, borderLeft: `4px solid ${def.color}`
@@ -342,36 +363,44 @@ export default function CharacterCreate() {
                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
                       {def.icon} {name}
                     </span>
-                    <span style={{ color: 'var(--accent)', fontWeight: 700, fontFamily: 'monospace', fontSize: '1.05rem' }}>
-                      {attributePoints[name]}
+                    <span style={{ fontFamily: 'monospace', fontSize: '1.05rem' }}>
+                      <span style={{ color: 'var(--muted)' }}>{base}</span>
+                      {added > 0 && <span style={{ color: 'var(--accent)', fontWeight: 700 }}> +{added}</span>}
+                      <span style={{ color: 'var(--text)', fontWeight: 700, marginLeft: 6 }}>= {current}</span>
                     </span>
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.7rem', marginBottom: 6 }}>{def.description}</div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <button onClick={() => deallocatePoint(name)} style={{
                       width: 30, height: 30, borderRadius: '50%',
-                      background: attributePoints[name] > 0 ? 'var(--danger)' : 'var(--border)',
+                      background: canRemove ? 'var(--danger)' : 'var(--border)',
                       border: 'none', color: 'white', fontWeight: 700, fontSize: '1rem',
-                      cursor: attributePoints[name] > 0 ? 'pointer' : 'not-allowed'
+                      cursor: canRemove ? 'pointer' : 'not-allowed', opacity: canRemove ? 1 : 0.4
                     }}>-</button>
                     <div style={{
-                      flex: 1, height: 8, background: 'var(--border)', borderRadius: 4, overflow: 'hidden'
+                      flex: 1, height: 8, background: 'var(--border)', borderRadius: 4, overflow: 'hidden', position: 'relative'
                     }}>
                       <div style={{
-                        width: `${(attributePoints[name] / 40) * 100}%`, height: '100%',
+                        width: `${(base / 20) * 100}%`, height: '100%',
+                        background: `${def.color}50`,
+                        borderRadius: 4, position: 'absolute'
+                      }} />
+                      <div style={{
+                        width: `${(current / 20) * 100}%`, height: '100%',
                         background: `linear-gradient(90deg, ${def.color}, ${def.color}80)`,
-                        borderRadius: 4, transition: 'width 0.2s'
+                        borderRadius: 4, transition: 'width 0.2s', position: 'relative'
                       }} />
                     </div>
                     <button onClick={() => allocatePoint(name)} style={{
                       width: 30, height: 30, borderRadius: '50%',
                       background: unspentPoints > 0 ? 'var(--success)' : 'var(--border)',
                       border: 'none', color: 'white', fontWeight: 700, fontSize: '1rem',
-                      cursor: unspentPoints > 0 ? 'pointer' : 'not-allowed'
+                      cursor: unspentPoints > 0 ? 'pointer' : 'not-allowed', opacity: unspentPoints > 0 ? 1 : 0.4
                     }}>+</button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 24, display: 'flex', justifyContent: 'center', gap: 12 }}>
@@ -388,7 +417,8 @@ export default function CharacterCreate() {
               }}>Begin Adventure</button>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
