@@ -431,84 +431,83 @@ export default function BattleScreen() {
         ))}
       </div>
 
-      {isPlayerTurn && !isVictory && !isDefeat && (
+      {!isVictory && !isDefeat && (
         <div style={{
-          flex: '0 0 auto', background: 'rgba(14,22,48,0.95)',
-          borderTop: '2px solid var(--accent)', padding: '10px 12px', zIndex: 2,
+          flex: '0 0 100px',
+          background: isPlayerTurn ? 'rgba(14,22,48,0.95)' : 'rgba(30,10,10,0.95)',
+          borderTop: `2px solid ${isPlayerTurn ? 'var(--accent)' : 'var(--danger)'}`,
+          padding: '10px 12px', zIndex: 2,
           backdropFilter: 'blur(4px)',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          transition: 'background 0.3s, border-color 0.3s',
         }}>
-          <div style={{
-            textAlign: 'center', marginBottom: 6, color: 'var(--muted)',
-            fontSize: '0.7rem', letterSpacing: 1
-          }}>
-            Choose an action <span style={{ color: 'var(--accent)' }}>(1-{cls?.abilities.length})</span>
-          </div>
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {cls?.abilities.map((ability, idx) => {
-              const onCd = (cooldowns[ability.id] || 0) > 0;
-              const noMana = ability.manaCost > playerMana;
-              const noStamina = ability.staminaCost > playerStamina;
-              const disabled = onCd || noMana || noStamina;
-              return (
-                <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
-                  title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''} ${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}`}
-                  style={{
-                    background: disabled ? 'rgba(42,49,80,0.3)' : 'linear-gradient(135deg, rgba(42,49,80,0.8), rgba(42,49,80,0.5))',
-                    border: `2px solid ${disabled ? 'var(--border)' : 'var(--accent)'}`,
-                    borderRadius: 10, padding: '8px 12px', minWidth: 110,
-                    color: disabled ? 'var(--muted)' : 'var(--text)',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
-                    position: 'relative'
-                  }}
-                  onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}}
-                  onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'none'; }}}
-                >
-                  <div style={{
-                    position: 'absolute', top: -6, left: -6,
-                    background: disabled ? '#444' : 'var(--accent)', borderRadius: '50%',
-                    width: 20, height: 20, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700,
-                    color: disabled ? '#888' : '#0b1020', border: '2px solid rgba(0,0,0,0.3)'
-                  }}>
-                    {idx + 1}
-                  </div>
-                  <div style={{ fontSize: '1.1rem', marginBottom: 1 }}>{ability.icon}</div>
-                  <div style={{ fontWeight: 600, fontSize: '0.75rem' }}>{ability.name}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginTop: 1 }}>
-                    {ability.manaCost > 0 && <span style={{ color: '#3b82f6' }}>{ability.manaCost} MP </span>}
-                    {ability.staminaCost > 0 && <span style={{ color: '#f59e0b' }}>{ability.staminaCost} SP</span>}
-                  </div>
-                  {onCd && (
-                    <div style={{
-                      position: 'absolute', top: 4, right: 4,
-                      background: 'var(--danger)', borderRadius: '50%',
-                      width: 18, height: 18, display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700
-                    }}>
-                      {cooldowns[ability.id]}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {phase === 'enemy_turn' && !isVictory && !isDefeat && (
-        <div style={{
-          flex: '0 0 auto', background: 'rgba(30,10,10,0.95)',
-          borderTop: '2px solid var(--danger)', padding: '14px 12px',
-          textAlign: 'center', zIndex: 2,
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            color: 'var(--danger)', fontSize: '0.9rem', fontWeight: 600,
-            animation: 'pulse 1s infinite'
-          }}>
-            {enemy.name} is attacking...
-          </div>
+          {isPlayerTurn ? (
+            <>
+              <div style={{
+                textAlign: 'center', marginBottom: 6, color: 'var(--muted)',
+                fontSize: '0.7rem', letterSpacing: 1
+              }}>
+                Choose an action <span style={{ color: 'var(--accent)' }}>(1-{cls?.abilities.length})</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {cls?.abilities.map((ability, idx) => {
+                  const onCd = (cooldowns[ability.id] || 0) > 0;
+                  const noMana = ability.manaCost > playerMana;
+                  const noStamina = ability.staminaCost > playerStamina;
+                  const disabled = onCd || noMana || noStamina;
+                  return (
+                    <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
+                      title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''} ${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}`}
+                      style={{
+                        background: disabled ? 'rgba(42,49,80,0.3)' : 'linear-gradient(135deg, rgba(42,49,80,0.8), rgba(42,49,80,0.5))',
+                        border: `2px solid ${disabled ? 'var(--border)' : 'var(--accent)'}`,
+                        borderRadius: 10, padding: '8px 12px', minWidth: 110,
+                        color: disabled ? 'var(--muted)' : 'var(--text)',
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
+                        position: 'relative'
+                      }}
+                      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}}
+                      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'none'; }}}
+                    >
+                      <div style={{
+                        position: 'absolute', top: -6, left: -6,
+                        background: disabled ? '#444' : 'var(--accent)', borderRadius: '50%',
+                        width: 20, height: 20, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700,
+                        color: disabled ? '#888' : '#0b1020', border: '2px solid rgba(0,0,0,0.3)'
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <div style={{ fontSize: '1.1rem', marginBottom: 1 }}>{ability.icon}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.75rem' }}>{ability.name}</div>
+                      <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginTop: 1 }}>
+                        {ability.manaCost > 0 && <span style={{ color: '#3b82f6' }}>{ability.manaCost} MP </span>}
+                        {ability.staminaCost > 0 && <span style={{ color: '#f59e0b' }}>{ability.staminaCost} SP</span>}
+                      </div>
+                      {onCd && (
+                        <div style={{
+                          position: 'absolute', top: 4, right: 4,
+                          background: 'var(--danger)', borderRadius: '50%',
+                          width: 18, height: 18, display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700
+                        }}>
+                          {cooldowns[ability.id]}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div style={{
+              color: 'var(--danger)', fontSize: '0.9rem', fontWeight: 600,
+              animation: 'pulse 1s infinite', textAlign: 'center'
+            }}>
+              {enemy.name} is attacking...
+            </div>
+          )}
         </div>
       )}
     </div>
