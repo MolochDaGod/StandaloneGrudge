@@ -100,6 +100,10 @@ public/
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
 ## Recent Changes
+- Added video backgrounds: bg-clear.mp4 (title), bg-blur.mp4 (gameplay screens), loading.mp4 (loading screen)
+- VideoBackground component crossfades between clear/blurred based on current screen
+- LoadingScreen component shows on app startup (2.2s) with colorful video + title
+- All screen backgrounds made semi-transparent (rgba 0.75 alpha) so video shows through
 - Added 6 playable races: Human, Orc, Elf, Undead, Barbarian, Dwarf (6 × 4 = 24 combinations)
 - Rewrote character creation to 4-step flow: Name → Race → Class → Attributes
 - Race attribute bonuses stack with class starting attributes
