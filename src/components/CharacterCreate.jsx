@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { attributeDefinitions } from '../data/attributes';
+import SpriteAnimation from './SpriteAnimation';
+import { getPlayerSprite } from '../data/spriteMap';
 
 export default function CharacterCreate() {
   const { setScreen, setPlayerName, selectClass, playerClass, playerName, attributePoints, unspentPoints, allocatePoint, deallocatePoint, startGame } = useGameStore();
@@ -85,7 +87,9 @@ export default function CharacterCreate() {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = cls.color; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 8px 30px ${cls.color}30`; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = `${cls.color}40`; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  <div style={{ fontSize: '3rem', marginBottom: 10 }}>{cls.icon}</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+                    <SpriteAnimation spriteData={getPlayerSprite(id)} animation="idle" scale={2} speed={150} />
+                  </div>
                   <h3 className="font-cinzel" style={{ color: cls.color, marginBottom: 8 }}>{cls.name}</h3>
                   <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: 12 }}>{cls.description}</p>
                   <p style={{ color: 'var(--text)', fontSize: '0.75rem', fontStyle: 'italic', opacity: 0.7 }}>{cls.lore}</p>

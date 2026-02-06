@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
+import SpriteAnimation from './SpriteAnimation';
+import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 
 function HPBar({ current, max, color, height = 12, label }) {
   const pct = Math.max(0, (current / max) * 100);
@@ -37,21 +39,82 @@ export default function BattleScreen() {
   const [shakePlayer, setShakePlayer] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
   const [displayFloats, setDisplayFloats] = useState([]);
+  const [playerAnim, setPlayerAnim] = useState('idle');
+  const [enemyAnim, setEnemyAnim] = useState('idle');
 
   const cls = classDefinitions[playerClass];
   const enemy = battleState?.enemy;
   const phase = battleState?.phase;
+
+  const playerSprite = getPlayerSprite(playerClass);
+  const enemySprite = enemy ? getEnemySprite(enemy.templateId) : null;
 
   useEffect(() => {
     if (floatingTexts.length > 0) {
       setDisplayFloats(floatingTexts.map((f, i) => ({ ...f, id: Date.now() + i })));
       const isPlayerHit = floatingTexts.some(f => f.x < 40);
       const isEnemyHit = floatingTexts.some(f => f.x > 40);
-      if (isPlayerHit) { setShakePlayer(true); setTimeout(() => setShakePlayer(false), 300); }
-      if (isEnemyHit) { setShakeEnemy(true); setTimeout(() => setShakeEnemy(false), 300); }
+      if (isPlayerHit) {
+        setShakePlayer(true);
+        setPlayerAnim('hurt');
+        setTimeout(() => { setShakePlayer(false); setPlayerAnim('idle'); }, 500);
+      }
+      if (isEnemyHit) {
+        setShakeEnemy(true);
+        setEnemyAnim('hurt');
+        setTimeout(() => { setShakeEnemy(false); setEnemyAnim('idle'); }, 500);
+      }
       setTimeout(() => setDisplayFloats([]), 1500);
     }
   }, [floatingTexts]);
+
+  useEffect(() => {
+    if (phase === 'enemy_turn' && enemy && enemy.health > 0) {
+      setEnemyAnim('attack1');
+      setTimeout(() => setEnemyAnim('idle'), 800);
+    }
+  }, [phase]);
+
+  useEffect(() => {
+    if (enemy && enemy.health <= 0) {
+      setEnemyAnim('death');
+    }
+  }, [enemy?.health]);
+
+  useEffect(() => {
+    if (phase === 'defeat') {
+      setPlayerAnim('death');
+    }
+  }, [phase]);
+
+  const handleAbility = useCallback((abilityId) => {
+    if (phase !== 'player_turn') return;
+    setPlayerAnim('attack1');
+    setTimeout(() => setPlayerAnim('idle'), 600);
+    useAbility(abilityId);
+  }, [phase, useAbility]);
+
+  useEffect(() => {
+    if (phase !== 'player_turn') return;
+    const abilities = cls?.abilities;
+    if (!abilities) return;
+
+    const handleKey = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= abilities.length) {
+        const ability = abilities[num - 1];
+        const onCd = (cooldowns[ability.id] || 0) > 0;
+        const noMana = ability.manaCost > playerMana;
+        const noStamina = ability.staminaCost > playerStamina;
+        if (!onCd && !noMana && !noStamina) {
+          handleAbility(ability.id);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [phase, cls, cooldowns, playerMana, playerStamina, handleAbility]);
 
   if (!battleState || !enemy) return null;
 
@@ -99,14 +162,17 @@ export default function BattleScreen() {
             transition: 'all 0.3s'
           }}>
             <div style={{
-              width: 100, height: 100, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${cls?.color}40, ${cls?.color}15)`,
-              border: `3px solid ${cls?.color}`,
+              margin: '0 auto 10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '2.5rem', margin: '0 auto 10px',
-              boxShadow: isPlayerTurn ? `0 0 20px ${cls?.color}40` : 'none'
+              filter: isPlayerTurn ? `drop-shadow(0 0 12px ${cls?.color}80)` : 'none',
             }}>
-              {cls?.icon}
+              <SpriteAnimation
+                spriteData={playerSprite}
+                animation={playerAnim}
+                scale={2.5}
+                speed={150}
+                loop={playerAnim === 'idle' || playerAnim === 'walk'}
+              />
             </div>
             <div className="font-cinzel" style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{playerName}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Lv.{level} {cls?.name}</div>
@@ -139,17 +205,21 @@ export default function BattleScreen() {
 
           <div style={{
             textAlign: 'center', animation: shakeEnemy ? 'shake 0.3s ease' : 'none',
-            transition: 'all 0.3s', opacity: enemy.health <= 0 ? 0.3 : 1
+            transition: 'all 0.3s', opacity: enemy.health <= 0 ? 0.4 : 1
           }}>
             <div style={{
-              width: 100, height: 100, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${enemy.color}40, ${enemy.color}15)`,
-              border: `3px solid ${enemy.color}`,
+              margin: '0 auto 10px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '2.5rem', margin: '0 auto 10px',
-              boxShadow: isBoss ? `0 0 30px ${enemy.color}50` : 'none'
+              filter: isBoss ? `drop-shadow(0 0 16px ${enemy.color}80)` : 'none',
             }}>
-              {enemy.icon}
+              <SpriteAnimation
+                spriteData={enemySprite}
+                animation={enemyAnim}
+                scale={2.5}
+                flip={true}
+                speed={150}
+                loop={enemyAnim === 'idle'}
+              />
             </div>
             <div className="font-cinzel" style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{enemy.name}</div>
             <div style={{ width: 160, marginTop: 8 }}>
@@ -210,6 +280,11 @@ export default function BattleScreen() {
                 +{enemy.xpReward} XP | +{enemy.goldReward} Gold
               </div>
             )}
+            {isDefeat && (
+              <div style={{ color: 'var(--muted)', marginTop: 10, fontSize: '0.85rem' }}>
+                You will recover at 50% HP and lose 10% gold.
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'center' }}>
               {isVictory && currentLocation && (
                 <button onClick={() => startBattle(currentLocation)} style={{
@@ -221,11 +296,13 @@ export default function BattleScreen() {
                 </button>
               )}
               <button onClick={returnToWorld} style={{
-                background: 'var(--border)', border: 'none', borderRadius: 10,
-                padding: '12px 24px', color: 'var(--text)', fontWeight: 600,
-                cursor: 'pointer', fontSize: '0.9rem'
+                background: isDefeat ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : 'var(--border)',
+                border: isDefeat ? '2px solid var(--danger)' : 'none',
+                borderRadius: 10, padding: '12px 24px',
+                color: isDefeat ? 'var(--danger)' : 'var(--text)',
+                fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem'
               }}>
-                Return to World
+                {isDefeat ? 'Retreat & Recover' : 'Return to World'}
               </button>
             </div>
           </div>
@@ -233,7 +310,7 @@ export default function BattleScreen() {
       </div>
 
       <div style={{
-        flex: '0 0 120px', background: 'rgba(0,0,0,0.6)',
+        flex: '0 0 100px', background: 'rgba(0,0,0,0.6)',
         borderTop: '2px solid var(--border)', padding: '8px 16px',
         overflow: 'auto', fontSize: '0.8rem'
       }}>
@@ -247,19 +324,41 @@ export default function BattleScreen() {
         ))}
       </div>
 
+      {phase === 'enemy_turn' && !isVictory && !isDefeat && (
+        <div style={{
+          flex: '0 0 auto', background: 'linear-gradient(180deg, rgba(30,10,10,0.95), rgba(20,10,10,0.98))',
+          borderTop: '2px solid var(--danger)', padding: '16px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            color: 'var(--danger)', fontSize: '1rem', fontWeight: 600,
+            animation: 'pulse 1s infinite', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', gap: 8
+          }}>
+            {enemy.name} is attacking...
+          </div>
+        </div>
+      )}
+
       {isPlayerTurn && !isVictory && !isDefeat && (
         <div style={{
           flex: '0 0 auto', background: 'linear-gradient(180deg, rgba(20,26,43,0.95), rgba(14,22,48,0.98))',
           borderTop: '2px solid var(--accent)', padding: '12px 16px'
         }}>
+          <div style={{
+            textAlign: 'center', marginBottom: 8, color: 'var(--accent)',
+            fontSize: '0.8rem', fontWeight: 600, letterSpacing: 1
+          }}>
+            YOUR TURN - Choose an action <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(or press 1-{cls?.abilities.length})</span>
+          </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {cls?.abilities.map(ability => {
+            {cls?.abilities.map((ability, idx) => {
               const onCd = (cooldowns[ability.id] || 0) > 0;
               const noMana = ability.manaCost > playerMana;
               const noStamina = ability.staminaCost > playerStamina;
               const disabled = onCd || noMana || noStamina;
               return (
-                <button key={ability.id} onClick={() => !disabled && useAbility(ability.id)}
+                <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
                   title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''} ${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}`}
                   style={{
                     background: disabled ? 'rgba(42,49,80,0.3)' : 'linear-gradient(135deg, rgba(42,49,80,0.8), rgba(42,49,80,0.5))',
@@ -273,6 +372,15 @@ export default function BattleScreen() {
                   onMouseEnter={e => { if (!disabled) e.currentTarget.style.borderColor = 'var(--gold)'; }}
                   onMouseLeave={e => { if (!disabled) e.currentTarget.style.borderColor = 'var(--accent)'; }}
                 >
+                  <div style={{
+                    position: 'absolute', top: -8, left: -8,
+                    background: disabled ? '#444' : 'var(--accent)', borderRadius: '50%',
+                    width: 22, height: 22, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700,
+                    color: disabled ? '#888' : '#0b1020', border: '2px solid rgba(0,0,0,0.3)'
+                  }}>
+                    {idx + 1}
+                  </div>
                   <div style={{ fontSize: '1.3rem', marginBottom: 2 }}>{ability.icon}</div>
                   <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{ability.name}</div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>

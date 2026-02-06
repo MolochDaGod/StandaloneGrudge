@@ -187,9 +187,10 @@ export function calculateStats(attributePoints, level = 0) {
   Object.entries(attributePoints).forEach(([attr, points]) => {
     const def = attributeDefinitions[attr];
     if (def && points > 0) {
+      const effective = calculateEffectivePoints(points);
       Object.entries(def.gains).forEach(([key, gain]) => {
         if (stats[key] !== undefined) {
-          stats[key] += gain.value * points;
+          stats[key] += gain.value * effective;
         }
       });
     }

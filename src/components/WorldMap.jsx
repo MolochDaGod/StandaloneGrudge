@@ -2,6 +2,8 @@ import React from 'react';
 import useGameStore from '../stores/gameStore';
 import { locations } from '../data/enemies';
 import { classDefinitions } from '../data/classes';
+import SpriteAnimation from './SpriteAnimation';
+import { getPlayerSprite } from '../data/spriteMap';
 
 export default function WorldMap() {
   const { level, xp, xpToNext, gold, playerName, playerClass, playerHealth, playerMaxHealth,
@@ -34,7 +36,7 @@ export default function WorldMap() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: '1.5rem' }}>{cls?.icon}</span>
+          <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={1.2} speed={150} />
           <div>
             <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem' }}>{playerName}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Lv.{level} {cls?.name}</div>

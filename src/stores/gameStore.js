@@ -533,14 +533,20 @@ const useGameStore = create((set, get) => ({
   returnToWorld: () => {
     const state = get();
     const stats = state.getStats();
+    const wasDefeat = state.battleState?.phase === 'defeat';
+    const recoveredHealth = wasDefeat
+      ? Math.floor(stats.health * 0.5)
+      : Math.floor(stats.health);
+    const goldLost = wasDefeat ? Math.floor(state.gold * 0.1) : 0;
     set({
       screen: 'world',
       battleState: null,
       currentLocation: null,
-      playerHealth: Math.floor(stats.health),
+      playerHealth: recoveredHealth,
       playerMana: Math.floor(stats.mana),
       playerStamina: Math.floor(stats.stamina),
-      gameMessage: null,
+      gold: Math.max(0, state.gold - goldLost),
+      gameMessage: wasDefeat ? `You retreat wounded. Lost ${goldLost} gold.` : null,
       floatingTexts: [],
     });
   },

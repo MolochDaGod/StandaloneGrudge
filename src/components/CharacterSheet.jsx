@@ -2,6 +2,8 @@ import React from 'react';
 import useGameStore from '../stores/gameStore';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
+import SpriteAnimation from './SpriteAnimation';
+import { getPlayerSprite } from '../data/spriteMap';
 
 export default function CharacterSheet() {
   const {
@@ -59,7 +61,9 @@ export default function CharacterSheet() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div style={{ background: 'rgba(20,26,43,0.8)', border: '1px solid var(--border)', borderRadius: 14, padding: 20 }}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: '3rem', marginBottom: 8 }}>{cls?.icon}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={2} speed={150} />
+            </div>
             <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{playerName}</h2>
             <div style={{ color: cls?.color, fontSize: '0.9rem' }}>Level {level} {cls?.name}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 4 }}>
