@@ -69,7 +69,7 @@ export default function TitleScreen() {
             </button>
 
             <div style={{ color: 'var(--muted)', fontSize: '0.75rem', marginTop: 20, opacity: 0.5 }}>
-              Turn-Based RPG | 8 Attributes | 4 Classes | Skill Trees
+              Turn-Based RPG | 6 Races | 4 Classes | 24 Warlords
             </div>
           </div>
         )}

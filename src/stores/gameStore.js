@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { calculateStats, TOTAL_POINTS_AT_LEVEL, POINTS_PER_LEVEL, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
+import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 
@@ -165,6 +166,7 @@ function getFormationPositions(count, side) {
 const useGameStore = create((set, get) => ({
   screen: 'title',
   playerName: 'Hero',
+  playerRace: null,
   playerClass: null,
   level: 1,
   xp: 0,
@@ -204,10 +206,23 @@ const useGameStore = create((set, get) => ({
 
   setPlayerName: (name) => set({ playerName: name }),
 
+  selectRace: (raceId) => set({ playerRace: raceId }),
+
   selectClass: (classId) => {
+    if (!classId) {
+      set({ playerClass: null, attributePoints: { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 }, unspentPoints: 20 });
+      return;
+    }
+    const state = get();
     const classDef = classDefinitions[classId];
     if (!classDef) return;
+    const raceDef = state.playerRace ? raceDefinitions[state.playerRace] : null;
     const attrs = { ...classDef.startingAttributes };
+    if (raceDef) {
+      Object.entries(raceDef.bonuses).forEach(([attr, val]) => {
+        if (attrs[attr] !== undefined) attrs[attr] += val;
+      });
+    }
     const totalSpent = Object.values(attrs).reduce((a, b) => a + b, 0);
     set({
       playerClass: classId,

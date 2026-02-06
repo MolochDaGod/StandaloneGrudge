@@ -2,13 +2,15 @@ import React from 'react';
 import useGameStore from '../stores/gameStore';
 import { locations } from '../data/enemies';
 import { classDefinitions } from '../data/classes';
+import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 
 export default function WorldMap() {
-  const { level, xp, xpToNext, gold, playerName, playerClass, playerHealth, playerMaxHealth,
+  const { level, xp, xpToNext, gold, playerName, playerClass, playerRace, playerHealth, playerMaxHealth,
     playerMana, playerMaxMana, setScreen, enterLocation, getUnlockedLocations, restAtInn,
     victories, unspentPoints, skillPoints } = useGameStore();
+  const raceDef = playerRace ? raceDefinitions[playerRace] : null;
 
   const unlockedLocs = getUnlockedLocations();
   const cls = classDefinitions[playerClass];
@@ -39,7 +41,7 @@ export default function WorldMap() {
           <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={1.2} speed={150} />
           <div>
             <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem' }}>{playerName}</div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Lv.{level} {cls?.name}</div>
+            <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Lv.{level} {raceDef ? raceDef.name + ' ' : ''}{cls?.name}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>

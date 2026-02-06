@@ -2,17 +2,19 @@ import React from 'react';
 import useGameStore from '../stores/gameStore';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
+import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 
 export default function CharacterSheet() {
   const {
-    setScreen, playerName, playerClass, level, xp, xpToNext, gold,
+    setScreen, playerName, playerClass, playerRace, level, xp, xpToNext, gold,
     attributePoints, unspentPoints, allocatePoint, deallocatePoint,
     getStats, victories, losses, playerHealth, playerMaxHealth
   } = useGameStore();
 
   const cls = classDefinitions[playerClass];
+  const raceDef = playerRace ? raceDefinitions[playerRace] : null;
   const stats = getStats();
   const cp = calculateCombatPower(stats);
 
@@ -65,7 +67,7 @@ export default function CharacterSheet() {
               <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={2} speed={150} />
             </div>
             <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{playerName}</h2>
-            <div style={{ color: cls?.color, fontSize: '0.9rem' }}>Level {level} {cls?.name}</div>
+            <div style={{ color: cls?.color, fontSize: '0.9rem' }}>Level {level} {raceDef ? raceDef.name + ' ' : ''}{cls?.name}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 4 }}>
               XP: {xp}/{xpToNext} | Gold: {gold}
             </div>
