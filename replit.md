@@ -26,7 +26,7 @@ src/
     spriteMap.js        - Sprite sheet mappings for classes and enemies
   components/
     TitleScreen.jsx     - Title screen with New Game button
-    CharacterCreate.jsx - 3-step character creation with sprite previews
+    CharacterCreate.jsx - 2-step character creation (Name+Faction, Attributes)
     WorldMap.jsx        - World map with locations, inn, navigation
     LocationView.jsx    - Location detail with fight/boss buttons
     BattleScreen.jsx    - Turn-based battle UI with sprites & keyboard hotkeys
@@ -34,6 +34,7 @@ src/
     SkillTreeView.jsx   - Skill tree UI
     SpriteAnimation.jsx - Reusable sprite sheet animation component
 public/
+  backgrounds/         - Battle background images per location (8 PNGs)
   sprites/             - Organized sprite sheets per character
     knight/            - Warrior class sprites
     priest/            - Mage Priest class sprites
@@ -70,11 +71,15 @@ public/
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
 ## Recent Changes
+- Redesigned CharacterCreate to 2-step flow: Name + Faction selection (step 1), Attribute allocation (step 2)
+- Added 8 battle background images for each location (Verdant Plains through Void Throne)
+- Fixed BattleScreen layout stability: player/enemy cards in fixed containers, no more layout shift during attacks
+- Replaced shake animation with flash/glow visual effects on cards
+- Added battle log with auto-scroll and header label
+- Turn indicator moved to header bar for cleaner UX
+- Added backdrop blur effects throughout battle UI
 - Added sprite-based animations replacing emoji visuals throughout the game
 - Added MMO-style keyboard hotkeys (1-5) for abilities in battle
 - Created SpriteAnimation component and spriteMap.js for sprite management
-- Updated BattleScreen, CharacterCreate, CharacterSheet, WorldMap with sprite visuals
 - Fixed diminishing returns (calculateEffectivePoints) being applied in stat calculations
-- Added enemy turn visual indicator in battles
 - Added defeat penalty system (50% HP recovery, 10% gold loss)
-- Fixed vite config with allowedHosts: true
