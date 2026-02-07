@@ -19,7 +19,7 @@ export const classSpriteMap = {
     death: { src: '/sprites/priest/death.png', frames: 4 },
     walk: { src: '/sprites/priest/walk.png', frames: 8 },
   },
-  worg: {
+  worge: {
     folder: 'orc-rider',
     idle: { src: '/sprites/orc-rider/idle.png', frames: 6 },
     attack1: { src: '/sprites/orc-rider/attack1.png', frames: 8 },
@@ -44,7 +44,7 @@ export const classSpriteMap = {
 const spriteSheets = {
   knight: classSpriteMap.warrior,
   priest: classSpriteMap.mage,
-  'orc-rider': classSpriteMap.worg,
+  'orc-rider': classSpriteMap.worge,
   archer: classSpriteMap.ranger,
   orc: {
     folder: 'orc',
@@ -124,37 +124,37 @@ export const raceClassSpriteMap = {
   human: {
     warrior: spriteSheets.knight,
     mage: spriteSheets.wizard,
-    worg: spriteSheets.priest,
+    worge: spriteSheets.priest,
     ranger: spriteSheets.archer,
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
     mage: spriteSheets['orc-rider'],
-    worg: spriteSheets.orc,
+    worge: spriteSheets.orc,
     ranger: spriteSheets.archer,
   },
   elf: {
     warrior: spriteSheets.swordsman,
     mage: spriteSheets.wizard,
-    worg: spriteSheets.priest,
+    worge: spriteSheets.priest,
     ranger: spriteSheets.archer,
   },
   undead: {
     warrior: spriteSheets['armored-skeleton'],
     mage: spriteSheets.wizard,
-    worg: spriteSheets.skeleton,
+    worge: spriteSheets.skeleton,
     ranger: spriteSheets.archer,
   },
   barbarian: {
     warrior: spriteSheets['knight-templar'],
     mage: spriteSheets.priest,
-    worg: spriteSheets.swordsman,
+    worge: spriteSheets.swordsman,
     ranger: spriteSheets.archer,
   },
   dwarf: {
     warrior: spriteSheets.knight,
     mage: spriteSheets.priest,
-    worg: spriteSheets['knight-templar'],
+    worge: spriteSheets['knight-templar'],
     ranger: spriteSheets.archer,
   },
 };

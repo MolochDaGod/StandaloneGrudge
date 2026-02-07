@@ -27,16 +27,16 @@ export const classDefinitions = {
       { id: 'ice_storm', name: 'Ice Storm', icon: '❄️', description: 'Freezes the enemy, reducing their speed', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { stat: 'attackSpeed', multiplier: 0.5, duration: 2 } },
     ]
   },
-  worg: {
-    name: 'Worg Rider',
+  worge: {
+    name: 'Worge',
     icon: '🐺',
     color: '#d97706',
     description: 'A savage beast-rider with devastating dual attacks.',
-    lore: 'Bonded to their great worg companion since birth, these fierce warriors attack as one — a blur of fangs, claws, and steel.',
+    lore: 'Bonded to their great worge companion since birth, these fierce warriors attack as one — a blur of fangs, claws, and steel.',
     startingAttributes: { Strength: 3, Vitality: 2, Endurance: 1, Dexterity: 2, Agility: 3, Intellect: 0, Wisdom: 0, Tactics: 1 },
     abilities: [
       { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', percent: 25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
-      { id: 'savage_bite', name: 'Savage Bite', icon: '🐺', description: 'Your worg lunges with a vicious bite', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 12, cooldown: 0, target: 'enemy' },
+      { id: 'savage_bite', name: 'Savage Bite', icon: '🐺', description: 'Your worge lunges with a vicious bite', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 12, cooldown: 0, target: 'enemy' },
       { id: 'feral_charge', name: 'Feral Charge', icon: '💨', description: 'Charge the enemy dealing heavy damage', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
       { id: 'howl', name: 'Blood Howl', icon: '🌙', description: 'Howl to regenerate health over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
       { id: 'rend', name: 'Rend', icon: '🩸', description: 'Tear the enemy, causing bleeding for 3 turns', type: 'physical', damage: 0.6, manaCost: 0, staminaCost: 18, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },

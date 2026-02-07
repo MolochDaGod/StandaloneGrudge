@@ -91,15 +91,15 @@ export const skillTrees = {
       }
     ]
   },
-  worg: {
-    className: 'Worg Rider',
+  worge: {
+    className: 'Worge',
     color: '#d97706',
     tiers: [
       {
         name: 'Level 1 - Beast Bond',
         requiredLevel: 1,
         skills: [
-          { id: 'wr_sharp_fangs', name: 'Sharp Fangs', icon: '🦷', description: 'Worg bite damage up', effect: '+15% Bite Damage', maxPoints: 3, bonuses: { damage: 3 } },
+          { id: 'wr_sharp_fangs', name: 'Sharp Fangs', icon: '🦷', description: 'Worge bite damage up', effect: '+15% Bite Damage', maxPoints: 3, bonuses: { damage: 3 } },
           { id: 'wr_thick_hide', name: 'Thick Hide', icon: '🐾', description: 'Increased resilience', effect: '+10% Defense', maxPoints: 3, bonuses: { defense: 4, health: 10 } }
         ]
       },

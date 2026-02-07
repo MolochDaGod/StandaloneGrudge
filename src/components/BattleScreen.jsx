@@ -35,7 +35,7 @@ function MiniBar({ current, max, color, height = 5, width = 60 }) {
 
 function getUnitSprite(unit) {
   if (unit.team === 'player' && unit.classId) {
-    if (unit.classId === 'worg' && unit.bearForm) {
+    if (unit.classId === 'worge' && unit.bearForm) {
       return getWorgTransformSprite(unit.raceId);
     }
     return getPlayerSprite(unit.classId, unit.raceId);
