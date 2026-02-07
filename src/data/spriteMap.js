@@ -41,14 +41,26 @@ export const classSpriteMap = {
   },
 };
 
-export const enemySpriteMap = {
-  goblin: {
-    folder: 'slime',
-    idle: { src: '/sprites/slime/idle.png', frames: 6 },
-    attack1: { src: '/sprites/slime/attack1.png', frames: 6 },
-    attack2: { src: '/sprites/slime/attack2.png', frames: 12 },
-    hurt: { src: '/sprites/slime/hurt.png', frames: 4 },
-    death: { src: '/sprites/slime/death.png', frames: 4 },
+const spriteSheets = {
+  knight: classSpriteMap.warrior,
+  priest: classSpriteMap.mage,
+  'orc-rider': classSpriteMap.worg,
+  archer: classSpriteMap.ranger,
+  orc: {
+    folder: 'orc',
+    idle: { src: '/sprites/orc/idle.png', frames: 6 },
+    attack1: { src: '/sprites/orc/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/orc/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/orc/hurt.png', frames: 4 },
+    death: { src: '/sprites/orc/death.png', frames: 4 },
+  },
+  'elite-orc': {
+    folder: 'elite-orc',
+    idle: { src: '/sprites/elite-orc/idle.png', frames: 6 },
+    attack1: { src: '/sprites/elite-orc/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/elite-orc/attack2.png', frames: 11 },
+    hurt: { src: '/sprites/elite-orc/hurt.png', frames: 4 },
+    death: { src: '/sprites/elite-orc/death.png', frames: 4 },
   },
   skeleton: {
     folder: 'skeleton',
@@ -58,39 +70,7 @@ export const enemySpriteMap = {
     hurt: { src: '/sprites/skeleton/hurt.png', frames: 4 },
     death: { src: '/sprites/skeleton/death.png', frames: 4 },
   },
-  wolf: {
-    folder: 'werewolf',
-    idle: { src: '/sprites/werewolf/idle.png', frames: 6 },
-    attack1: { src: '/sprites/werewolf/attack1.png', frames: 9 },
-    attack2: { src: '/sprites/werewolf/attack2.png', frames: 13 },
-    hurt: { src: '/sprites/werewolf/hurt.png', frames: 4 },
-    death: { src: '/sprites/werewolf/death.png', frames: 4 },
-  },
-  dark_mage: {
-    folder: 'wizard',
-    idle: { src: '/sprites/wizard/idle.png', frames: 6 },
-    attack1: { src: '/sprites/wizard/attack1.png', frames: 6 },
-    attack2: { src: '/sprites/wizard/attack2.png', frames: 6 },
-    hurt: { src: '/sprites/wizard/hurt.png', frames: 4 },
-    death: { src: '/sprites/wizard/death.png', frames: 4 },
-  },
-  orc: {
-    folder: 'orc',
-    idle: { src: '/sprites/orc/idle.png', frames: 6 },
-    attack1: { src: '/sprites/orc/attack1.png', frames: 6 },
-    attack2: { src: '/sprites/orc/attack2.png', frames: 6 },
-    hurt: { src: '/sprites/orc/hurt.png', frames: 4 },
-    death: { src: '/sprites/orc/death.png', frames: 4 },
-  },
-  dragon_whelp: {
-    folder: 'werebear',
-    idle: { src: '/sprites/werebear/idle.png', frames: 6 },
-    attack1: { src: '/sprites/werebear/attack1.png', frames: 9 },
-    attack2: { src: '/sprites/werebear/attack2.png', frames: 13 },
-    hurt: { src: '/sprites/werebear/hurt.png', frames: 4 },
-    death: { src: '/sprites/werebear/death.png', frames: 4 },
-  },
-  lich: {
+  'armored-skeleton': {
     folder: 'armored-skeleton',
     idle: { src: '/sprites/armored-skeleton/idle.png', frames: 6 },
     attack1: { src: '/sprites/armored-skeleton/attack1.png', frames: 8 },
@@ -98,15 +78,15 @@ export const enemySpriteMap = {
     hurt: { src: '/sprites/armored-skeleton/hurt.png', frames: 4 },
     death: { src: '/sprites/armored-skeleton/death.png', frames: 4 },
   },
-  demon_lord: {
-    folder: 'knight-templar',
-    idle: { src: '/sprites/knight-templar/idle.png', frames: 6 },
-    attack1: { src: '/sprites/knight-templar/attack1.png', frames: 7 },
-    attack2: { src: '/sprites/knight-templar/attack2.png', frames: 8 },
-    hurt: { src: '/sprites/knight-templar/hurt.png', frames: 4 },
-    death: { src: '/sprites/knight-templar/death.png', frames: 4 },
+  wizard: {
+    folder: 'wizard',
+    idle: { src: '/sprites/wizard/idle.png', frames: 6 },
+    attack1: { src: '/sprites/wizard/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/wizard/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/wizard/hurt.png', frames: 4 },
+    death: { src: '/sprites/wizard/death.png', frames: 4 },
   },
-  void_king: {
+  swordsman: {
     folder: 'swordsman',
     idle: { src: '/sprites/swordsman/idle.png', frames: 6 },
     attack1: { src: '/sprites/swordsman/attack1.png', frames: 7 },
@@ -114,108 +94,90 @@ export const enemySpriteMap = {
     hurt: { src: '/sprites/swordsman/hurt.png', frames: 5 },
     death: { src: '/sprites/swordsman/death.png', frames: 4 },
   },
+  werewolf: {
+    folder: 'werewolf',
+    idle: { src: '/sprites/werewolf/idle.png', frames: 6 },
+    attack1: { src: '/sprites/werewolf/attack1.png', frames: 9 },
+    attack2: { src: '/sprites/werewolf/attack2.png', frames: 13 },
+    hurt: { src: '/sprites/werewolf/hurt.png', frames: 4 },
+    death: { src: '/sprites/werewolf/death.png', frames: 4 },
+  },
+  werebear: {
+    folder: 'werebear',
+    idle: { src: '/sprites/werebear/idle.png', frames: 6 },
+    attack1: { src: '/sprites/werebear/attack1.png', frames: 9 },
+    attack2: { src: '/sprites/werebear/attack2.png', frames: 13 },
+    hurt: { src: '/sprites/werebear/hurt.png', frames: 4 },
+    death: { src: '/sprites/werebear/death.png', frames: 4 },
+  },
+  'knight-templar': {
+    folder: 'knight-templar',
+    idle: { src: '/sprites/knight-templar/idle.png', frames: 6 },
+    attack1: { src: '/sprites/knight-templar/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/knight-templar/attack2.png', frames: 8 },
+    hurt: { src: '/sprites/knight-templar/hurt.png', frames: 4 },
+    death: { src: '/sprites/knight-templar/death.png', frames: 4 },
+  },
 };
 
 export const raceClassSpriteMap = {
   human: {
-    warrior: classSpriteMap.warrior,
-    mage: classSpriteMap.mage,
-    worg: classSpriteMap.worg,
-    ranger: classSpriteMap.ranger,
+    warrior: spriteSheets.knight,
+    mage: spriteSheets.wizard,
+    worg: spriteSheets.priest,
+    ranger: spriteSheets.archer,
   },
   orc: {
-    warrior: {
-      folder: 'orc',
-      idle: { src: '/sprites/orc/idle.png', frames: 6 },
-      attack1: { src: '/sprites/orc/attack1.png', frames: 6 },
-      attack2: { src: '/sprites/orc/attack2.png', frames: 6 },
-      hurt: { src: '/sprites/orc/hurt.png', frames: 4 },
-      death: { src: '/sprites/orc/death.png', frames: 4 },
-    },
-    mage: classSpriteMap.mage,
-    worg: classSpriteMap.worg,
-    ranger: {
-      folder: 'elite-orc',
-      idle: { src: '/sprites/elite-orc/idle.png', frames: 6 },
-      attack1: { src: '/sprites/elite-orc/attack1.png', frames: 7 },
-      attack2: { src: '/sprites/elite-orc/attack2.png', frames: 11 },
-      hurt: { src: '/sprites/elite-orc/hurt.png', frames: 4 },
-      death: { src: '/sprites/elite-orc/death.png', frames: 4 },
-    },
+    warrior: spriteSheets['elite-orc'],
+    mage: spriteSheets['orc-rider'],
+    worg: spriteSheets.orc,
+    ranger: spriteSheets.archer,
   },
   elf: {
-    warrior: classSpriteMap.warrior,
-    mage: {
-      folder: 'wizard',
-      idle: { src: '/sprites/wizard/idle.png', frames: 6 },
-      attack1: { src: '/sprites/wizard/attack1.png', frames: 6 },
-      attack2: { src: '/sprites/wizard/attack2.png', frames: 6 },
-      hurt: { src: '/sprites/wizard/hurt.png', frames: 4 },
-      death: { src: '/sprites/wizard/death.png', frames: 4 },
-    },
-    worg: classSpriteMap.worg,
-    ranger: classSpriteMap.ranger,
+    warrior: spriteSheets.swordsman,
+    mage: spriteSheets.wizard,
+    worg: spriteSheets.priest,
+    ranger: spriteSheets.archer,
   },
   undead: {
-    warrior: {
-      folder: 'skeleton',
-      idle: { src: '/sprites/skeleton/idle.png', frames: 6 },
-      attack1: { src: '/sprites/skeleton/attack1.png', frames: 6 },
-      attack2: { src: '/sprites/skeleton/attack2.png', frames: 7 },
-      hurt: { src: '/sprites/skeleton/hurt.png', frames: 4 },
-      death: { src: '/sprites/skeleton/death.png', frames: 4 },
-    },
-    mage: {
-      folder: 'armored-skeleton',
-      idle: { src: '/sprites/armored-skeleton/idle.png', frames: 6 },
-      attack1: { src: '/sprites/armored-skeleton/attack1.png', frames: 8 },
-      attack2: { src: '/sprites/armored-skeleton/attack2.png', frames: 9 },
-      hurt: { src: '/sprites/armored-skeleton/hurt.png', frames: 4 },
-      death: { src: '/sprites/armored-skeleton/death.png', frames: 4 },
-    },
-    worg: classSpriteMap.worg,
-    ranger: classSpriteMap.ranger,
+    warrior: spriteSheets['armored-skeleton'],
+    mage: spriteSheets.wizard,
+    worg: spriteSheets.skeleton,
+    ranger: spriteSheets.archer,
   },
   barbarian: {
-    warrior: {
-      folder: 'swordsman',
-      idle: { src: '/sprites/swordsman/idle.png', frames: 6 },
-      attack1: { src: '/sprites/swordsman/attack1.png', frames: 7 },
-      attack2: { src: '/sprites/swordsman/attack2.png', frames: 15 },
-      hurt: { src: '/sprites/swordsman/hurt.png', frames: 5 },
-      death: { src: '/sprites/swordsman/death.png', frames: 4 },
-    },
-    mage: classSpriteMap.mage,
-    worg: {
-      folder: 'werewolf',
-      idle: { src: '/sprites/werewolf/idle.png', frames: 6 },
-      attack1: { src: '/sprites/werewolf/attack1.png', frames: 9 },
-      attack2: { src: '/sprites/werewolf/attack2.png', frames: 13 },
-      hurt: { src: '/sprites/werewolf/hurt.png', frames: 4 },
-      death: { src: '/sprites/werewolf/death.png', frames: 4 },
-    },
-    ranger: {
-      folder: 'werebear',
-      idle: { src: '/sprites/werebear/idle.png', frames: 6 },
-      attack1: { src: '/sprites/werebear/attack1.png', frames: 9 },
-      attack2: { src: '/sprites/werebear/attack2.png', frames: 13 },
-      hurt: { src: '/sprites/werebear/hurt.png', frames: 4 },
-      death: { src: '/sprites/werebear/death.png', frames: 4 },
-    },
+    warrior: spriteSheets['knight-templar'],
+    mage: spriteSheets.priest,
+    worg: spriteSheets.swordsman,
+    ranger: spriteSheets.archer,
   },
   dwarf: {
-    warrior: {
-      folder: 'knight-templar',
-      idle: { src: '/sprites/knight-templar/idle.png', frames: 6 },
-      attack1: { src: '/sprites/knight-templar/attack1.png', frames: 7 },
-      attack2: { src: '/sprites/knight-templar/attack2.png', frames: 8 },
-      hurt: { src: '/sprites/knight-templar/hurt.png', frames: 4 },
-      death: { src: '/sprites/knight-templar/death.png', frames: 4 },
-    },
-    mage: classSpriteMap.mage,
-    worg: classSpriteMap.worg,
-    ranger: classSpriteMap.ranger,
+    warrior: spriteSheets.knight,
+    mage: spriteSheets.priest,
+    worg: spriteSheets['knight-templar'],
+    ranger: spriteSheets.archer,
   },
+};
+
+export const worgTransformSprite = {
+  human: spriteSheets.werewolf,
+  orc: spriteSheets.werebear,
+  elf: spriteSheets.werewolf,
+  undead: spriteSheets.werewolf,
+  barbarian: spriteSheets.werebear,
+  dwarf: spriteSheets.werebear,
+};
+
+export const enemySpriteMap = {
+  goblin: spriteSheets.orc,
+  skeleton: spriteSheets.skeleton,
+  wolf: spriteSheets.werewolf,
+  dark_mage: spriteSheets.wizard,
+  orc: spriteSheets.orc,
+  dragon_whelp: spriteSheets.werebear,
+  lich: spriteSheets['armored-skeleton'],
+  demon_lord: spriteSheets['knight-templar'],
+  void_king: spriteSheets.swordsman,
 };
 
 export function getRaceClassSprite(raceId, classId) {
@@ -227,6 +189,10 @@ export function getRaceClassSprite(raceId, classId) {
 export function getPlayerSprite(classId, raceId) {
   if (raceId) return getRaceClassSprite(raceId, classId);
   return classSpriteMap[classId] || classSpriteMap.warrior;
+}
+
+export function getWorgTransformSprite(raceId) {
+  return worgTransformSprite[raceId] || spriteSheets.werewolf;
 }
 
 export function getEnemySprite(templateId) {

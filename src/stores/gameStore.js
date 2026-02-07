@@ -43,7 +43,9 @@ function createHeroBattleUnit(hero) {
     team: 'player',
     isPlayerControlled: true,
     classId: hero.classId,
+    raceId: hero.raceId,
     templateId: null,
+    bearForm: false,
     health: Math.min(hero.currentHealth, Math.floor(stats.health)),
     maxHealth: Math.floor(stats.health),
     mana: Math.min(hero.currentMana, Math.floor(stats.mana)),
@@ -132,7 +134,8 @@ function chooseAIAction(unit, allUnits) {
   const availableAbilities = unit.abilities.filter(a =>
     (unit.cooldowns[a.id] || 0) <= 0 &&
     (a.manaCost || 0) <= unit.mana &&
-    (a.staminaCost || 0) <= unit.stamina
+    (a.staminaCost || 0) <= unit.stamina &&
+    !(a.isBearForm && unit.bearForm)
   );
   if (availableAbilities.length === 0) return null;
 
@@ -853,7 +856,15 @@ const useGameStore = create((set, get) => ({
       log.push(`💚 ${attacker.name} uses ${ability.name}!`);
 
     } else if (ability.type === 'buff') {
-      if (ability.effect) {
+      if (ability.isBearForm) {
+        attacker.bearForm = true;
+        attacker.buffs.push({ ...ability.effect, source: ability.name });
+        if (ability.defenseBoost) {
+          attacker.buffs.push({ ...ability.defenseBoost, source: ability.name });
+        }
+        actionResult.targetId = currentUnitId;
+        log.push(`🐻 ${attacker.name} transforms into beast form!`);
+      } else if (ability.effect) {
         attacker.buffs.push({ ...ability.effect, source: ability.name });
         actionResult.targetId = currentUnitId;
         log.push(`⬆️ ${attacker.name} uses ${ability.name}!`);

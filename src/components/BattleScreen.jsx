@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, classSpriteMap } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
@@ -34,13 +34,16 @@ function MiniBar({ current, max, color, height = 5, width = 60 }) {
 }
 
 function getUnitSprite(unit) {
-  if (unit.classId && classSpriteMap[unit.classId]) {
-    return classSpriteMap[unit.classId];
+  if (unit.team === 'player' && unit.classId) {
+    if (unit.classId === 'worg' && unit.bearForm) {
+      return getWorgTransformSprite(unit.raceId);
+    }
+    return getPlayerSprite(unit.classId, unit.raceId);
   }
   if (unit.templateId) {
     return getEnemySprite(unit.templateId);
   }
-  return classSpriteMap.warrior;
+  return getPlayerSprite('warrior');
 }
 
 function isRangedUnit(unit) {
@@ -598,7 +601,8 @@ export default function BattleScreen() {
                   const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
                   const noMana = (ability.manaCost || 0) > currentUnit.mana;
                   const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
-                  const disabled = onCd || noMana || noStamina;
+                  const alreadyTransformed = ability.isBearForm && currentUnit.bearForm;
+                  const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
                       title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''} ${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}`}
