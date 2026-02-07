@@ -149,7 +149,7 @@ export const raceClassSpriteMap = {
   },
   undead: {
     warrior: spriteSheets['armored-skeleton'],
-    mage: spriteSheets.wizard,
+    mage: { ...spriteSheets.wizard, filter: 'invert(1) hue-rotate(180deg)' },
     worge: spriteSheets.skeleton,
     ranger: spriteSheets.archer,
   },
