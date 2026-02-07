@@ -155,7 +155,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['elite-orc'],
     mage: spriteSheets['orc-rider'],
     worge: spriteSheets.orc,
-    ranger: spriteSheets['armored-orc'],
+    ranger: { ...spriteSheets['elite-orc'], filter: 'brightness(0.8) saturate(1.5) hue-rotate(-15deg)' },
   },
   elf: {
     warrior: { ...spriteSheets.swordsman, filter: 'brightness(1.3) sepia(0.3) saturate(0.8) hue-rotate(10deg)' },
