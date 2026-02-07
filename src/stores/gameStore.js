@@ -5,34 +5,37 @@ import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 
-const allyNamePool = {
-  warrior: ['Sir Aldric', 'Dame Brenna', 'Rolf', 'Greta'],
-  mage: ['Theron', 'Lyra', 'Seraphina', 'Ewan'],
-  worg: ['Grukk', 'Snarl', 'Ragnar', 'Ursa'],
-  ranger: ['Fenn', 'Elara', 'Hawk', 'Willow'],
-};
-
-function createAllyUnit(classId, playerLevel) {
-  const cls = classDefinitions[classId];
+function createHeroBattleUnit(hero) {
+  const cls = classDefinitions[hero.classId];
   if (!cls) return null;
-  const names = allyNamePool[classId] || ['Ally'];
-  const name = names[Math.floor(Math.random() * names.length)];
-  const s = 0.55;
-  const lvl = 1 + playerLevel * 0.12;
+  const stats = calculateStats(hero.attributePoints, hero.level);
   return {
-    id: `ally_${classId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-    name, team: 'player', isPlayerControlled: false,
-    classId, templateId: null,
-    health: Math.floor(180 * s * lvl), maxHealth: Math.floor(180 * s * lvl),
-    mana: 80, maxMana: 80, stamina: 80, maxStamina: 80,
-    damage: Math.floor(16 * s * lvl), defense: Math.floor(10 * s * lvl),
-    speed: 10 + Math.floor(Math.random() * 10),
-    critChance: 6, evasion: 4, block: 3,
-    damageReduction: 0, drainHealth: 0, healthRegen: 2, manaRegen: 3,
-    abilities: cls.abilities.slice(0, 3),
+    id: hero.id,
+    name: hero.name,
+    team: 'player',
+    isPlayerControlled: true,
+    classId: hero.classId,
+    templateId: null,
+    health: Math.min(hero.currentHealth, Math.floor(stats.health)),
+    maxHealth: Math.floor(stats.health),
+    mana: Math.min(hero.currentMana, Math.floor(stats.mana)),
+    maxMana: Math.floor(stats.mana),
+    stamina: Math.min(hero.currentStamina, Math.floor(stats.stamina)),
+    maxStamina: Math.floor(stats.stamina),
+    damage: stats.damage,
+    defense: stats.defense,
+    speed: 20 + Math.floor((hero.attributePoints.Agility || 0) * 0.3),
+    critChance: stats.criticalChance || 5,
+    evasion: stats.evasion || 0,
+    block: stats.block || 0,
+    damageReduction: stats.damageReduction || 0,
+    drainHealth: stats.drainHealth || 0,
+    healthRegen: stats.healthRegen || 0,
+    manaRegen: stats.manaRegen || 0,
+    abilities: cls.abilities,
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
-    level: Math.max(1, playerLevel - 1),
+    level: hero.level,
   };
 }
 
@@ -148,15 +151,15 @@ function chooseAIAction(unit, allUnits) {
 function getFormationPositions(count, side) {
   const p = {
     player: {
-      1: [{x:20,y:50}],
-      2: [{x:16,y:35},{x:22,y:65}],
-      3: [{x:13,y:25},{x:22,y:50},{x:13,y:75}],
+      1: [{x:18,y:68}],
+      2: [{x:14,y:58},{x:22,y:78}],
+      3: [{x:10,y:50},{x:20,y:68},{x:12,y:82}],
     },
     enemy: {
-      1: [{x:80,y:50}],
-      2: [{x:78,y:35},{x:84,y:65}],
-      3: [{x:75,y:25},{x:84,y:50},{x:75,y:75}],
-      4: [{x:72,y:18},{x:84,y:36},{x:72,y:56},{x:84,y:76}],
+      1: [{x:82,y:68}],
+      2: [{x:78,y:58},{x:86,y:78}],
+      3: [{x:76,y:50},{x:86,y:68},{x:78,y:82}],
+      4: [{x:72,y:45},{x:84,y:58},{x:74,y:72},{x:86,y:82}],
     }
   };
   const maxCount = side === 'player' ? 3 : 4;
@@ -202,6 +205,11 @@ const useGameStore = create((set, get) => ({
   losses: 0,
   bossesDefeated: [],
   inventory: [],
+  heroRoster: [],
+  activeHeroIds: [],
+  heroCreationPending: false,
+  maxHeroSlots: 1,
+  locationsCleared: [],
 
   setScreen: (screen) => set({ screen }),
 
@@ -307,6 +315,21 @@ const useGameStore = create((set, get) => ({
     const state = get();
     if (!state.playerClass) return;
     const stats = state.getStats();
+    const primaryHero = {
+      id: 'player',
+      name: state.playerName,
+      raceId: state.playerRace,
+      classId: state.playerClass,
+      level: state.level,
+      attributePoints: { ...state.attributePoints },
+      baseAttributePoints: { ...state.baseAttributePoints },
+      currentHealth: Math.floor(stats.health),
+      currentMana: Math.floor(stats.mana),
+      currentStamina: Math.floor(stats.stamina),
+      unspentPoints: 0,
+      skillPoints: 0,
+      unlockedSkills: {},
+    };
     set({
       screen: 'world',
       playerHealth: Math.floor(stats.health),
@@ -316,7 +339,36 @@ const useGameStore = create((set, get) => ({
       playerStamina: Math.floor(stats.stamina),
       playerMaxStamina: Math.floor(stats.stamina),
       skillPoints: 1,
+      heroRoster: [primaryHero],
+      activeHeroIds: ['player'],
+      maxHeroSlots: 1,
     });
+  },
+
+  addHeroToRoster: (hero) => {
+    const state = get();
+    set({
+      heroRoster: [...state.heroRoster, hero],
+      activeHeroIds: state.activeHeroIds.length < 3
+        ? [...state.activeHeroIds, hero.id]
+        : state.activeHeroIds,
+      heroCreationPending: false,
+      screen: 'world',
+    });
+  },
+
+  setActiveHeroes: (heroIds) => {
+    set({ activeHeroIds: heroIds.slice(0, 3) });
+  },
+
+  getAvailableHeroSlots: () => {
+    const state = get();
+    return state.maxHeroSlots - state.heroRoster.length;
+  },
+
+  canCreateHero: () => {
+    const state = get();
+    return state.heroRoster.length < state.maxHeroSlots;
   },
 
   refreshPlayerStats: () => {
@@ -337,46 +389,25 @@ const useGameStore = create((set, get) => ({
     const loc = locations.find(l => l.id === locationId);
     if (!loc) return;
 
-    const stats = state.getStats();
-    const cls = classDefinitions[state.playerClass];
-
-    const playerUnit = {
-      id: 'player',
-      name: state.playerName,
-      team: 'player',
-      isPlayerControlled: true,
-      classId: state.playerClass,
-      templateId: null,
-      health: Math.min(state.playerHealth, Math.floor(stats.health)),
-      maxHealth: Math.floor(stats.health),
-      mana: Math.min(state.playerMana, Math.floor(stats.mana)),
-      maxMana: Math.floor(stats.mana),
-      stamina: Math.min(state.playerStamina, Math.floor(stats.stamina)),
-      maxStamina: Math.floor(stats.stamina),
-      damage: stats.damage,
-      defense: stats.defense,
-      speed: 20 + Math.floor((state.attributePoints.Agility || 0) * 0.3),
-      critChance: stats.criticalChance || 5,
-      evasion: stats.evasion || 0,
-      block: stats.block || 0,
-      damageReduction: stats.damageReduction || 0,
-      drainHealth: stats.drainHealth || 0,
-      healthRegen: stats.healthRegen || 0,
-      manaRegen: stats.manaRegen || 0,
-      abilities: cls.abilities,
-      cooldowns: {},
-      buffs: [], dots: [], stunned: false, alive: true,
-      level: state.level,
-    };
-
-    const allyCount = loc.allyCount || 1;
-    const availableClasses = ['warrior', 'mage', 'worg', 'ranger'].filter(c => c !== state.playerClass);
-    const allies = [];
-    for (let i = 0; i < allyCount; i++) {
-      const allyClass = availableClasses[i % availableClasses.length];
-      const ally = createAllyUnit(allyClass, state.level);
-      if (ally) allies.push(ally);
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
     }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+
+    if (playerTeam.length === 0) return;
 
     const [minEnemies, maxEnemies] = loc.enemyCount || [2, 3];
     const enemyCount = minEnemies + Math.floor(Math.random() * (maxEnemies - minEnemies + 1));
@@ -387,7 +418,6 @@ const useGameStore = create((set, get) => ({
       if (enemy) enemyUnits.push(enemy);
     }
 
-    const playerTeam = [playerUnit, ...allies];
     const allUnits = [...playerTeam, ...enemyUnits];
 
     const pPositions = getFormationPositions(playerTeam.length, 'player');
@@ -399,6 +429,8 @@ const useGameStore = create((set, get) => ({
       .sort((a, b) => b.speed - a.speed)
       .map(u => u.id);
 
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
     set({
       screen: 'battle',
       battleState: { phase: 'intro', turnCount: 0, isBoss: false },
@@ -408,12 +440,12 @@ const useGameStore = create((set, get) => ({
       selectedTargetId: enemyUnits[0]?.id || null,
       lastAction: null,
       battleLog: [`Battle begins! ${enemyUnits.length} enemies appear!`],
-      playerHealth: playerUnit.health,
-      playerMaxHealth: playerUnit.maxHealth,
-      playerMana: playerUnit.mana,
-      playerMaxMana: playerUnit.maxMana,
-      playerStamina: playerUnit.stamina,
-      playerMaxStamina: playerUnit.maxStamina,
+      playerHealth: mainUnit.health,
+      playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana,
+      playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina,
+      playerMaxStamina: mainUnit.maxStamina,
       cooldowns: {},
       floatingTexts: [],
     });
@@ -422,34 +454,26 @@ const useGameStore = create((set, get) => ({
   startBossBattle: (bossTemplateId) => {
     const state = get();
     const loc = locations.find(l => l.id === state.currentLocation);
-    const stats = state.getStats();
-    const cls = classDefinitions[state.playerClass];
 
-    const playerUnit = {
-      id: 'player',
-      name: state.playerName,
-      team: 'player', isPlayerControlled: true,
-      classId: state.playerClass, templateId: null,
-      health: Math.floor(stats.health), maxHealth: Math.floor(stats.health),
-      mana: Math.floor(stats.mana), maxMana: Math.floor(stats.mana),
-      stamina: Math.floor(stats.stamina), maxStamina: Math.floor(stats.stamina),
-      damage: stats.damage, defense: stats.defense,
-      speed: 20 + Math.floor((state.attributePoints.Agility || 0) * 0.3),
-      critChance: stats.criticalChance || 5, evasion: stats.evasion || 0,
-      block: stats.block || 0, damageReduction: stats.damageReduction || 0,
-      drainHealth: stats.drainHealth || 0, healthRegen: stats.healthRegen || 0,
-      manaRegen: stats.manaRegen || 0,
-      abilities: cls.abilities, cooldowns: {},
-      buffs: [], dots: [], stunned: false, alive: true,
-      level: state.level,
-    };
-
-    const availableClasses = ['warrior', 'mage', 'worg', 'ranger'].filter(c => c !== state.playerClass);
-    const allies = [];
-    for (let i = 0; i < 2; i++) {
-      const ally = createAllyUnit(availableClasses[i % availableClasses.length], state.level);
-      if (ally) allies.push(ally);
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
     }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+
+    if (playerTeam.length === 0) return;
 
     const boss = createEnemy(bossTemplateId, state.level + 2);
     boss.maxHealth = Math.floor(boss.maxHealth * 1.8);
@@ -475,7 +499,6 @@ const useGameStore = create((set, get) => ({
     }
 
     const enemyUnits = [boss, ...addEnemies];
-    const playerTeam = [playerUnit, ...allies];
     const allUnits = [...playerTeam, ...enemyUnits];
 
     const pPositions = getFormationPositions(playerTeam.length, 'player');
@@ -484,6 +507,8 @@ const useGameStore = create((set, get) => ({
     enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
 
     set({
       screen: 'battle',
@@ -494,9 +519,9 @@ const useGameStore = create((set, get) => ({
       selectedTargetId: boss.id,
       lastAction: null,
       battleLog: [`BOSS BATTLE: ${boss.name} appears with ${addEnemies.length} allies!`],
-      playerHealth: playerUnit.health, playerMaxHealth: playerUnit.maxHealth,
-      playerMana: playerUnit.mana, playerMaxMana: playerUnit.maxMana,
-      playerStamina: playerUnit.stamina, playerMaxStamina: playerUnit.maxStamina,
+      playerHealth: mainUnit.health, playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana, playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina, playerMaxStamina: mainUnit.maxStamina,
       cooldowns: {}, floatingTexts: [],
     });
   },
@@ -778,10 +803,16 @@ const useGameStore = create((set, get) => ({
     let leveledUp = false;
     let log = [...state.battleLog];
     let bossesDefeated = [...state.bossesDefeated];
+    let locationsCleared = [...state.locationsCleared];
 
     if (state.battleState.isBoss) {
       const bossUnit = enemyUnits.find(u => u.name.includes('★'));
-      if (bossUnit?.templateId) bossesDefeated.push(bossUnit.templateId);
+      if (bossUnit?.templateId) {
+        bossesDefeated.push(bossUnit.templateId);
+        if (state.currentLocation && !locationsCleared.includes(state.currentLocation)) {
+          locationsCleared.push(state.currentLocation);
+        }
+      }
     }
 
     while (newXp >= newXpToNext && newLevel < 20) {
@@ -796,7 +827,39 @@ const useGameStore = create((set, get) => ({
 
     log.push(`✨ Victory! Gained ${totalXp} XP and ${totalGold} Gold.`);
 
+    const newVictories = state.victories + 1;
+    let newMaxSlots = state.maxHeroSlots;
+    let heroMsg = null;
+
+    if (newVictories === 1 && newMaxSlots < 2) {
+      newMaxSlots = 2;
+      heroMsg = 'New hero slot unlocked! You can recruit a second warlord.';
+    } else if (newVictories === 2 && newMaxSlots < 3) {
+      newMaxSlots = 3;
+      heroMsg = 'New hero slot unlocked! You can recruit a third warlord.';
+    }
+
+    const newLocCleared = locationsCleared.length;
+    const prevLocCleared = state.locationsCleared.length;
+    if (newLocCleared > prevLocCleared && newMaxSlots < 3 + newLocCleared) {
+      newMaxSlots = Math.min(6, 3 + newLocCleared);
+      heroMsg = 'Map cleared! New hero slot unlocked!';
+    }
+
     const playerUnit = state.battleUnits.find(u => u.id === 'player');
+
+    const updatedRoster = state.heroRoster.map(hero => {
+      const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+      if (battleUnit) {
+        return {
+          ...hero,
+          currentHealth: battleUnit.health,
+          currentMana: battleUnit.mana,
+          currentStamina: battleUnit.stamina,
+        };
+      }
+      return hero;
+    });
 
     set({
       battleState: { ...state.battleState, phase: 'victory' },
@@ -806,10 +869,13 @@ const useGameStore = create((set, get) => ({
       gold: state.gold + totalGold,
       unspentPoints: newUnspent,
       skillPoints: newSkillPoints,
-      victories: state.victories + 1,
+      victories: newVictories,
       bossesDefeated,
+      locationsCleared,
+      maxHeroSlots: newMaxSlots,
+      heroRoster: updatedRoster,
       battleLog: log.slice(-12),
-      gameMessage: leveledUp ? `Level Up! You are now level ${newLevel}!` : null,
+      gameMessage: heroMsg || (leveledUp ? `Level Up! You are now level ${newLevel}!` : null),
       playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
       playerMana: playerUnit ? playerUnit.mana : state.playerMana,
       playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
@@ -850,6 +916,8 @@ const useGameStore = create((set, get) => ({
     let goldLost = 0;
     let msg = null;
 
+    let updatedRoster = state.heroRoster;
+
     if (wasBattle) {
       if (wasDefeat) {
         newHealth = Math.floor(stats.health * 0.5);
@@ -857,10 +925,33 @@ const useGameStore = create((set, get) => ({
         newStamina = Math.floor(stats.stamina);
         goldLost = Math.floor(state.gold * 0.1);
         msg = `You retreat wounded. Lost ${goldLost} gold.`;
-      } else if (playerUnit) {
-        newHealth = playerUnit.health;
-        newMana = playerUnit.mana;
-        newStamina = playerUnit.stamina;
+        updatedRoster = state.heroRoster.map(hero => {
+          const hStats = calculateStats(hero.attributePoints, hero.level);
+          return {
+            ...hero,
+            currentHealth: Math.floor(hStats.health * 0.5),
+            currentMana: Math.floor(hStats.mana),
+            currentStamina: Math.floor(hStats.stamina),
+          };
+        });
+      } else {
+        if (playerUnit) {
+          newHealth = playerUnit.health;
+          newMana = playerUnit.mana;
+          newStamina = playerUnit.stamina;
+        }
+        updatedRoster = state.heroRoster.map(hero => {
+          const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+          if (battleUnit) {
+            return {
+              ...hero,
+              currentHealth: battleUnit.health,
+              currentMana: battleUnit.mana,
+              currentStamina: battleUnit.stamina,
+            };
+          }
+          return hero;
+        });
       }
     }
 
@@ -879,6 +970,7 @@ const useGameStore = create((set, get) => ({
       gold: Math.max(0, state.gold - goldLost),
       gameMessage: msg,
       floatingTexts: [],
+      heroRoster: updatedRoster,
     });
   },
 
@@ -887,12 +979,22 @@ const useGameStore = create((set, get) => ({
     const cost = state.level * 5;
     if (state.gold < cost) return;
     const stats = state.getStats();
+    const healedRoster = state.heroRoster.map(hero => {
+      const hStats = calculateStats(hero.attributePoints, hero.level);
+      return {
+        ...hero,
+        currentHealth: Math.floor(hStats.health),
+        currentMana: Math.floor(hStats.mana),
+        currentStamina: Math.floor(hStats.stamina),
+      };
+    });
     set({
       gold: state.gold - cost,
       playerHealth: Math.floor(stats.health),
       playerMana: Math.floor(stats.mana),
       playerStamina: Math.floor(stats.stamina),
-      gameMessage: 'You rest at the inn and recover fully!',
+      heroRoster: healedRoster,
+      gameMessage: 'Your party rests at the inn and recovers fully!',
     });
   },
 

@@ -1,7 +1,7 @@
 # Grudge Warlords
 
 ## Overview
-A Final Fantasy 7-inspired turn-based RPG with dark fantasy aesthetic. Built with React + Vite + Zustand. Features 6 races, 4 classes (24 Warlord combinations), multi-unit tactical battles with AI-controlled allies and multiple enemies per encounter.
+A Final Fantasy 7-inspired turn-based RPG with dark fantasy aesthetic. Built with React + Vite + Zustand. Features 6 races, 4 classes (24 Warlord combinations), multi-hero tactical battles with player-controlled roster heroes and multiple enemies per encounter.
 
 ## Project Architecture
 - **Frontend**: React 19 with Vite dev server on port 5000
@@ -34,6 +34,8 @@ src/
     CharacterSheet.jsx  - Stats view + attribute allocation
     SkillTreeView.jsx   - Skill tree UI
     SpriteAnimation.jsx - Reusable sprite sheet animation component
+    HeroCreate.jsx      - Recruit new heroes to roster (4-step creation)
+    BattleParticles.jsx - Particle effects for battles
 public/
   backgrounds/         - Battle background images per location (8 PNGs)
   sprites/             - Organized sprite sheets per character
@@ -99,14 +101,34 @@ public/
 - **8 Locations**: Progressive unlock by level, bosses in later zones
 - **Defeat Penalty**: Recover at 50% HP, lose 10% gold
 
+## Hero Roster System
+- Players create and control multiple heroes (no AI allies)
+- Max 3 heroes active per battle, up to 6 total in roster
+- Hero slot unlocks: 2nd hero after 1st victory, 3rd after 2nd victory, more after clearing boss maps
+- HeroCreate component: 4-step creation (Name → Race → Class → Attributes) for new roster heroes
+- New heroes start at (player level - 2, min 1)
+- WorldMap shows War Party management UI with active/reserve hero toggling
+- All roster heroes are player-controlled in battle (turns cycle through all player heroes)
+- Inn rest heals entire roster, defeat penalizes entire roster
+
+## Audio System
+- Web Audio API synthesized sounds: sword hits, magic casting, healing, buffs, dodge, crits, victory/defeat
+- Adaptive BGM: ambient music on world map, battle music during fights
+- audioManager.js exports: playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm
+
+## Particle Effects
+- BattleParticles.jsx: AmbientParticles, CastingParticles, HitParticles, HealParticles
+- CSS-animated particles with configurable colors and positions
+- Integrated throughout battle: casting sparkles, hit impacts, heal particles, ambient floating
+
 ## Recent Changes
-- Added video backgrounds: bg-clear.mp4 (title), bg-blur.mp4 (gameplay screens), loading.mp4 (loading screen)
-- VideoBackground component crossfades between clear/blurred based on current screen
-- LoadingScreen component shows on app startup (2.2s) with colorful video + title
-- All screen backgrounds made semi-transparent (rgba 0.75 alpha) so video shows through
-- Added 6 playable races: Human, Orc, Elf, Undead, Barbarian, Dwarf (6 × 4 = 24 combinations)
-- Rewrote character creation to 4-step flow: Name → Race → Class → Attributes
-- Race attribute bonuses stack with class starting attributes
-- Class selection step previews combined race+class attribute totals
-- Title screen, world map, and character sheet all display race alongside class
-- Fixed game flow with proper step navigation and back buttons
+- Implemented hero roster system replacing AI allies with player-controlled heroes
+- Created HeroCreate component for recruiting new warlords from the world map
+- Battle system now uses createHeroBattleUnit() for all player heroes
+- Victory/defeat/inn rest all sync roster hero stats (health/mana/stamina)
+- WorldMap shows War Party panel with active/reserve toggling and recruit button
+- Added location cleared tracking (checkmark on map after boss defeat)
+- Integrated Web Audio API for synthesized sound effects and adaptive BGM
+- Added particle effects system for battle visuals
+- Video backgrounds: bg-clear.mp4 (title), bg-blur.mp4 (gameplay screens), loading.mp4 (loading screen)
+- 6 playable races with 4 classes = 24 warlord combinations

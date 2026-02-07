@@ -3,6 +3,8 @@ import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, classSpriteMap } from '../data/spriteMap';
+import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
+import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -77,12 +79,12 @@ export default function BattleScreen() {
   const [projectiles, setProjectiles] = useState([]);
   const [floatingDmg, setFloatingDmg] = useState([]);
   const [introComplete, setIntroComplete] = useState(false);
+  const [activeParticles, setActiveParticles] = useState([]);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
 
-  const cls = classDefinitions[playerClass];
   const phase = battleState?.phase;
   const isBoss = battleState?.isBoss;
   const bgImage = locationBackgrounds[currentLocation] || null;
@@ -93,6 +95,14 @@ export default function BattleScreen() {
 
   const playerTeam = useMemo(() => battleUnits.filter(u => u.team === 'player'), [battleUnits]);
   const enemyTeam = useMemo(() => battleUnits.filter(u => u.team === 'enemy'), [battleUnits]);
+
+  const isPlayerTurn = phase === 'player_turn';
+  const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
+
+  useEffect(() => {
+    setBgm('battle');
+    return () => setBgm('ambient');
+  }, []);
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -118,6 +128,17 @@ export default function BattleScreen() {
       return () => { clearTimeout(timer); aiProcessing.current = false; };
     }
   }, [phase, battleCurrentTurn, introComplete]);
+
+  useEffect(() => {
+    if (phase === 'victory') playVictory();
+    if (phase === 'defeat') playDefeat();
+  }, [phase]);
+
+  const addParticle = useCallback((type, x, y, color) => {
+    const id = Date.now() + Math.random();
+    setActiveParticles(prev => [...prev, { id, type, x, y, color }]);
+    setTimeout(() => setActiveParticles(prev => prev.filter(p => p.id !== id)), 1200);
+  }, []);
 
   useEffect(() => {
     if (!lastAction || lastAction === actionProcessed.current) return;
@@ -149,6 +170,11 @@ export default function BattleScreen() {
 
       const ranged = isRangedUnit(attacker) || abilityType === 'magical';
 
+      if (abilityType === 'magical' && attacker.position) {
+        addParticle('cast', attacker.position.x, attacker.position.y, getProjectileColor(attacker, abilityName));
+        playMagicCast();
+      }
+
       if (ranged) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
         setTimeout(() => {
@@ -172,7 +198,13 @@ export default function BattleScreen() {
             setTimeout(() => {
               setProjectiles(prev => prev.filter(p => p.id !== projId));
               showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
-              if (!evaded) setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (!evaded) {
+                setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+                addParticle('hit', target.position.x, target.position.y, '#ef4444');
+                if (isCrit) playCrit(); else playHurt();
+              } else {
+                playDodge();
+              }
               setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
             }, 500);
           }
@@ -180,6 +212,7 @@ export default function BattleScreen() {
         }, 250);
         setTimeout(() => advanceTurn(), 1300);
       } else {
+        if (abilityType === 'physical') playSwordHit();
         if (attacker.position && target.position) {
           const dashX = target.position.x + (attacker.team === 'player' ? -8 : 8);
           const dashY = target.position.y;
@@ -190,7 +223,13 @@ export default function BattleScreen() {
         }, 300);
         setTimeout(() => {
           showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
-          if (!evaded) setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
+            if (isCrit) playCrit(); else playHurt();
+          } else {
+            playDodge();
+          }
           setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
         }, 500);
         setTimeout(() => {
@@ -203,6 +242,14 @@ export default function BattleScreen() {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
       if (healAmt && target) {
         showHealFloat(target, healAmt);
+        if (target.position) addParticle('heal', target.position.x, target.position.y);
+        playHeal();
+      } else if (abilityType === 'heal_over_time') {
+        playHeal();
+        if (attacker.position) addParticle('heal', attacker.position.x, attacker.position.y);
+      } else {
+        playBuff();
+        if (attacker.position) addParticle('cast', attacker.position.x, attacker.position.y, '#6ee7b7');
       }
       setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
       setTimeout(() => advanceTurn(), 900);
@@ -235,30 +282,28 @@ export default function BattleScreen() {
 
   useEffect(() => {
     if (phase !== 'player_turn') return;
-    const abilities = cls?.abilities;
+    const abilities = currentCls?.abilities;
     if (!abilities) return;
     const handleKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const num = parseInt(e.key);
       if (num >= 1 && num <= abilities.length) {
         const ability = abilities[num - 1];
-        const pUnit = battleUnits.find(u => u.id === 'player');
-        if (!pUnit) return;
-        const onCd = (pUnit.cooldowns[ability.id] || 0) > 0;
-        const noMana = (ability.manaCost || 0) > pUnit.mana;
-        const noStamina = (ability.staminaCost || 0) > pUnit.stamina;
+        if (!currentUnit) return;
+        const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+        const noMana = (ability.manaCost || 0) > currentUnit.mana;
+        const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
         if (!onCd && !noMana && !noStamina) handleAbility(ability.id);
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, cls, battleUnits, handleAbility]);
+  }, [phase, currentCls, currentUnit, handleAbility]);
 
   if (!battleState || battleUnits.length === 0) return null;
 
   const isVictory = phase === 'victory';
   const isDefeat = phase === 'defeat';
-  const isPlayerTurn = phase === 'player_turn';
 
   return (
     <div style={{
@@ -300,7 +345,7 @@ export default function BattleScreen() {
               borderRadius: 6,
               border: `1px solid ${currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
             }}>
-              {currentUnit.isPlayerControlled ? 'YOUR TURN' : `${currentUnit.name}'s turn`}
+              {currentUnit.isPlayerControlled ? `${currentUnit.name}'s TURN` : `${currentUnit.name}'s turn`}
             </div>
           )}
           {(isVictory || isDefeat) && (
@@ -315,6 +360,8 @@ export default function BattleScreen() {
       <div style={{
         flex: 1, position: 'relative', zIndex: 1, minHeight: 0, overflow: 'hidden',
       }}>
+        <AmbientParticles />
+
         {battleUnits.map((unit, idx) => {
           if (!unit.position) return null;
           const dash = dashPositions[unit.id];
@@ -415,6 +462,13 @@ export default function BattleScreen() {
               </div>
             </div>
           );
+        })}
+
+        {activeParticles.map(p => {
+          if (p.type === 'cast') return <CastingParticles key={p.id} x={p.x} y={p.y} color={p.color} />;
+          if (p.type === 'hit') return <HitParticles key={p.id} x={p.x} y={p.y} color={p.color} />;
+          if (p.type === 'heal') return <HealParticles key={p.id} x={p.x} y={p.y} />;
+          return null;
         })}
 
         {projectiles.map(p => (
@@ -525,13 +579,14 @@ export default function BattleScreen() {
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
           transition: 'background 0.3s, border-color 0.3s',
         }}>
-          {isPlayerTurn && playerUnit ? (
+          {isPlayerTurn && currentUnit ? (
             <>
               <div style={{
                 textAlign: 'center', marginBottom: 4, color: 'var(--muted)',
                 fontSize: '0.6rem', letterSpacing: 1
               }}>
-                Choose action <span style={{ color: 'var(--accent)' }}>(1-{cls?.abilities.length})</span>
+                <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{currentUnit.name}</span>
+                {' — '}Choose action <span style={{ color: 'var(--accent)' }}>(1-{currentCls?.abilities.length})</span>
                 {selectedTargetId && (
                   <span style={{ color: 'var(--danger)', marginLeft: 8 }}>
                     Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
@@ -539,10 +594,10 @@ export default function BattleScreen() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {cls?.abilities.map((ability, idx) => {
-                  const onCd = (playerUnit.cooldowns[ability.id] || 0) > 0;
-                  const noMana = (ability.manaCost || 0) > playerUnit.mana;
-                  const noStamina = (ability.staminaCost || 0) > playerUnit.stamina;
+                {currentCls?.abilities.map((ability, idx) => {
+                  const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                  const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                  const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
                   const disabled = onCd || noMana || noStamina;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
@@ -578,7 +633,7 @@ export default function BattleScreen() {
                           background: 'var(--danger)', borderRadius: '50%',
                           width: 14, height: 14, display: 'flex', alignItems: 'center',
                           justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700
-                        }}>{playerUnit.cooldowns[ability.id]}</div>
+                        }}>{currentUnit.cooldowns[ability.id]}</div>
                       )}
                     </button>
                   );

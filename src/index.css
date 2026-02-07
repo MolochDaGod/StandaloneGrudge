@@ -87,3 +87,21 @@ body {
   0% { opacity: 0; transform: translate(-50%, -50%) translateX(var(--slide-offset, -60px)) scale(0.7); }
   100% { opacity: 1; transform: translate(-50%, -50%) translateX(0) scale(1); }
 }
+
+@keyframes particleFade {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) translateY(-20px); }
+}
+
+@keyframes healRise {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  30% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.3); }
+}
+
+@keyframes ambientFloat {
+  0% { opacity: 0; transform: translateY(0); }
+  20% { opacity: 0.4; }
+  80% { opacity: 0.2; }
+  100% { opacity: 0; transform: translateY(-80px); }
+}
