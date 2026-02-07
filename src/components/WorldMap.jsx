@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import useGameStore from '../stores/gameStore';
+import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { locations } from '../data/enemies';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import { calculateStats } from '../data/attributes';
+
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
@@ -73,32 +73,20 @@ export default function WorldMap() {
             <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>XP: {xp}/{xpToNext}</div>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {unspentPoints > 0 && (
-              <button onClick={() => setScreen('character')} style={{
+            {(unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0)) && (
+              <button onClick={() => setScreen('account')} style={{
                 background: 'rgba(239,68,68,0.2)', border: '1px solid var(--danger)',
                 borderRadius: 8, padding: '6px 12px', color: 'var(--danger)',
                 cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, animation: 'glow 2s infinite'
               }}>
-                Stats ({unspentPoints})
+                Points Available!
               </button>
             )}
-            {skillPoints > 0 && (
-              <button onClick={() => setScreen('skills')} style={{
-                background: 'rgba(168,85,247,0.2)', border: '1px solid var(--purple)',
-                borderRadius: 8, padding: '6px 12px', color: 'var(--purple)',
-                cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, animation: 'glow 2s infinite'
-              }}>
-                Skills ({skillPoints})
-              </button>
-            )}
-            <button onClick={() => setScreen('character')} style={{
-              background: 'var(--border)', border: 'none', borderRadius: 8,
-              padding: '6px 12px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.8rem'
-            }}>📊 Stats</button>
-            <button onClick={() => setScreen('skills')} style={{
-              background: 'var(--border)', border: 'none', borderRadius: 8,
-              padding: '6px 12px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.8rem'
-            }}>🌳 Skills</button>
+            <button onClick={() => setScreen('account')} style={{
+              background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))',
+              border: '1px solid var(--gold)', borderRadius: 8,
+              padding: '6px 12px', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+            }}>⚔️ War Council</button>
           </div>
         </div>
       </header>
@@ -129,7 +117,7 @@ export default function WorldMap() {
                 const heroCls = classDefinitions[hero.classId];
                 const heroRace = hero.raceId ? raceDefinitions[hero.raceId] : null;
                 const isActive = activeHeroIds.includes(hero.id);
-                const heroStats = heroCls ? calculateStats(hero.attributePoints, hero.level) : null;
+                const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
                 return (
                   <div key={hero.id} onClick={() => toggleHeroActive(hero.id)} style={{
                     background: isActive

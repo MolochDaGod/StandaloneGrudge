@@ -5,10 +5,38 @@ import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 
+function getHeroSkillBonuses(hero) {
+  const bonuses = {};
+  if (!hero.classId) return bonuses;
+  const tree = skillTrees[hero.classId];
+  if (!tree) return bonuses;
+  const heroSkills = hero.unlockedSkills || {};
+  tree.tiers.forEach(tier => {
+    tier.skills.forEach(skill => {
+      const points = heroSkills[skill.id] || 0;
+      if (points > 0 && skill.bonuses) {
+        Object.entries(skill.bonuses).forEach(([stat, val]) => {
+          bonuses[stat] = (bonuses[stat] || 0) + val * points;
+        });
+      }
+    });
+  });
+  return bonuses;
+}
+
+function getHeroStatsWithBonuses(hero) {
+  const stats = calculateStats(hero.attributePoints, hero.level);
+  const skillBonuses = getHeroSkillBonuses(hero);
+  Object.entries(skillBonuses).forEach(([key, val]) => {
+    if (stats[key] !== undefined) stats[key] += val;
+  });
+  return stats;
+}
+
 function createHeroBattleUnit(hero) {
   const cls = classDefinitions[hero.classId];
   if (!cls) return null;
-  const stats = calculateStats(hero.attributePoints, hero.level);
+  const stats = getHeroStatsWithBonuses(hero);
   return {
     id: hero.id,
     name: hero.name,
@@ -347,10 +375,16 @@ const useGameStore = create((set, get) => ({
 
   addHeroToRoster: (hero) => {
     const state = get();
+    const heroWithSkills = {
+      ...hero,
+      skillPoints: Math.max(0, hero.level),
+      unlockedSkills: hero.unlockedSkills || {},
+      unspentPoints: hero.unspentPoints || 0,
+    };
     set({
-      heroRoster: [...state.heroRoster, hero],
+      heroRoster: [...state.heroRoster, heroWithSkills],
       activeHeroIds: state.activeHeroIds.length < 3
-        ? [...state.activeHeroIds, hero.id]
+        ? [...state.activeHeroIds, heroWithSkills.id]
         : state.activeHeroIds,
       heroCreationPending: false,
       screen: 'world',
@@ -369,6 +403,89 @@ const useGameStore = create((set, get) => ({
   canCreateHero: () => {
     const state = get();
     return state.heroRoster.length < state.maxHeroSlots;
+  },
+
+  unlockHeroSkill: (heroId, skillId) => {
+    const state = get();
+    if (heroId === 'player') {
+      get().unlockSkill(skillId);
+      const updatedState = get();
+      const updatedRoster = updatedState.heroRoster.map(h =>
+        h.id === 'player' ? { ...h, skillPoints: updatedState.skillPoints, unlockedSkills: { ...updatedState.unlockedSkills } } : h
+      );
+      set({ heroRoster: updatedRoster });
+      return;
+    }
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero || (hero.skillPoints || 0) <= 0) return;
+    const tree = skillTrees[hero.classId];
+    if (!tree) return;
+    for (const tier of tree.tiers) {
+      if (tier.requiredLevel > hero.level) continue;
+      for (const skill of tier.skills) {
+        if (skill.id === skillId) {
+          const heroSkills = hero.unlockedSkills || {};
+          const current = heroSkills[skillId] || 0;
+          if (current >= skill.maxPoints) return;
+          if (skill.requires && !(heroSkills[skill.requires] > 0)) return;
+          const updatedRoster = state.heroRoster.map(h =>
+            h.id === heroId ? {
+              ...h,
+              skillPoints: (h.skillPoints || 0) - 1,
+              unlockedSkills: { ...(h.unlockedSkills || {}), [skillId]: current + 1 },
+            } : h
+          );
+          set({ heroRoster: updatedRoster });
+          return;
+        }
+      }
+    }
+  },
+
+  allocateHeroPoint: (heroId, attrName) => {
+    const state = get();
+    if (heroId === 'player') {
+      get().allocatePoint(attrName);
+      const updatedState = get();
+      const updatedRoster = updatedState.heroRoster.map(h =>
+        h.id === 'player' ? { ...h, attributePoints: { ...updatedState.attributePoints }, unspentPoints: updatedState.unspentPoints } : h
+      );
+      set({ heroRoster: updatedRoster });
+      return;
+    }
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero || (hero.unspentPoints || 0) <= 0) return;
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? {
+        ...h,
+        attributePoints: { ...h.attributePoints, [attrName]: (h.attributePoints[attrName] || 0) + 1 },
+        unspentPoints: (h.unspentPoints || 0) - 1,
+      } : h
+    );
+    set({ heroRoster: updatedRoster });
+  },
+
+  deallocateHeroPoint: (heroId, attrName) => {
+    const state = get();
+    if (heroId === 'player') {
+      get().deallocatePoint(attrName);
+      const updatedState = get();
+      const updatedRoster = updatedState.heroRoster.map(h =>
+        h.id === 'player' ? { ...h, attributePoints: { ...updatedState.attributePoints }, unspentPoints: updatedState.unspentPoints } : h
+      );
+      set({ heroRoster: updatedRoster });
+      return;
+    }
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero || (hero.attributePoints[attrName] || 0) <= 0) return;
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? {
+        ...h,
+        attributePoints: { ...h.attributePoints, [attrName]: (h.attributePoints[attrName] || 0) - 1 },
+        unspentPoints: (h.unspentPoints || 0) + 1,
+      } : h
+    );
+    set({ heroRoster: updatedRoster });
   },
 
   refreshPlayerStats: () => {
@@ -848,17 +965,31 @@ const useGameStore = create((set, get) => ({
 
     const playerUnit = state.battleUnits.find(u => u.id === 'player');
 
+    const levelsGained = newLevel - state.level;
     const updatedRoster = state.heroRoster.map(hero => {
       const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+      const updates = {};
       if (battleUnit) {
-        return {
-          ...hero,
-          currentHealth: battleUnit.health,
-          currentMana: battleUnit.mana,
-          currentStamina: battleUnit.stamina,
-        };
+        updates.currentHealth = battleUnit.health;
+        updates.currentMana = battleUnit.mana;
+        updates.currentStamina = battleUnit.stamina;
       }
-      return hero;
+      if (hero.id === 'player') {
+        updates.level = newLevel;
+        updates.attributePoints = { ...state.attributePoints };
+        updates.unspentPoints = newUnspent;
+        updates.skillPoints = newSkillPoints;
+        updates.unlockedSkills = { ...state.unlockedSkills };
+      } else if (levelsGained > 0) {
+        const heroNewLevel = Math.min(20, hero.level + levelsGained);
+        const heroLevelsUp = heroNewLevel - hero.level;
+        if (heroLevelsUp > 0) {
+          updates.level = heroNewLevel;
+          updates.unspentPoints = (hero.unspentPoints || 0) + (heroLevelsUp * POINTS_PER_LEVEL);
+          updates.skillPoints = (hero.skillPoints || 0) + heroLevelsUp;
+        }
+      }
+      return { ...hero, ...updates };
     });
 
     set({
@@ -926,7 +1057,7 @@ const useGameStore = create((set, get) => ({
         goldLost = Math.floor(state.gold * 0.1);
         msg = `You retreat wounded. Lost ${goldLost} gold.`;
         updatedRoster = state.heroRoster.map(hero => {
-          const hStats = calculateStats(hero.attributePoints, hero.level);
+          const hStats = getHeroStatsWithBonuses(hero);
           return {
             ...hero,
             currentHealth: Math.floor(hStats.health * 0.5),
@@ -980,7 +1111,7 @@ const useGameStore = create((set, get) => ({
     if (state.gold < cost) return;
     const stats = state.getStats();
     const healedRoster = state.heroRoster.map(hero => {
-      const hStats = calculateStats(hero.attributePoints, hero.level);
+      const hStats = getHeroStatsWithBonuses(hero);
       return {
         ...hero,
         currentHealth: Math.floor(hStats.health),
@@ -1007,3 +1138,4 @@ const useGameStore = create((set, get) => ({
 }));
 
 export default useGameStore;
+export { getHeroSkillBonuses, getHeroStatsWithBonuses };

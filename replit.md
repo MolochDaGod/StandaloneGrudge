@@ -35,6 +35,7 @@ src/
     SkillTreeView.jsx   - Skill tree UI
     SpriteAnimation.jsx - Reusable sprite sheet animation component
     HeroCreate.jsx      - Recruit new heroes to roster (4-step creation)
+    AccountPage.jsx     - War Council: hero cards, stats, abilities, skills, attributes per hero
     BattleParticles.jsx - Particle effects for battles
 public/
   backgrounds/         - Battle background images per location (8 PNGs)
@@ -121,7 +122,17 @@ public/
 - CSS-animated particles with configurable colors and positions
 - Integrated throughout battle: casting sparkles, hit impacts, heal particles, ambient floating
 
+## Account / War Council Page
+- AccountPage.jsx: unified hero management with hero cards sidebar + detail panel
+- Tabs: Stats (core + combat stats), Abilities (class ability cards), Skills (per-hero skill tree), Attributes (per-hero point allocation)
+- Per-hero skill tracking: each hero has own skillPoints and unlockedSkills
+- Per-hero attribute allocation: allocateHeroPoint/deallocateHeroPoint in store
+- Heroes gain skill points and unspent attribute points on level up
+- WorldMap header has "War Council" button to access the page
+- Notifications when any hero has unspent points
+
 ## Recent Changes
+- Added AccountPage (War Council) for per-hero management with stats, abilities, skills, attributes
 - Implemented hero roster system replacing AI allies with player-controlled heroes
 - Created HeroCreate component for recruiting new warlords from the world map
 - Battle system now uses createHeroBattleUnit() for all player heroes

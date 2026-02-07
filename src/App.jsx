@@ -11,6 +11,7 @@ import BattleScreen from './components/BattleScreen';
 import CharacterSheet from './components/CharacterSheet';
 import SkillTreeView from './components/SkillTreeView';
 import HeroCreate from './components/HeroCreate';
+import AccountPage from './components/AccountPage';
 
 export default function App() {
   const screen = useGameStore(s => s.screen);
@@ -76,6 +77,7 @@ export default function App() {
       case 'character': return <CharacterSheet />;
       case 'skills': return <SkillTreeView />;
       case 'heroCreate': return <HeroCreate />;
+      case 'account': return <AccountPage />;
       default: return <TitleScreen />;
     }
   };
