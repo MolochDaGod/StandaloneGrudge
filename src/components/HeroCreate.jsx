@@ -198,7 +198,7 @@ export default function HeroCreate() {
                     borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
                     display: 'flex', gap: 12, alignItems: 'center',
                   }}>
-                  <SpriteAnimation spriteData={getPlayerSprite(id)} animation="idle" scale={1.2} speed={150} />
+                  <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={1.2} speed={150} />
                   <div>
                     <div className="font-cinzel" style={{ color: selectedClass === id ? 'var(--accent)' : 'var(--text)', fontSize: '1rem' }}>
                       {cls.name}
@@ -286,7 +286,7 @@ export default function HeroCreate() {
                     Preview - {name}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(selectedClass)} animation="idle" scale={1.3} speed={150} />
+                    <SpriteAnimation spriteData={getPlayerSprite(selectedClass, selectedRace)} animation="idle" scale={1.3} speed={150} />
                     <div>
                       <div style={{ color: 'var(--text)', fontWeight: 700 }}>{name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>

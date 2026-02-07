@@ -69,7 +69,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
           filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
           transition: 'filter 0.3s',
         }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId)} animation="idle" scale={1.4} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1.4} speed={150} />
         </div>
 
         <div style={{ textAlign: 'center' }}>
@@ -170,7 +170,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
       }}>
         <div style={{ filter: `drop-shadow(0 0 12px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId)} animation="idle" scale={2} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={2} speed={150} />
         </div>
         <div style={{ flex: 1 }}>
           <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{hero.name}</div>

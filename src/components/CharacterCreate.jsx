@@ -248,7 +248,7 @@ export default function CharacterCreate() {
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(id)} animation="idle" scale={2} speed={150} />
+                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2} speed={150} />
                     </div>
                     <h3 className="font-cinzel" style={{ color: cls.color, marginBottom: 4, fontSize: '1rem' }}>{cls.name}</h3>
                     <p style={{ color: 'var(--muted)', fontSize: '0.75rem', marginBottom: 8 }}>{cls.description}</p>
@@ -313,7 +313,7 @@ export default function CharacterCreate() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={2.2} speed={150} />
+                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={2.2} speed={150} />
               </div>
               <div style={{ flex: 1, minWidth: 180, textAlign: 'center' }}>
                 <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>

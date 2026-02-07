@@ -57,7 +57,7 @@ export default function WorldMap() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <SpriteAnimation spriteData={getPlayerSprite(playerClass)} animation="idle" scale={1.2} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.2} speed={150} />
           <div>
             <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem' }}>{playerName}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Lv.{level} {raceDef ? raceDef.name + ' ' : ''}{cls?.name}</div>
@@ -128,7 +128,7 @@ export default function WorldMap() {
                     transition: 'all 0.2s', minWidth: 140, textAlign: 'center',
                     opacity: isActive ? 1 : 0.6,
                   }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId)} animation="idle" scale={1} speed={150} />
+                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1} speed={150} />
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: isActive ? 'var(--accent)' : 'var(--muted)', marginTop: 4 }}>
                       {hero.name}
                     </div>
