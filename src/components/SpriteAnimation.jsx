@@ -52,6 +52,8 @@ export default function SpriteAnimation({
   const displayWidth = frameWidth * scale;
   const displayHeight = frameHeight * scale;
 
+  const cssFilter = spriteData?.filter || '';
+
   return (
     <div style={{
       width: displayWidth,
@@ -68,6 +70,7 @@ export default function SpriteAnimation({
         backgroundRepeat: 'no-repeat',
         backgroundPosition: `-${frame * displayWidth}px 0`,
         imageRendering: 'pixelated',
+        filter: cssFilter || 'none',
       }} />
     </div>
   );

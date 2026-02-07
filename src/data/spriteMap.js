@@ -163,7 +163,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets.knight,
     mage: spriteSheets.priest,
     worge: spriteSheets['knight-templar'],
-    ranger: spriteSheets.archer,
+    ranger: { ...spriteSheets.archer, filter: 'hue-rotate(-30deg) saturate(1.4) brightness(0.75)' },
   },
 };
 
