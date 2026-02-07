@@ -53,6 +53,7 @@ export default function SpriteAnimation({
   const displayHeight = frameHeight * scale;
 
   const cssFilter = spriteData?.filter || '';
+  const tintColor = spriteData?.tint || '';
 
   return (
     <div style={{
@@ -61,6 +62,7 @@ export default function SpriteAnimation({
       overflow: 'hidden',
       imageRendering: 'pixelated',
       transform: flip ? 'scaleX(-1)' : 'none',
+      position: 'relative',
     }}>
       <div style={{
         width: displayWidth,
@@ -72,6 +74,17 @@ export default function SpriteAnimation({
         imageRendering: 'pixelated',
         filter: cssFilter || 'none',
       }} />
+      {tintColor && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0,
+          width: displayWidth,
+          height: displayHeight,
+          background: tintColor,
+          mixBlendMode: 'multiply',
+          pointerEvents: 'none',
+        }} />
+      )}
     </div>
   );
 }

@@ -148,7 +148,7 @@ export const raceClassSpriteMap = {
   human: {
     warrior: spriteSheets.knight,
     mage: spriteSheets.wizard,
-    worge: spriteSheets.priest,
+    worge: { ...spriteSheets.priest, tint: 'rgba(144, 238, 144, 0.35)' },
     ranger: spriteSheets.archer,
   },
   orc: {
