@@ -110,6 +110,14 @@ const spriteSheets = {
     hurt: { src: '/sprites/werebear/hurt.png', frames: 4 },
     death: { src: '/sprites/werebear/death.png', frames: 4 },
   },
+  'greatsword-skeleton': {
+    folder: 'greatsword-skeleton',
+    idle: { src: '/sprites/greatsword-skeleton/idle.png', frames: 6 },
+    attack1: { src: '/sprites/greatsword-skeleton/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/greatsword-skeleton/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/greatsword-skeleton/hurt.png', frames: 4 },
+    death: { src: '/sprites/greatsword-skeleton/death.png', frames: 4 },
+  },
   'skeleton-archer': {
     folder: 'skeleton-archer',
     idle: { src: '/sprites/skeleton-archer/idle.png', frames: 6 },
@@ -156,10 +164,10 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets.archer,
   },
   undead: {
-    warrior: spriteSheets['armored-skeleton'],
+    warrior: spriteSheets['greatsword-skeleton'],
     mage: { ...spriteSheets.wizard, filter: 'invert(1) hue-rotate(180deg)' },
     worge: spriteSheets.skeleton,
-    ranger: spriteSheets['skeleton-archer'],
+    ranger: spriteSheets['armored-skeleton'],
   },
   barbarian: {
     warrior: spriteSheets['knight-templar'],
