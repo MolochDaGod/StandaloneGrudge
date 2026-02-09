@@ -814,6 +814,8 @@ const useGameStore = create((set, get) => ({
 
     attacker.mana -= (ability.manaCost || 0);
     attacker.stamina -= (ability.staminaCost || 0);
+    if (ability.manaGain) attacker.mana = Math.min(attacker.maxMana, attacker.mana + ability.manaGain);
+    if (ability.staminaGain) attacker.stamina = Math.min(attacker.maxStamina, attacker.stamina + ability.staminaGain);
     attacker.cooldowns[abilityId] = ability.cooldown || 0;
 
     let log = [...state.battleLog];

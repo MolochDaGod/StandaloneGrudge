@@ -713,7 +713,7 @@ export default function BattleScreen() {
                   const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
-                      title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''} ${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}`}
+                      title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''}${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}${ability.manaGain ? `+${ability.manaGain} MP` : ''}${ability.staminaGain ? ` +${ability.staminaGain} SP` : ''}`}
                       style={{
                         background: disabled ? 'rgba(42,49,80,0.3)' : 'linear-gradient(135deg, rgba(42,49,80,0.8), rgba(42,49,80,0.5))',
                         border: `2px solid ${disabled ? 'var(--border)' : 'var(--accent)'}`,
@@ -738,6 +738,8 @@ export default function BattleScreen() {
                       <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginTop: 0 }}>
                         {ability.manaCost > 0 && <span style={{ color: '#3b82f6' }}>{ability.manaCost}MP </span>}
                         {ability.staminaCost > 0 && <span style={{ color: '#f59e0b' }}>{ability.staminaCost}SP</span>}
+                        {ability.manaGain > 0 && <span style={{ color: '#60a5fa' }}>+{ability.manaGain}MP </span>}
+                        {ability.staminaGain > 0 && <span style={{ color: '#fbbf24' }}>+{ability.staminaGain}SP</span>}
                       </div>
                       {onCd && (
                         <div style={{
