@@ -183,24 +183,38 @@ export default function BattleScreen() {
   const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
 
   const displayedAbilities = useMemo(() => {
-    if (!currentCls) return [];
-    const baseAbilities = currentCls.abilities;
-    if (!currentUnit?.bearForm || !currentCls.bearFormAbilities) return baseAbilities;
+    if (!currentCls || !currentUnit) return [];
+    const loadout = currentUnit.abilityLoadout;
+    const allAbilities = currentUnit.abilities || currentCls.abilities;
+    const abilityMap = {};
+    for (const ab of allAbilities) {
+      abilityMap[ab.id] = ab;
+    }
+
+    let resolved;
+    if (loadout && loadout.length > 0) {
+      resolved = loadout.map(id => abilityMap[id]).filter(Boolean);
+    } else {
+      resolved = allAbilities.slice(0, 5);
+    }
+
+    if (!currentUnit.bearForm || !currentCls.bearFormAbilities) return resolved;
+
     const raceDef = currentUnit.raceId ? raceDefinitions[currentUnit.raceId] : null;
     const raceName = raceDef?.name || 'Beast';
-    return baseAbilities.map(ability => {
+    return resolved.map(ability => {
       if (currentCls.bearFormAbilities[ability.id]) {
         return currentCls.bearFormAbilities[ability.id];
       }
       if (ability.isBearForm) {
-        const revertAbility = currentUnit.abilities?.find(a => a.id === 'revert_form');
+        const revertAbility = allAbilities.find(a => a.id === 'revert_form');
         if (revertAbility) {
           return { ...revertAbility, name: `${raceName} Form` };
         }
       }
       return ability;
     });
-  }, [currentCls, currentUnit?.bearForm, currentUnit?.raceId, currentUnit?.abilities]);
+  }, [currentCls, currentUnit?.bearForm, currentUnit?.raceId, currentUnit?.abilities, currentUnit?.abilityLoadout]);
 
   useEffect(() => {
     setBgm('battle');

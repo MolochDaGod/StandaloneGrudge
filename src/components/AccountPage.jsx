@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
 import { RARITY, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
+import { getAvailableAbilities, getDefaultLoadout, isSlotLocked } from '../utils/abilityLoadout';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
@@ -192,9 +193,180 @@ function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
   );
 }
 
+function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout }) {
+  const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId);
+  const available = useMemo(() => getAvailableAbilities(hero.classId, hero.unlockedSkills || {}), [hero.classId, hero.unlockedSkills]);
+  const abilityMap = useMemo(() => {
+    const map = {};
+    for (const ab of available) map[ab.id] = ab;
+    return map;
+  }, [available]);
+
+  const isWorge = hero.classId === 'worge';
+  const slotCount = 5;
+
+  const handleSlotSelect = (abilityId) => {
+    if (selectingSlot === null) return;
+    const newLoadout = [...loadout];
+    const existingIdx = newLoadout.indexOf(abilityId);
+    if (existingIdx !== -1 && existingIdx !== selectingSlot) {
+      newLoadout[existingIdx] = newLoadout[selectingSlot];
+    }
+    newLoadout[selectingSlot] = abilityId;
+    setHeroLoadout(hero.id, newLoadout);
+    setSelectingSlot(null);
+  };
+
+  const resetLoadout = () => {
+    setHeroLoadout(hero.id, getDefaultLoadout(hero.classId));
+    setSelectingSlot(null);
+  };
+
+  const unslottable = isWorge ? ['bear_form'] : [];
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem' }}>
+          Ability Loadout
+        </h4>
+        <button onClick={resetLoadout} style={{
+          background: 'rgba(100,100,120,0.2)', border: '1px solid var(--border)',
+          borderRadius: 6, padding: '3px 10px', fontSize: '0.65rem',
+          color: 'var(--muted)', cursor: 'pointer',
+        }}>Reset Default</button>
+      </div>
+
+      <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.4 }}>
+        Tap a slot to change its ability. {isWorge && 'Slot 5 is locked to Bear Form.'}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+        {Array.from({ length: slotCount }).map((_, idx) => {
+          const abilityId = loadout[idx];
+          const ability = abilityMap[abilityId];
+          const locked = isSlotLocked(hero.classId, idx);
+          const isSelected = selectingSlot === idx;
+          const altAbility = isWorge && cls?.bearFormAbilities?.[abilityId] ? cls.bearFormAbilities[abilityId] : null;
+
+          return (
+            <div key={idx}>
+              <div
+                onClick={() => !locked && setSelectingSlot(isSelected ? null : idx)}
+                style={{
+                  display: 'flex', gap: 10, alignItems: 'center',
+                  background: isSelected ? 'rgba(110,231,183,0.08)' : 'rgba(42,49,80,0.4)',
+                  border: `2px solid ${isSelected ? 'var(--accent)' : locked ? 'rgba(100,100,120,0.3)' : 'var(--border)'}`,
+                  borderRadius: 10, padding: '8px 12px',
+                  cursor: locked ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s',
+                  opacity: locked ? 0.7 : 1,
+                }}
+              >
+                <div style={{
+                  width: 24, height: 24, flexShrink: 0,
+                  background: cls?.color || 'var(--accent)', borderRadius: 6,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.7rem', fontWeight: 700, color: '#0b1020',
+                }}>{idx + 1}</div>
+                {ability ? (
+                  <>
+                    <div style={{
+                      fontSize: '1.3rem', width: 36, height: 36, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(0,0,0,0.3)', borderRadius: 8,
+                      border: `1px solid ${cls?.color || 'var(--border)'}`,
+                    }}>{ability.icon}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text)' }}>{ability.name}</div>
+                      <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.3 }}>{ability.description}</div>
+                      <div style={{ display: 'flex', gap: 3, marginTop: 2, flexWrap: 'wrap' }}>
+                        {ability.manaCost > 0 && <span style={{ fontSize: '0.5rem', padding: '1px 4px', borderRadius: 3, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>{ability.manaCost} MP</span>}
+                        {ability.staminaCost > 0 && <span style={{ fontSize: '0.5rem', padding: '1px 4px', borderRadius: 3, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>{ability.staminaCost} SP</span>}
+                        {ability.cooldown > 0 && <span style={{ fontSize: '0.5rem', padding: '1px 4px', borderRadius: 3, background: 'rgba(100,100,120,0.2)', color: 'var(--muted)' }}>{ability.cooldown}T CD</span>}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ flex: 1, color: 'var(--muted)', fontSize: '0.7rem', fontStyle: 'italic' }}>Empty Slot</div>
+                )}
+                {locked && <div style={{ fontSize: '0.6rem', color: '#d97706', fontWeight: 600 }}>Locked</div>}
+                {!locked && <div style={{ fontSize: '0.8rem', color: isSelected ? 'var(--accent)' : 'var(--muted)' }}>{isSelected ? '...' : '>'}</div>}
+              </div>
+              {altAbility && (
+                <div style={{
+                  marginLeft: 34, marginTop: 2, padding: '4px 10px',
+                  background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.15)',
+                  borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: '0.6rem', color: '#d97706',
+                }}>
+                  <span>🐻</span>
+                  <span style={{ fontWeight: 600 }}>{altAbility.name}</span>
+                  <span style={{ color: 'var(--muted)' }}>in Bear Form</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {selectingSlot !== null && (
+        <div>
+          <div style={{
+            fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)',
+            marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            Choose ability for Slot {selectingSlot + 1}
+            <button onClick={() => setSelectingSlot(null)} style={{
+              background: 'none', border: '1px solid var(--border)',
+              borderRadius: 4, padding: '1px 8px', fontSize: '0.6rem',
+              color: 'var(--muted)', cursor: 'pointer',
+            }}>Cancel</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {available.filter(ab => !unslottable.includes(ab.id)).map(ability => {
+              const alreadySlotted = loadout.includes(ability.id);
+              const isCurrentSlot = loadout[selectingSlot] === ability.id;
+              return (
+                <div key={ability.id}
+                  onClick={() => handleSlotSelect(ability.id)}
+                  style={{
+                    display: 'flex', gap: 8, alignItems: 'center',
+                    background: isCurrentSlot ? 'rgba(110,231,183,0.1)' : 'rgba(30,35,55,0.5)',
+                    border: `1px solid ${isCurrentSlot ? 'var(--accent)' : alreadySlotted ? 'rgba(245,158,11,0.3)' : 'var(--border)'}`,
+                    borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  <div style={{
+                    fontSize: '1.1rem', width: 30, height: 30, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.3)', borderRadius: 6,
+                  }}>{ability.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text)' }}>{ability.name}</div>
+                    <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>{ability.description}</div>
+                  </div>
+                  {alreadySlotted && !isCurrentSlot && (
+                    <div style={{ fontSize: '0.5rem', color: '#f59e0b', fontWeight: 600 }}>
+                      Slot {loadout.indexOf(ability.id) + 1}
+                    </div>
+                  )}
+                  {isCurrentSlot && <div style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 600 }}>Current</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HeroDetailPanel({ hero, onClose }) {
-  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory } = useGameStore();
+  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout } = useGameStore();
   const [tab, setTab] = useState('stats');
+  const [selectingSlot, setSelectingSlot] = useState(null);
 
   const cls = classDefinitions[hero.classId];
   const race = hero.raceId ? raceDefinitions[hero.raceId] : null;
@@ -543,58 +715,7 @@ function HeroDetailPanel({ hero, onClose }) {
         )}
 
         {tab === 'abilities' && (
-          <div>
-            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 12 }}>
-              {cls?.name} Abilities
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {cls?.abilities.map((ability, idx) => {
-                const altAbility = cls?.bearFormAbilities?.[ability.id] || null;
-                return (
-                  <div key={ability.id} style={{
-                    display: 'flex', gap: 8, alignItems: 'stretch', flexWrap: 'wrap',
-                  }}>
-                    <AbilityCard ability={ability} idx={idx} cls={cls} isCurrent />
-                    {altAbility && (
-                      <>
-                        <div style={{
-                          display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center',
-                          color: 'var(--muted)', fontSize: '0.6rem', minWidth: 28,
-                        }}>
-                          <span style={{ fontSize: '1rem' }}>→</span>
-                          <span style={{ fontSize: '0.5rem', color: '#d97706', fontWeight: 600 }}>🐻</span>
-                        </div>
-                        <AbilityCard ability={altAbility} idx={idx} cls={cls} isAlt altBadge="🐻" />
-                      </>
-                    )}
-                    {ability.isBearForm && (
-                      <>
-                        <div style={{
-                          display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center',
-                          color: 'var(--muted)', fontSize: '0.6rem', minWidth: 28,
-                        }}>
-                          <span style={{ fontSize: '1rem' }}>→</span>
-                          <span style={{ fontSize: '0.5rem', color: '#22c55e', fontWeight: 600 }}>↩</span>
-                        </div>
-                        <AbilityCard
-                          ability={{ id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Return to your normal form, removing beast buffs', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }}
-                          idx={idx} cls={cls} isAlt
-                        />
-                      </>
-                    )}
-                    {ability.isDemonBlade && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', padding: '0 8px',
-                        color: '#ef4444', fontSize: '0.55rem', fontStyle: 'italic',
-                      }}>
-                        Transforms sprite
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} />
         )}
 
         {tab === 'skills' && tree && (

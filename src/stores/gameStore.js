@@ -6,6 +6,7 @@ import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
+import { getDefaultLoadout, resolveLoadout } from '../utils/abilityLoadout';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -38,6 +39,21 @@ function getHeroStatsWithBonuses(hero) {
     else stats[key] = val;
   });
   return stats;
+}
+
+function getSkillTreeAbilities(hero) {
+  const tree = skillTrees[hero.classId];
+  if (!tree) return [];
+  const abilities = [];
+  const heroSkills = hero.unlockedSkills || {};
+  for (const tier of tree.tiers) {
+    for (const skill of tier.skills) {
+      if (skill.grantedAbility && (heroSkills[skill.id] || 0) > 0) {
+        abilities.push(skill.grantedAbility);
+      }
+    }
+  }
+  return abilities;
 }
 
 function createHeroBattleUnit(hero) {
@@ -75,9 +91,10 @@ function createHeroBattleUnit(hero) {
     manaRegen: stats.manaRegen || 0,
     defenseBreak: stats.defenseBreak || 0,
     criticalEvasion: stats.criticalEvasion || 0,
+    abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId),
     abilities: cls.bearFormAbilities
-      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '\uD83D\uDD04', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }]
-      : cls.abilities,
+      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }, ...getSkillTreeAbilities(hero)]
+      : [...cls.abilities, ...getSkillTreeAbilities(hero)],
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
     level: hero.level,
@@ -425,6 +442,7 @@ const useGameStore = create(persist((set, get) => ({
       skillPoints: 0,
       unlockedSkills: {},
       equipment: startingEquipment,
+      abilityLoadout: getDefaultLoadout(state.playerClass),
     };
     set({
       screen: 'training',
@@ -451,6 +469,7 @@ const useGameStore = create(persist((set, get) => ({
       unlockedSkills: hero.unlockedSkills || {},
       unspentPoints: hero.unspentPoints || 0,
       equipment: hasEquipment ? hero.equipment : getStartingEquipment(hero.classId),
+      abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId),
     };
     const newRoster = [...state.heroRoster, heroWithSkills];
     const newActiveIds = state.activeHeroIds.length < 3
@@ -496,6 +515,21 @@ const useGameStore = create(persist((set, get) => ({
   canCreateHero: () => {
     const state = get();
     return state.heroRoster.length < state.maxHeroSlots;
+  },
+
+  setHeroLoadout: (heroId, loadout) => {
+    const state = get();
+    if (heroId === 'player') {
+      const updatedRoster = state.heroRoster.map(h =>
+        h.id === 'player' ? { ...h, abilityLoadout: [...loadout] } : h
+      );
+      set({ heroRoster: updatedRoster });
+      return;
+    }
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? { ...h, abilityLoadout: [...loadout] } : h
+    );
+    set({ heroRoster: updatedRoster });
   },
 
   unlockHeroSkill: (heroId, skillId) => {
