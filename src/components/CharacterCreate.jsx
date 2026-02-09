@@ -4,6 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions, raceList } from '../data/races';
 import { attributeDefinitions } from '../data/attributes';
 import SpriteAnimation from './SpriteAnimation';
+import WorgeMorphPreview from './WorgeMorphPreview';
 import { getPlayerSprite } from '../data/spriteMap';
 
 const stepLabels = ['Name', 'Race', 'Class', 'Attributes'];
@@ -255,8 +256,12 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={4} speed={150} />
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2, height: 120, overflow: 'hidden' }}>
+                      {id === 'worge' ? (
+                        <WorgeMorphPreview raceId={selectedRace} scale={3} speed={150} />
+                      ) : (
+                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={3} speed={150} />
+                      )}
                     </div>
                     <div style={{
                       display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', marginBottom: 6

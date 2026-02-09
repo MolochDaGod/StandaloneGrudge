@@ -543,7 +543,8 @@ export default function BattleScreen() {
           const introDelay = introComplete ? 0 : (idx * 100);
           const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
           const targetDisplaySize = 250;
-          const spriteScale = targetDisplaySize / baseFrameSize;
+          const isBearForm = unit.classId === 'worge' && unit.bearForm;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1);
 
           return (
             <div
