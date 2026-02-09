@@ -4,6 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
+import { RARITY, EQUIPMENT_SLOTS } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 
@@ -100,7 +101,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
 }
 
 function HeroDetailPanel({ hero, onClose }) {
-  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes } = useGameStore();
+  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory } = useGameStore();
   const [tab, setTab] = useState('stats');
 
   const cls = classDefinitions[hero.classId];
@@ -152,6 +153,7 @@ function HeroDetailPanel({ hero, onClose }) {
 
   const tabs = [
     { id: 'stats', label: 'Stats', icon: '📊' },
+    { id: 'equipment', label: 'Gear', icon: '🛡️' },
     { id: 'abilities', label: 'Abilities', icon: '⚔️' },
     { id: 'skills', label: 'Skills', icon: '🌳' },
     { id: 'attributes', label: 'Attributes', icon: '📈' },
@@ -262,6 +264,98 @@ function HeroDetailPanel({ hero, onClose }) {
                   {race.icon} {race.name} — {race.trait}
                 </div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>{race.traitDescription}</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'equipment' && (
+          <div>
+            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 12 }}>Equipment</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {EQUIPMENT_SLOTS.map(slot => {
+                const equipped = (hero.equipment || {})[slot];
+                const rarityDef = equipped ? RARITY[equipped.rarity] : null;
+                return (
+                  <div key={slot} style={{
+                    background: 'rgba(42,49,80,0.4)', border: `1px solid ${rarityDef ? rarityDef.color + '40' : 'var(--border)'}`,
+                    borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.3rem', border: '1px solid var(--border)',
+                    }}>
+                      {equipped ? equipped.icon : (slot === 'weapon' ? '🗡️' : slot === 'armor' ? '🛡️' : '💍')}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                        {slot}
+                      </div>
+                      {equipped ? (
+                        <>
+                          <div style={{ color: rarityDef.color, fontWeight: 'bold', fontSize: '0.85rem' }}>
+                            {equipped.name} <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>[{rarityDef.name}]</span>
+                          </div>
+                          <div style={{ color: '#22c55e', fontSize: '0.7rem', marginTop: 2 }}>
+                            {Object.entries(equipped.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Empty</div>
+                      )}
+                    </div>
+                    {equipped && (
+                      <button onClick={() => unequipItem(hero.id, slot)} style={{
+                        background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: 6, padding: '4px 10px', color: '#ef4444', cursor: 'pointer', fontSize: '0.7rem',
+                      }}>Remove</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 8 }}>
+              Inventory ({inventory.length} items)
+            </h4>
+            {inventory.length === 0 ? (
+              <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic', padding: '12px 0' }}>
+                No items. Defeat enemies to find loot!
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+                {inventory.map(item => {
+                  const r = RARITY[item.rarity];
+                  const canEquip = (!item.classReq || item.classReq.includes(hero.classId)) && hero.level >= (item.levelReq || 0);
+                  return (
+                    <div key={item.id} style={{
+                      background: 'rgba(0,0,0,0.2)', border: `1px solid ${r.color}30`,
+                      borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10,
+                    }}>
+                      <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: r.color, fontSize: '0.8rem', fontWeight: 'bold' }}>
+                          {item.name} <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>[{r.name}]</span>
+                        </div>
+                        <div style={{ color: '#22c55e', fontSize: '0.65rem' }}>
+                          {Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => canEquip && equipItem(hero.id, item)}
+                        disabled={!canEquip}
+                        style={{
+                          background: canEquip ? 'rgba(34,197,94,0.2)' : 'rgba(100,100,100,0.2)',
+                          border: `1px solid ${canEquip ? 'rgba(34,197,94,0.3)' : 'rgba(100,100,100,0.2)'}`,
+                          borderRadius: 6, padding: '4px 10px',
+                          color: canEquip ? '#22c55e' : 'var(--muted)',
+                          cursor: canEquip ? 'pointer' : 'not-allowed', fontSize: '0.7rem',
+                          opacity: canEquip ? 1 : 0.5,
+                        }}
+                      >Equip</button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

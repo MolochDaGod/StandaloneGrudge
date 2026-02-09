@@ -12,11 +12,14 @@ import CharacterSheet from './components/CharacterSheet';
 import SkillTreeView from './components/SkillTreeView';
 import HeroCreate from './components/HeroCreate';
 import AccountPage from './components/AccountPage';
+import TrainingScreen from './components/TrainingScreen';
+import LootPopup from './components/LootPopup';
 
 export default function App() {
   const screen = useGameStore(s => s.screen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
+  const pendingLoot = useGameStore(s => s.pendingLoot);
 
   const [ready, setReady] = useState(isReady());
   const [progress, setProgress] = useState({ loaded: 0, total: 1 });
@@ -78,6 +81,7 @@ export default function App() {
       case 'skills': return <SkillTreeView />;
       case 'heroCreate': return <HeroCreate />;
       case 'account': return <AccountPage />;
+      case 'training': return <TrainingScreen />;
       default: return <TitleScreen />;
     }
   };
@@ -93,6 +97,7 @@ export default function App() {
       }}>
         {renderScreen()}
       </div>
+      {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
       {gameMessage && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,

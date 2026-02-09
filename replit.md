@@ -25,18 +25,22 @@ src/
     enemies.js          - 9 enemy types, 8 locations, enemy factory
     skillTrees.js       - Class skill trees with tiers
     spriteMap.js        - Sprite sheet mappings for classes and enemies
+  data/
+    equipment.js        - Equipment templates, rarity tiers, loot generation, stat bonuses
   components/
     TitleScreen.jsx     - Title screen with New Game button
     CharacterCreate.jsx - 4-step character creation (Name → Race → Class → Attributes)
-    WorldMap.jsx        - World map with locations, inn, navigation
+    WorldMap.jsx        - World map with locations, inn, auto-harvest panel
     LocationView.jsx    - Location detail with fight/boss buttons
     BattleScreen.jsx    - Multi-unit tactical battle with 2D positioning
     CharacterSheet.jsx  - Stats view + attribute allocation
     SkillTreeView.jsx   - Skill tree UI
     SpriteAnimation.jsx - Reusable sprite sheet animation component
     HeroCreate.jsx      - Recruit new heroes to roster (4-step creation)
-    AccountPage.jsx     - War Council: hero cards, stats, abilities, skills, attributes per hero
+    AccountPage.jsx     - War Council: hero cards, stats, abilities, skills, attributes, equipment per hero
     BattleParticles.jsx - Particle effects for battles
+    TrainingScreen.jsx  - Guided tutorial battles (2 rounds)
+    LootPopup.jsx       - Post-battle loot reward overlay
 public/
   backgrounds/         - Battle background images per location (8 PNGs)
   sprites/             - Organized sprite sheets per character
@@ -122,9 +126,36 @@ public/
 - CSS-animated particles with configurable colors and positions
 - Integrated throughout battle: casting sparkles, hit impacts, heal particles, ambient floating
 
+## Equipment System
+- 3 equipment slots: weapon, armor, accessory
+- 5 rarity tiers: Common, Uncommon, Rare, Epic, Legendary (with stat multipliers)
+- Equipment templates per class (weapons) and universal (armor/accessories)
+- Loot drops from enemies (35% base, 100% from bosses, higher rarity from bosses)
+- Equipment tab in War Council for equip/unequip per hero
+- LootPopup component shows rewards after battle victory
+- Equipment stat bonuses: damage, defense, health, mana, criticalChance, evasion, etc.
+
+## Training System
+- Guided tutorial: create hero 1 → Training Round 1 → create hero 2 → Training Round 2 → create hero 3 → world map
+- TrainingScreen component with narrative text, battle integration
+- Training battles use scaled enemies (goblin round 1, skeleton round 2)
+
+## Auto-Harvest System
+- 5 resource nodes: Gold Mine, Herb Garden, Lumber Yard, Ore Vein, Crystal Cave
+- Assign idle (reserve) heroes to gather resources passively
+- Resources accumulate every 2 seconds based on hero level multiplier
+- Harvest panel on WorldMap with assign/recall controls
+
+## Status Effects in Combat
+- DoT (damage over time): bleed from Warrior Cleave, burn from Mage Fireball, poison from Ranger Poison Arrow, rend from Worge
+- Buffs: War Cry (damage boost), Evasive Roll (evasion), Mana Shield (defense), Bear Form (damage+defense)
+- Debuffs: Ice Storm (damage reduction on enemy)
+- Stun: Shield Bash (skip turn)
+- HoT: Blood Howl (heal over time)
+
 ## Account / War Council Page
 - AccountPage.jsx: unified hero management with hero cards sidebar + detail panel
-- Tabs: Stats (core + combat stats), Abilities (class ability cards), Skills (per-hero skill tree), Attributes (per-hero point allocation)
+- Tabs: Stats (core + combat stats), Abilities (class ability cards), Skills (per-hero skill tree), Attributes (per-hero point allocation), Equipment (equip/unequip + inventory)
 - Per-hero skill tracking: each hero has own skillPoints and unlockedSkills
 - Per-hero attribute allocation: allocateHeroPoint/deallocateHeroPoint in store
 - Heroes gain skill points and unspent attribute points on level up
@@ -132,14 +163,12 @@ public/
 - Notifications when any hero has unspent points
 
 ## Recent Changes
-- Added AccountPage (War Council) for per-hero management with stats, abilities, skills, attributes
-- Implemented hero roster system replacing AI allies with player-controlled heroes
-- Created HeroCreate component for recruiting new warlords from the world map
-- Battle system now uses createHeroBattleUnit() for all player heroes
-- Victory/defeat/inn rest all sync roster hero stats (health/mana/stamina)
-- WorldMap shows War Party panel with active/reserve toggling and recruit button
-- Added location cleared tracking (checkmark on map after boss defeat)
-- Integrated Web Audio API for synthesized sound effects and adaptive BGM
-- Added particle effects system for battle visuals
+- Added equipment system with weapons/armor/accessories, 5 rarity tiers, loot drops
+- Added Equipment tab in War Council for per-hero equip/unequip + inventory management
+- Added LootPopup component for post-battle reward display
+- Enhanced abilities: 5 abilities per class, burn/bleed/freeze DoT effects, Mana Shield, Arrow Volley
+- Built Training Round system with guided tutorial battles gating world access
+- Added Auto-Harvesting system with 5 resource nodes on WorldMap
+- Fixed React hooks ordering bug in App.jsx (pendingLoot hook after early return)
 - Video backgrounds: bg-clear.mp4 (title), bg-blur.mp4 (gameplay screens), loading.mp4 (loading screen)
 - 6 playable races with 4 classes = 24 warlord combinations

@@ -11,6 +11,7 @@ export const classDefinitions = {
       { id: 'power_strike', name: 'Power Strike', icon: '💥', description: 'A devastating blow dealing 2x damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 2, target: 'enemy' },
       { id: 'war_cry', name: 'War Cry', icon: '📢', description: 'Boost your damage by 30% for 3 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 30, cooldown: 5, target: 'self', effect: { stat: 'damage', multiplier: 1.3, duration: 3 } },
       { id: 'shield_bash', name: 'Shield Bash', icon: '🛡️', description: 'Stun the enemy for 1 turn', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } },
+      { id: 'cleave', name: 'Cleave', icon: '🩸', description: 'Slash deep, causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.12, duration: 3 } },
     ]
   },
   mage: {
@@ -22,9 +23,10 @@ export const classDefinitions = {
     startingAttributes: { Strength: 0, Vitality: 1, Endurance: 1, Dexterity: 0, Agility: 0, Intellect: 5, Wisdom: 4, Tactics: 1 },
     abilities: [
       { id: 'arcane_bolt', name: 'Arcane Bolt', icon: '✨', description: 'A burst of arcane energy', type: 'magical', damage: 1.4, manaCost: 15, staminaCost: 0, cooldown: 0, target: 'enemy' },
-      { id: 'fireball', name: 'Fireball', icon: '🔥', description: 'Hurls a ball of fire dealing massive damage', type: 'magical', damage: 2.5, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy' },
+      { id: 'fireball', name: 'Fireball', icon: '🔥', description: 'Hurls fire dealing massive damage + burn', type: 'magical', damage: 2.5, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'heal', name: 'Divine Heal', icon: '💚', description: 'Restore 30% of max HP', type: 'heal', damage: 0, manaCost: 40, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.30 },
-      { id: 'ice_storm', name: 'Ice Storm', icon: '❄️', description: 'Freezes the enemy, reducing their speed', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { stat: 'attackSpeed', multiplier: 0.5, duration: 2 } },
+      { id: 'ice_storm', name: 'Ice Storm', icon: '❄️', description: 'Freezes the enemy, reducing their damage', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { stat: 'damage', multiplier: 0.6, duration: 2 } },
+      { id: 'mana_shield', name: 'Mana Shield', icon: '🔰', description: 'Convert mana into a protective barrier', type: 'buff', damage: 0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 25, duration: 3 } },
     ]
   },
   worge: {
@@ -54,6 +56,7 @@ export const classDefinitions = {
       { id: 'aimed_shot', name: 'Aimed Shot', icon: '🎯', description: 'A carefully aimed shot that always crits', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 20, cooldown: 2, target: 'enemy', guaranteedCrit: true },
       { id: 'poison_arrow', name: 'Poison Arrow', icon: '☠️', description: 'Poisons the enemy for damage over time', type: 'physical', damage: 0.7, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.2, duration: 3 } },
       { id: 'evasive_maneuver', name: 'Evasive Roll', icon: '💨', description: 'Increase evasion by 50% for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'evasion', flat: 50, duration: 2 } },
+      { id: 'volley', name: 'Arrow Volley', icon: '🌧️', description: 'Rain arrows for heavy damage', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy' },
     ]
   }
 };

@@ -72,7 +72,7 @@ export default function BattleScreen() {
     selectedTargetId, lastAction, battleLog, playerClass, playerName,
     level, cooldowns, currentLocation,
     useAbility, processAIAction, advanceTurn, setSelectedTarget,
-    returnToWorld, startBattle,
+    returnToWorld, startBattle, returnFromTraining,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
   } = useGameStore();
@@ -352,7 +352,10 @@ export default function BattleScreen() {
             </div>
           )}
           {(isVictory || isDefeat) && (
-            <button onClick={returnToWorld} style={{
+            <button onClick={() => {
+              if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+              else returnToWorld();
+            }} style={{
               background: 'var(--border)', border: 'none', borderRadius: 8,
               padding: '4px 12px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.75rem'
             }}>Return</button>
@@ -532,21 +535,24 @@ export default function BattleScreen() {
               </div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center' }}>
-              {isVictory && currentLocation && (
+              {isVictory && currentLocation && !battleState?.isTraining && (
                 <button onClick={() => startBattle(currentLocation)} style={{
                   background: 'linear-gradient(135deg, var(--accent), #10b981)',
                   border: 'none', borderRadius: 10, padding: '8px 16px',
                   color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem'
                 }}>Fight Again</button>
               )}
-              <button onClick={returnToWorld} style={{
+              <button onClick={() => {
+                if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+                else returnToWorld();
+              }} style={{
                 background: isDefeat ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : 'var(--border)',
                 border: isDefeat ? '2px solid var(--danger)' : 'none',
                 borderRadius: 10, padding: '8px 16px',
                 color: isDefeat ? 'var(--danger)' : 'var(--text)',
                 fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem'
               }}>
-                {isDefeat ? 'Retreat & Recover' : 'Return to World'}
+                {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
               </button>
             </div>
           </div>

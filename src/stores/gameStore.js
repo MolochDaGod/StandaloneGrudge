@@ -4,6 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
+import { generateLoot, getEquipmentStatBonuses, EQUIPMENT_SLOTS } from '../data/equipment';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -29,6 +30,11 @@ function getHeroStatsWithBonuses(hero) {
   const skillBonuses = getHeroSkillBonuses(hero);
   Object.entries(skillBonuses).forEach(([key, val]) => {
     if (stats[key] !== undefined) stats[key] += val;
+  });
+  const equipBonuses = getEquipmentStatBonuses(hero.equipment || {});
+  Object.entries(equipBonuses).forEach(([key, val]) => {
+    if (stats[key] !== undefined) stats[key] += val;
+    else stats[key] = val;
   });
   return stats;
 }
@@ -235,12 +241,24 @@ const useGameStore = create((set, get) => ({
   victories: 0,
   losses: 0,
   bossesDefeated: [],
-  inventory: [],
   heroRoster: [],
   activeHeroIds: [],
   heroCreationPending: false,
   maxHeroSlots: 1,
   locationsCleared: [],
+  inventory: [],
+  pendingLoot: [],
+  harvestNodes: [
+    { id: 'gold_mine', name: 'Gold Mine', icon: '⛏️', resource: 'gold', baseRate: 3, unlockLevel: 1 },
+    { id: 'herb_garden', name: 'Herb Garden', icon: '🌿', resource: 'herbs', baseRate: 2, unlockLevel: 2 },
+    { id: 'lumber_yard', name: 'Lumber Yard', icon: '🪵', resource: 'wood', baseRate: 2, unlockLevel: 3 },
+    { id: 'ore_vein', name: 'Ore Vein', icon: '🪨', resource: 'ore', baseRate: 1, unlockLevel: 5 },
+    { id: 'crystal_cave', name: 'Crystal Cave', icon: '💎', resource: 'crystals', baseRate: 1, unlockLevel: 8 },
+  ],
+  activeHarvests: {},
+  harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
+  lastHarvestTick: Date.now(),
+  trainingPhase: null,
 
   setScreen: (screen) => set({ screen }),
 
@@ -360,9 +378,11 @@ const useGameStore = create((set, get) => ({
       unspentPoints: 0,
       skillPoints: 0,
       unlockedSkills: {},
+      equipment: {},
     };
     set({
-      screen: 'world',
+      screen: 'training',
+      trainingPhase: 'pre_training_1',
       playerHealth: Math.floor(stats.health),
       playerMaxHealth: Math.floor(stats.health),
       playerMana: Math.floor(stats.mana),
@@ -383,15 +403,38 @@ const useGameStore = create((set, get) => ({
       skillPoints: Math.max(0, hero.level),
       unlockedSkills: hero.unlockedSkills || {},
       unspentPoints: hero.unspentPoints || 0,
+      equipment: hero.equipment || {},
     };
-    set({
-      heroRoster: [...state.heroRoster, heroWithSkills],
-      activeHeroIds: state.activeHeroIds.length < 3
-        ? [...state.activeHeroIds, heroWithSkills.id]
-        : state.activeHeroIds,
-      heroCreationPending: false,
-      screen: 'world',
-    });
+    const newRoster = [...state.heroRoster, heroWithSkills];
+    const newActiveIds = state.activeHeroIds.length < 3
+      ? [...state.activeHeroIds, heroWithSkills.id]
+      : state.activeHeroIds;
+
+    if (state.trainingPhase === 'create_hero_2') {
+      set({
+        heroRoster: newRoster,
+        activeHeroIds: newActiveIds,
+        heroCreationPending: false,
+        screen: 'training',
+        trainingPhase: 'pre_training_2',
+      });
+    } else if (state.trainingPhase === 'create_hero_3') {
+      set({
+        heroRoster: newRoster,
+        activeHeroIds: newActiveIds,
+        heroCreationPending: false,
+        trainingPhase: null,
+        screen: 'world',
+        gameMessage: 'Your War Party is formed! The world awaits, Warlord.',
+      });
+    } else {
+      set({
+        heroRoster: newRoster,
+        activeHeroIds: newActiveIds,
+        heroCreationPending: false,
+        screen: 'world',
+      });
+    }
   },
 
   setActiveHeroes: (heroIds) => {
@@ -919,6 +962,10 @@ const useGameStore = create((set, get) => ({
 
   handleVictory: () => {
     const state = get();
+    if (state.battleState?.isTraining) {
+      get().handleTrainingVictory(state.battleState.trainingRound);
+      return;
+    }
     const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
     const totalXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
     const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
@@ -954,6 +1001,15 @@ const useGameStore = create((set, get) => ({
     }
 
     log.push(`✨ Victory! Gained ${totalXp} XP and ${totalGold} Gold.`);
+
+    const lootDrops = [];
+    enemyUnits.forEach(e => {
+      const drops = generateLoot(e.templateId, state.level, state.battleState.isBoss);
+      lootDrops.push(...drops);
+    });
+    if (lootDrops.length > 0) {
+      log.push(`🎁 Found ${lootDrops.length} item${lootDrops.length > 1 ? 's' : ''}!`);
+    }
 
     const newVictories = state.victories + 1;
     let newMaxSlots = state.maxHeroSlots;
@@ -1016,6 +1072,7 @@ const useGameStore = create((set, get) => ({
       locationsCleared,
       maxHeroSlots: newMaxSlots,
       heroRoster: updatedRoster,
+      pendingLoot: lootDrops,
       battleLog: log.slice(-12),
       gameMessage: heroMsg || (leveledUp ? `Level Up! You are now level ${newLevel}!` : null),
       playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
@@ -1145,6 +1202,281 @@ const useGameStore = create((set, get) => ({
   getUnlockedLocations: () => {
     const state = get();
     return locations.filter(l => l.unlocked || (l.unlockLevel && state.level >= l.unlockLevel));
+  },
+
+  equipItem: (heroId, item) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero) return;
+    if (item.levelReq && hero.level < item.levelReq) return;
+    if (item.classReq && !item.classReq.includes(hero.classId)) return;
+
+    const currentEquip = (hero.equipment || {})[item.slot];
+    let newInventory = state.inventory.filter(i => i.id !== item.id);
+    if (currentEquip) newInventory.push(currentEquip);
+
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? { ...h, equipment: { ...(h.equipment || {}), [item.slot]: item } } : h
+    );
+    set({ heroRoster: updatedRoster, inventory: newInventory });
+  },
+
+  unequipItem: (heroId, slot) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero || !hero.equipment?.[slot]) return;
+
+    const item = hero.equipment[slot];
+    const newEquipment = { ...(hero.equipment || {}) };
+    delete newEquipment[slot];
+
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? { ...h, equipment: newEquipment } : h
+    );
+    set({ heroRoster: updatedRoster, inventory: [...state.inventory, item] });
+  },
+
+  addToInventory: (items) => {
+    const state = get();
+    set({ inventory: [...state.inventory, ...items] });
+  },
+
+  removeFromInventory: (itemId) => {
+    const state = get();
+    set({ inventory: state.inventory.filter(i => i.id !== itemId) });
+  },
+
+  setPendingLoot: (loot) => set({ pendingLoot: loot }),
+  clearPendingLoot: () => {
+    const state = get();
+    set({ inventory: [...state.inventory, ...state.pendingLoot], pendingLoot: [] });
+  },
+  discardPendingLoot: () => set({ pendingLoot: [] }),
+
+  assignHarvest: (nodeId, heroId) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero) return;
+    const alreadyHarvesting = Object.values(state.activeHarvests).includes(heroId);
+    if (alreadyHarvesting) return;
+    if (state.activeHeroIds.includes(heroId)) return;
+    set({
+      activeHarvests: { ...state.activeHarvests, [nodeId]: heroId },
+      lastHarvestTick: Date.now(),
+    });
+  },
+
+  recallHarvest: (nodeId) => {
+    const state = get();
+    const newHarvests = { ...state.activeHarvests };
+    delete newHarvests[nodeId];
+    set({ activeHarvests: newHarvests });
+  },
+
+  tickHarvests: () => {
+    const state = get();
+    const now = Date.now();
+    const elapsed = (now - state.lastHarvestTick) / 1000;
+    if (elapsed < 1) return;
+
+    const newResources = { ...state.harvestResources };
+    let goldGained = 0;
+
+    Object.entries(state.activeHarvests).forEach(([nodeId, heroId]) => {
+      const node = state.harvestNodes.find(n => n.id === nodeId);
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (!node || !hero) return;
+      const heroMult = 1 + (hero.level * 0.1);
+      const amount = node.baseRate * heroMult * elapsed;
+      if (node.resource === 'gold') {
+        goldGained += Math.floor(amount);
+      } else {
+        newResources[node.resource] = (newResources[node.resource] || 0) + amount;
+      }
+    });
+
+    const updates = { lastHarvestTick: now, harvestResources: newResources };
+    if (goldGained > 0) updates.gold = state.gold + goldGained;
+    set(updates);
+  },
+
+  setTrainingPhase: (phase) => set({ trainingPhase: phase }),
+
+  startTrainingBattle: (round) => {
+    const state = get();
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
+    }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+    if (playerTeam.length === 0) return;
+
+    const enemyTemplateId = round === 1 ? 'goblin' : 'skeleton';
+    const enemyCount = round === 1 ? 1 : 2;
+    const enemyUnits = [];
+    for (let i = 0; i < enemyCount; i++) {
+      const enemy = createEnemy(enemyTemplateId, 1);
+      if (round === 1) {
+        enemy.maxHealth = Math.floor(enemy.maxHealth * 0.5);
+        enemy.health = enemy.maxHealth;
+        enemy.damage = Math.floor(enemy.damage * 0.5);
+      } else {
+        enemy.maxHealth = Math.floor(enemy.maxHealth * 0.7);
+        enemy.health = enemy.maxHealth;
+        enemy.damage = Math.floor(enemy.damage * 0.7);
+      }
+      if (enemy) enemyUnits.push(enemy);
+    }
+
+    const allUnits = [...playerTeam, ...enemyUnits];
+    const pPositions = getFormationPositions(playerTeam.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
+    set({
+      screen: 'battle',
+      battleState: { phase: 'intro', turnCount: 0, isBoss: false, isTraining: true, trainingRound: round },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [round === 1
+        ? 'Training Round 1: Defeat the practice dummy! Use abilities 1-5 to attack.'
+        : 'Training Round 2: Fight alongside your team! Coordinate your heroes.'],
+      playerHealth: mainUnit.health,
+      playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana,
+      playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina,
+      playerMaxStamina: mainUnit.maxStamina,
+      cooldowns: {},
+      floatingTexts: [],
+    });
+  },
+
+  handleTrainingVictory: (round) => {
+    const state = get();
+    const totalXp = 25;
+    const totalGold = 10;
+    let newXp = state.xp + totalXp;
+    let newLevel = state.level;
+    let newXpToNext = state.xpToNext;
+    let newUnspent = state.unspentPoints;
+    let newSkillPoints = state.skillPoints;
+    let log = [...state.battleLog];
+
+    while (newXp >= newXpToNext && newLevel < 20) {
+      newXp -= newXpToNext;
+      newLevel++;
+      newXpToNext = Math.floor(newXpToNext * 1.4);
+      newUnspent += POINTS_PER_LEVEL;
+      newSkillPoints += 1;
+    }
+
+    log.push(`Training complete! Gained ${totalXp} XP and ${totalGold} Gold.`);
+
+    const updatedRoster = state.heroRoster.map(hero => {
+      const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+      const updates = {};
+      if (battleUnit) {
+        updates.currentHealth = battleUnit.health;
+        updates.currentMana = battleUnit.mana;
+        updates.currentStamina = battleUnit.stamina;
+      }
+      if (hero.id === 'player') {
+        updates.level = newLevel;
+        updates.unspentPoints = newUnspent;
+        updates.skillPoints = newSkillPoints;
+      }
+      return { ...hero, ...updates };
+    });
+
+    set({
+      battleState: { ...state.battleState, phase: 'victory' },
+      xp: newXp,
+      level: newLevel,
+      xpToNext: newXpToNext,
+      gold: state.gold + totalGold,
+      unspentPoints: newUnspent,
+      skillPoints: newSkillPoints,
+      heroRoster: updatedRoster,
+      battleLog: log.slice(-12),
+      victories: state.victories + 1,
+    });
+  },
+
+  returnFromTraining: (round) => {
+    const state = get();
+    const stats = state.getStats();
+    const healedRoster = state.heroRoster.map(hero => {
+      const hStats = getHeroStatsWithBonuses(hero);
+      return {
+        ...hero,
+        currentHealth: Math.floor(hStats.health),
+        currentMana: Math.floor(hStats.mana),
+        currentStamina: Math.floor(hStats.stamina),
+      };
+    });
+
+    if (round === 1) {
+      set({
+        screen: 'heroCreate',
+        battleState: null, battleUnits: [], battleTurnOrder: [],
+        battleCurrentTurn: 0, selectedTargetId: null, lastAction: null,
+        floatingTexts: [],
+        playerHealth: Math.floor(stats.health),
+        playerMana: Math.floor(stats.mana),
+        playerStamina: Math.floor(stats.stamina),
+        heroRoster: healedRoster,
+        trainingPhase: 'create_hero_2',
+        maxHeroSlots: 2,
+        gameMessage: 'Training complete! Now recruit your second warlord.',
+      });
+    } else {
+      set({
+        screen: 'heroCreate',
+        battleState: null, battleUnits: [], battleTurnOrder: [],
+        battleCurrentTurn: 0, selectedTargetId: null, lastAction: null,
+        floatingTexts: [],
+        playerHealth: Math.floor(stats.health),
+        playerMana: Math.floor(stats.mana),
+        playerStamina: Math.floor(stats.stamina),
+        heroRoster: healedRoster,
+        trainingPhase: 'create_hero_3',
+        maxHeroSlots: 3,
+        gameMessage: 'Training complete! Recruit your third warlord to form your War Party.',
+      });
+    }
+  },
+
+  completeTraining: () => {
+    const state = get();
+    const stats = state.getStats();
+    set({
+      screen: 'world',
+      trainingPhase: null,
+      playerHealth: Math.floor(stats.health),
+      playerMana: Math.floor(stats.mana),
+      playerStamina: Math.floor(stats.stamina),
+      gameMessage: 'Your War Party is formed! The world awaits, Warlord.',
+    });
   },
 }));
 

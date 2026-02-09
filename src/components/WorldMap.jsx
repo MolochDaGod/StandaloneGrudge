@@ -12,7 +12,9 @@ export default function WorldMap() {
   const { level, xp, xpToNext, gold, playerName, playerClass, playerRace, playerHealth, playerMaxHealth,
     playerMana, playerMaxMana, setScreen, enterLocation, getUnlockedLocations, restAtInn,
     victories, unspentPoints, skillPoints, heroRoster, activeHeroIds, maxHeroSlots,
-    setActiveHeroes, locationsCleared } = useGameStore();
+    setActiveHeroes, locationsCleared,
+    harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
+  } = useGameStore();
   const raceDef = playerRace ? raceDefinitions[playerRace] : null;
 
   const unlockedLocs = getUnlockedLocations();
@@ -23,6 +25,13 @@ export default function WorldMap() {
   useEffect(() => {
     setBgm('ambient');
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      tickHarvests();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [tickHarvests]);
 
   const toggleHeroActive = (heroId) => {
     if (activeHeroIds.includes(heroId)) {
@@ -173,6 +182,94 @@ export default function WorldMap() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {harvestNodes && harvestNodes.length > 0 && (
+          <div style={{
+            marginBottom: 20, padding: 16, background: 'rgba(20,26,43,0.8)',
+            border: '1px solid var(--border)', borderRadius: 10,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1rem' }}>
+                Auto Harvest
+              </h3>
+              <div style={{ display: 'flex', gap: 10, fontSize: '0.7rem', color: 'var(--muted)' }}>
+                {Object.entries(harvestResources).filter(([k, v]) => v > 0 || k === 'gold').map(([k, v]) => (
+                  <span key={k} style={{
+                    background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 4,
+                    border: '1px solid var(--border)',
+                  }}>
+                    {k === 'gold' ? '💰' : k === 'herbs' ? '🌿' : k === 'wood' ? '🪵' : k === 'ore' ? '🪨' : '💎'}{' '}
+                    {Math.floor(v)}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+              {harvestNodes.filter(n => level >= n.unlockLevel).map(node => {
+                const assignedHeroId = activeHarvests[node.id];
+                const assignedHero = assignedHeroId ? heroRoster.find(h => h.id === assignedHeroId) : null;
+                const availableHeroes = heroRoster.filter(h =>
+                  !activeHeroIds.includes(h.id) && !Object.values(activeHarvests).includes(h.id)
+                );
+                return (
+                  <div key={node.id} style={{
+                    background: assignedHero ? 'rgba(34,197,94,0.08)' : 'rgba(42,49,80,0.3)',
+                    border: `1px solid ${assignedHero ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
+                    borderRadius: 8, padding: '10px 12px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: '1.2rem' }}>{node.icon}</span>
+                      <div>
+                        <div style={{ color: 'var(--text)', fontSize: '0.8rem', fontWeight: 600 }}>{node.name}</div>
+                        <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>
+                          +{node.baseRate} {node.resource}/s
+                        </div>
+                      </div>
+                    </div>
+                    {assignedHero ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <SpriteAnimation spriteData={getPlayerSprite(assignedHero.classId, assignedHero.raceId)} animation="idle" scale={0.6} speed={200} />
+                          <span style={{ color: 'var(--accent)', fontSize: '0.7rem', fontWeight: 600 }}>{assignedHero.name}</span>
+                        </div>
+                        <button onClick={() => recallHarvest(node.id)} style={{
+                          background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+                          borderRadius: 4, padding: '3px 8px', color: '#ef4444', cursor: 'pointer', fontSize: '0.65rem',
+                        }}>Recall</button>
+                      </div>
+                    ) : (
+                      <div>
+                        {availableHeroes.length > 0 ? (
+                          <select
+                            onChange={(e) => { if (e.target.value) assignHarvest(node.id, e.target.value); e.target.value = ''; }}
+                            defaultValue=""
+                            style={{
+                              background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)',
+                              borderRadius: 4, padding: '4px 8px', color: 'var(--text)',
+                              fontSize: '0.7rem', width: '100%', cursor: 'pointer',
+                            }}
+                          >
+                            <option value="">Assign hero...</option>
+                            {availableHeroes.map(h => (
+                              <option key={h.id} value={h.id}>{h.name} (Lv.{h.level})</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div style={{ color: 'var(--muted)', fontSize: '0.65rem', fontStyle: 'italic' }}>
+                            No idle heroes available
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 8, color: 'var(--muted)', fontSize: '0.6rem', fontStyle: 'italic' }}>
+              Assign reserve heroes to gather resources while you adventure. Heroes in your War Party cannot harvest.
             </div>
           </div>
         )}
