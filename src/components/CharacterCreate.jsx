@@ -255,9 +255,14 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2, height: 100, overflow: 'hidden' }}>
+                    <div style={{
+                      display: 'flex', justifyContent: 'center', alignItems: 'center',
+                      marginBottom: 6, height: 100, overflow: 'hidden',
+                      border: `1px solid ${cls.color}50`, borderRadius: 10,
+                      background: 'rgba(0,0,0,0.25)',
+                    }}>
                       {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={1} speed={150} />
+                        <WorgeMorphPreview raceId={selectedRace} scale={2.5} speed={150} />
                       ) : (
                         <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2.5} speed={150} />
                       )}

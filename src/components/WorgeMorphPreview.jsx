@@ -20,18 +20,13 @@ export default function WorgeMorphPreview({ raceId, scale = 3, speed = 150 }) {
   const normalSprite = getPlayerSprite('worge', raceId);
   const bearSprite = getWorgTransformSprite(raceId);
   const currentSprite = isBearForm ? bearSprite : normalSprite;
-  const currentScale = isBearForm ? scale * 1.15 : scale;
-  const containerWidth = 100 * scale;
-  const containerHeight = 100 * scale;
+  const currentScale = isBearForm ? scale * 1.1 : scale;
 
   return (
     <div style={{
-      width: containerWidth,
-      height: containerHeight,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      overflow: 'hidden',
       transition: 'opacity 0.4s ease',
       opacity,
     }}>

@@ -199,11 +199,18 @@ export default function HeroCreate() {
                     borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
                     display: 'flex', gap: 12, alignItems: 'center',
                   }}>
-                  {id === 'worge' ? (
-                    <WorgeMorphPreview raceId={selectedRace} scale={1} speed={150} />
-                  ) : (
-                    <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2.4} speed={150} />
-                  )}
+                  <div style={{
+                    width: 80, height: 80, overflow: 'hidden',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '1px solid rgba(110,231,183,0.3)', borderRadius: 10,
+                    background: 'rgba(0,0,0,0.25)', flexShrink: 0,
+                  }}>
+                    {id === 'worge' ? (
+                      <WorgeMorphPreview raceId={selectedRace} scale={2} speed={150} />
+                    ) : (
+                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2} speed={150} />
+                    )}
+                  </div>
                   <div>
                     <div className="font-cinzel" style={{ color: selectedClass === id ? 'var(--accent)' : 'var(--text)', fontSize: '1rem' }}>
                       {cls.name}
