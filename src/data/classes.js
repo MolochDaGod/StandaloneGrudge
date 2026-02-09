@@ -43,7 +43,12 @@ export const classDefinitions = {
       { id: 'natures_grasp', name: "Nature's Grasp", icon: '🌿', description: 'Vines heal you over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 20, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
       { id: 'dagger_toss', name: 'Dagger Toss', icon: '🗡️', description: 'Hurl an envenomed dagger, poisoning for 3 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
       { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
-    ]
+    ],
+    bearFormAbilities: {
+      mace_strike: { id: 'maul', name: 'Maul', icon: '🐾', description: 'Savage claws rip the target, restoring resources', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 4, staminaGain: 8 },
+      natures_grasp: { id: 'natures_taunt', name: "Nature's Taunt", icon: '🌲', description: 'Roar with primal fury, taunting all enemies and boosting defense for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'defense', flat: 15, duration: 2 } },
+      dagger_toss: { id: 'worge_charge', name: 'Worge Charge', icon: '🐺', description: 'Lunge at the enemy with bestial speed, dealing heavy damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
+    }
   },
   ranger: {
     name: 'Ranger',

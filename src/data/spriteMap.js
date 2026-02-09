@@ -390,6 +390,10 @@ export const abilityEffectMap = {
     "Nature's Grasp": { effect: 'healEffect', beam: null, anim: 'block' },
     'Dagger Toss': { effect: 'windHit', beam: 'green', anim: 'attack3' },
     'Bear Form': { effect: 'holyVfx', beam: null, anim: 'block' },
+    'Maul': { effect: 'slashHit', beam: null, anim: 'attack1' },
+    "Nature's Taunt": { effect: 'holyVfx', beam: null, anim: 'block' },
+    'Worge Charge': { effect: 'hitEffect1', beam: null, anim: 'attack2' },
+    'Revert Form': { effect: 'holyVfx', beam: null, anim: 'block' },
   },
   ranger: {
     'Quick Shot': { effect: 'windProjectile', beam: 'green', anim: 'attack1' },
@@ -422,6 +426,9 @@ export function getEnemySprite(templateId) {
 export function getAbilityEffect(classId, abilityName) {
   const classEffects = abilityEffectMap[classId];
   if (classEffects && classEffects[abilityName]) return classEffects[abilityName];
+  if (classId === 'worge' && abilityName.endsWith(' Form') && classEffects?.['Revert Form']) {
+    return classEffects['Revert Form'];
+  }
   if (enemyAbilityEffects[abilityName]) return enemyAbilityEffects[abilityName];
   return { effect: 'weaponHit', beam: null };
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
+import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
@@ -179,6 +180,26 @@ export default function BattleScreen() {
 
   const isPlayerTurn = phase === 'player_turn';
   const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
+
+  const displayedAbilities = useMemo(() => {
+    if (!currentCls) return [];
+    const baseAbilities = currentCls.abilities;
+    if (!currentUnit?.bearForm || !currentCls.bearFormAbilities) return baseAbilities;
+    const raceDef = currentUnit.raceId ? raceDefinitions[currentUnit.raceId] : null;
+    const raceName = raceDef?.name || 'Beast';
+    return baseAbilities.map(ability => {
+      if (currentCls.bearFormAbilities[ability.id]) {
+        return currentCls.bearFormAbilities[ability.id];
+      }
+      if (ability.isBearForm) {
+        const revertAbility = currentUnit.abilities?.find(a => a.id === 'revert_form');
+        if (revertAbility) {
+          return { ...revertAbility, name: `${raceName} Form` };
+        }
+      }
+      return ability;
+    });
+  }, [currentCls, currentUnit?.bearForm, currentUnit?.raceId, currentUnit?.abilities]);
 
   useEffect(() => {
     setBgm('battle');
@@ -425,13 +446,12 @@ export default function BattleScreen() {
 
   useEffect(() => {
     if (phase !== 'player_turn') return;
-    const abilities = currentCls?.abilities;
-    if (!abilities) return;
+    if (!displayedAbilities.length) return;
     const handleKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const num = parseInt(e.key);
-      if (num >= 1 && num <= abilities.length) {
-        const ability = abilities[num - 1];
+      if (num >= 1 && num <= displayedAbilities.length) {
+        const ability = displayedAbilities[num - 1];
         if (!currentUnit) return;
         const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
         const noMana = (ability.manaCost || 0) > currentUnit.mana;
@@ -441,7 +461,7 @@ export default function BattleScreen() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, currentCls, currentUnit, handleAbility]);
+  }, [phase, displayedAbilities, currentUnit, handleAbility]);
 
   if (!battleState || battleUnits.length === 0) return null;
 
@@ -783,7 +803,7 @@ export default function BattleScreen() {
                 fontSize: '0.6rem', letterSpacing: 1
               }}>
                 <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{currentUnit.name}</span>
-                {' — '}Choose action <span style={{ color: 'var(--accent)' }}>(1-{currentCls?.abilities.length})</span>
+                {' — '}Choose action <span style={{ color: 'var(--accent)' }}>(1-{displayedAbilities.length})</span>
                 {selectedTargetId && (
                   <span style={{ color: 'var(--danger)', marginLeft: 8 }}>
                     Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
@@ -791,11 +811,11 @@ export default function BattleScreen() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {currentCls?.abilities.map((ability, idx) => {
+                {displayedAbilities.map((ability, idx) => {
                   const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
                   const noMana = (ability.manaCost || 0) > currentUnit.mana;
                   const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
-                  const alreadyTransformed = (ability.isBearForm && currentUnit.bearForm) || (ability.isDemonBlade && currentUnit.demonBlade);
+                  const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
                   const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}

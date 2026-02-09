@@ -70,7 +70,9 @@ function createHeroBattleUnit(hero) {
     drainHealth: stats.drainHealth || 0,
     healthRegen: stats.healthRegen || 0,
     manaRegen: stats.manaRegen || 0,
-    abilities: cls.abilities,
+    abilities: cls.bearFormAbilities
+      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }]
+      : cls.abilities,
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
     level: hero.level,
@@ -139,12 +141,18 @@ function chooseAIAction(unit, allUnits) {
     }
   }
 
+  const cls = classDefinitions[unit.classId];
+  const bearSwapIds = cls?.bearFormAbilities ? Object.keys(cls.bearFormAbilities) : [];
+  const bearReplacementIds = cls?.bearFormAbilities ? Object.values(cls.bearFormAbilities).map(a => a.id) : [];
+
   const availableAbilities = unit.abilities.filter(a =>
     (unit.cooldowns[a.id] || 0) <= 0 &&
     (a.manaCost || 0) <= unit.mana &&
     (a.staminaCost || 0) <= unit.stamina &&
     !(a.isBearForm && unit.bearForm) &&
-    !(a.isDemonBlade && unit.demonBlade)
+    !(a.isDemonBlade && unit.demonBlade) &&
+    !(unit.bearForm && bearSwapIds.includes(a.id)) &&
+    !(!unit.bearForm && (bearReplacementIds.includes(a.id) || a.type === 'revert_form'))
   );
   if (availableAbilities.length === 0) return null;
 
@@ -961,6 +969,12 @@ const useGameStore = create(persist((set, get) => ({
       attacker.dots.push({ heal: true, healPercent: ability.healPercent, duration: ability.duration, source: ability.name });
       actionResult.targetId = currentUnitId;
       log.push(`💚 ${attacker.name} uses ${ability.name}!`);
+
+    } else if (ability.type === 'revert_form') {
+      attacker.bearForm = false;
+      attacker.buffs = attacker.buffs.filter(b => b.source !== 'Bear Form');
+      actionResult.targetId = currentUnitId;
+      log.push(`🔄 ${attacker.name} reverts to normal form!`);
 
     } else if (ability.type === 'buff') {
       if (ability.isBearForm) {
