@@ -8,10 +8,10 @@ function getCtx() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     bgmGain = audioCtx.createGain();
-    bgmGain.gain.value = 0.15;
+    bgmGain.gain.value = musicMuted ? 0 : musicVolume;
     bgmGain.connect(audioCtx.destination);
     sfxGain = audioCtx.createGain();
-    sfxGain.gain.value = 0.25;
+    sfxGain.gain.value = sfxMuted ? 0 : sfxVolume;
     sfxGain.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -228,6 +228,36 @@ export function setBgm(type) {
 export function initAudio() {
   getCtx();
 }
+
+let musicMuted = false;
+let sfxMuted = false;
+let musicVolume = 0.15;
+let sfxVolume = 0.25;
+
+export function setMusicMuted(muted) {
+  musicMuted = muted;
+  if (bgmGain) bgmGain.gain.value = muted ? 0 : musicVolume;
+}
+
+export function setSfxMuted(muted) {
+  sfxMuted = muted;
+  if (sfxGain) sfxGain.gain.value = muted ? 0 : sfxVolume;
+}
+
+export function setMusicVolume(vol) {
+  musicVolume = vol;
+  if (bgmGain && !musicMuted) bgmGain.gain.value = vol;
+}
+
+export function setSfxVolume(vol) {
+  sfxVolume = vol;
+  if (sfxGain && !sfxMuted) sfxGain.gain.value = vol;
+}
+
+export function getMusicMuted() { return musicMuted; }
+export function getSfxMuted() { return sfxMuted; }
+export function getMusicVolume() { return musicVolume; }
+export function getSfxVolume() { return sfxVolume; }
 
 let userInteracted = false;
 function handleFirstInteraction() {

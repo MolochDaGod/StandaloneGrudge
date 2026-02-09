@@ -14,6 +14,7 @@ import HeroCreate from './components/HeroCreate';
 import AccountPage from './components/AccountPage';
 import TrainingScreen from './components/TrainingScreen';
 import LootPopup from './components/LootPopup';
+import SettingsMenu from './components/SettingsMenu';
 
 export default function App() {
   const screen = useGameStore(s => s.screen);
@@ -97,6 +98,7 @@ export default function App() {
       }}>
         {renderScreen()}
       </div>
+      <SettingsMenu />
       {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
       {gameMessage && (
         <div style={{
