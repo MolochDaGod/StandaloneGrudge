@@ -1,0 +1,88 @@
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 88d1957f-e5f9-4bbe-8b56-60edc458561a Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 71b9e9dd-9e9b-4615-8d28-3187422a5ba7 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension adccbcd2-c9d6-4778-b0cb-20e1bf289634 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 1f5ce3c0-6f99-4d79-8354-ef5cbc8dd034 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 80d95f9d-da16-441f-90c4-d40e5f9f3a7a Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 14ed5892-2bf7-41c9-9f19-0bd9464b6e94 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 3d28c542-4e39-4490-ae8d-b1af85e3affb Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 857b2e2f-2c57-42be-8033-400c06d95624 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 7429c16f-3b87-492e-a0d0-cd9aa93313df Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 18327322-d236-4f51-93dd-bd22e040e5e3 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 9d8280fb-1a5f-495b-9624-aba982c42205 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 7636883a-2637-421c-aa98-27ffc46d202b Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 64d9f8f8-0c0c-46cb-8245-193024f271c7 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 929d2f2e-70e3-407b-b5c7-9b5d4c8e7e20 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 33a91a8f-b3df-4337-a084-d5efdb39049d Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 2de857a3-68f1-4435-8c51-eda9d5ffe3a4 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension ce79e410-37c7-48d9-88ee-d28b6a4efcd9 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension d526fa49-4249-4a76-99b8-6a8e548e485f Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension f69cae31-eabd-4d70-8feb-546b81e35e1a Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension dd982728-9c3f-41ed-ae69-33c51a7fec20 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 3a43c2a4-dbc3-4bb7-8792-eed3c6c3cc7d Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension e2df0c28-20a7-468f-96bb-aec04c9c8ed7 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension cb610a4e-e11a-4432-a603-20cbfeeb4da2 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension ab840018-fd1b-4dfb-8f8c-ccacfe052b60 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension 84d30d55-b036-47a5-ac3f-01e1e158bd42 Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ Extension Error: An error occurred while loading the extension manifest: Manifest does not exist for extension f97af10c-89b0-4910-a11a-6554b5cd4fdd Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+ React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+%s   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ App 1. useCallback                useCallback
+2. useCallback                useCallback
+3. useSyncExternalStore       useSyncExternalStore
+4. useDebugValue              useDebugValue
+5. useCallback                useCallback
+6. useCallback                useCallback
+7. useSyncExternalStore       useSyncExternalStore
+8. useDebugValue              useDebugValue
+9. useCallback                useCallback
+10. useCallback               useCallback
+11. useSyncExternalStore      useSyncExternalStore
+12. useDebugValue             useDebugValue
+13. useState                  useState
+14. useState                  useState
+15. useRef                    useRef
+16. useState                  useState
+17. useEffect                 useEffect
+18. useEffect                 useEffect
+19. undefined                 useCallback
+
+(anonymous) @ injected.js:37
+react-dom_client.js:5790 Uncaught Error: Rendered more hooks than during the previous render.
+ [vite] Failed to reload /src/App.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+(anonymous) @ injected.js:37
+ [vite] SyntaxError: The requested module '/src/data/attributes.js' does not provide an export named 'ATTRIBUTES'
+(anonymous) @ injected.js:37
+ [vite] Failed to reload /src/components/TrainingScreen.jsx. This could be due to syntax errors or importing non-existent modules. (see errors above)
+(anonymous) @ injected.js:37
+ [Coframe] Mutation callback infinite loop protection triggered, disconnecting mutation observer Object
+overrideMethod @ chrome-extension://f…ld/installHook.js:1
+f36fb95c-926d-4e1b-9…t=1770625353383:252 Uncaught 
