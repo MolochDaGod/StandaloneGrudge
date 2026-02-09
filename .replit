@@ -2,7 +2,7 @@ modules = ["nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["unzip", "imagemagick"]
+packages = ["unzip", "imagemagick", "p7zip"]
 
 [workflows]
 runButton = "Project"

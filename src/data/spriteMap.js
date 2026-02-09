@@ -286,6 +286,20 @@ export const effectSprites = {
   magicBubbles: { src: '/effects/pixel/20_magicbubbles_spritesheet.png', size: 800, frames: 64 },
   slash: { src: '/effects/slash_spritesheet.png', cols: 1, rows: 8, frameW: 64, frameH: 64, frames: 8 },
   healEffect: { src: '/effects/heal_spritesheet.png', cols: 4, rows: 4, frameW: 128, frameH: 128, frames: 16 },
+  hitEffect1: { src: '/effects/hit_effect_1.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
+  hitEffect2: { src: '/effects/hit_effect_2.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
+  hitEffect3: { src: '/effects/hit_effect_3.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
+  fireExplosion: { src: '/effects/fire_explosion.png', cols: 4, rows: 4, frameW: 64, frameH: 64, frames: 16 },
+  fireExplosion2: { src: '/effects/fire_explosion_2.png', cols: 18, rows: 1, frameW: 48, frameH: 48, frames: 18 },
+  thunderHit: { src: '/effects/thunder_hit.png', cols: 6, rows: 1, frameW: 32, frameH: 32, frames: 6 },
+  thunderProjectile: { src: '/effects/thunder_projectile.png', cols: 5, rows: 1, frameW: 32, frameH: 32, frames: 5 },
+  thunderProjectile2: { src: '/effects/thunder_projectile_2.png', cols: 16, rows: 1, frameW: 48, frameH: 48, frames: 16 },
+  holyImpact: { src: '/effects/holy_impact.png', cols: 7, rows: 1, frameW: 32, frameH: 32, frames: 7 },
+  holyRepeatable: { src: '/effects/holy_repeatable.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  holyVfx: { src: '/effects/holy_vfx_02.png', cols: 16, rows: 1, frameW: 48, frameH: 48, frames: 16 },
+  windBreath: { src: '/effects/wind_breath.png', cols: 18, rows: 1, frameW: 32, frameH: 32, frames: 18 },
+  windHit: { src: '/effects/wind_hit.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
+  windProjectile: { src: '/effects/wind_projectile.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
 };
 
 export const beamTrails = {
@@ -295,34 +309,50 @@ export const beamTrails = {
   red: '/effects/beams/beam_red.png',
 };
 
+export const enemyAbilityEffects = {
+  'Shadow Bolt': { effect: 'midnight', beam: 'purple' },
+  'Dark Nova': { effect: 'felSpell', beam: 'purple' },
+  'Drain Life': { effect: 'nebula', beam: 'purple' },
+  'Fire Breath': { effect: 'fireExplosion', beam: 'orange' },
+  'Hellfire': { effect: 'fireExplosion2', beam: 'orange' },
+  'Meteor': { effect: 'fireExplosion', beam: 'red' },
+  'Soul Bolt': { effect: 'holyImpact', beam: 'purple' },
+  'Death Coil': { effect: 'thunderHit', beam: 'purple' },
+  'Doom Strike': { effect: 'hitEffect1', beam: 'red' },
+  'Ground Pound': { effect: 'hitEffect2', beam: null },
+  'Void Blast': { effect: 'thunderProjectile2', beam: 'purple' },
+  'Annihilate': { effect: 'fireExplosion2', beam: 'red' },
+  'Reality Tear': { effect: 'felSpell', beam: 'purple' },
+};
+
 export const abilityEffectMap = {
   warrior: {
     'Slash': { effect: 'slash', beam: null, anim: 'attack1' },
-    'Power Strike': { effect: 'weaponHit', beam: null, anim: 'attack2' },
-    'War Cry': { effect: 'brightFire', beam: null, anim: 'block' },
-    'Shield Bash': { effect: 'flameLash', beam: null, anim: 'attack3' },
-    'Cleave': { effect: 'fireSpin', beam: null, anim: 'attack3' },
+    'Power Strike': { effect: 'hitEffect1', beam: null, anim: 'attack2' },
+    'War Cry': { effect: 'holyVfx', beam: null, anim: 'block' },
+    'Shield Bash': { effect: 'hitEffect2', beam: null, anim: 'attack3' },
+    'Cleave': { effect: 'fireExplosion2', beam: null, anim: 'attack3' },
   },
   mage: {
-    'Arcane Bolt': { effect: 'magic8', beam: 'purple', anim: 'attack1' },
-    'Fireball': { effect: 'fire', beam: 'orange', anim: 'attack1' },
+    'Arcane Bolt': { effect: 'holyImpact', beam: 'purple', anim: 'attack1' },
+    'Fireball': { effect: 'fireExplosion', beam: 'orange', anim: 'attack1' },
     'Divine Heal': { effect: 'healEffect', beam: null, anim: 'heal' },
     'Ice Storm': { effect: 'freezing', beam: 'purple', anim: 'attack1' },
-    'Mana Shield': { effect: 'protectionCircle', beam: null, anim: 'block' },
+    'Mana Shield': { effect: 'holyRepeatable', beam: null, anim: 'block' },
   },
   worge: {
-    'Mace Strike': { effect: 'slash', beam: null, anim: 'attack1' },
-    'Lightning Lash': { effect: 'brightFire', beam: 'orange', anim: 'attack2' },
+    'Mace Strike': { effect: 'hitEffect3', beam: null, anim: 'attack1' },
+    'Lightning Lash': { effect: 'thunderHit', beam: 'orange', anim: 'attack2' },
     "Nature's Grasp": { effect: 'healEffect', beam: null, anim: 'block' },
-    'Dagger Toss': { effect: 'magickaHit', beam: 'green', anim: 'attack3' },
-    'Bear Form': { effect: 'vortex', beam: null, anim: 'block' },
+    'Dagger Toss': { effect: 'windHit', beam: 'green', anim: 'attack3' },
+    'Bear Form': { effect: 'holyVfx', beam: null, anim: 'block' },
   },
   ranger: {
-    'Quick Shot': { effect: 'magickaHit', beam: 'green', anim: 'attack1' },
-    'Aimed Shot': { effect: 'weaponHit', beam: 'red', anim: 'attack2' },
-    'Poison Arrow': { effect: 'nebula', beam: 'green', anim: 'attack1' },
-    'Evasive Roll': { effect: 'phantom', beam: null, anim: 'block' },
-    'Arrow Volley': { effect: 'magicSpell', beam: 'green', anim: 'attack2' },
+    'Quick Shot': { effect: 'windProjectile', beam: 'green', anim: 'attack1' },
+    'Aimed Shot': { effect: 'hitEffect1', beam: 'red', anim: 'attack2' },
+    'Poison Arrow': { effect: 'windBreath', beam: 'green', anim: 'attack1' },
+    'Evasive Roll': { effect: 'windBreath', beam: null, anim: 'block' },
+    'Arrow Volley': { effect: 'thunderProjectile2', beam: 'green', anim: 'attack2' },
   },
 };
 
@@ -348,5 +378,6 @@ export function getEnemySprite(templateId) {
 export function getAbilityEffect(classId, abilityName) {
   const classEffects = abilityEffectMap[classId];
   if (classEffects && classEffects[abilityName]) return classEffects[abilityName];
+  if (enemyAbilityEffects[abilityName]) return enemyAbilityEffects[abilityName];
   return { effect: 'weaponHit', beam: null };
 }
