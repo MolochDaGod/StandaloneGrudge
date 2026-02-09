@@ -97,7 +97,18 @@ function getUnitSprite(unit) {
     return getPlayerSprite(unit.classId, unit.raceId);
   }
   if (unit.templateId) {
-    return getEnemySprite(unit.templateId);
+    const sprite = getEnemySprite(unit.templateId);
+    if (unit.isBoss) {
+      const bossFilters = {
+        nature_elemental: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)',
+        water_elemental: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)',
+        lich: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)',
+        demon_lord: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)',
+        void_king: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8)',
+      };
+      return { ...sprite, filter: bossFilters[unit.templateId] || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
+    }
+    return sprite;
   }
   return getPlayerSprite('warrior');
 }
@@ -569,7 +580,8 @@ export default function BattleScreen() {
           const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
           const targetDisplaySize = 250;
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
-          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1);
+          const isBossUnit = unit.team === 'enemy' && unit.isBoss;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * (isBossUnit ? 1.6 : 1);
 
           return (
             <div

@@ -217,9 +217,13 @@ function chooseAIAction(unit, allUnits) {
     return { abilityId: buffAbilities[0].id, targetId: unit.id };
   }
 
-  if (unit.team === 'player' && healAbilities.length > 0) {
-    const lowAlly = allies.find(a => a.health / a.maxHealth < 0.45);
-    if (lowAlly) return { abilityId: healAbilities[0].id, targetId: lowAlly.id };
+  if (healAbilities.length > 0) {
+    if (unit.team === 'player') {
+      const lowAlly = allies.find(a => a.health / a.maxHealth < 0.45);
+      if (lowAlly) return { abilityId: healAbilities[0].id, targetId: lowAlly.id };
+    } else if (unit.health / unit.maxHealth < 0.5 && Math.random() < 0.6) {
+      return { abilityId: healAbilities[0].id, targetId: unit.id };
+    }
   }
 
   if (unit.team === 'player' && hotAbilities.length > 0 && unit.health / unit.maxHealth < 0.5 && Math.random() < 0.5) {

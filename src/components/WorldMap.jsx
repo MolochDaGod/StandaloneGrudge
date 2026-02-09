@@ -6,8 +6,16 @@ import { missionTemplates, arenaTemplates } from '../data/missions';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
+
+const bossMapSprites = {
+  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)' },
+  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)' },
+  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)' },
+  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)' },
+  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)' },
+};
 
 const locationPositions = {
   verdant_plains:  { x: 18, y: 78 },
@@ -393,6 +401,59 @@ export default function WorldMap() {
                     Lv.{loc.unlockLevel}
                   </div>
                 )}
+              </div>
+            </div>
+          );
+        })}
+
+        {locations.filter(loc => loc.boss && !bossesDefeated.includes(loc.boss)).map(loc => {
+          const pos = locationPositions[loc.id];
+          if (!pos) return null;
+          const isLocUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel);
+          if (!isLocUnlocked) return null;
+          const bossStyle = bossMapSprites[loc.boss] || {};
+          const spriteData = getEnemySprite(loc.boss);
+          const corruptedSprite = { ...spriteData, filter: bossStyle.filter || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
+          const bossX = pos.x + 3.5;
+          const bossY = pos.y - 4.5;
+
+          return (
+            <div key={`boss_${loc.boss}`} style={{
+              position: 'absolute',
+              left: `${Math.max(4, Math.min(96, bossX))}%`,
+              top: `${Math.max(4, Math.min(96, bossY))}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 4,
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                position: 'relative',
+                width: 80, height: 80,
+                overflow: 'hidden',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                filter: `drop-shadow(0 0 12px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
+                animation: 'glow 2s infinite',
+              }}>
+                <SpriteAnimation
+                  spriteData={corruptedSprite}
+                  animation="idle"
+                  scale={2.0}
+                  flip={true}
+                  speed={180}
+                />
+              </div>
+              <div style={{
+                width: 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
+                background: `radial-gradient(ellipse, ${bossStyle.glow || 'rgba(255,0,0,0.4)'}, transparent)`,
+              }} />
+              <div className="font-cinzel" style={{
+                textAlign: 'center',
+                fontSize: '0.5rem', fontWeight: 700,
+                color: bossStyle.glow ? bossStyle.glow.replace('0.5', '1').replace('0.6', '1').replace('0.7', '1') : '#ff4444',
+                textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
+                whiteSpace: 'nowrap', marginTop: 2,
+              }}>
+                BOSS
               </div>
             </div>
           );

@@ -374,6 +374,22 @@ export const enemyAbilityEffects = {
   'Vine Lash': { effect: 'windHit', beam: 'green' },
   "Nature's Wrath": { effect: 'windBreath', beam: 'green' },
   'Earthquake': { effect: 'hitEffect2', beam: null },
+  'Regenerate': { effect: 'healEffect', beam: 'green' },
+  'Thorn Armor': { effect: 'protectionCircle', beam: 'green' },
+  'Root Bind': { effect: 'windBreath', beam: 'green' },
+  'Healing Tide': { effect: 'healEffect', beam: 'purple' },
+  'Frozen Prison': { effect: 'freezing', beam: 'purple' },
+  'Soul Drain': { effect: 'nebula', beam: 'purple' },
+  'Raise Dead': { effect: 'phantom', beam: 'purple' },
+  'Shadow Nova': { effect: 'midnight', beam: 'purple' },
+  'Curse of Weakness': { effect: 'felSpell', beam: 'purple' },
+  'Demonic Regeneration': { effect: 'healEffect', beam: 'red' },
+  'Infernal Chains': { effect: 'fireSpin', beam: 'red' },
+  'Hellfire Aura': { effect: 'brightFire', beam: 'orange' },
+  'Void Drain': { effect: 'vortex', beam: 'purple' },
+  'Oblivion Pulse': { effect: 'sunburn', beam: 'purple' },
+  'Time Stop': { effect: 'freezing', beam: 'purple' },
+  'Void Enrage': { effect: 'felSpell', beam: 'red' },
 };
 
 export const abilityEffectMap = {
