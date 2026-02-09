@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { calculateStats, TOTAL_POINTS_AT_LEVEL, POINTS_PER_LEVEL, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
@@ -203,7 +204,7 @@ function getFormationPositions(count, side) {
   return p[side][Math.min(count, maxCount)] || p[side][1];
 }
 
-const useGameStore = create((set, get) => ({
+const useGameStore = create(persist((set, get) => ({
   screen: 'title',
   playerName: 'Hero',
   playerRace: null,
@@ -1494,6 +1495,40 @@ const useGameStore = create((set, get) => ({
       gameMessage: 'Your War Party is formed! The world awaits, Warlord.',
     });
   },
+}), {
+  name: 'grudge-warlords-save',
+  partialize: (state) => ({
+    screen: state.screen === 'battle' ? 'world' : state.screen,
+    playerName: state.playerName,
+    playerRace: state.playerRace,
+    playerClass: state.playerClass,
+    level: state.level,
+    xp: state.xp,
+    xpToNext: state.xpToNext,
+    gold: state.gold,
+    attributePoints: state.attributePoints,
+    baseAttributePoints: state.baseAttributePoints,
+    unspentPoints: state.unspentPoints,
+    skillPoints: state.skillPoints,
+    unlockedSkills: state.unlockedSkills,
+    playerHealth: state.playerHealth,
+    playerMaxHealth: state.playerMaxHealth,
+    playerMana: state.playerMana,
+    playerMaxMana: state.playerMaxMana,
+    playerStamina: state.playerStamina,
+    playerMaxStamina: state.playerMaxStamina,
+    victories: state.victories,
+    losses: state.losses,
+    bossesDefeated: state.bossesDefeated,
+    heroRoster: state.heroRoster,
+    activeHeroIds: state.activeHeroIds,
+    maxHeroSlots: state.maxHeroSlots,
+    locationsCleared: state.locationsCleared,
+    inventory: state.inventory,
+    harvestResources: state.harvestResources,
+    activeHarvests: state.activeHarvests,
+    trainingPhase: state.trainingPhase,
+  }),
 }));
 
 export default useGameStore;
