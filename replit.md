@@ -136,9 +136,13 @@ public/
 - Equipment stat bonuses: damage, defense, health, mana, criticalChance, evasion, etc.
 
 ## Training System
-- Guided tutorial: create hero 1 → Training Round 1 → create hero 2 → Training Round 2 → create hero 3 → world map
+- Guided tutorial: create hero 1 → Training Round 1 → Skill Tutorial → create hero 2 → Training Round 2 → create hero 3 → world map
 - TrainingScreen component with narrative text, battle integration
 - Training battles use scaled enemies (goblin round 1, skeleton round 2)
+- Skill Tutorial: 3-step interactive guide after first battle victory
+  - Step 1: Attribute Points - inline allocation UI with +/- buttons for all 8 attributes
+  - Step 2: Skill Tree - interactive skill tree spending with glowing available skills
+  - Step 3: Action Bar - visual guide showing all class abilities with hotkeys, costs, cooldowns, and effects
 
 ## Auto-Harvest System
 - 5 resource nodes: Gold Mine, Herb Garden, Lumber Yard, Ore Vein, Crystal Cave

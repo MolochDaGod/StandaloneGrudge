@@ -1436,18 +1436,24 @@ const useGameStore = create((set, get) => ({
     });
 
     if (round === 1) {
+      const ensureSkillPoints = Math.max(state.skillPoints, 1);
+      const ensureUnspent = Math.max(state.unspentPoints, 2);
+      const rosterWithPoints = healedRoster.map(h =>
+        h.id === 'player' ? { ...h, skillPoints: ensureSkillPoints, unspentPoints: ensureUnspent } : h
+      );
       set({
-        screen: 'heroCreate',
+        screen: 'training',
         battleState: null, battleUnits: [], battleTurnOrder: [],
         battleCurrentTurn: 0, selectedTargetId: null, lastAction: null,
         floatingTexts: [],
         playerHealth: Math.floor(stats.health),
         playerMana: Math.floor(stats.mana),
         playerStamina: Math.floor(stats.stamina),
-        heroRoster: healedRoster,
-        trainingPhase: 'create_hero_2',
+        heroRoster: rosterWithPoints,
+        trainingPhase: 'skill_tutorial',
+        skillPoints: ensureSkillPoints,
+        unspentPoints: ensureUnspent,
         maxHeroSlots: 2,
-        gameMessage: 'Training complete! Now recruit your second warlord.',
       });
     } else {
       set({
@@ -1464,6 +1470,14 @@ const useGameStore = create((set, get) => ({
         gameMessage: 'Training complete! Recruit your third warlord to form your War Party.',
       });
     }
+  },
+
+  continueFromSkillTutorial: () => {
+    set({
+      screen: 'heroCreate',
+      trainingPhase: 'create_hero_2',
+      gameMessage: 'Well done! Now recruit your second warlord.',
+    });
   },
 
   completeTraining: () => {
