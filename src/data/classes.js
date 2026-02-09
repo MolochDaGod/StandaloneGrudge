@@ -33,15 +33,15 @@ export const classDefinitions = {
     name: 'Worge',
     icon: '🐺',
     color: '#d97706',
-    description: 'A savage beast-rider with devastating dual attacks.',
-    lore: 'Bonded to their great worge companion since birth, these fierce warriors attack as one — a blur of fangs, claws, and steel.',
-    startingAttributes: { Strength: 3, Vitality: 2, Endurance: 1, Dexterity: 2, Agility: 3, Intellect: 0, Wisdom: 0, Tactics: 1 },
+    description: 'A shapeshifter who wields nature and storm magic in human form, then transforms into a devastating beast.',
+    lore: 'Worges walk between worlds — scholars of storm and root in mortal guise, unstoppable predators in beast form. Their mace and dagger channel primal energies until the wild within is unleashed.',
+    startingAttributes: { Strength: 2, Vitality: 2, Endurance: 1, Dexterity: 2, Agility: 2, Intellect: 2, Wisdom: 1, Tactics: 0 },
     abilities: [
+      { id: 'mace_strike', name: 'Mace Strike', icon: '🔨', description: 'A heavy mace blow empowered by storm energy', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 10, cooldown: 0, target: 'enemy' },
+      { id: 'lightning_lash', name: 'Lightning Lash', icon: '⚡', description: 'Call down a bolt of lightning on the target', type: 'magical', damage: 1.8, manaCost: 25, staminaCost: 0, cooldown: 2, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
+      { id: 'natures_grasp', name: "Nature's Grasp", icon: '🌿', description: 'Vines heal you over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 20, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
+      { id: 'dagger_toss', name: 'Dagger Toss', icon: '🗡️', description: 'Hurl an envenomed dagger, poisoning for 3 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
       { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', percent: 25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
-      { id: 'savage_bite', name: 'Savage Bite', icon: '🐺', description: 'Your worge lunges with a vicious bite', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 12, cooldown: 0, target: 'enemy' },
-      { id: 'feral_charge', name: 'Feral Charge', icon: '💨', description: 'Charge the enemy dealing heavy damage', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
-      { id: 'howl', name: 'Blood Howl', icon: '🌙', description: 'Howl to regenerate health over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
-      { id: 'rend', name: 'Rend', icon: '🩸', description: 'Tear the enemy, causing bleeding for 3 turns', type: 'physical', damage: 0.6, manaCost: 0, staminaCost: 18, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
     ]
   },
   ranger: {

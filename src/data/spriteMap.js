@@ -213,8 +213,8 @@ export const raceClassSpriteMap = {
   orc: {
     warrior: spriteSheets['elite-orc'],
     mage: spriteSheets['orc-rider'],
-    worge: spriteSheets['armored-orc'],
-    ranger: spriteSheets['skeleton-archer'],
+    worge: spriteSheets.orc,
+    ranger: spriteSheets['armored-orc'],
   },
   elf: {
     warrior: spriteSheets.swordsman,
