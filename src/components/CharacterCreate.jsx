@@ -152,6 +152,7 @@ export default function CharacterCreate() {
                     transition: 'all 0.25s', textAlign: 'center', position: 'relative',
                     boxShadow: isSelected ? `0 0 20px ${race.color}25, inset 0 0 30px ${race.color}08` : 'none',
                     transform: isSelected ? 'scale(1.03)' : 'scale(1)',
+                    minHeight: 160,
                   }}
                   onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = race.color + '80'; e.currentTarget.style.transform = 'translateY(-2px)'; }}}
                   onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = race.color + '30'; e.currentTarget.style.transform = 'none'; }}}
@@ -178,16 +179,22 @@ export default function CharacterCreate() {
               })}
             </div>
 
-            {selectedRaceDef && (
-              <div style={{
-                marginTop: 16, background: 'rgba(14,22,48,0.8)', border: `1px solid ${selectedRaceDef.color}40`,
-                borderRadius: 10, padding: 14, textAlign: 'center'
-              }}>
-                <p style={{ color: 'var(--text)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.8 }}>
+            <div style={{
+              marginTop: 16, background: 'rgba(14,22,48,0.8)',
+              border: `1px solid ${selectedRaceDef ? selectedRaceDef.color + '40' : 'var(--border)'}`,
+              borderRadius: 10, padding: 14, textAlign: 'center',
+              minHeight: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {selectedRaceDef ? (
+                <p style={{ color: 'var(--text)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.8, margin: 0 }}>
                   "{selectedRaceDef.lore}"
                 </p>
-              </div>
-            )}
+              ) : (
+                <p style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.5, margin: 0 }}>
+                  Select a race to learn more
+                </p>
+              )}
+            </div>
 
             <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 12 }}>
               <button onClick={() => goBack(1)} style={{
@@ -240,6 +247,7 @@ export default function CharacterCreate() {
                     transition: 'all 0.25s', textAlign: 'center', position: 'relative',
                     boxShadow: isSelected ? `0 0 20px ${cls.color}30, inset 0 0 30px ${cls.color}10` : 'none',
                     transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                    minHeight: 240,
                   }}
                   onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color; e.currentTarget.style.transform = 'translateY(-3px)'; }}}
                   onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = `${cls.color}40`; e.currentTarget.style.transform = 'none'; }}}
@@ -247,13 +255,11 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
                       <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2} speed={150} />
                     </div>
-                    <h3 className="font-cinzel" style={{ color: cls.color, marginBottom: 4, fontSize: '1rem' }}>{cls.name}</h3>
-                    <p style={{ color: 'var(--muted)', fontSize: '0.75rem', marginBottom: 8 }}>{cls.description}</p>
                     <div style={{
-                      display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center'
+                      display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', marginBottom: 6
                     }}>
                       {Object.entries(previewAttrs).filter(([, v]) => v > 0).map(([attr, val]) => (
                         <span key={attr} style={{
@@ -262,21 +268,29 @@ export default function CharacterCreate() {
                         }}>{attr.slice(0, 3)} {val}</span>
                       ))}
                     </div>
+                    <h3 className="font-cinzel" style={{ color: cls.color, marginBottom: 4, fontSize: '1rem' }}>{cls.name}</h3>
+                    <p style={{ color: 'var(--muted)', fontSize: '0.75rem', marginBottom: 0 }}>{cls.description}</p>
                   </div>
                 );
               })}
             </div>
 
-            {selectedCls && (
-              <div style={{
-                marginTop: 16, background: 'rgba(14,22,48,0.8)', border: `1px solid ${selectedCls.color}40`,
-                borderRadius: 10, padding: 14, textAlign: 'center'
-              }}>
-                <p style={{ color: 'var(--text)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.8 }}>
+            <div style={{
+              marginTop: 16, background: 'rgba(14,22,48,0.8)',
+              border: `1px solid ${selectedCls ? selectedCls.color + '40' : 'var(--border)'}`,
+              borderRadius: 10, padding: 14, textAlign: 'center',
+              minHeight: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {selectedCls ? (
+                <p style={{ color: 'var(--text)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.8, margin: 0 }}>
                   "{selectedCls.lore}"
                 </p>
-              </div>
-            )}
+              ) : (
+                <p style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.5, margin: 0 }}>
+                  Select a class to learn more
+                </p>
+              )}
+            </div>
 
             <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 12 }}>
               <button onClick={() => goBack(2)} style={{

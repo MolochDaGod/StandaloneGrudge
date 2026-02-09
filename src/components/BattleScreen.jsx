@@ -167,7 +167,8 @@ export default function BattleScreen() {
 
   const phase = battleState?.phase;
   const isBoss = battleState?.isBoss;
-  const bgImage = locationBackgrounds[currentLocation] || null;
+  const isTraining = battleState?.isTraining;
+  const bgImage = locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null);
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];
   const currentUnit = battleUnits.find(u => u.id === currentUnitId);
