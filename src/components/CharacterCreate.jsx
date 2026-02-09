@@ -161,7 +161,7 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 8, color: race.color, fontSize: '0.8rem', fontWeight: 700
                     }}>&#10003;</div>}
-                    <div style={{ fontSize: '2rem', marginBottom: 6 }}>{race.icon}</div>
+                    <img src={race.icon} alt={race.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', marginBottom: 6 }} />
                     <h3 className="font-cinzel" style={{ color: race.color, marginBottom: 4, fontSize: '1rem' }}>{race.name}</h3>
                     <p style={{ color: 'var(--muted)', fontSize: '0.73rem', marginBottom: 6, lineHeight: 1.4 }}>{race.description}</p>
                     <div style={{
@@ -225,7 +225,7 @@ export default function CharacterCreate() {
                   background: `${selectedRaceDef.color}20`, border: `1px solid ${selectedRaceDef.color}40`,
                   padding: '3px 12px', borderRadius: 20, fontSize: '0.75rem', color: selectedRaceDef.color
                 }}>
-                  {selectedRaceDef.icon} {selectedRaceDef.name}
+                  <img src={selectedRaceDef.icon} alt={selectedRaceDef.name} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', verticalAlign: 'middle', marginRight: 4 }} />{selectedRaceDef.name}
                 </span>
               )}
             </div>
@@ -343,7 +343,7 @@ export default function CharacterCreate() {
                     <span style={{
                       background: `${raceDef.color}20`, border: `1px solid ${raceDef.color}40`,
                       padding: '3px 10px', borderRadius: 20, fontSize: '0.75rem', color: raceDef.color
-                    }}>{raceDef.icon} {raceDef.name}</span>
+                    }}><img src={raceDef.icon} alt={raceDef.name} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', verticalAlign: 'middle', marginRight: 4 }} />{raceDef.name}</span>
                   )}
                   <span style={{
                     background: `${cls.color}20`, border: `1px solid ${cls.color}40`,

@@ -155,7 +155,7 @@ export default function HeroCreate() {
                     border: `2px solid ${selectedRace === id ? 'var(--accent)' : 'var(--border)'}`,
                     borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
                   }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>{race.icon}</div>
+                  <img src={race.icon} alt={race.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 6 }} />
                   <div className="font-cinzel" style={{ color: selectedRace === id ? 'var(--accent)' : 'var(--text)', fontSize: '1rem' }}>
                     {race.name}
                   </div>

@@ -2,7 +2,7 @@ export const raceDefinitions = {
   human: {
     id: 'human',
     name: 'Human',
-    icon: '👤',
+    icon: '/attached_assets/HumanIcon_1770649105101.png',
     color: '#94a3b8',
     description: 'Versatile and adaptable — masters of none, capable of all.',
     lore: 'The most numerous of the Grudge War survivors, Humans thrive through sheer adaptability. Where other races rely on innate gifts, Humans forge their destiny through will and cunning.',
@@ -13,7 +13,7 @@ export const raceDefinitions = {
   orc: {
     id: 'orc',
     name: 'Orc',
-    icon: '🟢',
+    icon: '/attached_assets/OrcIcon_1770649105098.png',
     color: '#65a30d',
     description: 'Savage brutes bred for war — crushing power and iron will.',
     lore: 'Born in the blood pits of the Shattered Wastes, Orcs know nothing but battle. Their bones are dense as stone, their muscles forged by a lifetime of brutality.',
@@ -24,7 +24,7 @@ export const raceDefinitions = {
   elf: {
     id: 'elf',
     name: 'Elf',
-    icon: '🧝',
+    icon: '/attached_assets/ElfIcon_1770649105101.png',
     color: '#22d3ee',
     description: 'Ancient and graceful — wielders of arcane arts and deadly precision.',
     lore: 'The Elves walked this world before the first grudge was spoken. Their mastery of magic and movement is unrivaled, though their arrogance has earned them many enemies.',
@@ -35,7 +35,7 @@ export const raceDefinitions = {
   undead: {
     id: 'undead',
     name: 'Undead',
-    icon: '💀',
+    icon: '/attached_assets/UndeadIcon_1770649105099.png',
     color: '#a78bfa',
     description: 'Death-touched revenants fueled by dark energy and grudges unresolved.',
     lore: 'Neither alive nor truly dead, the Undead are sustained by the grudges that bind them to this world. Their rotting flesh hides an unbreakable will and dark power.',
@@ -46,7 +46,7 @@ export const raceDefinitions = {
   barbarian: {
     id: 'barbarian',
     name: 'Barbarian',
-    icon: '🪓',
+    icon: '/attached_assets/BarbarianIcon_1770649105100.png',
     color: '#f43f5e',
     description: 'Untamed fury given form — raw power and relentless aggression.',
     lore: 'From the frozen steppes and scorched badlands, Barbarians reject civilization and embrace primal rage. Their ferocity in battle is unmatched, striking with wild abandon that terrifies even hardened soldiers.',
@@ -57,7 +57,7 @@ export const raceDefinitions = {
   dwarf: {
     id: 'dwarf',
     name: 'Dwarf',
-    icon: '⛏️',
+    icon: '/attached_assets/DwarveIcon_1770649105100.png',
     color: '#f59e0b',
     description: 'Stout mountain folk — unyielding defense and masterful craftsmanship.',
     lore: 'Deep beneath the mountains, the Dwarves forged their kingdoms in stone and iron. Generations of mining and warfare have made them nearly unbreakable, with an endurance that outlasts any foe.',

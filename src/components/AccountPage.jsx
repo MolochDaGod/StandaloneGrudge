@@ -414,7 +414,7 @@ function HeroDetailPanel({ hero, onClose }) {
                 borderRadius: 8, border: '1px solid var(--border)',
               }}>
                 <div style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>
-                  {race.icon} {race.name} — {race.trait}
+                  <img src={race.icon} alt={race.name} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', verticalAlign: 'middle', marginRight: 4 }} />{race.name} — {race.trait}
                 </div>
                 <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>{race.traitDescription}</div>
               </div>
