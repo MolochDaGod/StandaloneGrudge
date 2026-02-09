@@ -244,11 +244,10 @@ export default function CharacterCreate() {
                       ? `linear-gradient(135deg, ${cls.color}20, ${cls.color}10)`
                       : 'linear-gradient(135deg, rgba(20,26,43,0.95), rgba(20,26,43,0.7))',
                     border: `2px solid ${isSelected ? cls.color : cls.color + '40'}`,
-                    borderRadius: 14, padding: 18, cursor: 'pointer',
+                    borderRadius: 14, padding: 14, cursor: 'pointer',
                     transition: 'all 0.25s', textAlign: 'center', position: 'relative',
                     boxShadow: isSelected ? `0 0 20px ${cls.color}30, inset 0 0 30px ${cls.color}10` : 'none',
                     transform: isSelected ? 'scale(1.02)' : 'scale(1)',
-                    minHeight: 240,
                   }}
                   onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color; e.currentTarget.style.transform = 'translateY(-3px)'; }}}
                   onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = `${cls.color}40`; e.currentTarget.style.transform = 'none'; }}}
@@ -256,11 +255,11 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2, height: 120, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2, height: 100, overflow: 'hidden' }}>
                       {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={1.2} speed={150} />
+                        <WorgeMorphPreview raceId={selectedRace} scale={1} speed={150} />
                       ) : (
-                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={3} speed={150} />
+                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2.5} speed={150} />
                       )}
                     </div>
                     <div style={{
