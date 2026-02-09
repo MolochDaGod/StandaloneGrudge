@@ -17,6 +17,52 @@ const locationBackgrounds = {
   void_throne: '/backgrounds/void_throne.png',
 };
 
+function EffectSprite({ x, y, sprite }) {
+  const [frame, setFrame] = React.useState(0);
+  const cols = Math.round(Math.sqrt(sprite.frames));
+  const frameSize = sprite.size / cols;
+  const totalFrames = sprite.frames;
+  const displaySize = 120;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) {
+        clearInterval(interval);
+        return;
+      }
+      setFrame(f);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize,
+      overflow: 'hidden',
+      zIndex: 250,
+      pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * displaySize}px ${cols * displaySize}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }} />
+    </div>
+  );
+}
+
 function MiniBar({ current, max, color, height = 5, width = 60 }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -235,7 +281,8 @@ export default function BattleScreen() {
                 if (hfx && target.position) {
                   const hid = Date.now() + Math.random();
                   setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 600);
+                  const effectDur = (hfx.frames || 36) * 30 + 100;
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
                 }
                 if (isCrit) playCrit(); else playHurt();
               } else {
@@ -266,7 +313,8 @@ export default function BattleScreen() {
             if (hfx && target.position) {
               const hid = Date.now() + Math.random();
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 600);
+              const effectDur = (hfx.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
             }
             if (isCrit) playCrit(); else playHurt();
           } else {
@@ -544,24 +592,7 @@ export default function BattleScreen() {
         ))}
 
         {hitEffects.map(e => (
-          <div key={e.id} style={{
-            position: 'absolute',
-            left: `${e.x}%`, top: `${e.y}%`,
-            transform: 'translate(-50%, -50%)',
-            width: 80, height: 80,
-            zIndex: 250,
-            pointerEvents: 'none',
-            animation: 'effectPop 0.6s ease forwards',
-          }}>
-            <div style={{
-              width: '100%', height: '100%',
-              backgroundImage: `url(${e.sprite.src})`,
-              backgroundSize: `${e.sprite.size}px ${e.sprite.size}px`,
-              backgroundPosition: '0 0',
-              imageRendering: 'pixelated',
-              animation: `effectGrid 0.6s steps(${Math.min(Math.sqrt(e.sprite.frames), 8) | 0}) forwards`,
-            }} />
-          </div>
+          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} />
         ))}
 
         {floatingDmg.map(f => (
