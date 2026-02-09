@@ -9,22 +9,22 @@ export const RARITY = {
 };
 
 const weaponTemplates = [
-  { id: 'iron_sword', name: 'Iron Sword', slot: 'weapon', icon: '🗡️', classReq: ['warrior'], levelReq: 1, stats: { damage: 4, criticalChance: 2 } },
-  { id: 'steel_blade', name: 'Steel Blade', slot: 'weapon', icon: '⚔️', classReq: ['warrior'], levelReq: 4, stats: { damage: 8, criticalChance: 3, block: 2 } },
-  { id: 'greatsword', name: 'Greatsword', slot: 'weapon', icon: '🗡️', classReq: ['warrior'], levelReq: 8, stats: { damage: 14, criticalChance: 4, stagger: 1 } },
-  { id: 'doom_blade', name: 'Doom Blade', slot: 'weapon', icon: '⚔️', classReq: ['warrior'], levelReq: 14, stats: { damage: 22, criticalChance: 6, drainHealth: 3 } },
-  { id: 'oak_staff', name: 'Oak Staff', slot: 'weapon', icon: '🪄', classReq: ['mage'], levelReq: 1, stats: { damage: 3, mana: 15, manaRegen: 0.5 } },
-  { id: 'crystal_staff', name: 'Crystal Staff', slot: 'weapon', icon: '🔮', classReq: ['mage'], levelReq: 4, stats: { damage: 6, mana: 25, manaRegen: 1, cooldownReduction: 2 } },
-  { id: 'arcane_scepter', name: 'Arcane Scepter', slot: 'weapon', icon: '🪄', classReq: ['mage'], levelReq: 8, stats: { damage: 10, mana: 40, manaRegen: 2, spellAccuracy: 5 } },
-  { id: 'void_staff', name: 'Void Staff', slot: 'weapon', icon: '🔮', classReq: ['mage'], levelReq: 14, stats: { damage: 18, mana: 60, manaRegen: 3, cooldownReduction: 5 } },
-  { id: 'short_bow', name: 'Short Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 1, stats: { damage: 3, criticalChance: 4, accuracy: 3 } },
-  { id: 'longbow', name: 'Longbow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 4, stats: { damage: 7, criticalChance: 6, accuracy: 5, criticalDamage: 5 } },
-  { id: 'composite_bow', name: 'Composite Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 8, stats: { damage: 12, criticalChance: 8, accuracy: 8, attackSpeed: 3 } },
-  { id: 'shadow_bow', name: 'Shadow Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 14, stats: { damage: 20, criticalChance: 12, accuracy: 10, criticalDamage: 15 } },
-  { id: 'storm_mace', name: 'Storm Mace', slot: 'weapon', icon: '🔨', classReq: ['worge'], levelReq: 1, stats: { damage: 4, attackSpeed: 3, evasion: 2 } },
-  { id: 'thornwood_dagger', name: 'Thornwood Dagger', slot: 'weapon', icon: '🗡️', classReq: ['worge'], levelReq: 4, stats: { damage: 8, attackSpeed: 5, evasion: 3, drainHealth: 2 } },
-  { id: 'tempest_maul', name: 'Tempest Maul', slot: 'weapon', icon: '⚡', classReq: ['worge'], levelReq: 8, stats: { damage: 13, attackSpeed: 6, evasion: 4, criticalChance: 5 } },
-  { id: 'natures_fang', name: "Nature's Fang", slot: 'weapon', icon: '🌿', classReq: ['worge'], levelReq: 14, stats: { damage: 21, attackSpeed: 8, evasion: 6, drainHealth: 5 } },
+  { id: 'iron_sword', name: 'Iron Sword', slot: 'weapon', icon: '🗡️', classReq: ['warrior'], levelReq: 1, stats: { physicalDamage: 4, criticalChance: 2 } },
+  { id: 'steel_blade', name: 'Steel Blade', slot: 'weapon', icon: '⚔️', classReq: ['warrior'], levelReq: 4, stats: { physicalDamage: 8, criticalChance: 3, block: 2 } },
+  { id: 'greatsword', name: 'Greatsword', slot: 'weapon', icon: '🗡️', classReq: ['warrior'], levelReq: 8, stats: { physicalDamage: 14, criticalChance: 4, stagger: 1 } },
+  { id: 'doom_blade', name: 'Doom Blade', slot: 'weapon', icon: '⚔️', classReq: ['warrior'], levelReq: 14, stats: { physicalDamage: 22, criticalChance: 6, drainHealth: 3 } },
+  { id: 'oak_staff', name: 'Oak Staff', slot: 'weapon', icon: '🪄', classReq: ['mage'], levelReq: 1, stats: { magicDamage: 3, mana: 15, manaRegen: 0.5 } },
+  { id: 'crystal_staff', name: 'Crystal Staff', slot: 'weapon', icon: '🔮', classReq: ['mage'], levelReq: 4, stats: { magicDamage: 6, mana: 25, manaRegen: 1, cooldownReduction: 2 } },
+  { id: 'arcane_scepter', name: 'Arcane Scepter', slot: 'weapon', icon: '🪄', classReq: ['mage'], levelReq: 8, stats: { magicDamage: 10, mana: 40, manaRegen: 2, spellAccuracy: 5 } },
+  { id: 'void_staff', name: 'Void Staff', slot: 'weapon', icon: '🔮', classReq: ['mage'], levelReq: 14, stats: { magicDamage: 18, mana: 60, manaRegen: 3, cooldownReduction: 5 } },
+  { id: 'short_bow', name: 'Short Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 1, stats: { physicalDamage: 3, criticalChance: 4, accuracy: 3 } },
+  { id: 'longbow', name: 'Longbow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 4, stats: { physicalDamage: 7, criticalChance: 6, accuracy: 5, criticalDamage: 5 } },
+  { id: 'composite_bow', name: 'Composite Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 8, stats: { physicalDamage: 12, criticalChance: 8, accuracy: 8, attackSpeed: 3 } },
+  { id: 'shadow_bow', name: 'Shadow Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 14, stats: { physicalDamage: 20, criticalChance: 12, accuracy: 10, criticalDamage: 15 } },
+  { id: 'storm_mace', name: 'Storm Mace', slot: 'weapon', icon: '🔨', classReq: ['worge'], levelReq: 1, stats: { physicalDamage: 3, magicDamage: 1, attackSpeed: 3, evasion: 2 } },
+  { id: 'thornwood_dagger', name: 'Thornwood Dagger', slot: 'weapon', icon: '🗡️', classReq: ['worge'], levelReq: 4, stats: { physicalDamage: 5, magicDamage: 3, attackSpeed: 5, evasion: 3, drainHealth: 2 } },
+  { id: 'tempest_maul', name: 'Tempest Maul', slot: 'weapon', icon: '⚡', classReq: ['worge'], levelReq: 8, stats: { physicalDamage: 8, magicDamage: 5, attackSpeed: 6, evasion: 4, criticalChance: 5 } },
+  { id: 'natures_fang', name: "Nature's Fang", slot: 'weapon', icon: '🌿', classReq: ['worge'], levelReq: 14, stats: { physicalDamage: 13, magicDamage: 8, attackSpeed: 8, evasion: 6, drainHealth: 5 } },
 ];
 
 const armorTemplates = [
@@ -39,13 +39,13 @@ const armorTemplates = [
 ];
 
 const accessoryTemplates = [
-  { id: 'iron_ring', name: 'Iron Ring', slot: 'accessory', icon: '💍', levelReq: 1, stats: { damage: 2, defense: 2 } },
-  { id: 'ruby_amulet', name: 'Ruby Amulet', slot: 'accessory', icon: '📿', levelReq: 3, stats: { damage: 4, criticalChance: 3, health: 15 } },
+  { id: 'iron_ring', name: 'Iron Ring', slot: 'accessory', icon: '💍', levelReq: 1, stats: { physicalDamage: 2, defense: 2 } },
+  { id: 'ruby_amulet', name: 'Ruby Amulet', slot: 'accessory', icon: '📿', levelReq: 3, stats: { physicalDamage: 2, magicDamage: 2, criticalChance: 3, health: 15 } },
   { id: 'mana_crystal', name: 'Mana Crystal', slot: 'accessory', icon: '💎', levelReq: 4, stats: { mana: 40, manaRegen: 2, cooldownReduction: 3 } },
   { id: 'wolf_pendant', name: 'Wolf Pendant', slot: 'accessory', icon: '🐺', levelReq: 5, stats: { attackSpeed: 5, evasion: 4, criticalChance: 3 } },
   { id: 'shield_charm', name: 'Shield Charm', slot: 'accessory', icon: '🔰', levelReq: 6, stats: { defense: 8, block: 5, health: 30 } },
-  { id: 'dragon_tooth', name: 'Dragon Tooth', slot: 'accessory', icon: '🦷', levelReq: 10, stats: { damage: 10, criticalDamage: 15, armorPenetration: 5 } },
-  { id: 'void_shard', name: 'Void Shard', slot: 'accessory', icon: '🌀', levelReq: 15, stats: { damage: 8, mana: 30, drainHealth: 5, cooldownReduction: 5 } },
+  { id: 'dragon_tooth', name: 'Dragon Tooth', slot: 'accessory', icon: '🦷', levelReq: 10, stats: { physicalDamage: 5, magicDamage: 5, criticalDamage: 15, armorPenetration: 5 } },
+  { id: 'void_shard', name: 'Void Shard', slot: 'accessory', icon: '🌀', levelReq: 15, stats: { magicDamage: 8, mana: 30, drainHealth: 5, cooldownReduction: 5 } },
   { id: 'life_stone', name: 'Life Stone', slot: 'accessory', icon: '💚', levelReq: 8, stats: { health: 60, healthRegen: 2, damageReduction: 3 } },
 ];
 

@@ -206,7 +206,8 @@ function HeroDetailPanel({ hero, onClose }) {
     { key: 'health', label: 'Health', icon: '❤️', color: '#22c55e' },
     { key: 'mana', label: 'Mana', icon: '💧', color: '#3b82f6' },
     { key: 'stamina', label: 'Stamina', icon: '⚡', color: '#f59e0b' },
-    { key: 'damage', label: 'Damage', icon: '⚔️', color: '#ef4444' },
+    { key: 'physicalDamage', label: 'Phys DMG', icon: '⚔️', color: '#ef4444' },
+    { key: 'magicDamage', label: 'Magic DMG', icon: '🔮', color: '#8b5cf6' },
     { key: 'defense', label: 'Defense', icon: '🛡️', color: '#6b7280' },
   ];
 

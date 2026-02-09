@@ -60,18 +60,23 @@ function createHeroBattleUnit(hero) {
     maxMana: Math.floor(stats.mana),
     stamina: Math.min(hero.currentStamina, Math.floor(stats.stamina)),
     maxStamina: Math.floor(stats.stamina),
-    damage: stats.damage,
+    physicalDamage: stats.physicalDamage || 0,
+    magicDamage: stats.magicDamage || 0,
     defense: stats.defense,
     speed: 20 + Math.floor((hero.attributePoints.Agility || 0) * 0.3),
     critChance: stats.criticalChance || 5,
+    criticalDamage: stats.criticalDamage || 50,
     evasion: stats.evasion || 0,
     block: stats.block || 0,
+    blockEffect: stats.blockEffect || 0,
     damageReduction: stats.damageReduction || 0,
     drainHealth: stats.drainHealth || 0,
     healthRegen: stats.healthRegen || 0,
     manaRegen: stats.manaRegen || 0,
+    defenseBreak: stats.defenseBreak || 0,
+    criticalEvasion: stats.criticalEvasion || 0,
     abilities: cls.bearFormAbilities
-      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }]
+      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '\uD83D\uDD04', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }]
       : cls.abilities,
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
@@ -86,10 +91,15 @@ function calculateAttackDamage(attacker, defender, ability) {
   });
   const totalEvasion = (defender.evasion || 0) + evasionBonus;
   if (Math.random() * 100 < totalEvasion) {
-    return { totalDmg: 0, isCrit: false, blocked: false, evaded: true };
+    return { totalDmg: 0, isCrit: false, blocked: false, evaded: true, drained: 0 };
   }
 
-  let baseDmg = (attacker.damage || 0) + ((attacker.level || 1) * 2);
+  const isMagic = ability.type === 'magical';
+  let baseDmg = isMagic
+    ? (attacker.magicDamage || attacker.damage || 0)
+    : (attacker.physicalDamage || attacker.damage || 0);
+  baseDmg += (attacker.level || 1) * 2;
+
   let dmgMult = 1;
   (attacker.buffs || []).forEach(b => {
     if (b.stat === 'damage' && b.multiplier) dmgMult *= b.multiplier;
@@ -97,31 +107,54 @@ function calculateAttackDamage(attacker, defender, ability) {
   baseDmg = Math.floor(baseDmg * dmgMult);
 
   let totalDmg = Math.floor(baseDmg * (ability.damage || 1));
-  const isCrit = ability.guaranteedCrit || Math.random() * 100 < (attacker.critChance || 5);
-  if (isCrit) {
-    totalDmg = Math.floor(totalDmg * 1.5);
-  }
 
-  if (!isCrit) {
-    let defenseVal = defender.defense || 0;
-    (defender.buffs || []).forEach(b => {
-      if (b.stat === 'defense' && b.flat) defenseVal += b.flat;
-    });
-    totalDmg = Math.max(1, totalDmg - Math.floor(defenseVal * 0.5));
+  let defenseVal = defender.defense || 0;
+  (defender.buffs || []).forEach(b => {
+    if (b.stat === 'defense' && b.flat) defenseVal += b.flat;
+  });
+  const attackerDefBreak = attacker.defenseBreak || 0;
+  if (attackerDefBreak > 0) {
+    defenseVal = Math.max(0, defenseVal * (1 - attackerDefBreak / 100));
   }
+  const defReduction = Math.min(80, Math.sqrt(Math.max(0, defenseVal)));
+  totalDmg = Math.floor(totalDmg * (100 - defReduction) / 100);
 
   if (defender.damageReduction > 0) {
     totalDmg = Math.floor(totalDmg * (1 - defender.damageReduction / 100));
   }
 
+  const variance = 0.75 + Math.random() * 0.5;
+  totalDmg = Math.floor(totalDmg * variance);
+
   let blocked = false;
+  let isCrit = false;
+
   if (Math.random() * 100 < (defender.block || 0)) {
-    totalDmg = Math.floor(totalDmg * 0.4);
+    const blockFactor = Math.min(90, defender.blockEffect || 0) / 100;
+    const reduction = blockFactor > 0 ? blockFactor : 0.6;
+    totalDmg = Math.floor(totalDmg * (1 - reduction));
     blocked = true;
   }
 
+  if (!blocked) {
+    let effectiveCritChance = attacker.critChance || 5;
+    const critEvasion = defender.criticalEvasion || 0;
+    effectiveCritChance = Math.max(0, effectiveCritChance - critEvasion);
+    isCrit = ability.guaranteedCrit || Math.random() * 100 < effectiveCritChance;
+    if (isCrit) {
+      const critFactor = 1 + ((attacker.criticalDamage || 50) / 100);
+      totalDmg = Math.floor(totalDmg * critFactor);
+    }
+  }
+
   totalDmg = Math.max(1, totalDmg);
-  return { totalDmg, isCrit, blocked, evaded: false };
+
+  let drained = 0;
+  if ((attacker.drainHealth || 0) > 0 && totalDmg > 0 && !blocked) {
+    drained = Math.floor(totalDmg * (attacker.drainHealth / 100));
+  }
+
+  return { totalDmg, isCrit, blocked, evaded: false, drained };
 }
 
 function chooseAIAction(unit, allUnits) {
@@ -653,7 +686,8 @@ const useGameStore = create(persist((set, get) => ({
     const boss = createEnemy(bossTemplateId, state.level + 2);
     boss.maxHealth = Math.floor(boss.maxHealth * 1.8);
     boss.health = boss.maxHealth;
-    boss.damage = Math.floor(boss.damage * 1.3);
+    boss.physicalDamage = Math.floor(boss.physicalDamage * 1.3);
+    boss.magicDamage = Math.floor(boss.magicDamage * 1.3);
     boss.defense = Math.floor(boss.defense * 1.3);
     boss.name = '★ ' + boss.name + ' ★';
     boss.xpReward = Math.floor(boss.xpReward * 3);
@@ -943,9 +977,9 @@ const useGameStore = create(persist((set, get) => ({
         actualTarget.buffs.push({ ...ability.effect, source: ability.name });
       }
 
-      if (attacker.drainHealth > 0 && result.totalDmg > 0) {
-        const heal = Math.floor(result.totalDmg * attacker.drainHealth / 100);
-        attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
+      if (result.drained > 0) {
+        attacker.health = Math.min(attacker.maxHealth, attacker.health + result.drained);
+        log.push(`💜 ${attacker.name} drains ${result.drained} HP!`);
       }
       if (ability.drainPercent && result.totalDmg > 0) {
         const heal = Math.floor(result.totalDmg * ability.drainPercent);
@@ -1433,11 +1467,13 @@ const useGameStore = create(persist((set, get) => ({
       if (round === 1) {
         enemy.maxHealth = Math.floor(enemy.maxHealth * 0.5);
         enemy.health = enemy.maxHealth;
-        enemy.damage = Math.floor(enemy.damage * 0.5);
+        enemy.physicalDamage = Math.floor(enemy.physicalDamage * 0.5);
+        enemy.magicDamage = Math.floor(enemy.magicDamage * 0.5);
       } else {
         enemy.maxHealth = Math.floor(enemy.maxHealth * 0.7);
         enemy.health = enemy.maxHealth;
-        enemy.damage = Math.floor(enemy.damage * 0.7);
+        enemy.physicalDamage = Math.floor(enemy.physicalDamage * 0.7);
+        enemy.magicDamage = Math.floor(enemy.magicDamage * 0.7);
       }
       if (enemy) enemyUnits.push(enemy);
     }
