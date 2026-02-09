@@ -524,24 +524,24 @@ export default function BattleScreen() {
               </div>
 
               <div style={{
-                textAlign: 'center', marginTop: -4,
-                background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '2px 6px',
-                backdropFilter: 'blur(2px)', minWidth: 65,
+                position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                textAlign: 'center', marginBottom: 2,
+                background: 'rgba(0,0,0,0.6)', borderRadius: 5, padding: '2px 4px',
+                backdropFilter: 'blur(2px)', minWidth: 50,
               }}>
                 <div style={{
-                  fontSize: '0.55rem', fontWeight: 600,
+                  fontSize: '0.5rem', fontWeight: 600,
                   color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 75,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 65,
+                  marginBottom: 1,
                 }}>
                   {unit.name}
                 </div>
-                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={60} />
-                {unit.team === 'player' && (
-                  <div style={{ display: 'flex', gap: 2, marginTop: 1, justifyContent: 'center' }}>
-                    <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={3} width={28} />
-                    <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={3} width={28} />
-                  </div>
-                )}
+                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={50} />
+                <div style={{ display: 'flex', gap: 2, marginTop: 1, justifyContent: 'center' }}>
+                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
+                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
+                </div>
                 {unit.buffs?.length > 0 && (
                   <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
                     {unit.buffs.slice(0, 3).map((b, i) => (
