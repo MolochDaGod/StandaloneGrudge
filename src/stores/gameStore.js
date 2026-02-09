@@ -786,6 +786,58 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  skipTurn: () => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const unit = state.battleUnits.find(u => u.id === currentUnitId);
+    if (!unit) return;
+    const log = [...state.battleLog, `⏭️ ${unit.name} skips their turn.`];
+    set({
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating' },
+      lastAction: { attackerId: currentUnitId, type: 'skip' },
+    });
+  },
+
+  defendTurn: () => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const units = state.battleUnits.map(u => ({ ...u, buffs: [...(u.buffs || [])], cooldowns: { ...u.cooldowns } }));
+    const unit = units.find(u => u.id === currentUnitId);
+    if (!unit || !unit.alive) return;
+    unit.buffs.push({ source: 'Defend', stat: 'defense', flat: Math.floor(unit.maxHealth * 0.15), duration: 2 });
+    const healAmt = Math.floor(unit.maxHealth * 0.05);
+    unit.health = Math.min(unit.maxHealth, unit.health + healAmt);
+    unit.mana = Math.min(unit.maxMana, unit.mana + 3);
+    unit.stamina = Math.min(unit.maxStamina, unit.stamina + 5);
+    const log = [...state.battleLog, `🛡️ ${unit.name} defends! +DEF for 2 turns, recovers ${healAmt} HP.`];
+    set({
+      battleUnits: units,
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating' },
+      lastAction: { attackerId: currentUnitId, type: 'defend' },
+    });
+  },
+
+  autoAttack: () => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const unit = state.battleUnits.find(u => u.id === currentUnitId);
+    if (!unit || !unit.alive) return;
+    const firstAbility = unit.abilities?.[0];
+    if (!firstAbility) return;
+    const enemies = state.battleUnits.filter(u => u.team === 'enemy' && u.alive && u.health > 0);
+    if (enemies.length === 0) return;
+    const target = enemies.reduce((lowest, e) => e.health < lowest.health ? e : lowest, enemies[0]);
+    get().useAbility(firstAbility.id, target.id);
+  },
+
   useAbility: (abilityId, targetIdOverride) => {
     const state = get();
     const bs = state.battleState;

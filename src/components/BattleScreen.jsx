@@ -139,6 +139,7 @@ export default function BattleScreen() {
     level, cooldowns, currentLocation,
     useAbility, processAIAction, advanceTurn, setSelectedTarget,
     returnToWorld, startBattle, returnFromTraining,
+    skipTurn, defendTurn, autoAttack,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
   } = useGameStore();
@@ -216,8 +217,23 @@ export default function BattleScreen() {
 
     const { attackerId, targetId, abilityType, abilityName, totalDmg, evaded, blocked, isCrit, healAmt, type } = lastAction;
 
-    if (type === 'stunned') {
-      setTimeout(() => advanceTurn(), 600);
+    if (type === 'stunned' || type === 'skip') {
+      setTimeout(() => advanceTurn(), 500);
+      return;
+    }
+
+    if (type === 'defend') {
+      const defender = battleUnits.find(u => u.id === attackerId);
+      if (defender) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: 'block' }));
+        spawnParticle('heal', defender.position?.x || 30, defender.position?.y || 50, '#60a5fa');
+        setTimeout(() => {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          advanceTurn();
+        }, 700);
+      } else {
+        setTimeout(() => advanceTurn(), 300);
+      }
       return;
     }
 
@@ -692,6 +708,37 @@ export default function BattleScreen() {
         }}>
           {isPlayerTurn && currentUnit ? (
             <>
+              <div style={{
+                display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 5,
+              }}>
+                <button onClick={autoAttack} style={{
+                  background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.1))',
+                  border: '1px solid rgba(239,68,68,0.5)', borderRadius: 6,
+                  padding: '4px 14px', color: '#ef4444', cursor: 'pointer',
+                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.1))'; }}
+                >⚔ Auto Attack</button>
+                <button onClick={defendTurn} style={{
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.1))',
+                  border: '1px solid rgba(59,130,246,0.5)', borderRadius: 6,
+                  padding: '4px 14px', color: '#60a5fa', cursor: 'pointer',
+                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.35)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.1))'; }}
+                >🛡 Defend</button>
+                <button onClick={skipTurn} style={{
+                  background: 'linear-gradient(135deg, rgba(150,150,170,0.2), rgba(150,150,170,0.08))',
+                  border: '1px solid rgba(150,150,170,0.4)', borderRadius: 6,
+                  padding: '4px 14px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
+                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(150,150,170,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(150,150,170,0.2), rgba(150,150,170,0.08))'; }}
+                >⏭ Skip</button>
+              </div>
               <div style={{
                 textAlign: 'center', marginBottom: 4, color: 'var(--muted)',
                 fontSize: '0.6rem', letterSpacing: 1
