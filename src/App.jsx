@@ -50,7 +50,7 @@ export default function App() {
       );
       if (needsTransition) {
         setTransitioning(true);
-        const timer = setTimeout(() => setTransitioning(false), 600);
+        const timer = setTimeout(() => setTransitioning(false), 300);
         prevScreenRef.current = screen;
         return () => clearTimeout(timer);
       }

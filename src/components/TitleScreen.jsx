@@ -6,7 +6,7 @@ export default function TitleScreen() {
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowMenu(true), 800);
+    const timer = setTimeout(() => setShowMenu(true), 400);
     return () => clearTimeout(timer);
   }, []);
 
