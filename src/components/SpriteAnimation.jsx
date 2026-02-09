@@ -47,8 +47,8 @@ export default function SpriteAnimation({
 
   if (!anim) return null;
 
-  const frameWidth = 100;
-  const frameHeight = 100;
+  const frameWidth = spriteData?.frameWidth || anim?.frameWidth || 100;
+  const frameHeight = spriteData?.frameHeight || anim?.frameHeight || 100;
   const displayWidth = frameWidth * scale;
   const displayHeight = frameHeight * scale;
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
@@ -89,6 +89,9 @@ function getUnitSprite(unit) {
     if (unit.classId === 'worge' && unit.bearForm) {
       return getWorgTransformSprite(unit.raceId);
     }
+    if (unit.classId === 'warrior' && unit.demonBlade) {
+      return warriorTransformSprite;
+    }
     return getPlayerSprite(unit.classId, unit.raceId);
   }
   if (unit.templateId) {
@@ -100,6 +103,7 @@ function getUnitSprite(unit) {
 function isRangedUnit(unit) {
   if (unit.classId === 'ranger' || unit.classId === 'mage') return true;
   if (unit.templateId === 'dark_mage' || unit.templateId === 'lich') return true;
+  if (unit.templateId === 'water_elemental' || unit.templateId === 'nature_elemental') return true;
   return false;
 }
 
@@ -515,7 +519,9 @@ export default function BattleScreen() {
           const isEnemyClickable = unit.team === 'enemy' && unit.alive && isPlayerTurn;
           const flipSprite = unit.team === 'enemy';
           const introDelay = introComplete ? 0 : (idx * 100);
-          const spriteScale = 1.5;
+          const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
+          const targetDisplaySize = 150;
+          const spriteScale = targetDisplaySize / baseFrameSize;
 
           return (
             <div
@@ -788,7 +794,7 @@ export default function BattleScreen() {
                   const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
                   const noMana = (ability.manaCost || 0) > currentUnit.mana;
                   const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
-                  const alreadyTransformed = ability.isBearForm && currentUnit.bearForm;
+                  const alreadyTransformed = (ability.isBearForm && currentUnit.bearForm) || (ability.isDemonBlade && currentUnit.demonBlade);
                   const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}

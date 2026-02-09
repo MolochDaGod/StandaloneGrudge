@@ -53,6 +53,7 @@ function createHeroBattleUnit(hero) {
     raceId: hero.raceId,
     templateId: null,
     bearForm: false,
+    demonBlade: false,
     health: Math.min(hero.currentHealth, Math.floor(stats.health)),
     maxHealth: Math.floor(stats.health),
     mana: Math.min(hero.currentMana, Math.floor(stats.mana)),
@@ -142,7 +143,8 @@ function chooseAIAction(unit, allUnits) {
     (unit.cooldowns[a.id] || 0) <= 0 &&
     (a.manaCost || 0) <= unit.mana &&
     (a.staminaCost || 0) <= unit.stamina &&
-    !(a.isBearForm && unit.bearForm)
+    !(a.isBearForm && unit.bearForm) &&
+    !(a.isDemonBlade && unit.demonBlade)
   );
   if (availableAbilities.length === 0) return null;
 
@@ -728,9 +730,16 @@ const useGameStore = create(persist((set, get) => ({
       Object.keys(updated.cooldowns).forEach(k => {
         if (updated.cooldowns[k] > 0) updated.cooldowns[k]--;
       });
-      updated.buffs = (updated.buffs || [])
+      const prevBuffs = updated.buffs || [];
+      updated.buffs = prevBuffs
         .map(b => ({ ...b, duration: b.duration - 1 }))
         .filter(b => b.duration > 0);
+      if (updated.bearForm && prevBuffs.some(b => b.source === 'Bear Form') && !updated.buffs.some(b => b.source === 'Bear Form')) {
+        updated.bearForm = false;
+      }
+      if (updated.demonBlade && prevBuffs.some(b => b.source === 'Demon Blade') && !updated.buffs.some(b => b.source === 'Demon Blade')) {
+        updated.demonBlade = false;
+      }
 
       let hp = updated.health;
       updated.dots = (updated.dots || []).filter(d => {
@@ -962,6 +971,14 @@ const useGameStore = create(persist((set, get) => ({
         }
         actionResult.targetId = currentUnitId;
         log.push(`🐻 ${attacker.name} transforms into beast form!`);
+      } else if (ability.isDemonBlade) {
+        attacker.demonBlade = true;
+        attacker.buffs.push({ ...ability.effect, source: ability.name });
+        if (ability.defenseBoost) {
+          attacker.buffs.push({ ...ability.defenseBoost, source: ability.name });
+        }
+        actionResult.targetId = currentUnitId;
+        log.push(`🗡️ ${attacker.name} transforms into a Demon Swordsman!`);
       } else if (ability.effect) {
         attacker.buffs.push({ ...ability.effect, source: ability.name });
         actionResult.targetId = currentUnitId;

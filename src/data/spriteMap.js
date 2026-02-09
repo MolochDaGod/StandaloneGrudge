@@ -201,6 +201,39 @@ const spriteSheets = {
     death: { src: '/sprites/slime/death.png', frames: 4 },
     walk: { src: '/sprites/slime/walk.png', frames: 6 },
   },
+  'demon-sword': {
+    folder: 'demon-sword',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/demon-sword/idle.png', frames: 13 },
+    walk: { src: '/sprites/demon-sword/walk.png', frames: 7 },
+    attack1: { src: '/sprites/demon-sword/attack1.png', frames: 15 },
+    attack2: { src: '/sprites/demon-sword/attack2.png', frames: 13 },
+    attack3: { src: '/sprites/demon-sword/attack3.png', frames: 27 },
+    hurt: { src: '/sprites/demon-sword/hurt.png', frames: 14 },
+    death: { src: '/sprites/demon-sword/death.png', frames: 3 },
+    block: { src: '/sprites/demon-sword/block.png', frames: 17 },
+  },
+  'water-elemental': {
+    folder: 'water-elemental',
+    frameWidth: 256,
+    frameHeight: 128,
+    idle: { src: '/sprites/water-elemental/idle.png', frames: 2 },
+    walk: { src: '/sprites/water-elemental/walk.png', frames: 2 },
+    attack1: { src: '/sprites/water-elemental/attack1.png', frames: 1 },
+    hurt: { src: '/sprites/water-elemental/hurt.png', frames: 1 },
+    death: { src: '/sprites/water-elemental/death.png', frames: 1 },
+  },
+  'nature-elemental': {
+    folder: 'nature-elemental',
+    frameWidth: 256,
+    frameHeight: 128,
+    idle: { src: '/sprites/nature-elemental/idle.png', frames: 2 },
+    walk: { src: '/sprites/nature-elemental/walk.png', frames: 2 },
+    attack1: { src: '/sprites/nature-elemental/attack1.png', frames: 1 },
+    hurt: { src: '/sprites/nature-elemental/hurt.png', frames: 1 },
+    death: { src: '/sprites/nature-elemental/death.png', frames: 1 },
+  },
 };
 
 export const raceClassSpriteMap = {
@@ -242,6 +275,8 @@ export const raceClassSpriteMap = {
   },
 };
 
+export const warriorTransformSprite = spriteSheets['demon-sword'];
+
 export const worgTransformSprite = {
   human: spriteSheets.werewolf,
   orc: spriteSheets.werebear,
@@ -261,6 +296,8 @@ export const enemySpriteMap = {
   lich: spriteSheets['armored-skeleton'],
   demon_lord: spriteSheets['knight-templar'],
   void_king: spriteSheets.swordsman,
+  water_elemental: spriteSheets['water-elemental'],
+  nature_elemental: spriteSheets['nature-elemental'],
   elite_orc: spriteSheets['elite-orc'],
 };
 
@@ -323,6 +360,12 @@ export const enemyAbilityEffects = {
   'Void Blast': { effect: 'thunderProjectile2', beam: 'purple' },
   'Annihilate': { effect: 'fireExplosion2', beam: 'red' },
   'Reality Tear': { effect: 'felSpell', beam: 'purple' },
+  'Tidal Strike': { effect: 'freezing', beam: 'purple' },
+  'Torrent': { effect: 'thunderProjectile2', beam: 'purple' },
+  'Tsunami': { effect: 'fireExplosion', beam: 'purple' },
+  'Vine Lash': { effect: 'windHit', beam: 'green' },
+  "Nature's Wrath": { effect: 'windBreath', beam: 'green' },
+  'Earthquake': { effect: 'hitEffect2', beam: null },
 };
 
 export const abilityEffectMap = {
@@ -332,6 +375,7 @@ export const abilityEffectMap = {
     'War Cry': { effect: 'holyVfx', beam: null, anim: 'block' },
     'Shield Bash': { effect: 'hitEffect2', beam: null, anim: 'attack3' },
     'Cleave': { effect: 'fireExplosion2', beam: null, anim: 'attack3' },
+    'Demon Blade': { effect: 'fireExplosion', beam: 'red', anim: 'block' },
   },
   mage: {
     'Arcane Bolt': { effect: 'holyImpact', beam: 'purple', anim: 'attack1' },

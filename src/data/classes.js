@@ -12,6 +12,7 @@ export const classDefinitions = {
       { id: 'war_cry', name: 'War Cry', icon: '📢', description: 'Boost your damage by 30% for 3 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 30, cooldown: 5, target: 'self', effect: { stat: 'damage', multiplier: 1.3, duration: 3 } },
       { id: 'shield_bash', name: 'Shield Bash', icon: '🛡️', description: 'Stun the enemy for 1 turn', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } },
       { id: 'cleave', name: 'Cleave', icon: '🩸', description: 'Slash deep, causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'demon_blade', name: 'Demon Blade', icon: '🗡️', description: 'Transform into a Demon Swordsman for 3 turns, gaining +40% damage and +15 defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 40, cooldown: 8, target: 'self', isDemonBlade: true, effect: { stat: 'damage', multiplier: 1.4, duration: 3 }, defenseBoost: { stat: 'defense', flat: 15, duration: 3 } },
     ]
   },
   mage: {
@@ -41,7 +42,7 @@ export const classDefinitions = {
       { id: 'lightning_lash', name: 'Lightning Lash', icon: '⚡', description: 'Call down a bolt of lightning on the target', type: 'magical', damage: 1.8, manaCost: 25, staminaCost: 0, cooldown: 2, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'natures_grasp', name: "Nature's Grasp", icon: '🌿', description: 'Vines heal you over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 20, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
       { id: 'dagger_toss', name: 'Dagger Toss', icon: '🗡️', description: 'Hurl an envenomed dagger, poisoning for 3 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
-      { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', percent: 25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
+      { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
     ]
   },
   ranger: {

@@ -87,6 +87,28 @@ export const enemyTemplates = {
       { id: 'void_barrier', name: 'Void Barrier', icon: '🛡️', type: 'buff', damage: 0, cooldown: 6, description: 'Impenetrable shield', effect: { stat: 'defense', flat: 50, duration: 2 } },
       { id: 'reality_tear', name: 'Reality Tear', icon: '🕳️', type: 'magical', damage: 4.0, cooldown: 8, description: 'Tears reality asunder' },
     ]
+  },
+  water_elemental: {
+    name: 'Grand Water Elemental', icon: '🌊', color: '#06b6d4',
+    baseHealth: 400, baseDamage: 48, baseDefense: 35, baseMana: 250,
+    xpReward: 150, goldReward: 100, speed: 14,
+    abilities: [
+      { id: 'tidal_strike', name: 'Tidal Strike', icon: '🌊', type: 'magical', damage: 1.4, description: 'A crashing wave of water' },
+      { id: 'torrent', name: 'Torrent', icon: '💧', type: 'magical', damage: 2.5, cooldown: 3, description: 'A devastating torrent', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'frost_armor', name: 'Frost Armor', icon: '❄️', type: 'buff', damage: 0, cooldown: 5, description: 'Encases in ice', effect: { stat: 'defense', flat: 40, duration: 3 } },
+      { id: 'tsunami', name: 'Tsunami', icon: '🌀', type: 'magical', damage: 3.5, cooldown: 6, description: 'A massive wave crashes down' },
+    ]
+  },
+  nature_elemental: {
+    name: 'Grand Nature Elemental', icon: '🌿', color: '#22c55e',
+    baseHealth: 450, baseDamage: 42, baseDefense: 38, baseMana: 200,
+    xpReward: 150, goldReward: 100, speed: 12,
+    abilities: [
+      { id: 'vine_lash', name: 'Vine Lash', icon: '🌿', type: 'physical', damage: 1.3, description: 'Thorned vines whip out' },
+      { id: 'natures_wrath', name: "Nature's Wrath", icon: '🍃', type: 'magical', damage: 2.2, cooldown: 3, description: 'The fury of nature unleashed', effect: { type: 'dot', damage: 0.15, duration: 3 } },
+      { id: 'regenerate', name: 'Regenerate', icon: '💚', type: 'buff', damage: 0, cooldown: 5, description: 'Rapid healing', effect: { stat: 'defense', flat: 25, duration: 3 }, healPercent: 0.15 },
+      { id: 'earthquake', name: 'Earthquake', icon: '⛰️', type: 'physical', damage: 3.2, cooldown: 6, description: 'The earth splits apart' },
+    ]
   }
 };
 
@@ -141,7 +163,7 @@ export const locations = [
     icon: '🏔️',
     unlocked: false,
     unlockLevel: 7,
-    boss: null,
+    boss: 'nature_elemental',
     enemyCount: [2, 3],
     allyCount: 2,
   },
@@ -155,7 +177,7 @@ export const locations = [
     icon: '🌋',
     unlocked: false,
     unlockLevel: 10,
-    boss: null,
+    boss: 'water_elemental',
     enemyCount: [3, 3],
     allyCount: 2,
   },
