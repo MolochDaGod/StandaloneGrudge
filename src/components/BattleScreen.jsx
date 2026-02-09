@@ -482,6 +482,7 @@ export default function BattleScreen() {
 
   const isVictory = phase === 'victory';
   const isDefeat = phase === 'defeat';
+  const isMissionRoundComplete = phase === 'missionRoundComplete';
 
   return (
     <div style={{
@@ -508,8 +509,8 @@ export default function BattleScreen() {
         alignItems: 'center', zIndex: 10, backdropFilter: 'blur(4px)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : 'var(--accent)', fontSize: '0.8rem' }}>
-            {isBoss ? 'BOSS BATTLE' : 'BATTLE'}
+          <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'var(--accent)', fontSize: '0.8rem' }}>
+            {isBoss ? 'BOSS BATTLE' : battleState?.isMission ? `MISSION (${battleState.missionRound}/${battleState.missionTotalRounds})` : battleState?.isArena ? 'ARENA' : 'BATTLE'}
           </span>
           <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>Turn {battleState?.turnCount || 1}</span>
         </div>
@@ -525,6 +526,16 @@ export default function BattleScreen() {
             }}>
               {currentUnit.isPlayerControlled ? `${currentUnit.name}'s TURN` : `${currentUnit.name}'s turn`}
             </div>
+          )}
+          {isMissionRoundComplete && (
+            <button onClick={() => {
+              useGameStore.getState().advanceMissionRound();
+            }} style={{
+              background: 'linear-gradient(135deg, rgba(192,132,252,0.3), rgba(192,132,252,0.1))',
+              border: '1px solid #c084fc', borderRadius: 8,
+              padding: '4px 12px', color: '#c084fc', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+              animation: 'glow 2s infinite',
+            }}>Next Round</button>
           )}
           {(isVictory || isDefeat) && (
             <button onClick={() => {

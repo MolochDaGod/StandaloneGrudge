@@ -7,6 +7,8 @@ import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout } from '../utils/abilityLoadout';
+import { missionTemplates, arenaTemplates } from '../data/missions';
+import { cities } from '../data/cities';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -321,6 +323,10 @@ const useGameStore = create(persist((set, get) => ({
   harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
   lastHarvestTick: Date.now(),
   trainingPhase: null,
+  activeMission: null,
+  completedMissions: [],
+  arenaLastRotation: 0,
+  currentArenaPool: [],
 
   setScreen: (screen) => set({ screen }),
 
@@ -771,6 +777,174 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  getAvailableMissions: (cityId) => {
+    const state = get();
+    return missionTemplates.filter(m =>
+      m.cityId === cityId &&
+      state.level >= m.levelRange[0]
+    );
+  },
+
+  getArenaForCity: (cityId) => {
+    const state = get();
+    const now = Date.now();
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
+    let pool = state.currentArenaPool;
+    if (!pool || pool.length === 0 || now - state.arenaLastRotation > SIX_HOURS) {
+      const cityArenas = arenaTemplates.filter(a => a.cityId === cityId && state.level >= a.levelRange[0]);
+      const shuffled = [...cityArenas].sort(() => Math.random() - 0.5);
+      pool = shuffled.slice(0, Math.min(3, shuffled.length));
+    }
+    return pool;
+  },
+
+  startMissionBattle: (missionId) => {
+    const state = get();
+    const mission = missionTemplates.find(m => m.id === missionId);
+    if (!mission) return;
+
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
+    }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+    if (playerTeam.length === 0) return;
+
+    const round = mission.rounds[0];
+    const enemyUnits = round.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
+
+    const allUnits = [...playerTeam, ...enemyUnits];
+    const pPositions = getFormationPositions(playerTeam.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
+    set({
+      screen: 'battle',
+      currentLocation: mission.targetLocation,
+      activeMission: { missionId, currentRound: 0, totalRounds: mission.rounds.length },
+      battleState: { phase: 'intro', turnCount: 0, isBoss: false, isMission: true, missionRound: 1, missionTotalRounds: mission.rounds.length },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [`MISSION: ${mission.title}`, `Round 1/${mission.rounds.length}: ${round.description}`],
+      playerHealth: mainUnit.health, playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana, playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina, playerMaxStamina: mainUnit.maxStamina,
+      cooldowns: {}, floatingTexts: [],
+    });
+  },
+
+  advanceMissionRound: () => {
+    const state = get();
+    const mission = missionTemplates.find(m => m.id === state.activeMission?.missionId);
+    if (!mission) return;
+
+    const nextRoundIdx = state.activeMission.currentRound + 1;
+    if (nextRoundIdx >= mission.rounds.length) return;
+
+    const round = mission.rounds[nextRoundIdx];
+
+    const playerUnits = state.battleUnits.filter(u => u.team === 'player' && u.alive && u.health > 0);
+    playerUnits.forEach(u => {
+      u.cooldowns = {};
+      u.buffs = [];
+      u.dots = [];
+      u.stunned = false;
+    });
+
+    const enemyUnits = round.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
+
+    const allUnits = [...playerUnits, ...enemyUnits];
+    const pPositions = getFormationPositions(playerUnits.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerUnits.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+
+    set({
+      activeMission: { ...state.activeMission, currentRound: nextRoundIdx },
+      battleState: { phase: 'intro', turnCount: 0, isBoss: false, isMission: true, missionRound: nextRoundIdx + 1, missionTotalRounds: mission.rounds.length },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [`Round ${nextRoundIdx + 1}/${mission.rounds.length}: ${round.description}`],
+      cooldowns: {},
+      floatingTexts: [],
+    });
+  },
+
+  startArenaBattle: (arenaId) => {
+    const state = get();
+    const arena = arenaTemplates.find(a => a.id === arenaId);
+    if (!arena) return;
+
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
+    }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+    if (playerTeam.length === 0) return;
+
+    const enemyUnits = arena.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
+
+    const allUnits = [...playerTeam, ...enemyUnits];
+    const pPositions = getFormationPositions(playerTeam.length, 'player');
+    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
+    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
+    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
+    set({
+      screen: 'battle',
+      battleState: { phase: 'intro', turnCount: 0, isBoss: false, isArena: true, arenaId },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [`ARENA: ${arena.title}`, arena.description],
+      playerHealth: mainUnit.health, playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana, playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina, playerMaxStamina: mainUnit.maxStamina,
+      cooldowns: {}, floatingTexts: [],
+    });
+  },
+
   setSelectedTarget: (unitId) => set({ selectedTargetId: unitId }),
 
   advanceTurn: () => {
@@ -1123,6 +1297,155 @@ const useGameStore = create(persist((set, get) => ({
       get().handleTrainingVictory(state.battleState.trainingRound);
       return;
     }
+
+    if (state.battleState?.isMission && state.activeMission) {
+      const mission = missionTemplates.find(m => m.id === state.activeMission.missionId);
+      if (mission && state.activeMission.currentRound < mission.rounds.length - 1) {
+        set({
+          battleState: { ...state.battleState, phase: 'missionRoundComplete' },
+          battleLog: [...state.battleLog, `Round ${state.activeMission.currentRound + 1} complete! Prepare for the next wave...`],
+        });
+        return;
+      }
+
+      const missionRewards = mission ? mission.rewards : { xp: 0, gold: 0 };
+      const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
+      const totalXp = missionRewards.xp + enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
+      const totalGold = missionRewards.gold + enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
+
+      let newXp = state.xp + totalXp;
+      let newLevel = state.level;
+      let newXpToNext = state.xpToNext;
+      let newUnspent = state.unspentPoints;
+      let newSkillPoints = state.skillPoints;
+      let log = [...state.battleLog];
+
+      while (newXp >= newXpToNext && newLevel < 20) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = Math.floor(newXpToNext * 1.4);
+        newUnspent += POINTS_PER_LEVEL;
+        newSkillPoints += 1;
+        log.push(`LEVEL UP! You are now level ${newLevel}!`);
+      }
+
+      log.push(`MISSION COMPLETE: ${mission.title}!`);
+      log.push(`Earned ${totalXp} XP and ${totalGold} Gold.`);
+
+      const levelsGained = newLevel - state.level;
+      const playerUnit = state.battleUnits.find(u => u.id === 'player');
+      const updatedRoster = state.heroRoster.map(hero => {
+        const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+        const updates = {};
+        if (battleUnit) {
+          updates.currentHealth = battleUnit.health;
+          updates.currentMana = battleUnit.mana;
+          updates.currentStamina = battleUnit.stamina;
+        }
+        if (hero.id === 'player') {
+          updates.level = newLevel;
+          updates.attributePoints = { ...state.attributePoints };
+          updates.unspentPoints = newUnspent;
+          updates.skillPoints = newSkillPoints;
+        } else if (levelsGained > 0) {
+          const heroNewLevel = Math.min(20, hero.level + levelsGained);
+          const heroLevelsUp = heroNewLevel - hero.level;
+          if (heroLevelsUp > 0) {
+            updates.level = heroNewLevel;
+            updates.unspentPoints = (hero.unspentPoints || 0) + (heroLevelsUp * POINTS_PER_LEVEL);
+            updates.skillPoints = (hero.skillPoints || 0) + heroLevelsUp;
+          }
+        }
+        return { ...hero, ...updates };
+      });
+
+      const completedMissions = [...state.completedMissions];
+      if (!completedMissions.includes(mission.id)) completedMissions.push(mission.id);
+
+      set({
+        battleState: { ...state.battleState, phase: 'victory' },
+        xp: newXp, level: newLevel, xpToNext: newXpToNext,
+        gold: state.gold + totalGold,
+        unspentPoints: newUnspent, skillPoints: newSkillPoints,
+        victories: state.victories + 1,
+        heroRoster: updatedRoster,
+        completedMissions,
+        activeMission: null,
+        battleLog: log.slice(-12),
+        playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
+        playerMana: playerUnit ? playerUnit.mana : state.playerMana,
+        playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
+      });
+      return;
+    }
+
+    if (state.battleState?.isArena) {
+      const arena = arenaTemplates.find(a => a.id === state.battleState.arenaId);
+      const arenaRewards = arena ? arena.rewards : { xp: 0, gold: 0 };
+      const totalXp = arenaRewards.xp;
+      const totalGold = arenaRewards.gold;
+
+      let newXp = state.xp + totalXp;
+      let newLevel = state.level;
+      let newXpToNext = state.xpToNext;
+      let newUnspent = state.unspentPoints;
+      let newSkillPoints = state.skillPoints;
+      let log = [...state.battleLog];
+
+      while (newXp >= newXpToNext && newLevel < 20) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = Math.floor(newXpToNext * 1.4);
+        newUnspent += POINTS_PER_LEVEL;
+        newSkillPoints += 1;
+        log.push(`LEVEL UP! You are now level ${newLevel}!`);
+      }
+
+      log.push(`ARENA VICTORY: ${arena?.title}!`);
+      log.push(`Earned ${totalXp} XP and ${totalGold} Gold.`);
+
+      const levelsGained = newLevel - state.level;
+      const playerUnit = state.battleUnits.find(u => u.id === 'player');
+      const updatedRoster = state.heroRoster.map(hero => {
+        const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+        const updates = {};
+        if (battleUnit) {
+          updates.currentHealth = battleUnit.health;
+          updates.currentMana = battleUnit.mana;
+          updates.currentStamina = battleUnit.stamina;
+        }
+        if (hero.id === 'player') {
+          updates.level = newLevel;
+          updates.attributePoints = { ...state.attributePoints };
+          updates.unspentPoints = newUnspent;
+          updates.skillPoints = newSkillPoints;
+        } else if (levelsGained > 0) {
+          const heroNewLevel = Math.min(20, hero.level + levelsGained);
+          const heroLevelsUp = heroNewLevel - hero.level;
+          if (heroLevelsUp > 0) {
+            updates.level = heroNewLevel;
+            updates.unspentPoints = (hero.unspentPoints || 0) + (heroLevelsUp * POINTS_PER_LEVEL);
+            updates.skillPoints = (hero.skillPoints || 0) + heroLevelsUp;
+          }
+        }
+        return { ...hero, ...updates };
+      });
+
+      set({
+        battleState: { ...state.battleState, phase: 'victory' },
+        xp: newXp, level: newLevel, xpToNext: newXpToNext,
+        gold: state.gold + totalGold,
+        unspentPoints: newUnspent, skillPoints: newSkillPoints,
+        victories: state.victories + 1,
+        heroRoster: updatedRoster,
+        battleLog: log.slice(-12),
+        playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
+        playerMana: playerUnit ? playerUnit.mana : state.playerMana,
+        playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
+      });
+      return;
+    }
+
     const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
     const locId = state.currentLocation;
     const zoneConquer = { ...state.zoneConquer };
@@ -1342,9 +1665,9 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
-  restAtInn: () => {
+  restAtInn: (customCost) => {
     const state = get();
-    const cost = state.level * 5;
+    const cost = customCost != null ? customCost : state.level * 5;
     if (state.gold < cost) return;
     const stats = state.getStats();
     const healedRoster = state.heroRoster.map(hero => {

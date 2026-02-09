@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { locations } from '../data/enemies';
+import { cities, cityPositions, cityConnections } from '../data/cities';
+import { missionTemplates, arenaTemplates } from '../data/missions';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
@@ -49,6 +51,7 @@ export default function WorldMap() {
     victories, unspentPoints, skillPoints, heroRoster, activeHeroIds, maxHeroSlots,
     setActiveHeroes, locationsCleared, bossesDefeated, zoneConquer,
     harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
+    startMissionBattle, startArenaBattle, completedMissions,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -58,6 +61,8 @@ export default function WorldMap() {
   const canCreateNewHero = heroRoster.length < maxHeroSlots;
 
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [citySubmenu, setCitySubmenu] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showWarParty, setShowWarParty] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
@@ -104,6 +109,8 @@ export default function WorldMap() {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setSelectedLocation(null);
+        setSelectedCity(null);
+        setCitySubmenu(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -130,12 +137,45 @@ export default function WorldMap() {
 
     setMenuPos({ x: menuX - rect.left, y: menuY - rect.top });
     setSelectedLocation(loc.id);
+    setSelectedCity(null);
+    setCitySubmenu(null);
 
     const target = locationPositions[loc.id];
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
       setIsMoving(true);
       setHeroPos(target);
       setCurrentZone(loc.id);
+      setTimeout(() => setIsMoving(false), 600);
+    }
+  }, [level, heroPos]);
+
+  const handleCityClick = useCallback((e, city) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel);
+    if (!isCityUnlocked) return;
+
+    const rect = mapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const pos = cityPositions[city.id];
+    let menuX = (pos.x / 100) * rect.width + rect.left;
+    let menuY = (pos.y / 100) * rect.height + rect.top - 10;
+
+    if (menuX + 280 > window.innerWidth) menuX = window.innerWidth - 290;
+    if (menuY + 400 > window.innerHeight) menuY -= 250;
+    if (menuX < 10) menuX = 10;
+    if (menuY < 10) menuY = 60;
+
+    setMenuPos({ x: menuX - rect.left, y: menuY - rect.top });
+    setSelectedCity(city.id);
+    setSelectedLocation(null);
+    setCitySubmenu(null);
+
+    const target = cityPositions[city.id];
+    if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
+      setIsMoving(true);
+      setHeroPos(target);
       setTimeout(() => setIsMoving(false), 600);
     }
   }, [level, heroPos]);
@@ -210,6 +250,25 @@ export default function WorldMap() {
                 strokeWidth={bothUnlocked ? 2.5 : 1.5}
                 strokeDasharray={bothUnlocked ? 'none' : '6 4'}
                 style={{ filter: bothUnlocked ? 'drop-shadow(0 0 3px rgba(255,215,0,0.3))' : 'none' }}
+              />
+            );
+          })}
+          {cityConnections.map(([cityId, locId], idx) => {
+            const cityPos = cityPositions[cityId];
+            const locPos = locationPositions[locId];
+            if (!cityPos || !locPos) return null;
+            const city = cities.find(c => c.id === cityId);
+            const isCityUnlocked = city && (city.unlocked || (city.unlockLevel && level >= city.unlockLevel));
+            const isLocUnlocked = unlockedLocs.some(l => l.id === locId);
+            const bothOk = isCityUnlocked && isLocUnlocked;
+            return (
+              <line key={`cc_${idx}`}
+                x1={`${cityPos.x}%`} y1={`${cityPos.y}%`}
+                x2={`${locPos.x}%`} y2={`${locPos.y}%`}
+                stroke={bothOk ? 'rgba(74,222,128,0.3)' : 'rgba(100,100,120,0.15)'}
+                strokeWidth={bothOk ? 2 : 1}
+                strokeDasharray={bothOk ? '6 3' : '4 4'}
+                style={{ filter: bothOk ? 'drop-shadow(0 0 2px rgba(74,222,128,0.2))' : 'none' }}
               />
             );
           })}
@@ -339,8 +398,73 @@ export default function WorldMap() {
           );
         })}
 
+        {cities.map((city) => {
+          const pos = cityPositions[city.id];
+          if (!pos) return null;
+          const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel);
+          const isSelected = selectedCity === city.id;
+
+          return (
+            <div key={city.id}
+              onClick={(e) => handleCityClick(e, city)}
+              style={{
+                position: 'absolute',
+                left: `${pos.x}%`, top: `${pos.y}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: isSelected ? 10 : 3,
+                cursor: isCityUnlocked ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <div style={{ position: 'relative', width: 58, height: 58 }}>
+                <div style={{
+                  width: 52, height: 52, margin: '3px',
+                  borderRadius: '50%',
+                  background: isCityUnlocked
+                    ? 'radial-gradient(circle, rgba(74,222,128,0.25), rgba(20,26,43,0.9))'
+                    : 'rgba(30,30,50,0.8)',
+                  border: `3px solid ${isCityUnlocked ? (isSelected ? '#fff' : '#4ade80') : 'rgba(80,80,100,0.4)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: isCityUnlocked ? '1.4rem' : '1rem',
+                  opacity: isCityUnlocked ? 1 : 0.4,
+                  boxShadow: isSelected
+                    ? '0 0 20px rgba(74,222,128,0.5), 0 0 40px rgba(74,222,128,0.3)'
+                    : isCityUnlocked
+                      ? '0 0 10px rgba(74,222,128,0.3)'
+                      : 'none',
+                  transition: 'all 0.3s',
+                  animation: isSelected ? 'pulse 1.5s infinite' : (isCityUnlocked ? 'glow 3s infinite' : 'none'),
+                }}>
+                  {isCityUnlocked ? city.icon : '🔒'}
+                </div>
+              </div>
+              <div style={{
+                position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                marginTop: 4, whiteSpace: 'nowrap', textAlign: 'center',
+              }}>
+                <div className="font-cinzel" style={{
+                  fontSize: '0.65rem', fontWeight: 700,
+                  color: isCityUnlocked ? '#4ade80' : 'rgba(150,150,170,0.5)',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
+                }}>
+                  {city.name}
+                </div>
+                {isCityUnlocked && (
+                  <div style={{ fontSize: '0.5rem', color: 'rgba(74,222,128,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                    City
+                  </div>
+                )}
+                {!isCityUnlocked && city.unlockLevel && (
+                  <div style={{ fontSize: '0.5rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                    Lv.{city.unlockLevel}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
         {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
-          const zonePos = locationPositions[currentZone] || locationPositions.verdant_plains;
+          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
           const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
           const baseOffsetX = (idx - 1) * 1.8;
           const baseOffsetY = -2.5 - idx * 1;
@@ -504,6 +628,179 @@ export default function WorldMap() {
             </div>
           </div>
         )}
+
+        {selectedCity && (() => {
+          const city = cities.find(c => c.id === selectedCity);
+          if (!city) return null;
+
+          const cityMissions = missionTemplates.filter(m => m.cityId === city.id && level >= m.levelRange[0]);
+          const cityArenas = arenaTemplates.filter(a => a.cityId === city.id && level >= a.levelRange[0]);
+
+          return (
+            <div ref={menuRef} style={{
+              position: 'absolute',
+              left: menuPos.x, top: menuPos.y,
+              zIndex: 20,
+              background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
+              border: '2px solid #4ade80',
+              borderRadius: 14,
+              padding: 0,
+              minWidth: 260, maxWidth: 320,
+              maxHeight: '70vh', overflowY: 'auto',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(74,222,128,0.3)',
+              animation: 'fadeIn 0.15s ease-out',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                padding: '14px 16px 10px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                background: 'linear-gradient(135deg, rgba(74,222,128,0.15), transparent)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: '1.4rem' }}>{city.icon}</span>
+                  <div>
+                    <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.95rem', fontWeight: 700 }}>
+                      {city.name}
+                    </div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+                  {city.description}
+                </div>
+              </div>
+
+              {!citySubmenu && (
+                <div style={{ padding: '8px' }}>
+                  <MenuButton
+                    icon="🏟️" label="Arena" sublabel={`${cityArenas.length} challenge${cityArenas.length !== 1 ? 's' : ''} available`}
+                    color="#f97316" onClick={() => setCitySubmenu('arena')}
+                    disabled={cityArenas.length === 0}
+                  />
+                  <MenuButton
+                    icon="📜" label="Missions" sublabel={`${cityMissions.length} mission${cityMissions.length !== 1 ? 's' : ''} available`}
+                    color="#c084fc" onClick={() => setCitySubmenu('missions')}
+                    disabled={cityMissions.length === 0}
+                  />
+                  <MenuButton
+                    icon="🛒" label="Trade" sublabel="Buy supplies & sell loot"
+                    color="var(--gold)" disabled
+                  />
+                  <MenuButton
+                    icon="🏨" label="Rest" sublabel={`Heal party (${city.innCost}g)`}
+                    color="#60a5fa" onClick={() => {
+                      restAtInn(city.innCost);
+                      setSelectedCity(null);
+                      setCitySubmenu(null);
+                    }}
+                  />
+                  <MenuButton
+                    icon="🔧" label="Upgrade" sublabel="Enhance equipment"
+                    color="#22d3ee" disabled
+                  />
+                </div>
+              )}
+
+              {citySubmenu === 'arena' && (
+                <div style={{ padding: '8px' }}>
+                  <button onClick={() => setCitySubmenu(null)} style={{
+                    background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    ← Back
+                  </button>
+                  <div className="font-cinzel" style={{ color: '#f97316', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                    Arena Challenges
+                  </div>
+                  {cityArenas.length === 0 && (
+                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                      No challenges available at your level.
+                    </div>
+                  )}
+                  {cityArenas.map(arena => (
+                    <div key={arena.id} style={{
+                      background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)',
+                      borderRadius: 8, padding: '10px 12px', marginBottom: 6, cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                      onClick={() => { startArenaBattle(arena.id); setSelectedCity(null); setCitySubmenu(null); }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.15)'; e.currentTarget.style.borderColor = '#f97316'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.15)'; }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ color: '#f97316', fontWeight: 700, fontSize: '0.75rem' }}>🏟️ {arena.title}</span>
+                        <span style={{ color: 'var(--muted)', fontSize: '0.55rem' }}>Lv.{arena.levelRange[0]}-{arena.levelRange[1]}</span>
+                      </div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6 }}>{arena.description}</div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem' }}>
+                        <span style={{ color: 'var(--gold)' }}>💰 {arena.rewards.gold}g</span>
+                        <span style={{ color: 'var(--accent)' }}>✨ {arena.rewards.xp} XP</span>
+                        <span style={{ color: 'var(--muted)' }}>👹 {arena.enemies.length} enemies</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {citySubmenu === 'missions' && (
+                <div style={{ padding: '8px' }}>
+                  <button onClick={() => setCitySubmenu(null)} style={{
+                    background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    ← Back
+                  </button>
+                  <div className="font-cinzel" style={{ color: '#c084fc', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                    Available Missions
+                  </div>
+                  {cityMissions.length === 0 && (
+                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                      No missions available at your level.
+                    </div>
+                  )}
+                  {cityMissions.map(mission => {
+                    const isCompleted = (completedMissions || []).includes(mission.id);
+                    return (
+                      <div key={mission.id} style={{
+                        background: isCompleted ? 'rgba(34,197,94,0.06)' : 'rgba(192,132,252,0.06)',
+                        border: `1px solid ${isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(192,132,252,0.15)'}`,
+                        borderRadius: 8, padding: '10px 12px', marginBottom: 6, cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                        onClick={() => { startMissionBattle(mission.id); setSelectedCity(null); setCitySubmenu(null); }}
+                        onMouseEnter={e => { e.currentTarget.style.background = isCompleted ? 'rgba(34,197,94,0.12)' : 'rgba(192,132,252,0.15)'; e.currentTarget.style.borderColor = isCompleted ? '#22c55e' : '#c084fc'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = isCompleted ? 'rgba(34,197,94,0.06)' : 'rgba(192,132,252,0.06)'; e.currentTarget.style.borderColor = isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(192,132,252,0.15)'; }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ color: isCompleted ? '#22c55e' : '#c084fc', fontWeight: 700, fontSize: '0.75rem' }}>
+                            📜 {mission.title}
+                          </span>
+                          {isCompleted && <span style={{ color: '#22c55e', fontSize: '0.55rem', fontWeight: 600 }}>✓ Done</span>}
+                        </div>
+                        <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6, lineHeight: 1.3 }}>{mission.description}</div>
+                        <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem', flexWrap: 'wrap' }}>
+                          <span style={{ color: 'var(--gold)' }}>💰 {mission.rewards.gold}g</span>
+                          <span style={{ color: 'var(--accent)' }}>✨ {mission.rewards.xp} XP</span>
+                          <span style={{ color: 'var(--muted)' }}>⚔ {mission.rounds.length} round{mission.rounds.length > 1 ? 's' : ''}</span>
+                          <span style={{ color: 'var(--muted)' }}>Lv.{mission.levelRange[0]}-{mission.levelRange[1]}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{
+                padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
+                textAlign: 'center',
+              }}>
+                <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
+                  Click anywhere to close
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0,
