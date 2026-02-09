@@ -497,7 +497,7 @@ export default function BattleScreen() {
           <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : 'var(--accent)', fontSize: '0.8rem' }}>
             {isBoss ? 'BOSS BATTLE' : 'BATTLE'}
           </span>
-          <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>Turn {battleState.turnCount}</span>
+          <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>Turn {battleState?.turnCount || 1}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {currentUnit && !isVictory && !isDefeat && (

@@ -140,7 +140,7 @@ export default function CharacterCreate() {
             <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.8rem', marginBottom: 20 }}>
               6 Races &times; 4 Classes = 24 Warlord Combinations
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
               {raceList.map(race => {
                 const isSelected = selectedRace === race.id;
                 return (
@@ -229,7 +229,7 @@ export default function CharacterCreate() {
                 </span>
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
               {Object.entries(classDefinitions).map(([id, cls]) => {
                 const isSelected = selectedFaction === id;
                 const previewAttrs = { ...cls.startingAttributes };
