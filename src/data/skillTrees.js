@@ -96,43 +96,43 @@ export const skillTrees = {
     color: '#d97706',
     tiers: [
       {
-        name: 'Level 1 - Beast Bond',
+        name: 'Level 1 - Primal Roots',
         requiredLevel: 1,
         skills: [
-          { id: 'wr_sharp_fangs', name: 'Sharp Fangs', icon: '🦷', description: 'Worge bite damage up', effect: '+15% Bite Damage', maxPoints: 3, bonuses: { damage: 3 } },
-          { id: 'wr_thick_hide', name: 'Thick Hide', icon: '🐾', description: 'Increased resilience', effect: '+10% Defense', maxPoints: 3, bonuses: { defense: 4, health: 10 } }
+          { id: 'wr_storm_touch', name: 'Storm Touch', icon: '⚡', description: 'Lightning spells hit harder', effect: '+15% Storm Damage', maxPoints: 3, bonuses: { damage: 3 } },
+          { id: 'wr_bark_skin', name: 'Bark Skin', icon: '🌿', description: 'Nature hardens your skin', effect: '+10% Defense', maxPoints: 3, bonuses: { defense: 4, health: 10 } }
         ]
       },
       {
-        name: 'Level 5 - Predator',
+        name: 'Level 5 - Dual Nature',
         requiredLevel: 5,
         skills: [
-          { id: 'wr_frenzy', name: 'Frenzy', icon: '🔴', description: 'Attack speed frenzy', effect: '+25% Attack Speed', maxPoints: 3, requires: 'wr_sharp_fangs', bonuses: { attackSpeed: 8 } },
-          { id: 'wr_pack_tactics', name: 'Pack Tactics', icon: '🐺', description: 'Combo damage bonus', effect: '+20% Combo Damage', maxPoints: 3, requires: 'wr_thick_hide', bonuses: { damage: 4, criticalChance: 3 } }
+          { id: 'wr_weapon_mastery', name: 'Weapon Mastery', icon: '🔨', description: 'Mace and dagger expertise', effect: '+20% Weapon Damage', maxPoints: 3, requires: 'wr_storm_touch', bonuses: { damage: 4, criticalChance: 3 } },
+          { id: 'wr_wild_growth', name: 'Wild Growth', icon: '🌱', description: 'Nature heals strengthen', effect: '+25% Heal Power', maxPoints: 3, requires: 'wr_bark_skin', bonuses: { health: 15 } }
         ]
       },
       {
-        name: 'Level 10 - Alpha',
+        name: 'Level 10 - Shapeshifter',
         requiredLevel: 10,
         skills: [
-          { id: 'wr_savage_leap', name: 'Savage Leap', icon: '💨', description: 'Leap to target with damage', effect: 'Gap Closer + 150% Dmg', maxPoints: 1, requires: 'wr_frenzy', bonuses: { damage: 10 } },
-          { id: 'wr_blood_scent', name: 'Blood Scent', icon: '🩸', description: 'Bonus vs wounded targets', effect: '+30% vs <50% HP', maxPoints: 3, requires: 'wr_pack_tactics', bonuses: { criticalChance: 5, damage: 3 } },
-          { id: 'wr_iron_jaws', name: 'Iron Jaws', icon: '⚙️', description: 'Bite ignores armor', effect: '20% Armor Pen', maxPoints: 2, requires: 'wr_sharp_fangs', bonuses: { armorPenetration: 5 } }
+          { id: 'wr_thunderclap', name: 'Thunderclap', icon: '🌩️', description: 'Storm spells stun briefly', effect: 'Spell Stun Chance', maxPoints: 1, requires: 'wr_weapon_mastery', bonuses: { damage: 10 } },
+          { id: 'wr_iron_hide', name: 'Iron Hide', icon: '🛡️', description: 'Bear form is tougher', effect: '+30% Bear Defense', maxPoints: 3, requires: 'wr_wild_growth', bonuses: { defense: 6, health: 15 } },
+          { id: 'wr_venom_edge', name: 'Venom Edge', icon: '🗡️', description: 'Dagger poison is deadlier', effect: '+20% Poison Damage', maxPoints: 2, requires: 'wr_storm_touch', bonuses: { damage: 5 } }
         ]
       },
       {
-        name: 'Level 15 - Apex',
+        name: 'Level 15 - Warden',
         requiredLevel: 15,
         skills: [
-          { id: 'wr_relentless', name: 'Relentless', icon: '💢', description: 'No stopping the hunt', effect: 'Immune to Slow', maxPoints: 1, requires: 'wr_savage_leap', bonuses: { attackSpeed: 10, damage: 5 } },
-          { id: 'wr_devour', name: 'Devour', icon: '😈', description: 'Eat enemies for health', effect: 'Execute + Heal', maxPoints: 2, requires: 'wr_blood_scent', bonuses: { drainHealth: 5, health: 20 } }
+          { id: 'wr_tempest', name: 'Tempest', icon: '🌪️', description: 'Storm mastery unleashed', effect: '+40% Storm Power', maxPoints: 1, requires: 'wr_thunderclap', bonuses: { damage: 8, attackSpeed: 10 } },
+          { id: 'wr_rejuvenate', name: 'Rejuvenate', icon: '💚', description: 'Nature mends all wounds', effect: 'Passive Regen', maxPoints: 2, requires: 'wr_iron_hide', bonuses: { drainHealth: 5, health: 20 } }
         ]
       },
       {
         name: 'Level 20 - Legendary',
         requiredLevel: 20,
         skills: [
-          { id: 'wr_primal_fury', name: 'Primal Fury', icon: '🌟', description: 'Unleash primal power', effect: 'Ultimate: Beast Mode', maxPoints: 1, requires: 'wr_relentless', bonuses: { damage: 15, attackSpeed: 15, health: 40 } }
+          { id: 'wr_natures_wrath', name: "Nature's Wrath", icon: '🌟', description: 'Command storm and wild as one', effect: 'Ultimate: Primal Storm', maxPoints: 1, requires: 'wr_tempest', bonuses: { damage: 15, attackSpeed: 15, health: 40 } }
         ]
       }
     ]

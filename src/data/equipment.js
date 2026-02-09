@@ -21,10 +21,10 @@ const weaponTemplates = [
   { id: 'longbow', name: 'Longbow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 4, stats: { damage: 7, criticalChance: 6, accuracy: 5, criticalDamage: 5 } },
   { id: 'composite_bow', name: 'Composite Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 8, stats: { damage: 12, criticalChance: 8, accuracy: 8, attackSpeed: 3 } },
   { id: 'shadow_bow', name: 'Shadow Bow', slot: 'weapon', icon: '🏹', classReq: ['ranger'], levelReq: 14, stats: { damage: 20, criticalChance: 12, accuracy: 10, criticalDamage: 15 } },
-  { id: 'beast_claws', name: 'Beast Claws', slot: 'weapon', icon: '🦷', classReq: ['worge'], levelReq: 1, stats: { damage: 4, attackSpeed: 3, evasion: 2 } },
-  { id: 'feral_fangs', name: 'Feral Fangs', slot: 'weapon', icon: '🐺', classReq: ['worge'], levelReq: 4, stats: { damage: 8, attackSpeed: 5, evasion: 3, drainHealth: 2 } },
-  { id: 'primal_talons', name: 'Primal Talons', slot: 'weapon', icon: '🐻', classReq: ['worge'], levelReq: 8, stats: { damage: 13, attackSpeed: 6, evasion: 4, criticalChance: 5 } },
-  { id: 'apex_jaws', name: 'Apex Jaws', slot: 'weapon', icon: '🦷', classReq: ['worge'], levelReq: 14, stats: { damage: 21, attackSpeed: 8, evasion: 6, drainHealth: 5 } },
+  { id: 'storm_mace', name: 'Storm Mace', slot: 'weapon', icon: '🔨', classReq: ['worge'], levelReq: 1, stats: { damage: 4, attackSpeed: 3, evasion: 2 } },
+  { id: 'thornwood_dagger', name: 'Thornwood Dagger', slot: 'weapon', icon: '🗡️', classReq: ['worge'], levelReq: 4, stats: { damage: 8, attackSpeed: 5, evasion: 3, drainHealth: 2 } },
+  { id: 'tempest_maul', name: 'Tempest Maul', slot: 'weapon', icon: '⚡', classReq: ['worge'], levelReq: 8, stats: { damage: 13, attackSpeed: 6, evasion: 4, criticalChance: 5 } },
+  { id: 'natures_fang', name: "Nature's Fang", slot: 'weapon', icon: '🌿', classReq: ['worge'], levelReq: 14, stats: { damage: 21, attackSpeed: 8, evasion: 6, drainHealth: 5 } },
 ];
 
 const armorTemplates = [

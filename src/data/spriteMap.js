@@ -309,11 +309,11 @@ export const abilityEffectMap = {
     'Arcane Blast': { effect: 'felSpell', beam: 'purple' },
   },
   worge: {
-    'Savage Bite': { effect: 'weaponHit', beam: null },
-    'Rending Claws': { effect: 'flameLash', beam: null },
-    'Blood Howl': { effect: 'nebula', beam: null },
+    'Mace Strike': { effect: 'weaponHit', beam: null },
+    'Lightning Lash': { effect: 'brightFire', beam: 'orange' },
+    "Nature's Grasp": { effect: 'magicBubbles', beam: null },
+    'Dagger Toss': { effect: 'magickaHit', beam: 'green' },
     'Bear Form': { effect: 'vortex', beam: null },
-    'Primal Fury': { effect: 'brightFire', beam: null },
   },
   ranger: {
     'Quick Shot': { effect: 'magickaHit', beam: 'green' },
