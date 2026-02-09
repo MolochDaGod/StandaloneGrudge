@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
+import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
 import { RARITY, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites';
+import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
@@ -314,52 +315,113 @@ function HeroDetailPanel({ hero, onClose }) {
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-        {tab === 'stats' && (
+        {tab === 'stats' && (() => {
+          const build = getBuildClassification(stats, hero.attributePoints || {});
+          const radar = getRadarData(stats);
+          return (
           <div>
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 12 }}>
               <MiniBar current={hero.currentHealth} max={stats.health} color="#22c55e" height={8} label="HP" />
               <MiniBar current={hero.currentMana} max={stats.mana} color="#3b82f6" height={6} label="MP" />
               <MiniBar current={hero.currentStamina} max={stats.stamina} color="#f59e0b" height={6} label="SP" />
             </div>
 
-            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 8, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
-              Core Stats
-            </h4>
-            {mainStats.map(s => (
-              <div key={s.key} style={{
-                display: 'flex', justifyContent: 'space-between', padding: '5px 0',
-                borderBottom: '1px solid rgba(255,255,255,0.03)',
-              }}>
-                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{s.icon} {s.label}</span>
-                <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace' }}>{Math.floor(stats[s.key])}</span>
-              </div>
-            ))}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h4 style={{ color: 'var(--accent)', fontSize: '0.8rem', marginBottom: 6, borderBottom: '1px solid var(--border)', paddingBottom: 3 }}>
+                  Core Stats
+                </h4>
+                {mainStats.map(s => (
+                  <div key={s.key} style={{
+                    display: 'flex', justifyContent: 'space-between', padding: '4px 0',
+                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                  }}>
+                    <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>{s.icon} {s.label}</span>
+                    <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace', fontSize: '0.8rem' }}>{Math.floor(stats[s.key])}</span>
+                  </div>
+                ))}
 
-            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginTop: 16, marginBottom: 8, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
-              Combat Stats
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px' }}>
-              {combatStats.map(s => (
-                <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '0.75rem' }}>
-                  <span style={{ color: 'var(--muted)' }}>{s.label}</span>
-                  <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{s.format(stats[s.key])}</span>
+                <h4 style={{ color: 'var(--accent)', fontSize: '0.8rem', marginTop: 12, marginBottom: 6, borderBottom: '1px solid var(--border)', paddingBottom: 3 }}>
+                  Combat Stats
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+                  {combatStats.map(s => (
+                    <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: '0.7rem' }}>
+                      <span style={{ color: 'var(--muted)' }}>{s.label}</span>
+                      <span style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{s.format(stats[s.key])}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div style={{
+                width: 200, flexShrink: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              }}>
+                <div style={{
+                  textAlign: 'center', padding: '8px 12px', borderRadius: 8,
+                  border: `2px solid ${build.tierColor}`,
+                  boxShadow: `0 0 16px ${build.tierColor}25`,
+                  background: `linear-gradient(135deg, ${build.tierColor}10, transparent)`,
+                  width: '100%',
+                }}>
+                  <div style={{ fontSize: '0.65rem', color: build.tierColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    {build.tier} (Rank {build.rank})
+                  </div>
+                  <div className="font-cinzel" style={{
+                    fontSize: '0.95rem', fontWeight: 700, color: build.tierColor,
+                    marginTop: 2, lineHeight: 1.2,
+                    textShadow: `0 0 8px ${build.tierColor}40`,
+                  }}>
+                    {build.name}
+                  </div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginTop: 3, fontStyle: 'italic' }}>
+                    {build.desc}
+                  </div>
+                </div>
+
+                <RadarChart
+                  labels={radar.labels}
+                  values={radar.values}
+                  size={190}
+                  color={build.tierColor}
+                />
+
+                <div style={{
+                  display: 'flex', gap: 12, justifyContent: 'center', width: '100%',
+                  background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '6px 10px',
+                  border: '1px solid var(--border)',
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>Power</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fbbf24', fontFamily: 'monospace' }}>{cp.toLocaleString()}</div>
+                  </div>
+                  <div style={{ width: 1, background: 'var(--border)' }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>Rating</div>
+                    <div style={{
+                      fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace',
+                      color: build.rating.startsWith('S') ? '#fbbf24' : build.rating === 'A' ? '#a855f7' : 'var(--text)',
+                    }}>{build.rating}</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {race && (
               <div style={{
-                marginTop: 16, padding: 12, background: 'rgba(42,49,80,0.3)',
-                borderRadius: 10, border: '1px solid var(--border)',
+                marginTop: 12, padding: 10, background: 'rgba(42,49,80,0.3)',
+                borderRadius: 8, border: '1px solid var(--border)',
               }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>
                   {race.icon} {race.name} — {race.trait}
                 </div>
-                <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>{race.traitDescription}</div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>{race.traitDescription}</div>
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {tab === 'equipment' && (
           <div>

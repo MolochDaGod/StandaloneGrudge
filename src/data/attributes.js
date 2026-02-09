@@ -222,3 +222,78 @@ export function calculateCombatPower(stats) {
   const utility = (stats.cooldownReduction * 2) + (stats.manaRegen * 10) + (stats.movementSpeed * 2);
   return Math.floor((ehp * 0.4) + (dps * 2.5) + (utility * 5));
 }
+
+const CLASS_TIERS = [
+  { minRank: 1, maxRank: 10, name: 'Legendary', color: '#89f7fe', desc: 'Mythical power achieved through perfect synergy.' },
+  { minRank: 11, maxRank: 50, name: 'Warlord', color: '#f97316', desc: 'A dominant force on the battlefield.' },
+  { minRank: 51, maxRank: 100, name: 'Epic', color: '#a855f7', desc: 'A hero of renown and great skill.' },
+  { minRank: 101, maxRank: 200, name: 'Hero', color: '#3b82f6', desc: 'A capable adventurer with potential.' },
+  { minRank: 201, maxRank: 300, name: 'Normal', color: '#9ca3af', desc: 'A standard combatant.' },
+];
+
+const CLASS_NAMES = (() => {
+  const n = [];
+  const p = ["Void", "Solar", "Lunar", "Star", "Chaos", "Holy", "Dark", "Blood", "Iron", "Storm", "Frost", "Fire", "Wind", "Earth", "Spirit", "Mind", "Soul", "Time", "Space", "Life"];
+  const r = ["Walker", "Weaver", "Lord", "King", "Queen", "God", "Titan", "Slayer", "Breaker", "Maker", "Seer", "Sage", "Guard", "Blade", "Fist", "Shield", "Heart", "Eye", "Hand", "Wing"];
+  n.push("Primordial God-King", "Eternal Void Walker", "Celestial Archon", "Omniscient Sage", "Timeless Sentinel", "Reality Weaver", "Abyssal Sovereign", "Divine Arbiter", "Cosmic Guardian", "Transcendent Being");
+  for (let i = 0; i < 40; i++) n.push(`${p[i % 20]} ${r[i % 20]} Warlord`);
+  for (let i = 0; i < 50; i++) n.push(`Epic ${p[i % 20]} ${r[i % 20]}`);
+  for (let i = 0; i < 100; i++) n.push(`${p[i % 20]} ${r[i % 20]}`);
+  for (let i = 0; i < 100; i++) n.push(`Novice ${r[i % 20]}`);
+  return n;
+})();
+
+export function calculateBuildScore(stats, attributePoints) {
+  const cp = calculateCombatPower(stats);
+  let score = (cp / 6000) * 100;
+
+  const totalPts = Object.values(attributePoints).reduce((a, b) => a + b, 0);
+  if (totalPts === 0) return 0;
+
+  const norm = {};
+  for (const k of Object.keys(attributePoints)) {
+    norm[k] = (attributePoints[k] || 0) / Math.max(totalPts, 1);
+  }
+
+  const synergy = Math.max(
+    (norm.Strength || 0) + (norm.Vitality || 0) + (norm.Endurance || 0),
+    (norm.Intellect || 0) + (norm.Wisdom || 0) + (norm.Tactics || 0),
+    (norm.Dexterity || 0) + (norm.Agility || 0) + (norm.Strength || 0),
+    (norm.Tactics || 0) + (norm.Endurance || 0) + (norm.Wisdom || 0),
+  ) * 20;
+
+  return Math.min(100, score + synergy);
+}
+
+export function getBuildClassification(stats, attributePoints) {
+  const score = calculateBuildScore(stats, attributePoints);
+  const rank = Math.max(1, Math.min(300, Math.floor(301 - (score * 3))));
+  const tier = CLASS_TIERS.find(t => rank >= t.minRank && rank <= t.maxRank) || CLASS_TIERS[CLASS_TIERS.length - 1];
+  const name = CLASS_NAMES[rank - 1] || 'Unknown Entity';
+
+  let rating = 'F';
+  if (score > 90) rating = 'S+';
+  else if (score > 80) rating = 'S';
+  else if (score > 70) rating = 'A';
+  else if (score > 60) rating = 'B';
+  else if (score > 50) rating = 'C';
+  else if (score > 30) rating = 'D';
+
+  return { name, tier: tier.name, rank, tierColor: tier.color, desc: tier.desc, rating, score };
+}
+
+export function getRadarData(stats) {
+  const maxHP = 3000;
+  const maxDmg = 500;
+  return {
+    labels: ['Survivability', 'Damage', 'Utility', 'Mobility', 'Control', 'Magic'],
+    values: [
+      Math.min(100, ((stats.health || 0) / maxHP) * 100 + ((stats.defense || 0) / 500) * 50),
+      Math.min(100, (Math.max(stats.physicalDamage || 0, stats.magicDamage || 0) / maxDmg) * 100 + (stats.criticalChance || 0)),
+      Math.min(100, (stats.cooldownReduction || 0) * 2 + (stats.manaRegen || 0) * 5),
+      Math.min(100, (stats.movementSpeed || 0) * 5 + (stats.evasion || 0)),
+      Math.min(100, (stats.block || 0) + (stats.stagger || 0) * 2),
+      Math.min(100, (stats.resistance || 0) + (stats.mana || 0) / 20),
+    ],
+  };
+}
