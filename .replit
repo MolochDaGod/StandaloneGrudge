@@ -1,8 +1,8 @@
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "python-3.11"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["unzip", "imagemagick", "p7zip"]
+packages = ["freetype", "imagemagick", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "p7zip", "tcl", "tk", "unzip", "zlib"]
 
 [workflows]
 runButton = "Project"

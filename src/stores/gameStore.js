@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, EQUIPMENT_SLOTS } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -1342,7 +1342,7 @@ const useGameStore = create(persist((set, get) => ({
     const hero = state.heroRoster.find(h => h.id === heroId);
     if (!hero) return;
     if (item.levelReq && hero.level < item.levelReq) return;
-    if (item.classReq && !item.classReq.includes(hero.classId)) return;
+    if (!canClassEquip(hero.classId, item)) return;
 
     const currentEquip = (hero.equipment || {})[item.slot];
     let newInventory = state.inventory.filter(i => i.id !== item.id);

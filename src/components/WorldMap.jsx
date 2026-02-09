@@ -349,7 +349,7 @@ export default function WorldMap() {
               <SpriteAnimation
                 spriteData={getPlayerSprite(hero.classId, hero.raceId)}
                 animation="idle"
-                scale={1.0}
+                scale={2.0}
                 speed={150 + idx * 30}
               />
               <div style={{
@@ -495,8 +495,8 @@ export default function WorldMap() {
           flexWrap: 'wrap', gap: 8, zIndex: 15,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 40, height: 40 }}>
-              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={0.9} speed={150} />
+            <div style={{ width: 60, height: 60, overflow: 'hidden' }}>
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.8} speed={150} />
             </div>
             <div>
               <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', fontWeight: 700 }}>{playerName}</div>
@@ -587,7 +587,7 @@ export default function WorldMap() {
                     transition: 'all 0.2s', minWidth: 90, textAlign: 'center',
                     opacity: isActive ? 1 : 0.6,
                   }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.7} speed={150} />
+                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1.4} speed={150} />
                     <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}
                     </div>
@@ -662,7 +662,7 @@ export default function WorldMap() {
                     {assignedHero ? (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <SpriteAnimation spriteData={getPlayerSprite(assignedHero.classId, assignedHero.raceId)} animation="idle" scale={0.5} speed={200} />
+                          <SpriteAnimation spriteData={getPlayerSprite(assignedHero.classId, assignedHero.raceId)} animation="idle" scale={1.0} speed={200} />
                           <span style={{ color: 'var(--accent)', fontSize: '0.6rem', fontWeight: 600 }}>{assignedHero.name}</span>
                         </div>
                         <button onClick={() => recallHarvest(node.id)} style={{

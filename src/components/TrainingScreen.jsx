@@ -91,7 +91,7 @@ export default function TrainingScreen() {
                 classId={mainHero.classId}
                 raceId={mainHero.raceId}
                 animation="idle"
-                scale={2}
+                scale={4}
               />
             </div>
           )}
@@ -480,7 +480,7 @@ export default function TrainingScreen() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: 15, margin: '15px 0' }}>
             {heroRoster.map(h => (
               <div key={h.id} style={{ textAlign: 'center' }}>
-                <SpriteAnimation classId={h.classId} raceId={h.raceId} animation="idle" scale={1.5} />
+                <SpriteAnimation classId={h.classId} raceId={h.raceId} animation="idle" scale={3} />
                 <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 4 }}>{h.name}</div>
               </div>
             ))}

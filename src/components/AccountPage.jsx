@@ -4,9 +4,10 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
-import { RARITY, EQUIPMENT_SLOTS } from '../data/equipment';
+import { RARITY, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
@@ -70,7 +71,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
           filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
           transition: 'filter 0.3s',
         }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1.4} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={2.8} speed={150} />
         </div>
 
         <div style={{ textAlign: 'center' }}>
@@ -263,7 +264,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
       }}>
         <div style={{ filter: `drop-shadow(0 0 12px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={2} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={4} speed={150} />
         </div>
         <div style={{ flex: 1 }}>
           <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{hero.name}</div>
@@ -362,88 +363,115 @@ function HeroDetailPanel({ hero, onClose }) {
 
         {tab === 'equipment' && (
           <div>
-            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 12 }}>Equipment</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-              {EQUIPMENT_SLOTS.map(slot => {
-                const equipped = (hero.equipment || {})[slot];
-                const rarityDef = equipped ? RARITY[equipped.rarity] : null;
-                return (
-                  <div key={slot} style={{
-                    background: 'rgba(42,49,80,0.4)', border: `1px solid ${rarityDef ? rarityDef.color + '40' : 'var(--border)'}`,
-                    borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12,
-                  }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 8,
-                      background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.3rem', border: '1px solid var(--border)',
-                    }}>
-                      {equipped ? equipped.icon : (slot === 'weapon' ? '🗡️' : slot === 'armor' ? '🛡️' : '💍')}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1 }}>
-                        {slot}
+            <div style={{
+              backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+              backgroundSize: 'cover', backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated', borderRadius: 4, padding: 16, marginBottom: 16,
+              border: '2px solid #8b7355',
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12,
+                background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: '4px 12px',
+              }}>
+                <span className="font-cinzel" style={{ color: '#d4a96a', fontSize: '0.9rem', letterSpacing: 2 }}>EQUIPMENT</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {EQUIPMENT_SLOTS.map(slot => {
+                  const equipped = (hero.equipment || {})[slot];
+                  const rarityDef = equipped ? RARITY[equipped.rarity] : null;
+                  const slotIcon = SLOT_ICON_MAP[slot];
+                  return (
+                    <div key={slot} style={{
+                      background: equipped ? `rgba(0,0,0,0.5)` : 'rgba(0,0,0,0.35)',
+                      border: `2px solid ${rarityDef ? rarityDef.color + '80' : '#5c4a32'}`,
+                      borderRadius: 4, padding: 8, display: 'flex', alignItems: 'center', gap: 8,
+                      cursor: equipped ? 'pointer' : 'default',
+                      position: 'relative',
+                    }}
+                    onClick={() => equipped && unequipItem(hero.id, slot)}
+                    title={equipped ? 'Click to unequip' : ''}
+                    >
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 4,
+                        backgroundImage: `url(${UI_SLOTS.empty})`,
+                        backgroundSize: '48px 48px', imageRendering: 'pixelated',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `1px solid ${rarityDef ? rarityDef.color + '60' : '#5c4a32'}`,
+                        position: 'relative',
+                      }}>
+                        {equipped ? (
+                          <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{equipped.icon}</span>
+                        ) : (
+                          <SpriteIcon src={slotIcon} size={16} scale={2.4} style={{ opacity: 0.4 }} />
+                        )}
                       </div>
-                      {equipped ? (
-                        <>
-                          <div style={{ color: rarityDef.color, fontWeight: 'bold', fontSize: '0.85rem' }}>
-                            {equipped.name} <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>[{rarityDef.name}]</span>
-                          </div>
-                          <div style={{ color: '#22c55e', fontSize: '0.7rem', marginTop: 2 }}>
-                            {Object.entries(equipped.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
-                          </div>
-                        </>
-                      ) : (
-                        <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Empty</div>
-                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.6rem', color: '#a08b6d', textTransform: 'uppercase', letterSpacing: 1 }}>
+                          {slot === 'offhand' ? 'Off-Hand' : slot}
+                        </div>
+                        {equipped ? (
+                          <>
+                            <div style={{ color: rarityDef.color, fontWeight: 'bold', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {equipped.name}
+                            </div>
+                            <div style={{ color: '#22c55e', fontSize: '0.6rem', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {Object.entries(equipped.stats).slice(0, 2).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ color: '#6b5c47', fontSize: '0.7rem', fontStyle: 'italic' }}>Empty</div>
+                        )}
+                      </div>
                     </div>
-                    {equipped && (
-                      <button onClick={() => unequipItem(hero.id, slot)} style={{
-                        background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)',
-                        borderRadius: 6, padding: '4px 10px', color: '#ef4444', cursor: 'pointer', fontSize: '0.7rem',
-                      }}>Remove</button>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-            <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', marginBottom: 8 }}>
-              Inventory ({inventory.length} items)
-            </h4>
+
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8,
+              background: 'rgba(0,0,0,0.3)', borderRadius: 4, padding: '4px 12px',
+              border: '2px solid #8b7355',
+            }}>
+              <span className="font-cinzel" style={{ color: '#d4a96a', fontSize: '0.85rem', letterSpacing: 2 }}>INVENTORY</span>
+              <span style={{ color: '#a08b6d', fontSize: '0.7rem', marginLeft: 6 }}>({inventory.length})</span>
+            </div>
             {inventory.length === 0 ? (
-              <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic', padding: '12px 0' }}>
+              <div style={{ color: '#6b5c47', fontSize: '0.8rem', fontStyle: 'italic', padding: '12px 0', textAlign: 'center' }}>
                 No items. Defeat enemies to find loot!
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))', gap: 4,
+                maxHeight: 220, overflowY: 'auto', padding: 8,
+                background: 'rgba(0,0,0,0.2)', borderRadius: 4, border: '2px solid #5c4a32',
+              }}>
                 {inventory.map(item => {
                   const r = RARITY[item.rarity];
-                  const canEquip = (!item.classReq || item.classReq.includes(hero.classId)) && hero.level >= (item.levelReq || 0);
+                  const itemCanEquip = canClassEquip(hero.classId, item) && hero.level >= (item.levelReq || 0);
                   return (
-                    <div key={item.id} style={{
-                      background: 'rgba(0,0,0,0.2)', border: `1px solid ${r.color}30`,
-                      borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10,
-                    }}>
-                      <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ color: r.color, fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          {item.name} <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>[{r.name}]</span>
-                        </div>
-                        <div style={{ color: '#22c55e', fontSize: '0.65rem' }}>
-                          {Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => canEquip && equipItem(hero.id, item)}
-                        disabled={!canEquip}
-                        style={{
-                          background: canEquip ? 'rgba(34,197,94,0.2)' : 'rgba(100,100,100,0.2)',
-                          border: `1px solid ${canEquip ? 'rgba(34,197,94,0.3)' : 'rgba(100,100,100,0.2)'}`,
-                          borderRadius: 6, padding: '4px 10px',
-                          color: canEquip ? '#22c55e' : 'var(--muted)',
-                          cursor: canEquip ? 'pointer' : 'not-allowed', fontSize: '0.7rem',
-                          opacity: canEquip ? 1 : 0.5,
-                        }}
-                      >Equip</button>
+                    <div key={item.id}
+                      onClick={() => itemCanEquip && equipItem(hero.id, item)}
+                      title={`${item.name} [${r.name}]\n${item.weaponType ? WEAPON_TYPES[item.weaponType]?.name : item.armorType ? ARMOR_TYPES[item.armorType]?.name + ' Armor' : item.slot}\n${Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}${!itemCanEquip ? '\n(Cannot equip)' : '\n(Click to equip)'}`}
+                      style={{
+                        width: 56, height: 56,
+                        backgroundImage: `url(${UI_SLOTS.empty})`,
+                        backgroundSize: '56px 56px', imageRendering: 'pixelated',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        border: `2px solid ${r.color}80`,
+                        borderRadius: 4, cursor: itemCanEquip ? 'pointer' : 'not-allowed',
+                        position: 'relative',
+                        opacity: itemCanEquip ? 1 : 0.5,
+                        transition: 'transform 0.1s',
+                      }}
+                      onMouseEnter={e => { if (itemCanEquip) e.currentTarget.style.transform = 'scale(1.1)'; }}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      <span style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                      <div style={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        height: 3, background: r.color, borderRadius: '0 0 2px 2px',
+                      }} />
                     </div>
                   );
                 })}

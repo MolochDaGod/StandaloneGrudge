@@ -5,6 +5,7 @@ import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon } from '../data/uiSprites';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
 const locationBackgrounds = {
@@ -541,7 +542,7 @@ export default function BattleScreen() {
           const flipSprite = unit.team === 'enemy';
           const introDelay = introComplete ? 0 : (idx * 100);
           const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
-          const targetDisplaySize = 150;
+          const targetDisplaySize = 250;
           const spriteScale = targetDisplaySize / baseFrameSize;
 
           return (
@@ -758,52 +759,62 @@ export default function BattleScreen() {
       {!isVictory && !isDefeat && (
         <div style={{
           flex: '0 0 auto', minHeight: 80,
-          background: isPlayerTurn ? 'rgba(14,22,48,0.95)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.95)' : 'rgba(14,22,48,0.90)'),
-          borderTop: `2px solid ${isPlayerTurn ? 'var(--accent)' : (currentUnit?.team === 'enemy' ? 'var(--danger)' : '#3b82f6')}`,
+          backgroundImage: `url(${UI_PANELS.hotbarBg})`,
+          backgroundSize: 'cover', backgroundRepeat: 'repeat-x',
+          imageRendering: 'pixelated',
+          borderTop: `2px solid ${isPlayerTurn ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           padding: '8px 10px', zIndex: 10,
-          backdropFilter: 'blur(4px)',
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          transition: 'background 0.3s, border-color 0.3s',
+          transition: 'border-color 0.3s',
+          position: 'relative',
         }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: isPlayerTurn ? 'rgba(14,22,48,0.75)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.8)' : 'rgba(14,22,48,0.7)'),
+            transition: 'background 0.3s', pointerEvents: 'none',
+          }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
           {isPlayerTurn && currentUnit ? (
             <>
               <div style={{
                 display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 5,
               }}>
                 <button onClick={autoAttack} style={{
-                  background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.1))',
-                  border: '1px solid rgba(239,68,68,0.5)', borderRadius: 6,
-                  padding: '4px 14px', color: '#ef4444', cursor: 'pointer',
+                  background: 'rgba(0,0,0,0.4)',
+                  border: '2px solid #8b4444', borderRadius: 4,
+                  padding: '4px 12px', color: '#ef4444', cursor: 'pointer',
                   fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.35)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.1))'; }}
-                >⚔ Auto Attack</button>
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,68,68,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; }}
+                ><SpriteIcon src={UI_ICONS.actionAttack} size={16} scale={2} /> Attack</button>
                 <button onClick={defendTurn} style={{
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.1))',
-                  border: '1px solid rgba(59,130,246,0.5)', borderRadius: 6,
-                  padding: '4px 14px', color: '#60a5fa', cursor: 'pointer',
+                  background: 'rgba(0,0,0,0.4)',
+                  border: '2px solid #445a8b', borderRadius: 4,
+                  padding: '4px 12px', color: '#60a5fa', cursor: 'pointer',
                   fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.35)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.1))'; }}
-                >🛡 Defend</button>
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(68,90,139,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; }}
+                ><SpriteIcon src={UI_ICONS.actionDefend} size={16} scale={2} /> Defend</button>
                 <button onClick={skipTurn} style={{
-                  background: 'linear-gradient(135deg, rgba(150,150,170,0.2), rgba(150,150,170,0.08))',
-                  border: '1px solid rgba(150,150,170,0.4)', borderRadius: 6,
-                  padding: '4px 14px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '2px solid #5c5c6a', borderRadius: 4,
+                  padding: '4px 12px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
                   fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(150,150,170,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(150,150,170,0.2), rgba(150,150,170,0.08))'; }}
-                >⏭ Skip</button>
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(80,80,100,0.3)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
+                >Skip</button>
               </div>
               <div style={{
-                textAlign: 'center', marginBottom: 4, color: 'var(--muted)',
+                textAlign: 'center', marginBottom: 4, color: '#a08b6d',
                 fontSize: '0.6rem', letterSpacing: 1
               }}>
-                <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{currentUnit.name}</span>
-                {' — '}Choose action <span style={{ color: 'var(--accent)' }}>(1-{displayedAbilities.length})</span>
+                <span style={{ color: '#d4a96a', fontWeight: 700 }}>{currentUnit.name}</span>
+                {' — '}Choose action <span style={{ color: '#d4a96a' }}>(1-{displayedAbilities.length})</span>
                 {selectedTargetId && (
                   <span style={{ color: 'var(--danger)', marginLeft: 8 }}>
                     Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
@@ -821,38 +832,41 @@ export default function BattleScreen() {
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
                       title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''}${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}${ability.manaGain ? `+${ability.manaGain} MP` : ''}${ability.staminaGain ? ` +${ability.staminaGain} SP` : ''}`}
                       style={{
-                        background: disabled ? 'rgba(42,49,80,0.3)' : 'linear-gradient(135deg, rgba(42,49,80,0.8), rgba(42,49,80,0.5))',
-                        border: `2px solid ${disabled ? 'var(--border)' : 'var(--accent)'}`,
-                        borderRadius: 8, padding: '5px 10px', minWidth: 90,
-                        color: disabled ? 'var(--muted)' : 'var(--text)',
+                        backgroundImage: disabled ? 'none' : `url(${UI_SLOTS.hotbar})`,
+                        backgroundSize: 'cover', imageRendering: 'pixelated',
+                        background: disabled ? 'rgba(30,30,40,0.5)' : undefined,
+                        backgroundColor: disabled ? 'rgba(30,30,40,0.5)' : 'rgba(60,45,25,0.6)',
+                        border: `2px solid ${disabled ? '#3a3a4a' : '#8b7355'}`,
+                        borderRadius: 4, padding: '5px 10px', minWidth: 90,
+                        color: disabled ? '#555' : '#e8dcc8',
                         cursor: disabled ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
                         position: 'relative',
                       }}
-                      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
-                      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.transform = 'none'; }}}
+                      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = '#d4a96a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
+                      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = '#8b7355'; e.currentTarget.style.transform = 'none'; }}}
                     >
                       <div style={{
                         position: 'absolute', top: -5, left: -5,
-                        background: disabled ? '#444' : 'var(--accent)', borderRadius: '50%',
+                        background: disabled ? '#333' : '#d4a96a', borderRadius: '50%',
                         width: 16, height: 16, display: 'flex', alignItems: 'center',
                         justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700,
-                        color: disabled ? '#888' : '#0b1020', border: '1px solid rgba(0,0,0,0.3)'
+                        color: disabled ? '#666' : '#2a1a0a', border: '1px solid rgba(0,0,0,0.3)'
                       }}>{idx + 1}</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: 0 }}>{ability.icon}</div>
-                      <div style={{ fontWeight: 600, fontSize: '0.65rem' }}>{ability.name}</div>
-                      <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginTop: 0 }}>
-                        {ability.manaCost > 0 && <span style={{ color: '#3b82f6' }}>{ability.manaCost}MP </span>}
-                        {ability.staminaCost > 0 && <span style={{ color: '#f59e0b' }}>{ability.staminaCost}SP</span>}
-                        {ability.manaGain > 0 && <span style={{ color: '#60a5fa' }}>+{ability.manaGain}MP </span>}
-                        {ability.staminaGain > 0 && <span style={{ color: '#fbbf24' }}>+{ability.staminaGain}SP</span>}
+                      <div style={{ fontSize: '0.9rem', marginBottom: 0, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))' }}>{ability.icon}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.65rem', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>{ability.name}</div>
+                      <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginTop: 0 }}>
+                        {ability.manaCost > 0 && <span style={{ color: '#6b9bd2' }}>{ability.manaCost}MP </span>}
+                        {ability.staminaCost > 0 && <span style={{ color: '#d4a96a' }}>{ability.staminaCost}SP</span>}
+                        {ability.manaGain > 0 && <span style={{ color: '#7bb8e8' }}>+{ability.manaGain}MP </span>}
+                        {ability.staminaGain > 0 && <span style={{ color: '#e8c86a' }}>+{ability.staminaGain}SP</span>}
                       </div>
                       {onCd && (
                         <div style={{
                           position: 'absolute', top: 2, right: 2,
-                          background: 'var(--danger)', borderRadius: '50%',
+                          background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
                           width: 14, height: 14, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700
+                          justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700, color: '#e8c8c8'
                         }}>{currentUnit.cooldowns[ability.id]}</div>
                       )}
                     </button>
@@ -862,13 +876,14 @@ export default function BattleScreen() {
             </>
           ) : (
             <div style={{
-              color: currentUnit?.team === 'enemy' ? 'var(--danger)' : '#93c5fd',
+              color: currentUnit?.team === 'enemy' ? '#c45050' : '#93c5fd',
               fontSize: '0.8rem', fontWeight: 600,
               animation: 'pulse 1s infinite', textAlign: 'center'
             }}>
               {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
             </div>
           )}
+          </div>
         </div>
       )}
     </div>

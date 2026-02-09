@@ -1,6 +1,6 @@
 import React from 'react';
 import useGameStore from '../stores/gameStore';
-import { RARITY } from '../data/equipment';
+import { RARITY, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 
 export default function LootPopup() {
   const pendingLoot = useGameStore(s => s.pendingLoot);
@@ -43,7 +43,7 @@ export default function LootPopup() {
                     </span>
                   </div>
                   <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 2 }}>
-                    {item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.levelReq}+
+                    {item.weaponType ? (WEAPON_TYPES[item.weaponType]?.name || item.slot) : item.armorType ? (ARMOR_TYPES[item.armorType]?.name + ' Armor') : item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.levelReq}+
                     {item.classReq && <span> | {item.classReq.join(', ')}</span>}
                   </div>
                   <div style={{ color: '#22c55e', fontSize: '0.75rem', marginTop: 2 }}>

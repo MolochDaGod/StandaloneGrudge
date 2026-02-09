@@ -65,7 +65,7 @@ export default function CharacterSheet() {
         <div style={{ background: 'rgba(20,26,43,0.8)', border: '1px solid var(--border)', borderRadius: 14, padding: 20 }}>
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={2} speed={150} />
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={4} speed={150} />
             </div>
             <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{playerName}</h2>
             <div style={{ color: cls?.color, fontSize: '0.9rem' }}>Level {level} {raceDef ? raceDef.name + ' ' : ''}{cls?.name}</div>
