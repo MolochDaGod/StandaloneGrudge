@@ -221,6 +221,65 @@ export function generateLoot(enemyTemplateId, playerLevel, isBoss = false) {
   return drops;
 }
 
+function createStarterItem(template) {
+  return {
+    id: `${template.id}_starter_${Math.random().toString(36).slice(2, 6)}`,
+    templateId: template.id,
+    name: template.name,
+    slot: template.slot,
+    icon: template.icon,
+    weaponType: template.weaponType || null,
+    armorType: template.armorType || null,
+    rarity: 'common',
+    levelReq: template.levelReq,
+    classReq: template.classReq || null,
+    stats: { ...template.stats },
+  };
+}
+
+export function getStartingEquipment(classId) {
+  const equipment = {};
+  const classWeapons = {
+    warrior: 'iron_sword',
+    worge: 'storm_mace',
+    mage: 'oak_staff_mage',
+    ranger: 'short_bow',
+  };
+  const classOffhands = {
+    warrior: 'wooden_shield',
+    mage: 'crystal_orb',
+  };
+  const classArmor = {
+    warrior: 'chain_mail',
+    worge: 'leather_vest',
+    mage: 'acolyte_robe',
+    ranger: 'chain_mail',
+  };
+
+  const weaponId = classWeapons[classId];
+  if (weaponId) {
+    const tmpl = weaponTemplates.find(t => t.id === weaponId);
+    if (tmpl) equipment.weapon = createStarterItem(tmpl);
+  }
+
+  const offhandId = classOffhands[classId];
+  if (offhandId) {
+    const tmpl = offhandTemplates.find(t => t.id === offhandId);
+    if (tmpl) equipment.offhand = createStarterItem(tmpl);
+  }
+
+  const armorId = classArmor[classId];
+  if (armorId) {
+    const tmpl = armorTemplates.find(t => t.id === armorId);
+    if (tmpl) equipment.armor = createStarterItem(tmpl);
+  }
+
+  const accessoryTmpl = accessoryTemplates.find(t => t.id === 'iron_ring');
+  if (accessoryTmpl) equipment.accessory = createStarterItem(accessoryTmpl);
+
+  return equipment;
+}
+
 export function getEquipmentStatBonuses(equipment) {
   const bonuses = {};
   EQUIPMENT_SLOTS.forEach(slot => {

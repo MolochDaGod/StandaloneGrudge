@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -409,6 +409,7 @@ const useGameStore = create(persist((set, get) => ({
     const state = get();
     if (!state.playerClass) return;
     const stats = state.getStats();
+    const startingEquipment = getStartingEquipment(state.playerClass);
     const primaryHero = {
       id: 'player',
       name: state.playerName,
@@ -423,7 +424,7 @@ const useGameStore = create(persist((set, get) => ({
       unspentPoints: 0,
       skillPoints: 0,
       unlockedSkills: {},
-      equipment: {},
+      equipment: startingEquipment,
     };
     set({
       screen: 'training',
@@ -443,12 +444,13 @@ const useGameStore = create(persist((set, get) => ({
 
   addHeroToRoster: (hero) => {
     const state = get();
+    const hasEquipment = hero.equipment && Object.keys(hero.equipment).length > 0;
     const heroWithSkills = {
       ...hero,
       skillPoints: Math.max(0, hero.level),
       unlockedSkills: hero.unlockedSkills || {},
       unspentPoints: hero.unspentPoints || 0,
-      equipment: hero.equipment || {},
+      equipment: hasEquipment ? hero.equipment : getStartingEquipment(hero.classId),
     };
     const newRoster = [...state.heroRoster, heroWithSkills];
     const newActiveIds = state.activeHeroIds.length < 3

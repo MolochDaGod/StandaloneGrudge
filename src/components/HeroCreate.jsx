@@ -299,7 +299,7 @@ export default function HeroCreate() {
                       ['HP', Math.floor(previewStats.health), '#22c55e'],
                       ['MP', Math.floor(previewStats.mana), '#3b82f6'],
                       ['SP', Math.floor(previewStats.stamina), '#f59e0b'],
-                      ['DMG', Math.floor(previewStats.damage), '#ef4444'],
+                      ['DMG', Math.floor(Math.max(previewStats.physicalDamage || 0, previewStats.magicDamage || 0)), '#ef4444'],
                       ['DEF', Math.floor(previewStats.defense), '#6b7280'],
                       ['SPD', Math.floor(20 + (finalAttributes.Agility || 0) * 0.3), '#a855f7'],
                       ['CRIT', `${(previewStats.criticalChance || 5).toFixed(1)}%`, '#fbbf24'],
