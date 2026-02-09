@@ -8,6 +8,7 @@ import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
+import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 
 const bossMapSprites = {
   nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)' },
@@ -60,6 +61,7 @@ export default function WorldMap() {
     setActiveHeroes, locationsCleared, bossesDefeated, zoneConquer,
     harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
     startMissionBattle, startArenaBattle, completedMissions,
+    upgradeEquipment,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -74,6 +76,8 @@ export default function WorldMap() {
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showWarParty, setShowWarParty] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
+  const [upgradeHeroId, setUpgradeHeroId] = useState(null);
+  const [upgradeMsg, setUpgradeMsg] = useState(null);
   const [heroPos, setHeroPos] = useState(locationPositions.verdant_plains);
   const [currentZone, setCurrentZone] = useState('verdant_plains');
   const [isMoving, setIsMoving] = useState(false);
@@ -756,8 +760,8 @@ export default function WorldMap() {
                     }}
                   />
                   <MenuButton
-                    icon="🔧" label="Upgrade" sublabel="Enhance equipment"
-                    color="#22d3ee" disabled
+                    icon="🔧" label="Upgrade" sublabel="Enhance equipment tiers"
+                    color="#22d3ee" onClick={() => { setCitySubmenu('upgrade'); setUpgradeHeroId(null); setUpgradeMsg(null); }}
                   />
                 </div>
               )}
@@ -848,6 +852,142 @@ export default function WorldMap() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {citySubmenu === 'upgrade' && (
+                <div style={{ padding: '8px' }}>
+                  <button onClick={() => { setCitySubmenu(null); setUpgradeHeroId(null); setUpgradeMsg(null); }} style={{
+                    background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    ← Back
+                  </button>
+                  <div className="font-cinzel" style={{ color: '#22d3ee', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                    Equipment Upgrade
+                  </div>
+
+                  {!upgradeHeroId ? (
+                    <div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.65rem', padding: '0 8px 8px' }}>
+                        Select a hero to upgrade their gear:
+                      </div>
+                      {heroRoster.map(hero => (
+                        <div key={hero.id} style={{
+                          background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)',
+                          borderRadius: 8, padding: '8px 12px', marginBottom: 4, cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                          onClick={() => setUpgradeHeroId(hero.id)}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,211,238,0.15)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,211,238,0.06)'; }}
+                        >
+                          <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '0.75rem' }}>
+                            {hero.name}
+                          </span>
+                          <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>
+                            Lv.{hero.level} {classDefinitions[hero.classId]?.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div>
+                      <button onClick={() => { setUpgradeHeroId(null); setUpgradeMsg(null); }} style={{
+                        background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                        fontSize: '0.6rem', padding: '2px 8px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4,
+                      }}>
+                        ← Heroes
+                      </button>
+                      {upgradeMsg && (
+                        <div style={{
+                          background: upgradeMsg.success ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                          border: `1px solid ${upgradeMsg.success ? '#22c55e' : '#ef4444'}`,
+                          borderRadius: 6, padding: '6px 10px', marginBottom: 8,
+                          color: upgradeMsg.success ? '#22c55e' : '#ef4444', fontSize: '0.65rem',
+                        }}>
+                          {upgradeMsg.text}
+                        </div>
+                      )}
+                      <div style={{ color: 'var(--gold)', fontSize: '0.65rem', padding: '0 4px 6px' }}>
+                        Gold: {gold}g
+                      </div>
+                      {(() => {
+                        const upgradeHero = heroRoster.find(h => h.id === upgradeHeroId);
+                        if (!upgradeHero) return null;
+                        return EQUIPMENT_SLOTS.map(slot => {
+                          const item = (upgradeHero.equipment || {})[slot];
+                          if (!item) return (
+                            <div key={slot} style={{
+                              background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '8px 10px', marginBottom: 4,
+                              border: '1px solid rgba(255,255,255,0.05)', opacity: 0.5,
+                            }}>
+                              <span style={{ color: 'var(--muted)', fontSize: '0.65rem', textTransform: 'capitalize' }}>
+                                {slot}: Empty
+                              </span>
+                            </div>
+                          );
+                          const tierDef = TIERS[item.tier] || TIERS[1];
+                          const nextTier = item.tier < 8 ? TIERS[item.tier + 1] : null;
+                          const cost = UPGRADE_COSTS[item.tier];
+                          const canAfford = cost && gold >= cost;
+                          const isMaxTier = item.tier >= 8;
+                          return (
+                            <div key={slot} style={{
+                              background: 'rgba(0,0,0,0.25)', borderRadius: 6, padding: '8px 10px', marginBottom: 4,
+                              border: `1px solid ${tierDef.color}30`,
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                <div>
+                                  <span style={{ fontSize: '1rem', marginRight: 6 }}>{item.icon}</span>
+                                  <span style={{ color: tierDef.color, fontWeight: 700, fontSize: '0.72rem' }}>
+                                    {item.name}
+                                  </span>
+                                  <span style={{
+                                    fontSize: '0.6rem', marginLeft: 6, padding: '1px 5px',
+                                    background: tierDef.color + '20', color: tierDef.color,
+                                    borderRadius: 4, fontWeight: 600,
+                                  }}>
+                                    T{item.tier || 1}
+                                  </span>
+                                </div>
+                              </div>
+                              <div style={{ color: '#22c55e', fontSize: '0.6rem', marginBottom: 4 }}>
+                                {Object.entries(item.stats || {}).slice(0, 3).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                              </div>
+                              {isMaxTier ? (
+                                <div style={{ color: '#f472b6', fontSize: '0.6rem', fontWeight: 600 }}>
+                                  Max Tier Reached
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    const result = upgradeEquipment(upgradeHeroId, slot);
+                                    if (result.success) {
+                                      setUpgradeMsg({ success: true, text: `Upgraded to T${result.newTier}! (-${result.cost}g)` });
+                                    } else {
+                                      setUpgradeMsg({ success: false, text: result.reason });
+                                    }
+                                  }}
+                                  disabled={!canAfford}
+                                  style={{
+                                    background: canAfford ? 'linear-gradient(135deg, #0891b2, #22d3ee)' : 'rgba(100,100,100,0.3)',
+                                    color: canAfford ? '#000' : 'var(--muted)',
+                                    border: 'none', borderRadius: 6, padding: '4px 12px',
+                                    fontSize: '0.65rem', fontWeight: 700, cursor: canAfford ? 'pointer' : 'not-allowed',
+                                    width: '100%',
+                                  }}
+                                >
+                                  Upgrade to T{item.tier + 1} ({cost}g)
+                                  {nextTier && <span style={{ opacity: 0.7, marginLeft: 4 }}>→ <span style={{ color: canAfford ? nextTier.color : 'inherit' }}>{nextTier.name}</span></span>}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
                 </div>
               )}
 

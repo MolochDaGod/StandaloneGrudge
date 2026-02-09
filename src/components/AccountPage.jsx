@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
-import { RARITY, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
+import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 import { getAvailableAbilities, getDefaultLoadout, isSlotLocked } from '../utils/abilityLoadout';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -612,12 +612,12 @@ function HeroDetailPanel({ hero, onClose }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {EQUIPMENT_SLOTS.map(slot => {
                   const equipped = (hero.equipment || {})[slot];
-                  const rarityDef = equipped ? RARITY[equipped.rarity] : null;
+                  const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
                   const slotIcon = SLOT_ICON_MAP[slot];
                   return (
                     <div key={slot} style={{
                       background: equipped ? `rgba(0,0,0,0.5)` : 'rgba(0,0,0,0.35)',
-                      border: `2px solid ${rarityDef ? rarityDef.color + '80' : '#5c4a32'}`,
+                      border: `2px solid ${tierDef ? tierDef.color + '80' : '#5c4a32'}`,
                       borderRadius: 4, padding: 8, display: 'flex', alignItems: 'center', gap: 8,
                       cursor: equipped ? 'pointer' : 'default',
                       position: 'relative',
@@ -630,7 +630,7 @@ function HeroDetailPanel({ hero, onClose }) {
                         backgroundImage: `url(${UI_SLOTS.empty})`,
                         backgroundSize: '48px 48px', imageRendering: 'pixelated',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: `1px solid ${rarityDef ? rarityDef.color + '60' : '#5c4a32'}`,
+                        border: `1px solid ${tierDef ? tierDef.color + '60' : '#5c4a32'}`,
                         position: 'relative',
                       }}>
                         {equipped ? (
@@ -645,7 +645,7 @@ function HeroDetailPanel({ hero, onClose }) {
                         </div>
                         {equipped ? (
                           <>
-                            <div style={{ color: rarityDef.color, fontWeight: 'bold', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ color: tierDef.color, fontWeight: 'bold', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {equipped.name}
                             </div>
                             <div style={{ color: '#22c55e', fontSize: '0.6rem', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -681,8 +681,8 @@ function HeroDetailPanel({ hero, onClose }) {
                 background: 'rgba(0,0,0,0.2)', borderRadius: 4, border: '2px solid #5c4a32',
               }}>
                 {inventory.map(item => {
-                  const r = RARITY[item.rarity];
-                  const itemCanEquip = canClassEquip(hero.classId, item) && hero.level >= (item.levelReq || 0);
+                  const r = TIERS[item.tier] || TIERS[1];
+                  const itemCanEquip = canClassEquip(hero.classId, item);
                   return (
                     <div key={item.id}
                       onClick={() => itemCanEquip && equipItem(hero.id, item)}

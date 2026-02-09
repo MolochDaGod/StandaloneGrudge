@@ -18,7 +18,7 @@ The application is a React 19 frontend utilizing Vite for development, with stat
 - **Character System:** 6 races and 4 classes combine for 24 unique Warlord combinations. Character attributes (8 total) have diminishing returns and are managed through a level progression system (0-20).
 - **Battle System:** Multi-unit tactical combat on a 2D plane with speed-based initiative. Player-controlled heroes (up to 3 active, 6 in roster) fight against AI enemies. Combat includes animations for attacks, projectiles, and floating damage numbers.
 - **Sprite System:** Utilizes `SpriteAnimation` component for frame-based animation of 100x100px sprite sheets, supporting various character and enemy animations. Dynamic scaling ensures consistent visual size.
-- **Game Systems:** Includes an equipment system (weapons, armor, accessories across 5 rarity tiers), a training system with guided tutorials, an auto-harvesting system for passive resource generation, and various status effects (DoT, buffs, debuffs, stun, HoT).
+- **Game Systems:** Includes an 8-tier equipment upgrade system (T1 Common through T8 Mythic) with 78+ weapons from grudgewarlords.com/arsenal, 18 armor pieces, and 30+ relics. Equipment is upgraded at city upgrade services using gold (100g to 10,000g per tier). Tier multipliers scale stats from 1.0x to 5.5x. Data migration (persist version 2) converts old rarity-based items to tier system. Also includes a training system with guided tutorials, an auto-harvesting system for passive resource generation, and various status effects (DoT, buffs, debuffs, stun, HoT).
 - **Audio System:** Web Audio API for synthesized combat sounds and adaptive BGM that changes between world map and battles.
 - **Particle Effects:** CSS-animated particle effects for various in-battle actions (casting, hits, heals, ambient).
 - **Ability Loadout System:** Each hero has a customizable 5-slot ability loadout (`abilityLoadout` array of ability IDs). Available abilities come from base class abilities + unlocked skill tree granted abilities. For Worge, slot 5 is permanently locked to Bear Form/Revert Form. The War Council Abilities tab provides an interactive loadout editor. Skill tree nodes with `grantedAbility` field unlock new slottable combat abilities (e.g., Execute, Meteor Strike, Thunderclap). Utility functions in `src/utils/abilityLoadout.js`.
@@ -29,7 +29,7 @@ The application is a React 19 frontend utilizing Vite for development, with stat
 **Feature Specifications:**
 - **Character Creation:** A 4-step process to define a Warlord's name, race, class, and attributes.
 - **Hero Management:** The "War Council" page provides comprehensive hero management, including stats, abilities, skill trees, attribute allocation, and equipment.
-- **Loot System:** Enemies drop loot with varying rarity, and a `LootPopup` displays post-battle rewards.
+- **Loot System:** Enemies drop loot with tier based on zone difficulty and player level. `LootPopup` displays post-battle rewards with tier colors (T1-T8). Bosses get +1 tier bonus on drops, with 5% chance for +2 tier drops.
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 - **Zone Conquer System:** Each zone has a 0-100% conquer rating that increases with victories. Higher conquer % reduces XP gains (up to -70% at 100%) but boosts auto-harvest output (up to +300%). Conquered zones (100%) display an idle worker sprite. Active heroes wander near the current zone on the world map. Conquer progress shown as SVG ring around zone nodes and progress bar in location popup.
 

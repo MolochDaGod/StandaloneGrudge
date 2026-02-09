@@ -1,6 +1,6 @@
 import React from 'react';
 import useGameStore from '../stores/gameStore';
-import { RARITY, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
+import { TIERS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 
 export default function LootPopup() {
   const pendingLoot = useGameStore(s => s.pendingLoot);
@@ -27,23 +27,23 @@ export default function LootPopup() {
         </h3>
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           {pendingLoot.map(item => {
-            const rarityDef = RARITY[item.rarity];
+            const tierDef = TIERS[item.tier] || TIERS[1];
             return (
               <div key={item.id} style={{
                 background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '10px 14px',
-                marginBottom: 8, border: `1px solid ${rarityDef.color}40`,
+                marginBottom: 8, border: `1px solid ${tierDef.color}40`,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
                 <span style={{ fontSize: '1.5rem' }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: rarityDef.color, fontWeight: 'bold', fontSize: '0.9rem' }}>
+                  <div style={{ color: tierDef.color, fontWeight: 'bold', fontSize: '0.9rem' }}>
                     {item.name}
                     <span style={{ fontSize: '0.7rem', marginLeft: 6, opacity: 0.7 }}>
-                      [{rarityDef.name}]
+                      [T{item.tier || 1}]
                     </span>
                   </div>
                   <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 2 }}>
-                    {item.weaponType ? (WEAPON_TYPES[item.weaponType]?.name || item.slot) : item.armorType ? (ARMOR_TYPES[item.armorType]?.name + ' Armor') : item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.levelReq}+
+                    {item.weaponType ? (WEAPON_TYPES[item.weaponType]?.name || item.slot) : item.armorType ? (ARMOR_TYPES[item.armorType]?.name + ' Armor') : item.slot.charAt(0).toUpperCase() + item.slot.slice(1)}
                     {item.classReq && <span> | {item.classReq.join(', ')}</span>}
                   </div>
                   <div style={{ color: '#22c55e', fontSize: '0.75rem', marginTop: 2 }}>

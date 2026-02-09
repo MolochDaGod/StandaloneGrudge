@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
@@ -1704,7 +1704,6 @@ const useGameStore = create(persist((set, get) => ({
     const state = get();
     const hero = state.heroRoster.find(h => h.id === heroId);
     if (!hero) return;
-    if (item.levelReq && hero.level < item.levelReq) return;
     if (!canClassEquip(hero.classId, item)) return;
 
     const currentEquip = (hero.equipment || {})[item.slot];
@@ -1748,6 +1747,49 @@ const useGameStore = create(persist((set, get) => ({
     set({ inventory: [...state.inventory, ...state.pendingLoot], pendingLoot: [] });
   },
   discardPendingLoot: () => set({ pendingLoot: [] }),
+
+  upgradeEquipment: (heroId, slot) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero || !hero.equipment?.[slot]) return { success: false, reason: 'No item equipped' };
+
+    const item = hero.equipment[slot];
+    if (item.tier >= 8) return { success: false, reason: 'Already at max tier' };
+
+    const cost = UPGRADE_COSTS[item.tier];
+    if (!cost) return { success: false, reason: 'Cannot upgrade further' };
+    if (state.gold < cost) return { success: false, reason: 'Not enough gold' };
+
+    const upgraded = upgradeItem(item);
+    if (!upgraded) return { success: false, reason: 'Upgrade failed' };
+
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? { ...h, equipment: { ...(h.equipment || {}), [slot]: upgraded } } : h
+    );
+    set({ heroRoster: updatedRoster, gold: state.gold - cost });
+    return { success: true, newTier: upgraded.tier, cost };
+  },
+
+  upgradeInventoryItem: (itemId) => {
+    const state = get();
+    const itemIdx = state.inventory.findIndex(i => i.id === itemId);
+    if (itemIdx === -1) return { success: false, reason: 'Item not found' };
+
+    const item = state.inventory[itemIdx];
+    if (item.tier >= 8) return { success: false, reason: 'Already at max tier' };
+
+    const cost = UPGRADE_COSTS[item.tier];
+    if (!cost) return { success: false, reason: 'Cannot upgrade further' };
+    if (state.gold < cost) return { success: false, reason: 'Not enough gold' };
+
+    const upgraded = upgradeItem(item);
+    if (!upgraded) return { success: false, reason: 'Upgrade failed' };
+
+    const newInventory = [...state.inventory];
+    newInventory[itemIdx] = upgraded;
+    set({ inventory: newInventory, gold: state.gold - cost });
+    return { success: true, newTier: upgraded.tier, cost };
+  },
 
   assignHarvest: (nodeId, heroId) => {
     const state = get();
@@ -2051,6 +2093,37 @@ const useGameStore = create(persist((set, get) => ({
   },
 }), {
   name: 'grudge-warlords-save',
+  version: 2,
+  migrate: (persistedState, version) => {
+    if (version < 2) {
+      const rarityToTier = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+      const migrateItem = (item) => {
+        if (item && item.rarity && !item.tier) {
+          return { ...item, tier: rarityToTier[item.rarity] || 1 };
+        }
+        return item;
+      };
+      if (persistedState.heroRoster) {
+        persistedState.heroRoster = persistedState.heroRoster.map(hero => {
+          if (hero.equipment) {
+            const newEquip = {};
+            Object.entries(hero.equipment).forEach(([slot, item]) => {
+              newEquip[slot] = migrateItem(item);
+            });
+            hero = { ...hero, equipment: newEquip };
+          }
+          return hero;
+        });
+      }
+      if (persistedState.inventory) {
+        persistedState.inventory = persistedState.inventory.map(migrateItem);
+      }
+      if (persistedState.pendingLoot) {
+        persistedState.pendingLoot = persistedState.pendingLoot.map(migrateItem);
+      }
+    }
+    return persistedState;
+  },
   partialize: (state) => ({
     screen: state.screen === 'battle' ? 'world' : state.screen,
     playerName: state.playerName,
