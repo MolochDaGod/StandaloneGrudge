@@ -240,37 +240,37 @@ export const raceClassSpriteMap = {
   human: {
     warrior: spriteSheets.knight,
     mage: spriteSheets.wizard,
-    worge: spriteSheets.soldier,
+    worge: { ...spriteSheets['orc-rider'], filter: 'hue-rotate(180deg) saturate(1.3) brightness(1.1)' },
     ranger: spriteSheets.archer,
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
     mage: spriteSheets['orc-rider'],
-    worge: spriteSheets.orc,
+    worge: { ...spriteSheets['armored-orc'], filter: 'hue-rotate(40deg) saturate(1.4) brightness(1.1)' },
     ranger: spriteSheets['armored-orc'],
   },
   elf: {
     warrior: spriteSheets.swordsman,
     mage: spriteSheets.wizard,
-    worge: spriteSheets.lancer,
+    worge: { ...spriteSheets.archer, filter: 'sepia(0.5) hue-rotate(60deg) saturate(1.6) brightness(1.1)' },
     ranger: spriteSheets.archer,
   },
   undead: {
     warrior: spriteSheets['greatsword-skeleton'],
     mage: { ...spriteSheets.wizard, filter: 'brightness(0.7) hue-rotate(120deg) saturate(1.5)' },
-    worge: spriteSheets.skeleton,
+    worge: { ...spriteSheets['armored-skeleton'], filter: 'hue-rotate(260deg) saturate(1.3) brightness(1.2)' },
     ranger: spriteSheets['skeleton-archer'],
   },
   barbarian: {
     warrior: spriteSheets['knight-templar'],
     mage: spriteSheets.priest,
-    worge: spriteSheets['armored-axeman'],
+    worge: { ...spriteSheets['armored-axeman'], filter: 'hue-rotate(20deg) saturate(1.5) brightness(1.15)' },
     ranger: spriteSheets.soldier,
   },
   dwarf: {
     warrior: spriteSheets['armored-axeman'],
     mage: spriteSheets.priest,
-    worge: spriteSheets['knight-templar'],
+    worge: { ...spriteSheets['knight-templar'], filter: 'hue-rotate(150deg) saturate(1.4) brightness(1.1)' },
     ranger: spriteSheets.lancer,
   },
 };
