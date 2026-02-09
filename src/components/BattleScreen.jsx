@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
@@ -66,6 +66,26 @@ function getProjectileColor(unit, abilityName) {
   return '#e2e8f0';
 }
 
+function getBeamTrail(unit, abilityName) {
+  const classId = unit.classId || '';
+  const fx = getAbilityEffect(classId, abilityName || '');
+  if (fx.beam) return beamTrails[fx.beam];
+  const n = (abilityName || '').toLowerCase();
+  if (n.includes('fire') || n.includes('hellfire')) return beamTrails.orange;
+  if (n.includes('shadow') || n.includes('dark') || n.includes('void')) return beamTrails.purple;
+  if (n.includes('ice') || n.includes('frost')) return beamTrails.purple;
+  if (n.includes('arrow') || n.includes('shot') || n.includes('poison')) return beamTrails.green;
+  if (classId === 'mage') return beamTrails.purple;
+  if (classId === 'ranger') return beamTrails.green;
+  return beamTrails.red;
+}
+
+function getHitEffect(unit, abilityName) {
+  const classId = unit.classId || '';
+  const fx = getAbilityEffect(classId, abilityName || '');
+  return fx.effect ? effectSprites[fx.effect] : effectSprites.weaponHit;
+}
+
 export default function BattleScreen() {
   const {
     battleState, battleUnits, battleTurnOrder, battleCurrentTurn,
@@ -83,6 +103,7 @@ export default function BattleScreen() {
   const [floatingDmg, setFloatingDmg] = useState([]);
   const [introComplete, setIntroComplete] = useState(false);
   const [activeParticles, setActiveParticles] = useState([]);
+  const [hitEffects, setHitEffects] = useState([]);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
@@ -184,6 +205,10 @@ export default function BattleScreen() {
           if (attacker.position && target.position) {
             const projId = Date.now();
             const color = getProjectileColor(attacker, abilityName);
+            const beamSrc = getBeamTrail(attacker, abilityName);
+            const dx = target.position.x - attacker.position.x;
+            const dy = target.position.y - attacker.position.y;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
             setProjectiles(prev => [...prev, {
               id: projId,
               startX: attacker.position.x + (attacker.team === 'player' ? 4 : -4),
@@ -191,6 +216,8 @@ export default function BattleScreen() {
               endX: target.position.x,
               endY: target.position.y,
               color,
+              beamSrc,
+              angle,
               phase: 'start',
             }]);
             requestAnimationFrame(() => {
@@ -204,6 +231,12 @@ export default function BattleScreen() {
               if (!evaded) {
                 setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
                 addParticle('hit', target.position.x, target.position.y, '#ef4444');
+                const hfx = getHitEffect(attacker, abilityName);
+                if (hfx && target.position) {
+                  const hid = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 600);
+                }
                 if (isCrit) playCrit(); else playHurt();
               } else {
                 playDodge();
@@ -229,6 +262,12 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
+            const hfx = getHitEffect(attacker, abilityName);
+            if (hfx && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 600);
+            }
             if (isCrit) playCrit(); else playHurt();
           } else {
             playDodge();
@@ -482,15 +521,47 @@ export default function BattleScreen() {
             position: 'absolute',
             left: `${p.phase === 'fly' ? p.endX : p.startX}%`,
             top: `${p.phase === 'fly' ? p.endY : p.startY}%`,
-            width: 14, height: 14,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${p.color}, ${p.color}88, transparent)`,
-            boxShadow: `0 0 12px ${p.color}, 0 0 24px ${p.color}66, 0 0 4px #fff`,
             transition: 'left 0.45s ease-in, top 0.45s ease-in',
-            transform: 'translate(-50%, -50%)',
+            transform: `translate(-50%, -50%) rotate(${p.angle || 0}deg)`,
             zIndex: 200,
             pointerEvents: 'none',
-          }} />
+          }}>
+            {p.beamSrc ? (
+              <img src={p.beamSrc} alt="" style={{
+                width: 120, height: 20,
+                filter: `drop-shadow(0 0 8px ${p.color})`,
+                opacity: 0.9,
+              }} />
+            ) : (
+              <div style={{
+                width: 14, height: 14,
+                borderRadius: '50%',
+                background: `radial-gradient(circle, ${p.color}, ${p.color}88, transparent)`,
+                boxShadow: `0 0 12px ${p.color}, 0 0 24px ${p.color}66, 0 0 4px #fff`,
+              }} />
+            )}
+          </div>
+        ))}
+
+        {hitEffects.map(e => (
+          <div key={e.id} style={{
+            position: 'absolute',
+            left: `${e.x}%`, top: `${e.y}%`,
+            transform: 'translate(-50%, -50%)',
+            width: 80, height: 80,
+            zIndex: 250,
+            pointerEvents: 'none',
+            animation: 'effectPop 0.6s ease forwards',
+          }}>
+            <div style={{
+              width: '100%', height: '100%',
+              backgroundImage: `url(${e.sprite.src})`,
+              backgroundSize: `${e.sprite.size}px ${e.sprite.size}px`,
+              backgroundPosition: '0 0',
+              imageRendering: 'pixelated',
+              animation: `effectGrid 0.6s steps(${Math.min(Math.sqrt(e.sprite.frames), 8) | 0}) forwards`,
+            }} />
+          </div>
         ))}
 
         {floatingDmg.map(f => (

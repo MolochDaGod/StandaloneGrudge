@@ -166,13 +166,30 @@ public/
 - WorldMap header has "War Council" button to access the page
 - Notifications when any hero has unspent points
 
+## Sprite System (20 Character Sprites)
+- 20 unique sprite sets in public/sprites/: archer, armored-axeman, armored-orc, armored-skeleton, elite-orc, greatsword-skeleton, knight, knight-templar, lancer, orc, orc-rider, priest, skeleton, skeleton-archer, slime, soldier, swordsman, werebear, werewolf, wizard
+- Each sprite has: idle, attack1, attack2/attack3 (some), hurt, death, walk animations
+- All 24 race/class combinations mapped to unique sprites in raceClassSpriteMap
+
+## Battle Effects System
+- 20 pixel art effect spritesheets in public/effects/pixel/ (magic spells, fire, ice, weapon hits, etc.)
+- 4 beam trail images in public/effects/beams/ (green, orange, purple, red) for projectile trails
+- abilityEffectMap maps each class's abilities to specific visual effects and beam colors
+- Hit effects overlay on target when attacks land (both melee and ranged)
+- Beam trails replace colored dots for ranged projectiles (arrow shots, magic bolts)
+
 ## Recent Changes
+- Added 20 character sprites with proper frame counts, 6 new sprite sets (lancer, armored-axeman, armored-orc, skeleton-archer, soldier, slime)
+- All 24 race/class combos now have unique sprite mappings (no more shared sprites with filters)
+- Integrated beam trail images for ranged projectiles (color-coded per ability type)
+- Added pixel art hit effects that play on targets when attacks connect
+- Goblin enemies now use slime sprite, orc enemies use armored-orc sprite
+- Fixed HeroCreate race.attributeBonuses → race.bonuses property name bug
 - Added equipment system with weapons/armor/accessories, 5 rarity tiers, loot drops
 - Added Equipment tab in War Council for per-hero equip/unequip + inventory management
 - Added LootPopup component for post-battle reward display
 - Enhanced abilities: 5 abilities per class, burn/bleed/freeze DoT effects, Mana Shield, Arrow Volley
 - Built Training Round system with guided tutorial battles gating world access
 - Added Auto-Harvesting system with 5 resource nodes on WorldMap
-- Fixed React hooks ordering bug in App.jsx (pendingLoot hook after early return)
 - Video backgrounds: bg-clear.mp4 (title), bg-blur.mp4 (gameplay screens), loading.mp4 (loading screen)
 - 6 playable races with 4 classes = 24 warlord combinations

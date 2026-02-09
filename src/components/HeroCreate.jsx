@@ -23,7 +23,7 @@ export default function HeroCreate() {
 
   const raceBonuses = useMemo(() => {
     if (!selectedRace) return {};
-    return raceDefinitions[selectedRace]?.attributeBonuses || {};
+    return raceDefinitions[selectedRace]?.bonuses || {};
   }, [selectedRace]);
 
   const classBonuses = useMemo(() => {
@@ -161,7 +161,7 @@ export default function HeroCreate() {
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.7rem', marginTop: 4 }}>{race.description}</div>
                   <div style={{ color: 'var(--gold)', fontSize: '0.65rem', marginTop: 6 }}>
-                    {Object.entries(race.attributeBonuses).map(([attr, val]) => `+${val} ${attr}`).join(', ')}
+                    {Object.entries(race.bonuses || {}).map(([attr, val]) => val > 0 ? `+${val} ${attr}` : null).filter(Boolean).join(', ')}
                   </div>
                 </div>
               ))}

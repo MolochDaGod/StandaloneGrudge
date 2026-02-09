@@ -105,3 +105,15 @@ body {
   80% { opacity: 0.2; }
   100% { opacity: 0; transform: translateY(-80px); }
 }
+
+@keyframes effectPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  60% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+}
+
+@keyframes effectGrid {
+  from { background-position: 0 0; }
+  to { background-position: -100% 0; }
+}
