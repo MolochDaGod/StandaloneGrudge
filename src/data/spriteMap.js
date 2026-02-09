@@ -284,6 +284,8 @@ export const effectSprites = {
   midnight: { src: '/effects/pixel/18_midnight_spritesheet.png', size: 800, frames: 64 },
   freezing: { src: '/effects/pixel/19_freezing_spritesheet.png', size: 1000, frames: 100 },
   magicBubbles: { src: '/effects/pixel/20_magicbubbles_spritesheet.png', size: 800, frames: 64 },
+  slash: { src: '/effects/slash_spritesheet.png', cols: 1, rows: 8, frameW: 64, frameH: 64, frames: 8 },
+  healEffect: { src: '/effects/heal_spritesheet.png', cols: 4, rows: 4, frameW: 128, frameH: 128, frames: 16 },
 };
 
 export const beamTrails = {
@@ -295,32 +297,32 @@ export const beamTrails = {
 
 export const abilityEffectMap = {
   warrior: {
-    'Power Strike': { effect: 'weaponHit', beam: null },
-    'Shield Bash': { effect: 'weaponHit', beam: null },
-    'Cleave': { effect: 'flameLash', beam: null },
-    'War Cry': { effect: 'brightFire', beam: null },
-    'Whirlwind': { effect: 'fireSpin', beam: null },
+    'Slash': { effect: 'slash', beam: null, anim: 'attack1' },
+    'Power Strike': { effect: 'weaponHit', beam: null, anim: 'attack2' },
+    'War Cry': { effect: 'brightFire', beam: null, anim: 'block' },
+    'Shield Bash': { effect: 'flameLash', beam: null, anim: 'attack3' },
+    'Cleave': { effect: 'fireSpin', beam: null, anim: 'attack3' },
   },
   mage: {
-    'Fireball': { effect: 'fire', beam: 'orange' },
-    'Ice Storm': { effect: 'freezing', beam: 'purple' },
-    'Heal': { effect: 'magicBubbles', beam: null },
-    'Mana Shield': { effect: 'protectionCircle', beam: null },
-    'Arcane Blast': { effect: 'felSpell', beam: 'purple' },
+    'Arcane Bolt': { effect: 'magic8', beam: 'purple', anim: 'attack1' },
+    'Fireball': { effect: 'fire', beam: 'orange', anim: 'attack1' },
+    'Divine Heal': { effect: 'healEffect', beam: null, anim: 'heal' },
+    'Ice Storm': { effect: 'freezing', beam: 'purple', anim: 'attack1' },
+    'Mana Shield': { effect: 'protectionCircle', beam: null, anim: 'block' },
   },
   worge: {
-    'Mace Strike': { effect: 'weaponHit', beam: null },
-    'Lightning Lash': { effect: 'brightFire', beam: 'orange' },
-    "Nature's Grasp": { effect: 'magicBubbles', beam: null },
-    'Dagger Toss': { effect: 'magickaHit', beam: 'green' },
-    'Bear Form': { effect: 'vortex', beam: null },
+    'Mace Strike': { effect: 'slash', beam: null, anim: 'attack1' },
+    'Lightning Lash': { effect: 'brightFire', beam: 'orange', anim: 'attack2' },
+    "Nature's Grasp": { effect: 'healEffect', beam: null, anim: 'block' },
+    'Dagger Toss': { effect: 'magickaHit', beam: 'green', anim: 'attack3' },
+    'Bear Form': { effect: 'vortex', beam: null, anim: 'block' },
   },
   ranger: {
-    'Quick Shot': { effect: 'magickaHit', beam: 'green' },
-    'Poison Arrow': { effect: 'magickaHit', beam: 'green' },
-    'Evasive Roll': { effect: 'phantom', beam: null },
-    'Arrow Volley': { effect: 'magicSpell', beam: 'green' },
-    'Snipe': { effect: 'magickaHit', beam: 'red' },
+    'Quick Shot': { effect: 'magickaHit', beam: 'green', anim: 'attack1' },
+    'Aimed Shot': { effect: 'weaponHit', beam: 'red', anim: 'attack2' },
+    'Poison Arrow': { effect: 'nebula', beam: 'green', anim: 'attack1' },
+    'Evasive Roll': { effect: 'phantom', beam: null, anim: 'block' },
+    'Arrow Volley': { effect: 'magicSpell', beam: 'green', anim: 'attack2' },
   },
 };
 

@@ -19,10 +19,15 @@ const locationBackgrounds = {
 
 function EffectSprite({ x, y, sprite }) {
   const [frame, setFrame] = React.useState(0);
-  const cols = Math.round(Math.sqrt(sprite.frames));
-  const frameSize = sprite.size / cols;
   const totalFrames = sprite.frames;
   const displaySize = 120;
+
+  const hasCustomLayout = sprite.cols !== undefined;
+  const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(sprite.frames));
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
 
   React.useEffect(() => {
     let f = 0;
@@ -33,7 +38,7 @@ function EffectSprite({ x, y, sprite }) {
         return;
       }
       setFrame(f);
-    }, 30);
+    }, 35);
     return () => clearInterval(interval);
   }, [totalFrames]);
 
@@ -54,7 +59,7 @@ function EffectSprite({ x, y, sprite }) {
         width: displaySize,
         height: displaySize,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * displaySize}px ${cols * displaySize}px`,
+        backgroundSize: `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`,
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
@@ -243,11 +248,18 @@ export default function BattleScreen() {
 
     const spriteData = getUnitSprite(attacker);
     const getAttackAnim = () => {
+      const effectMapping = getAbilityEffect(attacker.classId, abilityName);
+      if (effectMapping && effectMapping.anim) {
+        const desired = effectMapping.anim;
+        if (desired === 'heal' && spriteData.heal) return 'heal';
+        if (desired === 'block' && spriteData.block) return 'block';
+        if (spriteData[desired]) return desired;
+      }
       if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : 'attack1';
       if (abilityType === 'buff') return spriteData.block ? 'block' : 'attack1';
       const anims = ['attack1', 'attack2', 'attack3'].filter(a => spriteData[a]);
-      if (totalDmg > 50 && anims.length > 2) return anims[2];
-      if (totalDmg > 25 && anims.length > 1) return anims[1];
+      if (anims.length > 2 && (abilityType === 'physical' || abilityType === 'magical')) return anims[Math.floor(Math.random() * anims.length)];
+      if (anims.length > 1) return anims[1];
       return 'attack1';
     };
 
@@ -346,16 +358,36 @@ export default function BattleScreen() {
       }
     } else {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+      const hfx = getHitEffect(attacker, abilityName);
       if (healAmt && target) {
         showHealFloat(target, healAmt);
         if (target.position) addParticle('heal', target.position.x, target.position.y);
+        if (hfx && target.position) {
+          const hid = Date.now() + Math.random();
+          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+          setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+        }
         playHeal();
       } else if (abilityType === 'heal_over_time') {
         playHeal();
-        if (attacker.position) addParticle('heal', attacker.position.x, attacker.position.y);
+        if (attacker.position) {
+          addParticle('heal', attacker.position.x, attacker.position.y);
+          if (hfx) {
+            const hid = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfx }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+          }
+        }
       } else {
         playBuff();
-        if (attacker.position) addParticle('cast', attacker.position.x, attacker.position.y, '#6ee7b7');
+        if (attacker.position) {
+          addParticle('cast', attacker.position.x, attacker.position.y, '#6ee7b7');
+          if (hfx) {
+            const hid = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfx }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+          }
+        }
       }
       setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
       setTimeout(() => advanceTurn(), 900);
