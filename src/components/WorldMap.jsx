@@ -68,20 +68,30 @@ export default function WorldMap() {
   const mapRef = useRef(null);
   const menuRef = useRef(null);
 
+  const [heroWalking, setHeroWalking] = useState({});
+
   useEffect(() => {
     const interval = setInterval(() => {
       const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
       const newOffsets = {};
+      const newWalking = {};
       activeHeroes.forEach(h => {
+        const prevX = wanderOffsets[h.id]?.x || 0;
+        const newX = (Math.random() - 0.5) * 4;
         newOffsets[h.id] = {
-          x: (Math.random() - 0.5) * 5,
-          y: (Math.random() - 0.5) * 3,
+          x: newX,
+          y: (Math.random() - 0.5) * 2,
         };
+        newWalking[h.id] = { moving: true, flipX: newX < prevX };
       });
       setWanderOffsets(newOffsets);
-    }, 2500);
+      setHeroWalking(newWalking);
+      setTimeout(() => {
+        setHeroWalking({});
+      }, 1800);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [heroRoster, activeHeroIds]);
+  }, [heroRoster, activeHeroIds, wanderOffsets]);
 
   useEffect(() => { setBgm('ambient'); }, []);
 
@@ -332,10 +342,13 @@ export default function WorldMap() {
         {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
           const zonePos = locationPositions[currentZone] || locationPositions.verdant_plains;
           const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
-          const baseOffsetX = (idx - 1) * 2.5;
-          const baseOffsetY = -4 - idx * 1.5;
+          const baseOffsetX = (idx - 1) * 1.8;
+          const baseOffsetY = -2.5 - idx * 1;
           const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x));
           const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y));
+          const walk = heroWalking[hero.id];
+          const isWalking = walk?.moving;
+          const flipX = walk?.flipX;
           return (
             <div key={hero.id} style={{
               position: 'absolute',
@@ -343,22 +356,23 @@ export default function WorldMap() {
               top: `${clampedY}%`,
               transform: 'translate(-50%, -100%)',
               zIndex: 5,
-              transition: 'left 2s ease-in-out, top 2s ease-in-out',
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
+              transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))',
             }}>
               <SpriteAnimation
                 spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                animation="idle"
-                scale={2.0}
-                speed={150 + idx * 30}
+                animation={isWalking ? 'walk' : 'idle'}
+                flip={isWalking && flipX}
+                scale={1.0}
+                speed={isWalking ? 100 : (150 + idx * 30)}
               />
               <div style={{
-                position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
-                width: 20, height: 6, borderRadius: '50%',
+                position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
+                width: 14, height: 4, borderRadius: '50%',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
               }} />
               <div style={{
-                position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
                 fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
                 textShadow: '0 1px 3px rgba(0,0,0,0.9)',
               }}>{hero.name}</div>
