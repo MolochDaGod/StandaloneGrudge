@@ -30,6 +30,7 @@ The application is a React 19 frontend utilizing Vite for development, with stat
 - **Hero Management:** The "War Council" page provides comprehensive hero management, including stats, abilities, skill trees, attribute allocation, and equipment.
 - **Loot System:** Enemies drop loot with varying rarity, and a `LootPopup` displays post-battle rewards.
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
+- **Zone Conquer System:** Each zone has a 0-100% conquer rating that increases with victories. Higher conquer % reduces XP gains (up to -70% at 100%) but boosts auto-harvest output (up to +300%). Conquered zones (100%) display an idle worker sprite. Active heroes wander near the current zone on the world map. Conquer progress shown as SVG ring around zone nodes and progress bar in location popup.
 
 ## External Dependencies
 - **React:** Frontend library.

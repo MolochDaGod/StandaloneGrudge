@@ -47,7 +47,7 @@ export default function WorldMap() {
     playerHealth, playerMaxHealth, playerMana, playerMaxMana,
     setScreen, startBattle, startBossBattle, getUnlockedLocations, restAtInn,
     victories, unspentPoints, skillPoints, heroRoster, activeHeroIds, maxHeroSlots,
-    setActiveHeroes, locationsCleared, bossesDefeated,
+    setActiveHeroes, locationsCleared, bossesDefeated, zoneConquer,
     harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
   } = useGameStore();
 
@@ -62,9 +62,26 @@ export default function WorldMap() {
   const [showWarParty, setShowWarParty] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
   const [heroPos, setHeroPos] = useState(locationPositions.verdant_plains);
+  const [currentZone, setCurrentZone] = useState('verdant_plains');
   const [isMoving, setIsMoving] = useState(false);
+  const [wanderOffsets, setWanderOffsets] = useState({});
   const mapRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+      const newOffsets = {};
+      activeHeroes.forEach(h => {
+        newOffsets[h.id] = {
+          x: (Math.random() - 0.5) * 5,
+          y: (Math.random() - 0.5) * 3,
+        };
+      });
+      setWanderOffsets(newOffsets);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [heroRoster, activeHeroIds]);
 
   useEffect(() => { setBgm('ambient'); }, []);
 
@@ -108,6 +125,7 @@ export default function WorldMap() {
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
       setIsMoving(true);
       setHeroPos(target);
+      setCurrentZone(loc.id);
       setTimeout(() => setIsMoving(false), 600);
     }
   }, [level, heroPos]);
@@ -194,6 +212,10 @@ export default function WorldMap() {
           const cleared = locationsCleared.includes(loc.id);
           const icon = locationIcons[loc.id];
           const isSelected = selectedLocation === loc.id;
+          const conquer = (zoneConquer || {})[loc.id] || 0;
+          const isConquered = conquer >= 100;
+          const circumference = 2 * Math.PI * 26;
+          const strokeDash = (conquer / 100) * circumference;
 
           return (
             <div key={loc.id}
@@ -208,33 +230,78 @@ export default function WorldMap() {
                 transition: 'transform 0.2s',
               }}
             >
-              <div style={{
-                width: 56, height: 56,
-                borderRadius: '50%',
-                background: isUnlocked
-                  ? `radial-gradient(circle, ${icon.glow}, rgba(20,26,43,0.9))`
-                  : 'rgba(30,30,50,0.8)',
-                border: `3px solid ${isUnlocked ? (cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color) : 'rgba(80,80,100,0.4)'}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: isUnlocked ? '1.6rem' : '1.2rem',
-                opacity: isUnlocked ? 1 : 0.4,
-                boxShadow: isSelected
-                  ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}`
-                  : isUnlocked
-                    ? `0 0 10px ${icon.glow}`
-                    : 'none',
-                transition: 'all 0.3s',
-                animation: isSelected ? 'pulse 1.5s infinite' : (cleared ? 'none' : (isUnlocked ? 'glow 3s infinite' : 'none')),
-              }}>
-                {isUnlocked ? icon.symbol : '🔒'}
+              <div style={{ position: 'relative', width: 62, height: 62 }}>
+                {isUnlocked && conquer > 0 && (
+                  <svg width="62" height="62" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                    <circle cx="31" cy="31" r="26" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                    <circle cx="31" cy="31" r="26" fill="none"
+                      stroke={isConquered ? 'var(--gold)' : icon.color}
+                      strokeWidth="4"
+                      strokeDasharray={`${strokeDash} ${circumference}`}
+                      strokeLinecap="round"
+                      style={{ filter: isConquered ? 'drop-shadow(0 0 4px rgba(255,215,0,0.6))' : 'none', transition: 'stroke-dasharray 0.5s' }}
+                    />
+                  </svg>
+                )}
+                <div style={{
+                  position: 'absolute', top: 3, left: 3,
+                  width: 56, height: 56,
+                  borderRadius: '50%',
+                  background: isUnlocked
+                    ? `radial-gradient(circle, ${icon.glow}, rgba(20,26,43,0.9))`
+                    : 'rgba(30,30,50,0.8)',
+                  border: `3px solid ${isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color) : 'rgba(80,80,100,0.4)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: isUnlocked ? '1.6rem' : '1.2rem',
+                  opacity: isUnlocked ? 1 : 0.4,
+                  boxShadow: isSelected
+                    ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}`
+                    : isUnlocked
+                      ? `0 0 10px ${icon.glow}`
+                      : 'none',
+                  transition: 'all 0.3s',
+                  animation: isSelected ? 'pulse 1.5s infinite' : (cleared ? 'none' : (isUnlocked ? 'glow 3s infinite' : 'none')),
+                }}>
+                  {isUnlocked ? icon.symbol : '🔒'}
+                </div>
+                {isUnlocked && conquer > 0 && (
+                  <div style={{
+                    position: 'absolute', top: -8, right: -8,
+                    background: isConquered ? 'var(--gold)' : 'rgba(14,22,48,0.95)',
+                    border: `1px solid ${isConquered ? 'var(--gold)' : icon.color}`,
+                    borderRadius: 6, padding: '1px 4px',
+                    fontSize: '0.5rem', fontWeight: 700,
+                    color: isConquered ? '#000' : icon.color,
+                    whiteSpace: 'nowrap',
+                    boxShadow: isConquered ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
+                  }}>
+                    {conquer}%
+                  </div>
+                )}
               </div>
+              {isConquered && (
+                <div style={{
+                  position: 'absolute', top: -2, right: -22,
+                  width: 32, height: 32, overflow: 'hidden',
+                  imageRendering: 'pixelated',
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+                }}>
+                  <div style={{
+                    width: 256, height: 32,
+                    backgroundImage: 'url(/sprites/idle_worker.png)',
+                    backgroundSize: '256px 32px',
+                    imageRendering: 'pixelated',
+                    animation: 'workerIdle 1.6s steps(8) infinite',
+                  }} />
+                </div>
+              )}
               <div style={{
                 position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
                 marginTop: 4, whiteSpace: 'nowrap', textAlign: 'center',
               }}>
                 <div className="font-cinzel" style={{
                   fontSize: '0.65rem', fontWeight: 700,
-                  color: isUnlocked ? (cleared ? 'var(--gold)' : '#fff') : 'rgba(150,150,170,0.5)',
+                  color: isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : '#fff') : 'rgba(150,150,170,0.5)',
                   textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
                 }}>
                   {loc.name}
@@ -262,27 +329,42 @@ export default function WorldMap() {
           );
         })}
 
-        <div style={{
-          position: 'absolute',
-          left: `${heroPos.x}%`, top: `${heroPos.y}%`,
-          transform: 'translate(-50%, -100%)',
-          zIndex: 5,
-          transition: isMoving ? 'left 0.5s ease-in-out, top 0.5s ease-in-out' : 'none',
-          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
-          marginTop: -36,
-        }}>
-          <SpriteAnimation
-            spriteData={getPlayerSprite(playerClass, playerRace)}
-            animation={isMoving ? "walk" : "idle"}
-            scale={1.4}
-            speed={isMoving ? 100 : 150}
-          />
-          <div style={{
-            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
-            width: 30, height: 8, borderRadius: '50%',
-            background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
-          }} />
-        </div>
+        {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
+          const zonePos = locationPositions[currentZone] || locationPositions.verdant_plains;
+          const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
+          const baseOffsetX = (idx - 1) * 2.5;
+          const baseOffsetY = -4 - idx * 1.5;
+          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x));
+          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y));
+          return (
+            <div key={hero.id} style={{
+              position: 'absolute',
+              left: `${clampedX}%`,
+              top: `${clampedY}%`,
+              transform: 'translate(-50%, -100%)',
+              zIndex: 5,
+              transition: 'left 2s ease-in-out, top 2s ease-in-out',
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
+            }}>
+              <SpriteAnimation
+                spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                animation="idle"
+                scale={1.0}
+                speed={150 + idx * 30}
+              />
+              <div style={{
+                position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+                width: 20, height: 6, borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
+              }} />
+              <div style={{
+                position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+              }}>{hero.name}</div>
+            </div>
+          );
+        })}
 
         {selectedLoc && (
           <div ref={menuRef} style={{
@@ -318,6 +400,34 @@ export default function WorldMap() {
               <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                 {selectedLoc.description}
               </div>
+              {(() => {
+                const selConquer = (zoneConquer || {})[selectedLoc.id] || 0;
+                if (selConquer <= 0) return null;
+                const xpMod = Math.floor(selConquer * 0.7);
+                const harvestMod = Math.floor((selConquer / 100) * 300);
+                return (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>Conquered</span>
+                      <span style={{ fontSize: '0.6rem', fontWeight: 700, color: selConquer >= 100 ? 'var(--gold)' : locationIcons[selectedLoc.id]?.color }}>{selConquer}%</span>
+                    </div>
+                    <div style={{ height: 6, background: 'rgba(0,0,0,0.4)', borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', width: `${selConquer}%`, borderRadius: 3,
+                        background: selConquer >= 100
+                          ? 'linear-gradient(90deg, var(--gold), #ffed4a)'
+                          : `linear-gradient(90deg, ${locationIcons[selectedLoc.id]?.color}, ${locationIcons[selectedLoc.id]?.glow})`,
+                        transition: 'width 0.3s',
+                        boxShadow: selConquer >= 100 ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
+                      }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                      <span style={{ fontSize: '0.5rem', color: '#ef4444' }}>XP -{xpMod}%</span>
+                      <span style={{ fontSize: '0.5rem', color: '#22c55e' }}>Harvest +{harvestMod}%</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div style={{ padding: '8px' }}>

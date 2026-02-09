@@ -257,6 +257,7 @@ const useGameStore = create(persist((set, get) => ({
   heroCreationPending: false,
   maxHeroSlots: 1,
   locationsCleared: [],
+  zoneConquer: {},
   inventory: [],
   pendingLoot: [],
   harvestNodes: [
@@ -1053,7 +1054,16 @@ const useGameStore = create(persist((set, get) => ({
       return;
     }
     const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
-    const totalXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
+    const locId = state.currentLocation;
+    const zoneConquer = { ...state.zoneConquer };
+    const currentConquer = zoneConquer[locId] || 0;
+
+    const conquerGain = state.battleState?.isBoss ? 25 : Math.max(1, Math.floor(8 - currentConquer * 0.06));
+    zoneConquer[locId] = Math.min(100, currentConquer + conquerGain);
+
+    const xpReduction = currentConquer / 100 * 0.7;
+    const rawXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
+    const totalXp = Math.max(1, Math.floor(rawXp * (1 - xpReduction)));
     const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
 
     let newXp = state.xp + totalXp;
@@ -1086,7 +1096,9 @@ const useGameStore = create(persist((set, get) => ({
       log.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
     }
 
+    const newConquer = zoneConquer[locId] || 0;
     log.push(`✨ Victory! Gained ${totalXp} XP and ${totalGold} Gold.`);
+    if (locId) log.push(`📊 Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
 
     const lootDrops = [];
     enemyUnits.forEach(e => {
@@ -1156,6 +1168,7 @@ const useGameStore = create(persist((set, get) => ({
       victories: newVictories,
       bossesDefeated,
       locationsCleared,
+      zoneConquer,
       maxHeroSlots: newMaxSlots,
       heroRoster: updatedRoster,
       pendingLoot: lootDrops,
@@ -1368,12 +1381,15 @@ const useGameStore = create(persist((set, get) => ({
     const newResources = { ...state.harvestResources };
     let goldGained = 0;
 
+    const maxConquer = Math.max(0, ...Object.values(state.zoneConquer || {}));
+    const conquerHarvestMult = 1 + (maxConquer / 100) * 3;
+
     Object.entries(state.activeHarvests).forEach(([nodeId, heroId]) => {
       const node = state.harvestNodes.find(n => n.id === nodeId);
       const hero = state.heroRoster.find(h => h.id === heroId);
       if (!node || !hero) return;
       const heroMult = 1 + (hero.level * 0.1);
-      const amount = node.baseRate * heroMult * elapsed;
+      const amount = node.baseRate * heroMult * conquerHarvestMult * elapsed;
       if (node.resource === 'gold') {
         goldGained += Math.floor(amount);
       } else {
@@ -1607,6 +1623,7 @@ const useGameStore = create(persist((set, get) => ({
     activeHeroIds: state.activeHeroIds,
     maxHeroSlots: state.maxHeroSlots,
     locationsCleared: state.locationsCleared,
+    zoneConquer: state.zoneConquer,
     inventory: state.inventory,
     harvestResources: state.harvestResources,
     activeHarvests: state.activeHarvests,
