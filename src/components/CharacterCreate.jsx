@@ -258,7 +258,7 @@ export default function CharacterCreate() {
                     }}>&#10003;</div>}
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2, height: 120, overflow: 'hidden' }}>
                       {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={3} speed={150} />
+                        <WorgeMorphPreview raceId={selectedRace} scale={1.2} speed={150} />
                       ) : (
                         <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={3} speed={150} />
                       )}
