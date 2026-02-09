@@ -178,7 +178,20 @@ public/
 - Hit effects overlay on target when attacks land (both melee and ranged)
 - Beam trails replace colored dots for ranged projectiles (arrow shots, magic bolts)
 
+## Visual World Map
+- 2D fantasy map background image at public/backgrounds/world_map.png
+- 8 location nodes positioned at specific coordinates on the map
+- SVG path lines connecting adjacent locations (gold when both unlocked, dashed when locked)
+- Player hero sprite displayed on map, animates walking to selected location
+- Click any unlocked location node to open context menu with: Hunt Monsters, Challenge Boss, Rest at Inn, Visit Location, Trade (coming soon)
+- War Party and Auto-Harvest panels as collapsible overlays (top-right buttons)
+- HUD header bar (top) with player info, gold, XP, quick buttons
+- Stats footer bar (bottom) with victories, level, gold, hero count
+- Location nodes glow with themed colors, show level range and boss warnings
+- Locked locations show lock icon and required level
+
 ## Recent Changes
+- Rebuilt WorldMap as visual 2D map with generated fantasy background, clickable location nodes, hero sprite, and context menus
 - Added 20 character sprites with proper frame counts, 6 new sprite sets (lancer, armored-axeman, armored-orc, skeleton-archer, soldier, slime)
 - All 24 race/class combos now have unique sprite mappings (no more shared sprites with filters)
 - Integrated beam trail images for ranged projectiles (color-coded per ability type)
