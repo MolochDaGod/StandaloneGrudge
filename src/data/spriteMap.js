@@ -223,9 +223,9 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets.archer,
   },
   undead: {
-    warrior: spriteSheets['armored-skeleton'],
+    warrior: spriteSheets['greatsword-skeleton'],
     mage: { ...spriteSheets.wizard, filter: 'brightness(0.7) hue-rotate(120deg) saturate(1.5)' },
-    worge: spriteSheets['greatsword-skeleton'],
+    worge: spriteSheets.skeleton,
     ranger: spriteSheets['skeleton-archer'],
   },
   barbarian: {
