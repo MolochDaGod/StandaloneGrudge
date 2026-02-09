@@ -5,7 +5,7 @@ import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon } from '../data/uiSprites';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon } from '../data/uiSprites.jsx';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
 const locationBackgrounds = {

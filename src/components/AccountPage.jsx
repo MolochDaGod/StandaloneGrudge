@@ -7,7 +7,7 @@ import { skillTrees } from '../data/skillTrees';
 import { RARITY, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites';
+import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
