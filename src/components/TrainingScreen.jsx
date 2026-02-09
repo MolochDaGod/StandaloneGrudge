@@ -57,9 +57,15 @@ export default function TrainingScreen() {
     border: '1px solid rgba(255,215,0,0.2)', textAlign: 'left',
   };
 
+  const bgStyle = {
+    width: '100%', height: '100%',
+    backgroundImage: 'url(/backgrounds/shadow_citadel.png)',
+    backgroundSize: 'cover', backgroundPosition: 'center',
+  };
+
   if (trainingPhase === 'pre_training_1') {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ ...bgStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={panelStyle}>
           <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>&#9876;</div>
           <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.6rem', marginBottom: 15 }}>
@@ -110,9 +116,7 @@ export default function TrainingScreen() {
     ];
 
     return (
-      <div style={{ width: '100%', height: '100%', overflow: 'auto',
-        background: 'radial-gradient(circle at 30% 20%, rgba(110,231,183,0.04), transparent 50%), rgba(11,16,32,0.85)',
-      }}>
+      <div style={{ ...bgStyle, overflow: 'auto' }}>
         <header style={{
           background: 'linear-gradient(135deg, rgba(14,22,48,0.9), rgba(20,26,43,0.7))',
           borderBottom: '2px solid var(--gold)', padding: '12px 20px',
@@ -456,7 +460,7 @@ export default function TrainingScreen() {
 
   if (trainingPhase === 'pre_training_2') {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ ...bgStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={panelStyle}>
           <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>&#9876;&#9876;</div>
           <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.6rem', marginBottom: 15 }}>
