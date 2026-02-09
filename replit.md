@@ -173,10 +173,14 @@ public/
 
 ## Battle Effects System
 - 20 pixel art effect spritesheets in public/effects/pixel/ (magic spells, fire, ice, weapon hits, etc.)
+- 16 custom effect sprites in public/effects/ (slash, heal, hit x3, fire explosion x2, thunder hit/projectile x3, holy impact/repeatable/vfx, wind breath/hit/projectile)
 - 4 beam trail images in public/effects/beams/ (green, orange, purple, red) for projectile trails
-- abilityEffectMap maps each class's abilities to specific visual effects and beam colors
-- Hit effects overlay on target when attacks land (both melee and ranged)
-- Beam trails replace colored dots for ranged projectiles (arrow shots, magic bolts)
+- EffectSprite component supports both square-grid sprites (size/frames) and custom-layout sprites (cols/rows/frameW/frameH)
+- abilityEffectMap maps each class's abilities to specific visual effects, beam colors, AND character attack animations (anim property)
+- enemyAbilityEffects maps enemy ability names (Shadow Bolt, Hellfire, Meteor, etc.) to visual effects
+- Each ability uses a specific attack animation: attack1 (basic), attack2 (power), attack3 (finisher), heal, block
+- Hit effects overlay on target when attacks land (melee, ranged, heals, and buffs)
+- Beam trails for ranged projectiles (color-coded per ability type)
 
 ## Visual World Map
 - 2D fantasy map background image at public/backgrounds/world_map.png
