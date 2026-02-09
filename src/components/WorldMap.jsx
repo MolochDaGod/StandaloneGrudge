@@ -354,27 +354,31 @@ export default function WorldMap() {
               position: 'absolute',
               left: `${clampedX}%`,
               top: `${clampedY}%`,
-              transform: 'translate(-50%, -100%)',
+              transform: 'translate(-50%, -50%)',
               zIndex: 5,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))',
             }}>
-              <SpriteAnimation
-                spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                animation={isWalking ? 'walk' : 'idle'}
-                flip={isWalking && flipX}
-                scale={1.0}
-                speed={isWalking ? 100 : (150 + idx * 30)}
-              />
               <div style={{
-                position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
-                width: 14, height: 4, borderRadius: '50%',
+                width: 40, height: 40, overflow: 'hidden',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.7))',
+              }}>
+                <SpriteAnimation
+                  spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                  animation={isWalking ? 'walk' : 'idle'}
+                  flip={isWalking && flipX}
+                  scale={1.0}
+                  speed={isWalking ? 100 : (150 + idx * 30)}
+                />
+              </div>
+              <div style={{
+                width: 16, height: 4, borderRadius: '50%', margin: '-1px auto 0',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
               }} />
               <div style={{
-                position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                textAlign: 'center',
                 fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
-                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)', marginTop: 1,
               }}>{hero.name}</div>
             </div>
           );
