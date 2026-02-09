@@ -200,15 +200,15 @@ export default function HeroCreate() {
                     display: 'flex', gap: 12, alignItems: 'center',
                   }}>
                   <div style={{
-                    width: 80, height: 80, overflow: 'hidden',
+                    width: 80, height: 80,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '1px solid rgba(110,231,183,0.3)', borderRadius: 10,
                     background: 'rgba(0,0,0,0.25)', flexShrink: 0,
                   }}>
                     {id === 'worge' ? (
-                      <WorgeMorphPreview raceId={selectedRace} scale={2} speed={150} />
+                      <WorgeMorphPreview raceId={selectedRace} scale={0.8} speed={150} />
                     ) : (
-                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2} speed={150} />
+                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8} speed={150} />
                     )}
                   </div>
                   <div>

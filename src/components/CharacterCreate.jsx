@@ -257,14 +257,14 @@ export default function CharacterCreate() {
                     }}>&#10003;</div>}
                     <div style={{
                       display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      marginBottom: 6, height: 100, overflow: 'hidden',
+                      marginBottom: 6, width: 100, height: 100, margin: '0 auto 6px',
                       border: `1px solid ${cls.color}50`, borderRadius: 10,
                       background: 'rgba(0,0,0,0.25)',
                     }}>
                       {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={2.5} speed={150} />
+                        <WorgeMorphPreview raceId={selectedRace} scale={1} speed={150} />
                       ) : (
-                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={2.5} speed={150} />
+                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={1} speed={150} />
                       )}
                     </div>
                     <div style={{
