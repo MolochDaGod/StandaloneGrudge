@@ -100,6 +100,96 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   );
 }
 
+function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
+  return (
+    <div style={{
+      flex: 1, minWidth: 0,
+      background: isAlt
+        ? 'linear-gradient(135deg, rgba(217,119,6,0.08), rgba(42,49,80,0.4))'
+        : 'rgba(42,49,80,0.4)',
+      border: `1px solid ${isAlt ? 'rgba(217,119,6,0.25)' : 'var(--border)'}`,
+      borderRadius: 12, padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start',
+    }}>
+      <div style={{
+        fontSize: '1.5rem', width: 42, height: 42, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.3)', borderRadius: 8,
+        border: `1px solid ${isAlt ? '#d97706' : cls?.color || 'var(--border)'}`,
+        position: 'relative',
+      }}>
+        {ability.icon}
+        {isCurrent && (
+          <div style={{
+            position: 'absolute', top: -4, left: -4, width: 16, height: 16,
+            background: cls?.color || 'var(--accent)', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.55rem', fontWeight: 700, color: '#0b1020',
+          }}>{idx + 1}</div>
+        )}
+        {altBadge && (
+          <div style={{
+            position: 'absolute', top: -4, right: -4, width: 16, height: 16,
+            background: '#d97706', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.5rem', fontWeight: 700, color: '#0b1020',
+          }}>{altBadge}</div>
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: '0.8rem', color: isAlt ? '#d97706' : 'var(--text)', marginBottom: 2 }}>
+          {ability.name}
+        </div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginBottom: 4, lineHeight: 1.3 }}>
+          {ability.description}
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {ability.damage > 0 && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+              {(ability.damage * 100).toFixed(0)}% DMG
+            </span>
+          )}
+          {ability.type === 'heal' && ability.healPercent && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+              {(ability.healPercent * 100)}% Heal
+            </span>
+          )}
+          {ability.type === 'heal_over_time' && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+              HoT {ability.duration}T
+            </span>
+          )}
+          {(ability.type === 'buff' || ability.type === 'revert_form') && ability.damage === 0 && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(110,231,183,0.15)', color: 'var(--accent)' }}>
+              {ability.type === 'revert_form' ? 'Revert' : 'Buff'}
+            </span>
+          )}
+          {ability.manaCost > 0 && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>
+              {ability.manaCost} MP
+            </span>
+          )}
+          {ability.staminaCost > 0 && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+              {ability.staminaCost} SP
+            </span>
+          )}
+          {ability.cooldown > 0 && (
+            <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(107,114,128,0.15)', color: '#9ca3af' }}>
+              {ability.cooldown}T CD
+            </span>
+          )}
+        </div>
+        {ability.effect && (
+          <div style={{ fontSize: '0.55rem', color: 'var(--gold)', marginTop: 3 }}>
+            {ability.effect.type === 'stun' ? 'Stun' : ability.effect.type === 'dot' ? 'DoT' : ability.effect.stat}{' '}
+            {ability.effect.duration && `(${ability.effect.duration}T)`}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function HeroDetailPanel({ hero, onClose }) {
   const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory } = useGameStore();
   const [tab, setTab] = useState('stats');
@@ -367,65 +457,51 @@ function HeroDetailPanel({ hero, onClose }) {
               {cls?.name} Abilities
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {cls?.abilities.map((ability, idx) => (
-                <div key={ability.id} style={{
-                  background: 'rgba(42,49,80,0.4)', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: 14, display: 'flex', gap: 14, alignItems: 'flex-start',
-                }}>
-                  <div style={{
-                    fontSize: '1.8rem', width: 50, height: 50,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.3)', borderRadius: 10,
-                    border: `1px solid ${cls?.color || 'var(--border)'}`,
-                    position: 'relative',
+              {cls?.abilities.map((ability, idx) => {
+                const altAbility = cls?.bearFormAbilities?.[ability.id] || null;
+                return (
+                  <div key={ability.id} style={{
+                    display: 'flex', gap: 8, alignItems: 'stretch', flexWrap: 'wrap',
                   }}>
-                    {ability.icon}
-                    <div style={{
-                      position: 'absolute', top: -4, left: -4, width: 16, height: 16,
-                      background: cls?.color || 'var(--accent)', borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.55rem', fontWeight: 700, color: '#0b1020',
-                    }}>{idx + 1}</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', marginBottom: 2 }}>
-                      {ability.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: 6 }}>
-                      {ability.description}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4,
-                        background: 'rgba(239,68,68,0.15)', color: '#ef4444',
+                    <AbilityCard ability={ability} idx={idx} cls={cls} isCurrent />
+                    {altAbility && (
+                      <>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center',
+                          color: 'var(--muted)', fontSize: '0.6rem', minWidth: 28,
+                        }}>
+                          <span style={{ fontSize: '1rem' }}>→</span>
+                          <span style={{ fontSize: '0.5rem', color: '#d97706', fontWeight: 600 }}>🐻</span>
+                        </div>
+                        <AbilityCard ability={altAbility} idx={idx} cls={cls} isAlt altBadge="🐻" />
+                      </>
+                    )}
+                    {ability.isBearForm && (
+                      <>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center',
+                          color: 'var(--muted)', fontSize: '0.6rem', minWidth: 28,
+                        }}>
+                          <span style={{ fontSize: '1rem' }}>→</span>
+                          <span style={{ fontSize: '0.5rem', color: '#22c55e', fontWeight: 600 }}>↩</span>
+                        </div>
+                        <AbilityCard
+                          ability={{ id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Return to your normal form, removing beast buffs', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }}
+                          idx={idx} cls={cls} isAlt
+                        />
+                      </>
+                    )}
+                    {ability.isDemonBlade && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', padding: '0 8px',
+                        color: '#ef4444', fontSize: '0.55rem', fontStyle: 'italic',
                       }}>
-                        {ability.damage > 0 ? `${(ability.damage * 100).toFixed(0)}% DMG` : ability.type === 'heal' ? `${(ability.healPercent * 100)}% Heal` : ability.type}
-                      </span>
-                      {ability.manaCost > 0 && (
-                        <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>
-                          {ability.manaCost} MP
-                        </span>
-                      )}
-                      {ability.staminaCost > 0 && (
-                        <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
-                          {ability.staminaCost} SP
-                        </span>
-                      )}
-                      {ability.cooldown > 0 && (
-                        <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(107,114,128,0.15)', color: '#9ca3af' }}>
-                          {ability.cooldown}T CD
-                        </span>
-                      )}
-                    </div>
-                    {ability.effect && (
-                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', marginTop: 4 }}>
-                        Effect: {ability.effect.type === 'stun' ? 'Stun' : ability.effect.type === 'dot' ? 'DoT' : ability.effect.stat}{' '}
-                        {ability.effect.duration && `(${ability.effect.duration} turns)`}
+                        Transforms sprite
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
