@@ -456,6 +456,68 @@ export default function BattleScreen() {
     if (abilityType === 'physical' || abilityType === 'magical') {
       if (!target) { setTimeout(() => advanceTurn(), 200); return; }
 
+      const isDaggerToss = abilityId === 'dagger_toss' || abilityId === 'ws_dagger_stab' || abilityId === 'ws_dagger_slash' || abilityId === 'ws_backstab' || abilityId === 'ws_envenom' || abilityId === 'ws_fan_of_knives';
+
+      if (isDaggerToss && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        playSwordHit();
+        const projId = Date.now();
+        const dx = target.position.x - attacker.position.x;
+        const dy = target.position.y - attacker.position.y;
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        setProjectiles(prev => [...prev, {
+          id: projId,
+          startX: attacker.position.x + (attacker.team === 'player' ? 4 : -4),
+          startY: attacker.position.y,
+          endX: target.position.x,
+          endY: target.position.y,
+          color: '#94a3b8',
+          angle,
+          phase: 'start',
+          isDagger: true,
+        }]);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setProjectiles(prev => prev.map(p => p.id === projId ? { ...p, phase: 'fly' } : p));
+          });
+        });
+        setTimeout(() => {
+          setProjectiles(prev => prev.filter(p => p.id !== projId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, target.position.y, '#94a3b8');
+            const hfx = getHitEffect(attacker, abilityName);
+            if (hfx && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
+            }
+            if (isCrit) { playCrit(); } else { playHurt(); }
+          } else {
+            playDodge();
+          }
+          addParticle('cast', attacker.position.x, attacker.position.y, '#7c3aed');
+          setTimeout(() => {
+            const blinkX = target.position.x + (attacker.team === 'player' ? -6 : 6);
+            const blinkY = target.position.y;
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: blinkX, y: blinkY } }));
+            addParticle('cast', blinkX, blinkY, '#7c3aed');
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'attack1' }));
+            playSwordHit();
+            addParticle('hit', target.position.x, target.position.y, '#c084fc');
+          }, 350 * spd);
+          setTimeout(() => {
+            addParticle('cast', attacker.position.x, attacker.position.y, '#7c3aed');
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+            setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' }));
+          }, 700 * spd);
+        }, 450 * spd);
+        setTimeout(() => advanceTurn(), 1400 * spd);
+        return;
+      }
+
       const ranged = isRangedUnit(attacker) || abilityType === 'magical';
 
       if (abilityType === 'magical' && attacker.position) {
@@ -937,7 +999,45 @@ export default function BattleScreen() {
             zIndex: 200,
             pointerEvents: 'none',
           }}>
-            {p.beamSrc ? (
+            {p.isDagger ? (
+              <div style={{ position: 'relative', width: 24, height: 10 }}>
+                <div style={{
+                  position: 'absolute', top: 1, left: 0,
+                  width: 16, height: 3,
+                  background: 'linear-gradient(90deg, #64748b, #cbd5e1, #e2e8f0)',
+                  borderRadius: 1,
+                  boxShadow: '0 0 6px rgba(148,163,184,0.8), 0 0 12px rgba(148,163,184,0.4)',
+                }} />
+                <div style={{
+                  position: 'absolute', top: -1, left: 12,
+                  width: 0, height: 0,
+                  borderLeft: '8px solid #e2e8f0',
+                  borderTop: '4px solid transparent',
+                  borderBottom: '4px solid transparent',
+                  filter: 'drop-shadow(0 0 4px rgba(226,232,240,0.6))',
+                }} />
+                <div style={{
+                  position: 'absolute', top: -2, left: 5,
+                  width: 2, height: 9,
+                  background: '#94a3b8',
+                  borderRadius: 1,
+                }} />
+                <div style={{
+                  position: 'absolute', top: -1, left: -4,
+                  width: 6, height: 2,
+                  background: 'linear-gradient(90deg, #475569, #64748b)',
+                  borderRadius: 1,
+                  transform: 'rotate(-10deg)',
+                }} />
+                <div style={{
+                  position: 'absolute', top: 3, left: -4,
+                  width: 6, height: 2,
+                  background: 'linear-gradient(90deg, #475569, #64748b)',
+                  borderRadius: 1,
+                  transform: 'rotate(10deg)',
+                }} />
+              </div>
+            ) : p.beamSrc ? (
               <img src={p.beamSrc} alt="" style={{
                 width: 120, height: 20,
                 filter: `drop-shadow(0 0 8px ${p.color})`,
