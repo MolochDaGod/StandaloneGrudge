@@ -1231,30 +1231,33 @@ export default function WorldMap() {
               position: 'absolute',
               left: `${clampedX}%`,
               top: `${clampedY}%`,
-              transform: 'translate(-50%, -50%)',
+              transform: 'translate(-50%, -100%)',
               zIndex: 5,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
+              pointerEvents: 'none',
             }}>
               <div style={{
-                width: 100, height: 100, overflow: 'hidden',
+                width: 48, height: 56, overflow: 'hidden',
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
               }}>
-                <SpriteAnimation
-                  spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                  animation={isWalking ? 'walk' : 'idle'}
-                  flip={isWalking && flipX}
-                  scale={1}
-                  speed={isWalking ? 100 : (150 + idx * 30)}
-                />
+                <div style={{ marginBottom: -6, marginLeft: -2 }}>
+                  <SpriteAnimation
+                    spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                    animation={isWalking ? 'walk' : 'idle'}
+                    flip={isWalking && flipX}
+                    scale={0.6}
+                    speed={isWalking ? 100 : (150 + idx * 30)}
+                  />
+                </div>
               </div>
               <div style={{
-                width: 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
+                width: 24, height: 5, borderRadius: '50%', margin: '-1px auto 0',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
               }} />
               <div style={{
                 textAlign: 'center',
-                fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
                 textShadow: '0 1px 3px rgba(0,0,0,0.9)', marginTop: 1,
               }}>{hero.name}</div>
             </div>
