@@ -875,9 +875,9 @@ export default function WorldMap() {
         })}
 
         {locations.filter(loc => loc.boss && !bossesDefeated.includes(loc.boss)).map(loc => {
-          const pos = locationPositions[loc.id];
+          const pos = getNodePos(loc.id);
           if (!pos) return null;
-          const isLocUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel);
+          const isLocUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
           if (!isLocUnlocked) return null;
           const bossStyle = bossMapSprites[loc.boss] || {};
           const spriteData = getEnemySprite(loc.boss);
