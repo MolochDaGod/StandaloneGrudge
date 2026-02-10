@@ -972,10 +972,10 @@ export default function WorldMap() {
         {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
           const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
           const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
-          const baseOffsetX = (idx - 1) * 1.8;
-          const baseOffsetY = -2.5 - idx * 1;
-          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x));
-          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y));
+          const baseOffsetX = (idx - 1) * 0.8;
+          const baseOffsetY = -1.2 - idx * 0.4;
+          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.4));
+          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.4));
           const walk = heroWalking[hero.id];
           const isWalking = walk?.moving;
           const flipX = walk?.flipX;
@@ -1084,11 +1084,11 @@ export default function WorldMap() {
           const getHeroMapPos = (idx) => {
             const hero = activeHeroes[idx];
             const offset = hero ? (wanderOffsets[hero.id] || { x: 0, y: 0 }) : { x: 0, y: 0 };
-            const baseOffsetX = (idx - 1) * 1.8;
-            const baseOffsetY = -2.5 - idx * 1;
+            const baseOffsetX = (idx - 1) * 0.8;
+            const baseOffsetY = -1.2 - idx * 0.4;
             return {
-              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x)),
-              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y)),
+              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.4)),
+              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.4)),
             };
           };
 
