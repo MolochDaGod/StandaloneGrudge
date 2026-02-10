@@ -1803,22 +1803,32 @@ export default function BattleScreen() {
       </div>
 
       <div style={{
-        flex: '0 0 60px', background: 'rgba(0,0,0,0.65)',
-        borderTop: '1px solid var(--border)', padding: '4px 10px',
+        flex: '0 0 60px',
+        backgroundImage: 'url(/images/battle-panel-bg.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        borderTop: '2px solid #8b7355',
+        padding: '4px 10px',
         overflow: 'auto', fontSize: '0.7rem', zIndex: 10,
-        backdropFilter: 'blur(4px)',
+        position: 'relative',
       }} ref={logRef}>
         <div style={{
-          color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 600,
-          marginBottom: 2, letterSpacing: 1, textTransform: 'uppercase'
-        }}>Battle Log</div>
-        {battleLog.map((msg, i) => (
-          <div key={i} style={{
-            color: i === battleLog.length - 1 ? 'var(--text)' : 'var(--muted)',
-            padding: '0.5px 0', opacity: i === battleLog.length - 1 ? 1 : 0.65,
-            fontSize: '0.68rem',
-          }}>{msg}</div>
-        ))}
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{
+            color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 600,
+            marginBottom: 2, letterSpacing: 1, textTransform: 'uppercase'
+          }}>Battle Log</div>
+          {battleLog.map((msg, i) => (
+            <div key={i} style={{
+              color: i === battleLog.length - 1 ? 'var(--text)' : 'var(--muted)',
+              padding: '0.5px 0', opacity: i === battleLog.length - 1 ? 1 : 0.65,
+              fontSize: '0.68rem',
+            }}>{msg}</div>
+          ))}
+        </div>
       </div>
 
       <div style={{
@@ -1913,9 +1923,8 @@ export default function BattleScreen() {
 
       <div style={{
           flex: '0 0 140px', height: 140,
-          backgroundImage: `url(${UI_PANELS.hotbarBg})`,
-          backgroundSize: 'cover', backgroundRepeat: 'repeat-x',
-          imageRendering: 'pixelated',
+          backgroundImage: 'url(/images/battle-panel-bg.png)',
+          backgroundSize: 'cover', backgroundPosition: 'center bottom',
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           padding: '8px 10px', zIndex: 10,
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
@@ -1925,7 +1934,7 @@ export default function BattleScreen() {
         }}>
           <div style={{
             position: 'absolute', inset: 0,
-            background: (!isVictory && !isDefeat && isPlayerTurn) ? 'rgba(14,22,48,0.75)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.8)' : 'rgba(14,22,48,0.7)'),
+            background: (!isVictory && !isDefeat && isPlayerTurn) ? 'rgba(14,22,48,0.65)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.7)' : 'rgba(14,22,48,0.6)'),
             transition: 'background 0.3s', pointerEvents: 'none',
           }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
