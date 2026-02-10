@@ -595,10 +595,16 @@ export default function BattleScreen() {
   const [fireballFx, setFireballFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
+  const [camZoom, setCamZoom] = useState(3);
+  const [camPos, setCamPos] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const battlefieldRef = useRef(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
+  const camInitialized = useRef(false);
 
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
@@ -615,6 +621,55 @@ export default function BattleScreen() {
 
   const playerTeam = useMemo(() => battleUnits.filter(u => u.team === 'player'), [battleUnits]);
   const enemyTeam = useMemo(() => battleUnits.filter(u => u.team === 'enemy'), [battleUnits]);
+
+  useEffect(() => {
+    if (camInitialized.current || !battleUnits.length) return;
+    const firstPlayer = battleUnits.find(u => u.team === 'player' && u.position);
+    if (firstPlayer?.position) {
+      setCamPos({ x: -(firstPlayer.position.x - 50), y: -(firstPlayer.position.y - 50) });
+      camInitialized.current = true;
+    }
+  }, [battleUnits]);
+
+  useEffect(() => {
+    if (!currentUnit?.position || !currentUnit.alive) return;
+    const pos = currentUnit.position;
+    setCamPos(prev => {
+      const targetX = -(pos.x - 50);
+      const targetY = -(pos.y - 50);
+      return { x: prev.x + (targetX - prev.x) * 0.4, y: prev.y + (targetY - prev.y) * 0.4 };
+    });
+  }, [currentUnit?.id]);
+
+  const handleCamWheel = useCallback((e) => {
+    e.preventDefault();
+    setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.2 : 0.2))));
+  }, []);
+
+  const handleCamMouseDown = useCallback((e) => {
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.shiftKey)) {
+      e.preventDefault();
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  }, []);
+
+  const handleCamMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    const dx = (e.clientX - dragStart.x) / camZoom * 0.15;
+    const dy = (e.clientY - dragStart.y) / camZoom * 0.15;
+    setCamPos(p => ({ x: p.x + dx, y: p.y + dy }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isDragging, dragStart, camZoom]);
+
+  const handleCamMouseUp = useCallback(() => { setIsDragging(false); }, []);
+
+  useEffect(() => {
+    const el = battlefieldRef.current;
+    if (!el) return;
+    el.addEventListener('wheel', handleCamWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleCamWheel);
+  }, [handleCamWheel]);
 
   const isPlayerTurn = phase === 'player_turn';
   const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
@@ -1262,9 +1317,24 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      <div style={{
-        flex: 1, position: 'relative', zIndex: 1, minHeight: 0, overflow: 'hidden',
-      }}>
+      <div
+        ref={battlefieldRef}
+        onMouseDown={handleCamMouseDown}
+        onMouseMove={handleCamMouseMove}
+        onMouseUp={handleCamMouseUp}
+        onMouseLeave={handleCamMouseUp}
+        onContextMenu={(e) => e.preventDefault()}
+        style={{
+          flex: 1, position: 'relative', zIndex: 1, minHeight: 0, overflow: 'hidden',
+          cursor: isDragging ? 'grabbing' : 'default',
+        }}
+      >
+        <div style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
+          transformOrigin: '50% 50%',
+          transition: isDragging ? 'none' : 'transform 0.4s ease-out',
+        }}>
         <AmbientParticles />
 
         {battleUnits.map((unit, idx) => {
@@ -1552,6 +1622,8 @@ export default function BattleScreen() {
           </div>
         ))}
 
+        </div>
+
         {(isVictory || isDefeat) && (
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -1604,6 +1676,29 @@ export default function BattleScreen() {
             </div>
           </div>
         )}
+
+        <div style={{
+          position: 'absolute', bottom: 8, right: 8, zIndex: 200,
+          display: 'flex', alignItems: 'center', gap: 4,
+          background: 'rgba(0,0,0,0.6)', borderRadius: 6, padding: '3px 6px',
+          backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <button onClick={() => setCamZoom(z => Math.max(1, z - 0.5))} style={{
+            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+            fontSize: '0.7rem', padding: '0 4px', lineHeight: 1,
+          }}>-</button>
+          <span style={{ color: 'var(--muted)', fontSize: '0.55rem', minWidth: 30, textAlign: 'center' }}>
+            {Math.round(camZoom * 100)}%
+          </span>
+          <button onClick={() => setCamZoom(z => Math.min(5, z + 0.5))} style={{
+            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+            fontSize: '0.7rem', padding: '0 4px', lineHeight: 1,
+          }}>+</button>
+          <button onClick={() => { setCamZoom(1); setCamPos({ x: 0, y: 0 }); }} style={{
+            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+            fontSize: '0.5rem', padding: '0 4px',
+          }}>FIT</button>
+        </div>
       </div>
 
       <div style={{
