@@ -1370,7 +1370,7 @@ export default function BattleScreen() {
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover', backgroundPosition: 'center bottom',
+          backgroundSize: '120%', backgroundPosition: 'center 75%',
           opacity: 0.7, zIndex: 0,
         }} />
       )}
@@ -1958,7 +1958,7 @@ export default function BattleScreen() {
       )}
 
       <div style={{
-          flex: '0 0 auto',
+          flex: '0 0 140px', height: 140, minHeight: 140, maxHeight: 140,
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           zIndex: 10,
           display: 'flex', flexDirection: 'row',
