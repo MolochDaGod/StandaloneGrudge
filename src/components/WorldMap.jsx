@@ -982,7 +982,7 @@ export default function WorldMap() {
           const mapSpriteScale = 1.2;
           const spriteW = 100 * mapSpriteScale;
           const spriteH = 100 * mapSpriteScale;
-          const footCrop = 0.72;
+          const footCrop = 0.82;
           const visibleH = Math.round(spriteH * footCrop);
           const heroScale = Math.max(0.35, 1 / camZoom);
           return (
@@ -1170,7 +1170,7 @@ export default function WorldMap() {
           const count = event.enemyCount || 1;
           const eventScale = Math.max(0.3, 1 / camZoom);
           const spriteW = 80;
-          const spriteVisH = Math.round(spriteW * 0.72);
+          const spriteVisH = Math.round(spriteW * 0.82);
           const spriteOffsets = count === 1
             ? [{ x: 0, y: 0 }]
             : count === 2

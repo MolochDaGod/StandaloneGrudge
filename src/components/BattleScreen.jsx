@@ -1470,7 +1470,7 @@ export default function BattleScreen() {
           const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * (isBossUnit ? 1.6 : 1);
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
-          const footCrop = 0.72;
+          const footCrop = 0.82;
           const visibleHeight = Math.round(spriteSize * footCrop);
           const footY = visibleHeight;
 
