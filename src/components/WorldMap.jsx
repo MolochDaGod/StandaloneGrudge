@@ -138,6 +138,55 @@ const locationIcons = {
   void_throne:        { symbol: '👑', color: '#fbbf24', glow: 'rgba(251,191,36,0.5)' },
 };
 
+const terrainRegions = [
+  {
+    name: 'Verdant Wilds',
+    fill: 'rgba(74,222,128,0.06)',
+    stroke: 'rgba(74,222,128,0.2)',
+    points: '8,64 32,16 52,68 54,89 26,92 6,92',
+    labelX: 28, labelY: 72,
+  },
+  {
+    name: 'Shadow Realm',
+    fill: 'rgba(167,139,250,0.06)',
+    stroke: 'rgba(167,139,250,0.2)',
+    points: '82,4 92,20 89,42 38,69 21,32 69,14',
+    labelX: 65, labelY: 28,
+  },
+  {
+    name: 'Volcanic Wastes',
+    fill: 'rgba(239,68,68,0.06)',
+    stroke: 'rgba(239,68,68,0.2)',
+    points: '52,47 83,38 92,50 82,72 65,79 56,68',
+    labelX: 72, labelY: 60,
+  },
+  {
+    name: 'Frozen Peaks',
+    fill: 'rgba(125,211,252,0.06)',
+    stroke: 'rgba(125,211,252,0.2)',
+    points: '53,11 49,25 46,42 27,49 16,58 16,50 30,30',
+    labelX: 36, labelY: 36,
+  },
+  {
+    name: 'Ashenmoor',
+    fill: 'rgba(251,191,36,0.06)',
+    stroke: 'rgba(251,191,36,0.2)',
+    points: '54,34 62,34 62,42 54,42',
+    labelX: 58, labelY: 44,
+  },
+];
+
+const portalLocations = ['shadow_citadel', 'demon_gate', 'void_throne'];
+
+const steamPositions = [
+  { x: 42, y: 35, delay: 0 },
+  { x: 44, y: 37, delay: 1.5 },
+  { x: 20, y: 52, delay: 0.8 },
+  { x: 22, y: 54, delay: 2.2 },
+  { x: 38, y: 75, delay: 0.4 },
+  { x: 40, y: 77, delay: 1.8 },
+];
+
 export default function WorldMap() {
   const {
     level, xp, xpToNext, gold, playerName, playerClass, playerRace,
@@ -417,6 +466,58 @@ export default function WorldMap() {
           pointerEvents: 'none',
         }} />
 
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          pointerEvents: 'none', zIndex: 1,
+          background: 'rgba(255,180,80,0.03)',
+          animation: 'dayNightCycle 120s linear infinite',
+        }} />
+
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+          {terrainRegions.map((region, idx) => (
+            <polygon key={idx}
+              points={region.points}
+              fill={region.fill}
+              stroke={region.stroke}
+              strokeWidth="0.3"
+              style={{ filter: `drop-shadow(0 0 2px ${region.stroke})`, animation: 'regionPulse 6s ease-in-out infinite' }}
+            />
+          ))}
+          <path d="M 71,60 Q 73,63 72,66 Q 71,69 73,72" fill="none" stroke="rgba(251,146,60,0.3)" strokeWidth="0.4" strokeDasharray="2 1" style={{ animation: 'lavaFlow 3s linear infinite' }} />
+          <path d="M 77,59 Q 79,62 78,65 Q 77,68 79,71" fill="none" stroke="rgba(239,68,68,0.25)" strokeWidth="0.3" strokeDasharray="2 1" style={{ animation: 'lavaFlow 4s linear infinite', animationDelay: '1s' }} />
+          <path d="M 87,54 Q 85,57 86,60 Q 87,63 85,66" fill="none" stroke="rgba(251,146,60,0.2)" strokeWidth="0.35" strokeDasharray="2 1" style={{ animation: 'lavaFlow 3.5s linear infinite', animationDelay: '0.5s' }} />
+        </svg>
+
+        {terrainRegions.map((region, idx) => (
+          <div key={`rl_${idx}`} className="font-cinzel" style={{
+            position: 'absolute',
+            left: `${region.labelX}%`, top: `${region.labelY}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 1,
+            fontSize: '0.75rem', fontWeight: 700,
+            color: region.stroke.replace('0.2', '0.35'),
+            textTransform: 'uppercase',
+            letterSpacing: '0.15em',
+            textShadow: `0 0 10px ${region.fill}, 0 2px 6px rgba(0,0,0,0.8)`,
+            opacity: 0.6,
+          }}>
+            {region.name}
+          </div>
+        ))}
+
+        {steamPositions.map((sp, idx) => (
+          <div key={`steam_${idx}`} style={{
+            position: 'absolute',
+            left: `${sp.x}%`, top: `${sp.y}%`,
+            width: 8, height: 8,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(200,220,255,0.15), transparent)',
+            pointerEvents: 'none', zIndex: 2,
+            animation: `steamRise 4s ease-out infinite`,
+            animationDelay: `${sp.delay}s`,
+          }} />
+        ))}
+
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {pathConnections.map(([from, to], idx) => {
             const a = locationPositions[from];
@@ -496,7 +597,19 @@ export default function WorldMap() {
                     />
                   </svg>
                 )}
+                {isUnlocked && portalLocations.includes(loc.id) && (
                 <div style={{
+                  position: 'absolute', top: -4, left: -4,
+                  width: 70, height: 70,
+                  borderRadius: '50%',
+                  border: `2px solid ${icon.color}60`,
+                  boxShadow: `0 0 12px ${icon.glow}, 0 0 24px ${icon.glow}, inset 0 0 8px ${icon.glow}`,
+                  animation: 'portalSpin 3s linear infinite',
+                  opacity: 0.7,
+                  pointerEvents: 'none',
+                }} />
+              )}
+              <div style={{
                   position: 'absolute', top: 3, left: 3,
                   width: 56, height: 56,
                   borderRadius: '50%',
@@ -735,25 +848,25 @@ export default function WorldMap() {
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
             }}>
               <div style={{
-                width: 48, height: 48, overflow: 'hidden',
+                width: 100, height: 100, overflow: 'hidden',
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
               }}>
                 <SpriteAnimation
                   spriteData={getPlayerSprite(hero.classId, hero.raceId)}
                   animation={isWalking ? 'walk' : 'idle'}
                   flip={isWalking && flipX}
-                  scale={0.48}
+                  scale={1}
                   speed={isWalking ? 100 : (150 + idx * 30)}
                 />
               </div>
               <div style={{
-                width: 16, height: 4, borderRadius: '50%', margin: '-1px auto 0',
+                width: 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
               }} />
               <div style={{
                 textAlign: 'center',
-                fontSize: '0.45rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
                 textShadow: '0 1px 3px rgba(0,0,0,0.9)', marginTop: 1,
               }}>{hero.name}</div>
             </div>
@@ -1433,6 +1546,43 @@ export default function WorldMap() {
           </div>
         </div>
 
+        <div style={{
+          position: 'absolute', top: 80, left: 12, zIndex: 14,
+          background: 'rgba(8,12,28,0.85)',
+          border: '1px solid rgba(110,231,183,0.15)',
+          borderRadius: 10, padding: '10px 12px',
+          backdropFilter: 'blur(4px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          minWidth: 160,
+        }}>
+          <div className="font-cinzel" style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.05em' }}>
+            WAR PARTY
+          </div>
+          {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map((hero) => {
+            const heroCls = classDefinitions[hero.classId];
+            const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
+            const hpPercent = heroStats ? Math.round((hero.currentHealth / heroStats.health) * 100) : 100;
+            return (
+              <div key={`panel_${hero.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0 }}>
+                  <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1} speed={180} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {hero.name}
+                  </div>
+                  <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>
+                    Lv.{hero.level} {heroCls?.name}
+                  </div>
+                  <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 3, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${hpPercent}%`, background: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444', borderRadius: 2, transition: 'width 0.3s' }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {showWarParty && (
           <div style={{
             position: 'absolute', top: 70, right: 12, zIndex: 16,
@@ -1996,25 +2146,6 @@ export default function WorldMap() {
           <div style={{
             display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero) => (
-                <div key={hero.id} style={{
-                  width: 36, height: 36, borderRadius: '50%', overflow: 'hidden',
-                  border: '2px solid var(--accent)',
-                  boxShadow: '0 0 8px rgba(110,231,183,0.4), inset 0 0 6px rgba(110,231,183,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(14,22,48,0.8)',
-                  position: 'relative',
-                }}>
-                  <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)' }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.42} speed={180} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ width: 1, height: 28, background: 'rgba(255,215,0,0.2)' }} />
-
             <div style={{
               display: 'flex', alignItems: 'center', gap: 4,
               background: 'rgba(255,215,0,0.08)', borderRadius: 8, padding: '4px 10px',
@@ -2073,6 +2204,31 @@ export default function WorldMap() {
           @keyframes eventPulse {
             0%, 100% { transform: scale(1); opacity: 0.7; }
             50% { transform: scale(1.15); opacity: 1; }
+          }
+          @keyframes lavaFlow {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -20; }
+          }
+          @keyframes steamRise {
+            0% { opacity: 0; transform: translateY(0) scale(0.5); }
+            20% { opacity: 0.15; }
+            60% { opacity: 0.1; }
+            100% { opacity: 0; transform: translateY(-30px) scale(1.5); }
+          }
+          @keyframes portalSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes dayNightCycle {
+            0% { background: rgba(255,180,80,0.05); }
+            25% { background: transparent; }
+            50% { background: rgba(255,180,50,0.08); }
+            75% { background: rgba(20,30,80,0.15); }
+            100% { background: rgba(255,180,80,0.05); }
+          }
+          @keyframes regionPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
           }
         `}</style>
       </div>
