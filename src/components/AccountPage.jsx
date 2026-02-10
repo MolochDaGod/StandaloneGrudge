@@ -382,6 +382,7 @@ function HeroDetailPanel({ hero, onClose }) {
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [hoveredItemId, setHoveredItemId] = useState(null);
+  const [hoveredSkill, setHoveredSkill] = useState(null);
 
   const cls = classDefinitions[hero.classId];
   const race = hero.raceId ? raceDefinitions[hero.raceId] : null;
@@ -1130,15 +1131,16 @@ function HeroDetailPanel({ hero, onClose }) {
         {tab === 'skills' && tree && (() => {
           const allSkills = [];
           const skillPositions = {};
-          const NODE_W = 90;
-          const NODE_H = 80;
-          const TIER_GAP = 110;
-          const SKILL_GAP = 110;
+          const NODE_W = 80;
+          const NODE_H = 72;
+          const TIER_GAP = 100;
+          const SKILL_GAP = 95;
+          const maxCols = tree.tiers.reduce((m, t) => Math.max(m, t.skills.length), 0);
 
           tree.tiers.forEach((tier, tierIdx) => {
-            const tierY = tierIdx * TIER_GAP + 40;
+            const tierY = tierIdx * TIER_GAP + 36;
             const totalWidth = tier.skills.length * SKILL_GAP;
-            const startX = Math.max(0, (Math.max(3, tree.tiers.reduce((m, t) => Math.max(m, t.skills.length), 0)) * SKILL_GAP - totalWidth) / 2);
+            const startX = Math.max(0, (Math.max(3, maxCols) * SKILL_GAP - totalWidth) / 2);
             tier.skills.forEach((skill, skillIdx) => {
               const x = startX + skillIdx * SKILL_GAP + SKILL_GAP / 2;
               const y = tierY;
@@ -1159,154 +1161,324 @@ function HeroDetailPanel({ hero, onClose }) {
           });
 
           const posValues = Object.values(skillPositions);
-          const maxX = posValues.length > 0 ? Math.max(...posValues.map(p => p.x)) + NODE_W : 340;
+          const treeW = Math.max(3, maxCols) * SKILL_GAP + 20;
           const maxY = posValues.length > 0 ? Math.max(...posValues.map(p => p.y)) + NODE_H + 20 : 100;
-          const svgW = Math.max(maxX, 340);
+
+          const effectTypeLabel = (t) => {
+            const labels = { bleed: '🩸 Bleed', burn: '🔥 Burn', poison: '☠️ Poison', stun: '💫 Stun', sleep: '😴 Sleep', confuse: '🌀 Confuse', lower_attack: '📉 Lower Attack', lower_defense: '📉 Lower Defense', dot: '💀 DOT', extra_attack: '⚡ Bonus Attack', random_debuff: '🎲 Random Debuff', multi_dot: '💢 Multi-DOT' };
+            return labels[t] || t;
+          };
+
+          const hSkill = hoveredSkill;
+          const hCurrent = hSkill ? (heroSkills[hSkill.id] || 0) : 0;
+          const hMaxed = hSkill ? hCurrent >= hSkill.maxPoints : false;
+          const hUnlocked = hSkill ? hCurrent > 0 : false;
 
           return (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h4 className="font-cinzel" style={{ color: tree.color, fontSize: '0.9rem', margin: 0 }}>
-                  {tree.className} Skill Tree
-                </h4>
-                <div style={{
-                  background: (hero.skillPoints || 0) > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(110,231,183,0.1)',
-                  border: `1px solid ${(hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)'}`,
-                  borderRadius: 6, padding: '3px 10px', fontSize: '0.8rem',
-                  color: (hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)', fontWeight: 700,
-                }}>
-                  {hero.skillPoints || 0} SP
+            <div style={{ display: 'flex', gap: 0 }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <h4 className="font-cinzel" style={{ color: tree.color, fontSize: '0.85rem', margin: 0 }}>
+                    {tree.className} Skills
+                  </h4>
+                  <div style={{
+                    background: (hero.skillPoints || 0) > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(110,231,183,0.1)',
+                    border: `1px solid ${(hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)'}`,
+                    borderRadius: 6, padding: '2px 8px', fontSize: '0.7rem',
+                    color: (hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)', fontWeight: 700,
+                  }}>
+                    {hero.skillPoints || 0} SP
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ position: 'relative', width: treeW, minHeight: maxY }}>
+                    <svg width={treeW} height={maxY} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                      <defs>
+                        <filter id="glow">
+                          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                      </defs>
+                      {connections.map((conn, i) => {
+                        const fx = conn.from.x;
+                        const fy = conn.from.y + NODE_H / 2 + 4;
+                        const tx = conn.to.x;
+                        const ty = conn.to.y - NODE_H / 2 + 14;
+                        const midY = (fy + ty) / 2;
+                        return (
+                          <g key={i}>
+                            <path
+                              d={`M ${fx} ${fy} C ${fx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`}
+                              fill="none"
+                              stroke={conn.complete ? tree.color : conn.active ? 'rgba(255,215,0,0.5)' : 'rgba(80,80,100,0.3)'}
+                              strokeWidth={conn.complete ? 3 : 2}
+                              strokeDasharray={conn.active || conn.complete ? 'none' : '4 4'}
+                              filter={conn.complete ? 'url(#glow)' : 'none'}
+                            />
+                            {conn.complete && (
+                              <circle cx={tx} cy={ty} r={3} fill={tree.color} filter="url(#glow)" />
+                            )}
+                          </g>
+                        );
+                      })}
+                    </svg>
+
+                    {tree.tiers.map((tier, tierIdx) => {
+                      const tierLocked = hero.level < tier.requiredLevel;
+                      const tierY = tierIdx * TIER_GAP + 36;
+                      return (
+                        <React.Fragment key={tierIdx}>
+                          <div style={{
+                            position: 'absolute', top: tierY - 24, left: 0, right: 0,
+                            fontSize: '0.5rem', color: tierLocked ? 'rgba(120,120,140,0.5)' : 'rgba(212,169,106,0.6)',
+                            fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5,
+                            textAlign: 'center',
+                          }}>
+                            {tier.name}
+                            {tierLocked && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>Lv.{tier.requiredLevel}</span>}
+                          </div>
+
+                          {tier.skills.map(skill => {
+                            const pos = skillPositions[skill.id];
+                            const available = isSkillAvailable(skill, tier);
+                            const unlocked = (heroSkills[skill.id] || 0) > 0;
+                            const maxed = (heroSkills[skill.id] || 0) >= skill.maxPoints;
+                            const current = heroSkills[skill.id] || 0;
+                            const locked = tierLocked || (skill.requires && !(heroSkills[skill.requires] > 0));
+                            const isHovered = hoveredSkill?.id === skill.id;
+
+                            const borderColor = isHovered ? '#fff' : maxed ? tree.color : unlocked ? 'var(--gold)' : available ? 'var(--accent)' : 'rgba(60,60,80,0.6)';
+                            const bgColor = maxed
+                              ? `radial-gradient(circle at 50% 30%, ${tree.color}30, rgba(14,22,48,0.9))`
+                              : unlocked
+                                ? 'radial-gradient(circle at 50% 30%, rgba(255,215,0,0.12), rgba(14,22,48,0.85))'
+                                : 'radial-gradient(circle at 50% 30%, rgba(42,49,80,0.4), rgba(14,22,48,0.9))';
+
+                            return (
+                              <div key={skill.id}
+                                onClick={() => available && unlockHeroSkill(hero.id, skill.id)}
+                                onMouseEnter={() => setHoveredSkill(skill)}
+                                onMouseLeave={() => setHoveredSkill(null)}
+                                style={{
+                                  position: 'absolute',
+                                  left: pos.x - NODE_W / 2,
+                                  top: pos.y - NODE_H / 2 + 14,
+                                  width: NODE_W,
+                                  height: NODE_H,
+                                  background: bgColor,
+                                  border: `2px solid ${borderColor}`,
+                                  borderRadius: 10,
+                                  cursor: available ? 'pointer' : 'default',
+                                  opacity: locked ? 0.35 : 1,
+                                  transition: 'all 0.2s ease',
+                                  display: 'flex', flexDirection: 'column',
+                                  alignItems: 'center', justifyContent: 'center',
+                                  boxShadow: isHovered ? `0 0 14px ${tree.color}50` : maxed ? `0 0 10px ${tree.color}35, inset 0 0 6px ${tree.color}12` : unlocked ? '0 0 6px rgba(255,215,0,0.12)' : 'none',
+                                  zIndex: isHovered ? 5 : 1,
+                                  transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+                                }}
+                              >
+                                <div style={{
+                                  fontSize: '1.2rem', lineHeight: 1,
+                                  filter: maxed ? `drop-shadow(0 0 5px ${tree.color})` : unlocked ? 'drop-shadow(0 0 3px rgba(255,215,0,0.4))' : 'none',
+                                }}>{skill.icon}</div>
+                                <div style={{
+                                  fontWeight: 700, fontSize: '0.55rem', marginTop: 2,
+                                  color: maxed ? tree.color : unlocked ? 'var(--gold)' : 'var(--text)',
+                                  textAlign: 'center', lineHeight: 1.1,
+                                  maxWidth: NODE_W - 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>{skill.name}</div>
+                                <div style={{
+                                  marginTop: 2, fontSize: '0.5rem', fontWeight: 700, fontFamily: 'monospace',
+                                  color: maxed ? tree.color : unlocked ? '#fbbf24' : 'var(--muted)',
+                                  background: 'rgba(0,0,0,0.35)', borderRadius: 5, padding: '0px 5px',
+                                }}>{current}/{skill.maxPoints}</div>
+                                {maxed && (
+                                  <div style={{
+                                    position: 'absolute', top: -4, right: -4,
+                                    background: `linear-gradient(135deg, ${tree.color}, ${tree.color}cc)`,
+                                    borderRadius: '50%', width: 14, height: 14,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.5rem', color: '#fff', fontWeight: 900,
+                                    boxShadow: `0 0 6px ${tree.color}60`,
+                                  }}>✓</div>
+                                )}
+                                {skill.grantedAbility && (
+                                  <div style={{
+                                    position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
+                                    background: unlocked ? 'rgba(139,92,246,0.8)' : 'rgba(80,80,100,0.4)',
+                                    borderRadius: 3, padding: '0px 3px', fontSize: '0.35rem',
+                                    color: '#fff', fontWeight: 700, whiteSpace: 'nowrap',
+                                    letterSpacing: 0.5,
+                                  }}>ABILITY</div>
+                                )}
+                                {skill.passive && (
+                                  <div style={{
+                                    position: 'absolute', top: -3, left: -3,
+                                    background: 'rgba(34,197,94,0.7)',
+                                    borderRadius: 3, padding: '0px 3px', fontSize: '0.35rem',
+                                    color: '#fff', fontWeight: 700, whiteSpace: 'nowrap',
+                                  }}>PASSIVE</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }}>
-                <svg width={svgW} height={maxY} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                  <defs>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                  </defs>
-                  {connections.map((conn, i) => {
-                    const fx = conn.from.x;
-                    const fy = conn.from.y + NODE_H / 2 + 8;
-                    const tx = conn.to.x;
-                    const ty = conn.to.y - NODE_H / 2 + 18;
-                    const midY = (fy + ty) / 2;
-                    return (
-                      <g key={i}>
-                        <path
-                          d={`M ${fx} ${fy} C ${fx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`}
-                          fill="none"
-                          stroke={conn.complete ? tree.color : conn.active ? 'rgba(255,215,0,0.5)' : 'rgba(80,80,100,0.3)'}
-                          strokeWidth={conn.complete ? 3 : 2}
-                          strokeDasharray={conn.active || conn.complete ? 'none' : '4 4'}
-                          filter={conn.complete ? 'url(#glow)' : 'none'}
-                        />
-                        {conn.complete && (
-                          <circle cx={tx} cy={ty} r={4} fill={tree.color} filter="url(#glow)" />
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                <div style={{ position: 'relative', width: svgW, minHeight: maxY }}>
-                  {tree.tiers.map((tier, tierIdx) => {
-                    const tierLocked = hero.level < tier.requiredLevel;
-                    const tierY = tierIdx * TIER_GAP + 40;
-                    return (
-                      <React.Fragment key={tierIdx}>
-                        <div style={{
-                          position: 'absolute', top: tierY - 28, left: 0, right: 0,
-                          fontSize: '0.55rem', color: tierLocked ? 'rgba(120,120,140,0.5)' : 'rgba(212,169,106,0.7)',
-                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2,
-                          textAlign: 'center',
-                        }}>
-                          {tier.name}
-                          {tierLocked && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>Lv.{tier.requiredLevel}</span>}
+              <div style={{
+                width: 180, flexShrink: 0, marginLeft: 6,
+                background: 'rgba(14,22,48,0.6)',
+                border: '1px solid rgba(60,65,90,0.4)',
+                borderRadius: 8, padding: 10,
+                alignSelf: 'flex-start',
+                position: 'sticky', top: 0,
+                minHeight: 200,
+              }}>
+                {!hSkill ? (
+                  <div style={{ textAlign: 'center', padding: '30px 5px' }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: 8, opacity: 0.3 }}>🌳</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+                      Hover over a skill to see details
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <div style={{
+                        fontSize: '1.4rem', width: 32, height: 32, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: hMaxed ? `${tree.color}25` : hUnlocked ? 'rgba(255,215,0,0.1)' : 'rgba(42,49,80,0.4)',
+                        border: `2px solid ${hMaxed ? tree.color : hUnlocked ? 'var(--gold)' : 'var(--border)'}`,
+                        borderRadius: 8,
+                      }}>{hSkill.icon}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.7rem', color: hMaxed ? tree.color : hUnlocked ? 'var(--gold)' : 'var(--text)' }}>
+                          {hSkill.name}
                         </div>
+                        <div style={{ fontSize: '0.5rem', color: 'var(--muted)', fontFamily: 'monospace', fontWeight: 700 }}>
+                          {hCurrent}/{hSkill.maxPoints}
+                          {hSkill.passive && <span style={{ color: '#22c55e', marginLeft: 4 }}>PASSIVE</span>}
+                        </div>
+                      </div>
+                    </div>
 
-                        {tier.skills.map(skill => {
-                          const pos = skillPositions[skill.id];
-                          const available = isSkillAvailable(skill, tier);
-                          const unlocked = (heroSkills[skill.id] || 0) > 0;
-                          const maxed = (heroSkills[skill.id] || 0) >= skill.maxPoints;
-                          const current = heroSkills[skill.id] || 0;
-                          const locked = tierLocked || (skill.requires && !(heroSkills[skill.requires] > 0));
+                    <div style={{ fontSize: '0.55rem', color: 'var(--muted)', lineHeight: 1.4, marginBottom: 6 }}>
+                      {hSkill.description}
+                    </div>
 
-                          const borderColor = maxed ? tree.color : unlocked ? 'var(--gold)' : available ? 'var(--accent)' : 'rgba(60,60,80,0.6)';
-                          const bgColor = maxed
-                            ? `radial-gradient(circle at 50% 30%, ${tree.color}30, rgba(14,22,48,0.9))`
-                            : unlocked
-                              ? 'radial-gradient(circle at 50% 30%, rgba(255,215,0,0.12), rgba(14,22,48,0.85))'
-                              : 'radial-gradient(circle at 50% 30%, rgba(42,49,80,0.4), rgba(14,22,48,0.9))';
+                    <div style={{
+                      background: 'rgba(110,231,183,0.06)', border: '1px solid rgba(110,231,183,0.15)',
+                      borderRadius: 5, padding: '3px 6px', marginBottom: 6,
+                      fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 600,
+                    }}>
+                      {hSkill.effect}
+                    </div>
 
-                          return (
-                            <div key={skill.id}
-                              onClick={() => available && unlockHeroSkill(hero.id, skill.id)}
-                              title={`${skill.name}\n${skill.description}\n${skill.effect}`}
-                              style={{
-                                position: 'absolute',
-                                left: pos.x - NODE_W / 2,
-                                top: pos.y - NODE_H / 2 + 18,
-                                width: NODE_W,
-                                height: NODE_H,
-                                background: bgColor,
-                                border: `2px solid ${borderColor}`,
-                                borderRadius: 12,
-                                cursor: available ? 'pointer' : 'default',
-                                opacity: locked ? 0.35 : 1,
-                                transition: 'all 0.25s ease',
-                                display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center',
-                                boxShadow: maxed ? `0 0 12px ${tree.color}40, inset 0 0 8px ${tree.color}15` : unlocked ? '0 0 8px rgba(255,215,0,0.15)' : 'none',
-                                zIndex: 1,
-                              }}
-                              onMouseEnter={e => { if (available) e.currentTarget.style.transform = 'scale(1.08)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-                            >
-                              <div style={{
-                                fontSize: '1.4rem', lineHeight: 1,
-                                filter: maxed ? `drop-shadow(0 0 6px ${tree.color})` : unlocked ? 'drop-shadow(0 0 4px rgba(255,215,0,0.4))' : 'none',
-                              }}>{skill.icon}</div>
-                              <div style={{
-                                fontWeight: 700, fontSize: '0.6rem', marginTop: 3,
-                                color: maxed ? tree.color : unlocked ? 'var(--gold)' : 'var(--text)',
-                                textAlign: 'center', lineHeight: 1.1,
-                                maxWidth: NODE_W - 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              }}>{skill.name}</div>
-                              <div style={{
-                                marginTop: 2, fontSize: '0.55rem', fontWeight: 700, fontFamily: 'monospace',
-                                color: maxed ? tree.color : unlocked ? '#fbbf24' : 'var(--muted)',
-                                background: 'rgba(0,0,0,0.35)', borderRadius: 6, padding: '0px 6px',
-                              }}>{current}/{skill.maxPoints}</div>
-                              {maxed && (
-                                <div style={{
-                                  position: 'absolute', top: -5, right: -5,
-                                  background: `linear-gradient(135deg, ${tree.color}, ${tree.color}cc)`,
-                                  borderRadius: '50%', width: 16, height: 16,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.55rem', color: '#fff', fontWeight: 900,
-                                  boxShadow: `0 0 8px ${tree.color}60`,
-                                }}>✓</div>
-                              )}
-                              {skill.grantedAbility && (
-                                <div style={{
-                                  position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
-                                  background: unlocked ? 'rgba(139,92,246,0.8)' : 'rgba(80,80,100,0.4)',
-                                  borderRadius: 4, padding: '0px 4px', fontSize: '0.4rem',
-                                  color: '#fff', fontWeight: 700, whiteSpace: 'nowrap',
-                                  letterSpacing: 0.5,
-                                }}>ABILITY</div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
+                    {hSkill.tier && (
+                      <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginBottom: 4 }}>
+                        <span style={{ color: 'var(--gold)' }}>{hSkill.tier.name}</span>
+                      </div>
+                    )}
+
+                    {hSkill.requires && (
+                      <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginBottom: 4 }}>
+                        Requires: <span style={{ color: (heroSkills[hSkill.requires] || 0) > 0 ? '#22c55e' : 'var(--danger)' }}>
+                          {allSkills.find(s => s.id === hSkill.requires)?.name || hSkill.requires}
+                        </span>
+                      </div>
+                    )}
+
+                    {hSkill.bonuses && Object.keys(hSkill.bonuses).length > 0 && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.5rem', fontWeight: 700, color: 'var(--gold)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Bonuses</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                          {Object.entries(hSkill.bonuses).map(([k, v]) => (
+                            <span key={k} style={{
+                              fontSize: '0.5rem', padding: '1px 4px', borderRadius: 3,
+                              background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.15)',
+                              color: 'var(--gold)',
+                            }}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {hSkill.procEffect && (
+                      <div style={{ marginBottom: 6 }}>
+                        <div style={{ fontSize: '0.5rem', fontWeight: 700, color: '#22c55e', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Proc Effect</div>
+                        <div style={{
+                          background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)',
+                          borderRadius: 4, padding: '3px 5px', fontSize: '0.5rem', color: 'var(--text)',
+                        }}>
+                          {effectTypeLabel(hSkill.procEffect.type)}
+                          {hSkill.procEffect.damage && <span style={{ color: 'var(--danger)' }}> {(hSkill.procEffect.damage * 100).toFixed(0)}%/turn</span>}
+                          {hSkill.procEffect.duration && <span style={{ color: 'var(--muted)' }}> {hSkill.procEffect.duration}T</span>}
+                          {hSkill.procEffect.percent && <span style={{ color: '#f59e0b' }}> {(hSkill.procEffect.percent * 100).toFixed(0)}%</span>}
+                          {hSkill.procEffect.chance && <span style={{ color: 'var(--muted)' }}> ({(hSkill.procEffect.chance * 100).toFixed(0)}% chance)</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    {hSkill.grantedAbility && (
+                      <div style={{
+                        background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+                        borderRadius: 5, padding: 5, marginTop: 4,
+                      }}>
+                        <div style={{ fontSize: '0.5rem', fontWeight: 700, color: '#a78bfa', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                          Granted Ability
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                          <span style={{ fontSize: '0.9rem' }}>{hSkill.grantedAbility.icon}</span>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#a78bfa' }}>{hSkill.grantedAbility.name}</span>
+                        </div>
+                        <div style={{ fontSize: '0.5rem', color: 'var(--muted)', lineHeight: 1.3, marginBottom: 4 }}>
+                          {hSkill.grantedAbility.description}
+                        </div>
+                        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                          {hSkill.grantedAbility.damage > 0 && (
+                            <span style={{ fontSize: '0.45rem', padding: '1px 3px', borderRadius: 2, background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+                              {hSkill.grantedAbility.damage}x DMG
+                            </span>
+                          )}
+                          {hSkill.grantedAbility.manaCost > 0 && (
+                            <span style={{ fontSize: '0.45rem', padding: '1px 3px', borderRadius: 2, background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>
+                              {hSkill.grantedAbility.manaCost} MP
+                            </span>
+                          )}
+                          {hSkill.grantedAbility.staminaCost > 0 && (
+                            <span style={{ fontSize: '0.45rem', padding: '1px 3px', borderRadius: 2, background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
+                              {hSkill.grantedAbility.staminaCost} SP
+                            </span>
+                          )}
+                          {hSkill.grantedAbility.cooldown > 0 && (
+                            <span style={{ fontSize: '0.45rem', padding: '1px 3px', borderRadius: 2, background: 'rgba(100,100,120,0.15)', color: 'var(--muted)' }}>
+                              {hSkill.grantedAbility.cooldown}T CD
+                            </span>
+                          )}
+                          <span style={{ fontSize: '0.45rem', padding: '1px 3px', borderRadius: 2, background: 'rgba(100,100,120,0.1)', color: 'var(--muted)' }}>
+                            {hSkill.grantedAbility.target}
+                          </span>
+                        </div>
+                        {hSkill.grantedAbility.effect && (
+                          <div style={{ marginTop: 3, fontSize: '0.45rem', color: '#a78bfa' }}>
+                            {hSkill.grantedAbility.effect.type && effectTypeLabel(hSkill.grantedAbility.effect.type)}
+                            {hSkill.grantedAbility.effect.damage && <span style={{ color: 'var(--danger)' }}> {(hSkill.grantedAbility.effect.damage * 100).toFixed(0)}%/turn</span>}
+                            {hSkill.grantedAbility.effect.duration && <span style={{ color: 'var(--muted)' }}> {hSkill.grantedAbility.effect.duration}T</span>}
+                            {hSkill.grantedAbility.effect.flat && <span style={{ color: 'var(--accent)' }}> +{hSkill.grantedAbility.effect.flat}</span>}
+                            {hSkill.grantedAbility.effect.multiplier && <span style={{ color: 'var(--accent)' }}> x{hSkill.grantedAbility.effect.multiplier}</span>}
+                            {hSkill.grantedAbility.effect.percent && <span style={{ color: '#f59e0b' }}> {(hSkill.grantedAbility.effect.percent * 100).toFixed(0)}%</span>}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
