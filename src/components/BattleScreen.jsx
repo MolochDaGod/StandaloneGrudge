@@ -63,9 +63,9 @@ const critEffects = {
   },
   melee: {
     src: '/effects/slash_crit.jpg',
-    frames: 21, cols: 7, rows: 3,
-    width: 1024, height: 439,
-    frameW: 146, frameH: 146,
+    frames: 18, cols: 6, rows: 3,
+    width: 6144, height: 3072,
+    frameW: 1024, frameH: 1024,
   },
 };
 
@@ -174,6 +174,40 @@ function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 })
   );
 }
 
+function ThunderProjectileSprite() {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.thunderProjectile2;
+  const displaySize = 48;
+  const cols = sprite.cols;
+  const frameW = sprite.frameW;
+  const scaleX = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % sprite.frames;
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  return (
+    <div style={{ width: displaySize, height: displaySize, overflow: 'hidden' }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${displaySize}px`,
+        backgroundPosition: `-${col * displaySize}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 8px #facc15) drop-shadow(0 0 16px #f59e0b)',
+      }} />
+    </div>
+  );
+}
+
 function MiniBar({ current, max, color, height = 5, width = 60 }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -233,6 +267,12 @@ function isRangedUnit(unit) {
   return false;
 }
 
+function isElectricAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('lightning') || n.includes('thunder') || n.includes('chain light') || n.includes('storm') || n.includes('tempest');
+}
+
 function getProjectileColor(unit, abilityName) {
   if (!abilityName) return '#e2e8f0';
   const n = abilityName.toLowerCase();
@@ -261,10 +301,23 @@ function getBeamTrail(unit, abilityName) {
   return beamTrails.red;
 }
 
-function getHitEffect(unit, abilityName) {
+function getHitEffectByColor(color) {
+  if (!color) return effectSprites.hitEffect1;
+  const c = color.toLowerCase();
+  if (c.includes('22c55e') || c === '#22c55e' || c === 'green') return effectSprites.hitEffect3;
+  if (c.includes('38bdf8') || c === '#38bdf8' || c.includes('3b82f6') || c === 'blue') return effectSprites.hitEffect2;
+  return effectSprites.hitEffect1;
+}
+
+function getHitEffect(unit, abilityName, isRanged) {
   const classId = unit.classId || '';
   const fx = getAbilityEffect(classId, abilityName || '');
-  return fx.effect ? effectSprites[fx.effect] : effectSprites.weaponHit;
+  if (fx.effect) return effectSprites[fx.effect];
+  if (isRanged) {
+    const color = getProjectileColor(unit, abilityName);
+    return getHitEffectByColor(color);
+  }
+  return effectSprites.hitEffect1;
 }
 
 export default function BattleScreen() {
@@ -487,7 +540,7 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             addParticle('hit', target.position.x, target.position.y, '#94a3b8');
-            const hfx = getHitEffect(attacker, abilityName);
+            const hfx = getHitEffect(attacker, abilityName, false);
             if (hfx && target.position) {
               const hid = Date.now() + Math.random();
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
@@ -545,6 +598,7 @@ export default function BattleScreen() {
               beamSrc,
               angle,
               phase: 'start',
+              isElectric: isElectricAbility(abilityName),
             }]);
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
@@ -557,7 +611,7 @@ export default function BattleScreen() {
               if (!evaded) {
                 setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
                 addParticle('hit', target.position.x, target.position.y, '#ef4444');
-                const hfx = getHitEffect(attacker, abilityName);
+                const hfx = getHitEffect(attacker, abilityName, true);
                 if (hfx && target.position) {
                   const hid = Date.now() + Math.random();
                   setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
@@ -608,7 +662,7 @@ export default function BattleScreen() {
             if (!evaded) {
               setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
               if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
-              const hfx = getHitEffect(attacker, abilityName);
+              const hfx = getHitEffect(attacker, abilityName, false);
               if (hfx && target.position) {
                 const hid = Date.now() + Math.random();
                 setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
@@ -645,7 +699,7 @@ export default function BattleScreen() {
             if (!evaded) {
               setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
               if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
-              const hfx = getHitEffect(attacker, abilityName);
+              const hfx = getHitEffect(attacker, abilityName, false);
               if (hfx && target.position) {
                 const hid = Date.now() + Math.random();
                 setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
@@ -677,7 +731,7 @@ export default function BattleScreen() {
       }
     } else {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
-      const hfx = getHitEffect(attacker, abilityName);
+      const hfx = getHitEffect(attacker, abilityName, false);
       if (healAmt && target) {
         showHealFloat(target, healAmt);
         if (target.position) addParticle('heal', target.position.x, target.position.y);
@@ -1037,6 +1091,8 @@ export default function BattleScreen() {
                   transform: 'rotate(10deg)',
                 }} />
               </div>
+            ) : p.isElectric ? (
+              <ThunderProjectileSprite />
             ) : p.beamSrc ? (
               <img src={p.beamSrc} alt="" style={{
                 width: 120, height: 20,
