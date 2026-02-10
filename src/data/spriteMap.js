@@ -216,7 +216,6 @@ const spriteSheets = {
     folder: 'demon-sword',
     frameWidth: 64,
     frameHeight: 64,
-    blendMode: 'screen',
     idle: { src: '/sprites/demon-sword/idle.png', frames: 13 },
     walk: { src: '/sprites/demon-sword/walk.png', frames: 7 },
     attack1: { src: '/sprites/demon-sword/attack1.png', frames: 15 },

@@ -22,6 +22,22 @@ const locationBackgrounds = {
   ruins_of_ashenmoor: '/backgrounds/volcanic_field.png',
   infernal_forge: '/backgrounds/infernal_arena.png',
   dreadmaw_canyon: '/backgrounds/infernal_arena.png',
+  mystic_grove: '/map_nodes/mystic_grove.png',
+  whispering_caverns: '/map_nodes/whispering_caverns.png',
+  haunted_marsh: '/map_nodes/haunted_marsh.png',
+  crystal_caves: '/map_nodes/crystal_caves.png',
+  thornwood_pass: '/map_nodes/thornwood_pass.png',
+  sunken_temple: '/map_nodes/sunken_temple.png',
+  iron_peaks: '/map_nodes/iron_peaks.png',
+  shadow_forest: '/map_nodes/shadow_forest.png',
+  frozen_tundra: '/map_nodes/frozen_tundra.png',
+  blight_hollow: '/map_nodes/blight_hollow.png',
+  stormspire_peak: '/map_nodes/stormspire_peak.png',
+  corrupted_spire: '/map_nodes/corrupted_spire.png',
+  abyssal_depths: '/map_nodes/abyssal_depths.png',
+  ashen_battlefield: '/map_nodes/ashen_battlefield.png',
+  windswept_ridge: '/map_nodes/windswept_ridge.png',
+  void_threshold: '/map_nodes/void_threshold.png',
 };
 
 const zoneGradients = {
@@ -1938,21 +1954,57 @@ export default function BattleScreen() {
       )}
 
       <div style={{
-          flex: '0 0 140px', height: 140,
-          backgroundImage: 'url(/images/battle-panel-bg.png)',
-          backgroundSize: 'cover', backgroundPosition: 'center bottom',
+          flex: '0 0 auto',
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
-          padding: '8px 10px', zIndex: 10,
-          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          zIndex: 10,
+          display: 'flex', flexDirection: 'row',
           transition: 'border-color 0.3s',
           position: 'relative',
           overflow: 'hidden',
+          background: 'rgba(8,12,24,0.95)',
         }}>
           <div style={{
-            position: 'absolute', inset: 0,
-            background: (!isVictory && !isDefeat && isPlayerTurn) ? 'rgba(14,22,48,0.65)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.7)' : 'rgba(14,22,48,0.6)'),
-            transition: 'background 0.3s', pointerEvents: 'none',
-          }} />
+            flex: '0 0 140px', width: 140,
+            padding: '6px 6px',
+            display: 'flex', flexDirection: 'column', gap: 3,
+            justifyContent: 'center',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            overflow: 'hidden',
+          }}>
+            {playerTeam.map(unit => {
+              const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
+              const hpColor = !unit.alive ? '#555' : hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
+              const grudgePct = Math.min(100, unit.grudge || 0);
+              return (
+                <div key={unit.id} style={{ opacity: unit.alive ? 1 : 0.4 }}>
+                  <div style={{
+                    fontSize: '0.5rem', fontWeight: 700,
+                    color: unit.id === currentUnitId ? 'var(--accent)' : '#93c5fd',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    marginBottom: 1,
+                  }}>{unit.name}</div>
+                  <MiniBar current={unit.health} max={unit.maxHealth} color={hpColor} height={5} width={128} />
+                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
+                    <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={3} width={62} />
+                    <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={3} width={62} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
+                    <MiniBar current={grudgePct} max={100} color="#dc2626" height={3} width={grudgePct >= 100 ? 96 : 128} />
+                    {grudgePct >= 100 && (
+                      <span style={{ fontSize: '0.4rem', color: '#ef4444', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{
+            flex: 1, minWidth: 0,
+            padding: '6px 8px',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            position: 'relative',
+          }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
           {isVictory || isDefeat ? (
             <div style={{
@@ -2217,6 +2269,41 @@ export default function BattleScreen() {
               {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
             </div>
           )}
+          </div>
+          </div>
+
+          <div style={{
+            flex: '0 0 140px', width: 140,
+            padding: '6px 6px',
+            display: 'flex', flexDirection: 'column', gap: 3,
+            justifyContent: 'center',
+            borderLeft: '1px solid rgba(255,255,255,0.06)',
+            overflow: 'hidden',
+          }}>
+            {enemyTeam.map(unit => {
+              const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
+              const hpColor = !unit.alive ? '#555' : hpPct > 60 ? '#ef4444' : hpPct > 30 ? '#f59e0b' : '#22c55e';
+              return (
+                <div key={unit.id} style={{ opacity: unit.alive ? 1 : 0.4 }}>
+                  <div style={{
+                    fontSize: '0.5rem', fontWeight: 700,
+                    color: unit.id === currentUnitId ? 'var(--danger)' : '#fca5a5',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    marginBottom: 1, textAlign: 'right',
+                  }}>{unit.name}</div>
+                  <MiniBar current={unit.health} max={unit.maxHealth} color={hpColor} height={5} width={128} />
+                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
+                    <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={3} width={62} />
+                    <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={3} width={62} />
+                  </div>
+                  {unit.isBoss && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
+                      <MiniBar current={unit.grudge || 0} max={100} color="#dc2626" height={3} width={128} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
     </div>
