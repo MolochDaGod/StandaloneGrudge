@@ -208,6 +208,246 @@ function ThunderProjectileSprite() {
   );
 }
 
+function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, opacity = 0.85 }) {
+  const [frame, setFrame] = React.useState(0);
+  const totalFrames = sprite.frames;
+  const hasCustomLayout = sprite.cols !== undefined;
+  const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(totalFrames));
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % totalFrames;
+      setFrame(f);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', top: offsetY, left: '50%',
+      transform: 'translateX(-50%)', pointerEvents: 'none',
+      width: displaySize, height: displaySize, overflow: 'hidden', opacity,
+      zIndex: 10,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: hasCustomLayout
+          ? `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`
+          : `${sprite.size * scaleX}px ${sprite.size * scaleY}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: filter || 'none',
+      }} />
+    </div>
+  );
+}
+
+function DodgeFlashSprite({ x, y }) {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.thunderProjectile;
+  const displaySize = 56;
+  const cols = sprite.cols;
+  const frameW = sprite.frameW;
+  const scaleX = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames * 2) { clearInterval(interval); return; }
+      setFrame(f % sprite.frames);
+    }, 35);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: 210, opacity: 0.9,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${displaySize}px`,
+        backgroundPosition: `-${col * displaySize}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'hue-rotate(180deg) brightness(2) drop-shadow(0 0 8px #38bdf8) drop-shadow(0 0 16px #6ee7b7)',
+      }} />
+    </div>
+  );
+}
+
+function CastingSpriteEffect({ x, y }) {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.magicSpell;
+  const displaySize = 80;
+  const cols = Math.round(Math.sqrt(sprite.frames));
+  const frameW = sprite.size / cols;
+  const scaleX = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 30);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: 205, opacity: 0.8,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${sprite.size * scaleX}px ${sprite.size * scaleX}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #8b5cf6)',
+      }} />
+    </div>
+  );
+}
+
+function WeaponContactSprite({ x, y, playCount = 1 }) {
+  const [frame, setFrame] = React.useState(0);
+  const [cycle, setCycle] = React.useState(0);
+  const sprite = effectSprites.weaponHit;
+  const displaySize = 50;
+  const cols = Math.round(Math.sqrt(sprite.frames));
+  const frameW = sprite.size / cols;
+  const scaleX = displaySize / frameW;
+  const offsetX = (cycle % 3 - 1) * 8;
+  const offsetY = (cycle % 2) * 6 - 3;
+
+  React.useEffect(() => {
+    let f = 0;
+    let c = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames) {
+        c++;
+        if (c >= playCount) { clearInterval(interval); return; }
+        f = 0;
+        setCycle(c);
+      }
+      setFrame(f);
+    }, 25);
+    return () => clearInterval(interval);
+  }, [playCount]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: 205, opacity: 0.9,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${sprite.size * scaleX}px ${sprite.size * scaleX}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 8px #f59e0b)',
+      }} />
+    </div>
+  );
+}
+
+function FireballProjectile({ startX, startY, endX, endY, phase, onImpact }) {
+  const sunburnSprite = effectSprites.sunburn;
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 44;
+  const cols = Math.round(Math.sqrt(sunburnSprite.frames));
+  const frameW = sunburnSprite.size / cols;
+  const scaleX = displaySize / frameW;
+  const riseY = startY - 12;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % sunburnSprite.frames;
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  let posX, posY;
+  if (phase === 'rise') {
+    posX = startX;
+    posY = startY;
+  } else if (phase === 'fly') {
+    posX = endX;
+    posY = endY;
+  } else {
+    posX = startX;
+    posY = startY;
+  }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.4s ease-out'
+        : phase === 'fly'
+          ? 'left 0.45s ease-in, top 0.45s ease-in'
+          : 'none',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 210, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+        animation: 'pulse 0.3s infinite',
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${sunburnSprite.src})`,
+          backgroundSize: `${sunburnSprite.size * scaleX}px ${sunburnSprite.size * scaleX}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 0 10px #f97316) drop-shadow(0 0 20px #ef4444) brightness(1.3)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 function MiniBar({ current, max, color, height = 5, width = 60 }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -271,6 +511,12 @@ function isElectricAbility(abilityName) {
   if (!abilityName) return false;
   const n = abilityName.toLowerCase();
   return n.includes('lightning') || n.includes('thunder') || n.includes('chain light') || n.includes('storm') || n.includes('tempest');
+}
+
+function isFireballAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n === 'fireball';
 }
 
 function getProjectileColor(unit, abilityName) {
@@ -342,6 +588,10 @@ export default function BattleScreen() {
   const [activeParticles, setActiveParticles] = useState([]);
   const [hitEffects, setHitEffects] = useState([]);
   const [critFx, setCritFx] = useState([]);
+  const [dodgeFlashes, setDodgeFlashes] = useState([]);
+  const [castingFx, setCastingFx] = useState([]);
+  const [weaponContactFx, setWeaponContactFx] = useState([]);
+  const [fireballFx, setFireballFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
@@ -451,6 +701,24 @@ export default function BattleScreen() {
     setTimeout(() => setActiveParticles(prev => prev.filter(p => p.id !== id)), 1200);
   }, []);
 
+  const spawnDodgeFlash = useCallback((x, y) => {
+    const id = Date.now() + Math.random();
+    setDodgeFlashes(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setDodgeFlashes(prev => prev.filter(d => d.id !== id)), 700);
+  }, []);
+
+  const spawnCastingFx = useCallback((x, y) => {
+    const id = Date.now() + Math.random();
+    setCastingFx(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setCastingFx(prev => prev.filter(c => c.id !== id)), 2500);
+  }, []);
+
+  const spawnWeaponContact = useCallback((x, y, playCount = 1) => {
+    const id = Date.now() + Math.random();
+    setWeaponContactFx(prev => [...prev, { id, x, y, playCount }]);
+    setTimeout(() => setWeaponContactFx(prev => prev.filter(w => w.id !== id)), playCount * 900 + 200);
+  }, []);
+
   useEffect(() => {
     if (!lastAction || lastAction === actionProcessed.current) return;
     actionProcessed.current = lastAction;
@@ -547,8 +815,10 @@ export default function BattleScreen() {
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
             }
             if (isCrit) { playCrit(); } else { playHurt(); }
+            spawnWeaponContact(target.position.x, target.position.y, 1);
           } else {
             playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
           }
           addParticle('cast', attacker.position.x, attacker.position.y, '#7c3aed');
           setTimeout(() => {
@@ -556,12 +826,18 @@ export default function BattleScreen() {
             const blinkY = target.position.y;
             setDashPositions(prev => ({ ...prev, [attackerId]: { x: blinkX, y: blinkY } }));
             addParticle('cast', blinkX, blinkY, '#7c3aed');
+            const teleId1 = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: teleId1, x: blinkX, y: blinkY, sprite: effectSprites.magickaHit }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId1)), 1200);
             setUnitAnims(prev => ({ ...prev, [attackerId]: 'attack1' }));
             playSwordHit();
             addParticle('hit', target.position.x, target.position.y, '#c084fc');
           }, 350 * spd);
           setTimeout(() => {
             addParticle('cast', attacker.position.x, attacker.position.y, '#7c3aed');
+            const teleId2 = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: teleId2, x: attacker.position.x, y: attacker.position.y, sprite: effectSprites.magickaHit }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId2)), 1200);
             setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
             setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
             setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' }));
@@ -575,10 +851,54 @@ export default function BattleScreen() {
 
       if (abilityType === 'magical' && attacker.position) {
         addParticle('cast', attacker.position.x, attacker.position.y, getProjectileColor(attacker, abilityName));
+        spawnCastingFx(attacker.position.x, attacker.position.y);
         playMagicCast();
       }
 
-      if (ranged) {
+      if (ranged && isFireballAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const fbId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = attacker.position.y;
+        setFireballFx(prev => [...prev, { id: fbId, startX, startY, endX: target.position.x, endY: target.position.y, phase: 'start' }]);
+        setTimeout(() => {
+          setFireballFx(prev => prev.map(f => f.id === fbId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setFireballFx(prev => prev.map(f => f.id === fbId ? { ...f, phase: 'fly' } : f));
+        }, 500 * spd);
+        setTimeout(() => {
+          setFireballFx(prev => prev.filter(f => f.id !== fbId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, target.position.y, '#f97316');
+            const hfx = getHitEffect(attacker, abilityName, true);
+            if (hfx && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+              const effectDur = (hfx.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+            }
+            if (isCrit) {
+              playCrit();
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 1000 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1500 * spd);
+      } else if (ranged) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
         setTimeout(() => {
           if (attacker.position && target.position) {
@@ -631,6 +951,7 @@ export default function BattleScreen() {
                 }
               } else {
                 playDodge();
+                if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
               }
               setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
             }, 500 * spd);
@@ -680,8 +1001,10 @@ export default function BattleScreen() {
               } else {
                 playHurt();
               }
+              if (target.position) spawnWeaponContact(target.position.x, target.position.y, combo.length);
             } else {
               playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
             }
             setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
           }, comboEnd);
@@ -717,8 +1040,10 @@ export default function BattleScreen() {
               } else {
                 playHurt();
               }
+              if (target.position) spawnWeaponContact(target.position.x, target.position.y, 1);
             } else {
             playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
           }
           setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
         }, 500);
@@ -978,6 +1303,36 @@ export default function BattleScreen() {
                 />
               </div>
 
+              {unit.alive && unit.stunned && (
+                <LoopingEffectSprite
+                  sprite={effectSprites.magic8}
+                  displaySize={32}
+                  offsetY={-20}
+                  opacity={0.75}
+                  filter="drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #a855f7)"
+                />
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal) && (
+                <LoopingEffectSprite
+                  sprite={effectSprites.fireSpin}
+                  displaySize={36}
+                  offsetY={-16}
+                  opacity={0.7}
+                  filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
+                />
+              )}
+
+              {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
+                <LoopingEffectSprite
+                  sprite={effectSprites.blueFire}
+                  displaySize={28}
+                  offsetY={-24}
+                  opacity={0.6}
+                  filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
+                />
+              )}
+
               <div style={{
                 position: 'absolute', top: -55, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center', marginBottom: 2,
@@ -1116,6 +1471,22 @@ export default function BattleScreen() {
 
         {critFx.map(c => (
           <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={critEffects[c.type]} />
+        ))}
+
+        {dodgeFlashes.map(d => (
+          <DodgeFlashSprite key={d.id} x={d.x} y={d.y} />
+        ))}
+
+        {castingFx.map(c => (
+          <CastingSpriteEffect key={c.id} x={c.x} y={c.y} />
+        ))}
+
+        {weaponContactFx.map(w => (
+          <WeaponContactSprite key={w.id} x={w.x} y={w.y} playCount={w.playCount} />
+        ))}
+
+        {fireballFx.map(fb => (
+          <FireballProjectile key={fb.id} startX={fb.startX} startY={fb.startY} endX={fb.endX} endY={fb.endY} phase={fb.phase} />
         ))}
 
         {floatingDmg.map(f => (
