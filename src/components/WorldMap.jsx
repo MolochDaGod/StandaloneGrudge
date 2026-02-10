@@ -1227,6 +1227,7 @@ export default function WorldMap() {
                     imageRendering: 'pixelated',
                     filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
                     zIndex: i,
+                    pointerEvents: 'none',
                   }}>
                     <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.8} speed={180 + i * 40} />
                   </div>
