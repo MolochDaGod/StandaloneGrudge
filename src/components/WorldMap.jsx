@@ -255,6 +255,9 @@ export default function WorldMap() {
   const [showDebugGrid, setShowDebugGrid] = useState(false);
   const [camZoom, setCamZoom] = useState(3);
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
+  const [devUnlocked, setDevUnlocked] = useState({});
+  const [devPositions, setDevPositions] = useState({});
+  const [devDragging, setDevDragging] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const camInitRef = useRef(false);
@@ -415,16 +418,54 @@ export default function WorldMap() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getNodePos = useCallback((locId) => {
+    return devPositions[locId] || locationPositions[locId];
+  }, [devPositions]);
+
+  const handleNodeRightClick = useCallback((e, loc) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
+    if (!isUnlocked) {
+      setDevUnlocked(prev => ({ ...prev, [loc.id]: true }));
+      return;
+    }
+    setDevDragging(loc.id);
+    setSelectedLocation(null);
+    setSelectedCity(null);
+    setSelectedEvent(null);
+  }, [level, devUnlocked]);
+
+  useEffect(() => {
+    if (!devDragging) return;
+    const onMove = (e) => {
+      if (!mapRef.current) return;
+      const mapEl = mapRef.current.querySelector('[data-map-inner]') || mapRef.current;
+      const rect = mapEl.getBoundingClientRect();
+      const x = Math.round(Math.max(2, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100)));
+      const y = Math.round(Math.max(2, Math.min(98, ((e.clientY - rect.top) / rect.height) * 100)));
+      setDevPositions(prev => ({ ...prev, [devDragging]: { x, y } }));
+    };
+    const onUp = () => setDevDragging(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('contextmenu', (e) => e.preventDefault(), { once: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [devDragging]);
+
   const handleLocationClick = useCallback((e, loc) => {
     e.preventDefault();
     e.stopPropagation();
-    const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel);
+    const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
     if (!isUnlocked) return;
 
     const rect = mapRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const pos = locationPositions[loc.id];
+    const pos = getNodePos(loc.id);
     const nodeXPx = (pos.x / 100) * rect.width;
     const nodeYPx = (pos.y / 100) * rect.height;
     const menuWidth = 240;
@@ -451,14 +492,14 @@ export default function WorldMap() {
     setCitySubmenu(null);
     setSelectedEvent(null);
 
-    const target = locationPositions[loc.id];
+    const target = getNodePos(loc.id);
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
       setIsMoving(true);
       setHeroPos(target);
       setCurrentZone(loc.id);
       setTimeout(() => setIsMoving(false), 600);
     }
-  }, [level, heroPos]);
+  }, [level, heroPos, getNodePos, devUnlocked]);
 
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
@@ -554,7 +595,7 @@ export default function WorldMap() {
       onMouseLeave={handleMapMouseUp}
       style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab', border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
     >
-      <div ref={mapRef} style={{
+      <div ref={mapRef} data-map-inner style={{
         width: '100%', height: '100%', position: 'relative',
         backgroundImage: 'url(/backgrounds/world_map.png)',
         backgroundSize: 'cover', backgroundPosition: 'center',
@@ -684,12 +725,13 @@ export default function WorldMap() {
         </svg>
 
         {locations.map((loc) => {
-          const pos = locationPositions[loc.id];
+          const pos = getNodePos(loc.id);
           if (!pos) return null;
-          const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel);
+          const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
           const cleared = locationsCleared.includes(loc.id);
           const icon = locationIcons[loc.id];
           const isSelected = selectedLocation === loc.id;
+          const isDevDragging = devDragging === loc.id;
           const conquer = (zoneConquer || {})[loc.id] || 0;
           const isConquered = conquer >= 100;
           const circumference = 2 * Math.PI * 26;
@@ -699,7 +741,7 @@ export default function WorldMap() {
           return (
             <div key={loc.id}
               onClick={(e) => handleLocationClick(e, loc)}
-              onContextMenu={(e) => handleLocationClick(e, loc)}
+              onContextMenu={(e) => handleNodeRightClick(e, loc)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'location', id: loc.id, x: pos.x, y: pos.y }); }}
               onMouseLeave={() => setHoveredNode(null)}
               style={{
