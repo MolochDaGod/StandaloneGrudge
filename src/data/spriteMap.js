@@ -213,6 +213,7 @@ const spriteSheets = {
     folder: 'demon-sword',
     frameWidth: 64,
     frameHeight: 64,
+    blendMode: 'screen',
     idle: { src: '/sprites/demon-sword/idle.png', frames: 13 },
     walk: { src: '/sprites/demon-sword/walk.png', frames: 7 },
     attack1: { src: '/sprites/demon-sword/attack1.png', frames: 15 },
@@ -406,7 +407,7 @@ export const abilityEffectMap = {
     'Arcane Bolt': { effect: 'midnight', beam: 'purple', anim: 'attack1' },
     'Fireball': { effect: 'fireExplosion', beam: 'orange', anim: 'attack1' },
     'Divine Heal': { effect: 'healEffect', beam: null, anim: 'heal', postHealEffect: 'holyImpact' },
-    'Ice Storm': { effect: 'vortex', beam: 'purple', anim: 'attack1' },
+    'Ice Storm': { effect: 'freezing', beam: 'purple', anim: 'attack2', isIceStorm: true },
     'Mana Shield': { effect: 'protectionCircle', beam: null, anim: 'block' },
   },
   worge: {

@@ -54,6 +54,7 @@ export default function SpriteAnimation({
 
   const cssFilter = spriteData?.filter || '';
   const tintColor = spriteData?.tint || '';
+  const blendMode = spriteData?.blendMode || 'normal';
 
   return (
     <div style={{
@@ -63,6 +64,7 @@ export default function SpriteAnimation({
       imageRendering: 'pixelated',
       transform: flip ? 'scaleX(-1)' : 'none',
       position: 'relative',
+      mixBlendMode: blendMode,
     }}>
       <div style={{
         width: displayWidth,

@@ -449,6 +449,64 @@ function FireballProjectile({ startX, startY, endX, endY, phase, onImpact }) {
   );
 }
 
+function IceStormProjectile({ startX, startY, endX, endY, phase }) {
+  const freezingSprite = effectSprites.freezing;
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 48;
+  const cols = Math.round(Math.sqrt(freezingSprite.frames));
+  const frameW = freezingSprite.size / cols;
+  const scaleX = displaySize / frameW;
+  const riseY = startY - 14;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % freezingSprite.frames;
+      setFrame(f);
+    }, 35);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  let posX, posY;
+  if (phase === 'rise') { posX = startX; posY = startY; }
+  else if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.5s ease-out'
+        : phase === 'fly'
+          ? 'left 0.5s ease-in, top 0.5s ease-in'
+          : 'none',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 210, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+        animation: 'pulse 0.4s infinite',
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${freezingSprite.src})`,
+          backgroundSize: `${freezingSprite.size * scaleX}px ${freezingSprite.size * scaleX}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 0 12px #60a5fa) drop-shadow(0 0 24px #3b82f6) brightness(1.4) hue-rotate(-10deg)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 function MiniBar({ current, max, color, height = 5, width = 60 }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -518,6 +576,11 @@ function isFireballAbility(abilityName) {
   if (!abilityName) return false;
   const n = abilityName.toLowerCase();
   return n === 'fireball';
+}
+
+function isIceStormAbility(abilityName) {
+  if (!abilityName) return false;
+  return abilityName.toLowerCase() === 'ice storm';
 }
 
 function getProjectileColor(unit, abilityName) {
@@ -593,6 +656,7 @@ export default function BattleScreen() {
   const [castingFx, setCastingFx] = useState([]);
   const [weaponContactFx, setWeaponContactFx] = useState([]);
   const [fireballFx, setFireballFx] = useState([]);
+  const [iceStormFx, setIceStormFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
   const logRef = useRef(null);
@@ -956,6 +1020,51 @@ export default function BattleScreen() {
         }, 1000 * spd);
         setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
         setTimeout(() => advanceTurn(), 1500 * spd);
+      } else if (ranged && isIceStormAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const iceId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = attacker.position.y;
+        setIceStormFx(prev => [...prev, { id: iceId, startX, startY, endX: target.position.x, endY: target.position.y, phase: 'start' }]);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.map(f => f.id === iceId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.map(f => f.id === iceId ? { ...f, phase: 'fly' } : f));
+        }, 550 * spd);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.filter(f => f.id !== iceId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, target.position.y, '#60a5fa');
+            addParticle('cast', target.position.x, target.position.y, '#93c5fd');
+            addParticle('cast', target.position.x + 2, target.position.y - 1, '#bfdbfe');
+            const hfxIce = getHitEffect(attacker, abilityName, true);
+            if (hfxIce.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxIce.sprite, filter: hfxIce.filter || 'hue-rotate(180deg) brightness(1.3)' }]);
+              const effectDur = (hfxIce.sprite.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+            }
+            if (isCrit) {
+              playCrit();
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 1100 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1600 * spd);
       } else if (ranged) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
         setTimeout(() => {
@@ -1615,6 +1724,10 @@ export default function BattleScreen() {
 
         {fireballFx.map(fb => (
           <FireballProjectile key={fb.id} startX={fb.startX} startY={fb.startY} endX={fb.endX} endY={fb.endY} phase={fb.phase} />
+        ))}
+
+        {iceStormFx.map(ice => (
+          <IceStormProjectile key={ice.id} startX={ice.startX} startY={ice.startY} endX={ice.endX} endY={ice.endY} phase={ice.phase} />
         ))}
 
         {floatingDmg.map(f => (
