@@ -277,7 +277,6 @@ export default function WorldMap() {
   const [citySubmenu, setCitySubmenu] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showWarParty, setShowWarParty] = useState(false);
-  const [showHarvest, setShowHarvest] = useState(false);
   const [showGruda, setShowGruda] = useState(false);
   const [grudaCopied, setGrudaCopied] = useState(null);
   const [upgradeHeroId, setUpgradeHeroId] = useState(null);
@@ -2196,23 +2195,22 @@ export default function WorldMap() {
               padding: '4px 10px', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             }}>⚔ Council</button>
 
-            <button onClick={() => setShowWarParty(!showWarParty)} style={{
+            <button onClick={() => { setShowWarParty(!showWarParty); setShowGruda(false); }} style={{
               background: showWarParty ? 'rgba(110,231,183,0.2)' : 'rgba(110,231,183,0.08)',
               border: `1px solid ${showWarParty ? 'var(--accent)' : 'rgba(110,231,183,0.3)'}`,
               borderRadius: 8, padding: '4px 10px', color: 'var(--accent)',
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>🛡 Party ({activeHeroIds.length}/3)</button>
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              🛡 Party
+              {Object.keys(activeHarvests).length > 0 && (
+                <span style={{ background: 'rgba(251,191,36,0.3)', color: 'var(--gold)', borderRadius: 4, padding: '0 4px', fontSize: '0.5rem' }}>
+                  ⛏{Object.keys(activeHarvests).length}
+                </span>
+              )}
+            </button>
 
-            {harvestNodes && harvestNodes.length > 0 && level >= 1 && (
-              <button onClick={() => setShowHarvest(!showHarvest)} style={{
-                background: showHarvest ? 'rgba(251,191,36,0.2)' : 'rgba(251,191,36,0.08)',
-                border: `1px solid ${showHarvest ? 'var(--gold)' : 'rgba(251,191,36,0.3)'}`,
-                borderRadius: 8, padding: '4px 10px', color: 'var(--gold)',
-                cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-              }}>⛏ Harvest</button>
-            )}
-
-            <button onClick={() => { setShowGruda(!showGruda); setShowWarParty(false); setShowHarvest(false); setGrudaCopied(null); }} style={{
+            <button onClick={() => { setShowGruda(!showGruda); setShowWarParty(false); setGrudaCopied(null); }} style={{
               background: showGruda ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.08)',
               border: `1px solid ${showGruda ? 'var(--danger)' : 'rgba(239,68,68,0.3)'}`,
               borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
@@ -2264,59 +2262,122 @@ export default function WorldMap() {
           })}
         </div>
 
-        {showWarParty && (
+        {showWarParty && (() => {
+          const harvestingHeroIds = Object.values(activeHarvests);
+          const idleHeroes = heroRoster.filter(h =>
+            !activeHeroIds.includes(h.id) && !harvestingHeroIds.includes(h.id)
+          );
+          const unlockedNodes = (harvestNodes || []).filter(n => level >= n.unlockLevel);
+          const getHeroRole = (hero) => {
+            if (activeHeroIds.includes(hero.id)) return 'active';
+            const harvestEntry = Object.entries(activeHarvests).find(([, hId]) => hId === hero.id);
+            if (harvestEntry) {
+              const node = (harvestNodes || []).find(n => n.id === harvestEntry[0]);
+              return node ? `harvesting:${node.name}:${node.icon}` : 'harvesting';
+            }
+            return 'idle';
+          };
+          return (
           <div style={{
             position: 'absolute', top: 70, right: 12, zIndex: 16,
-            background: 'rgba(14,22,48,0.95)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: 14, maxWidth: 340,
+            background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(110,231,183,0.2)',
+            borderRadius: 12, padding: 14, maxWidth: 380, width: 370,
             boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
             animation: 'fadeIn 0.15s ease-out',
+            maxHeight: 'calc(100vh - 160px)', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h4 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.85rem', margin: 0 }}>
-                War Party ({activeHeroIds.length}/3)
+                War Party
               </h4>
-              {canCreateNewHero && (
-                <button onClick={() => setScreen('heroCreate')} style={{
-                  background: 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1))',
-                  border: '1px solid var(--gold)', borderRadius: 6, padding: '3px 10px',
-                  color: 'var(--gold)', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700,
-                }}>+ Recruit</button>
-              )}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                {canCreateNewHero && (
+                  <button onClick={() => setScreen('heroCreate')} style={{
+                    background: 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1))',
+                    border: '1px solid var(--gold)', borderRadius: 6, padding: '3px 10px',
+                    color: 'var(--gold)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 700,
+                  }}>+ Recruit</button>
+                )}
+                <button onClick={() => setShowWarParty(false)} style={{
+                  background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1rem',
+                }}>×</button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+
+            <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.55rem', color: 'var(--accent)', background: 'rgba(110,231,183,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
+                ⚔ {activeHeroIds.length}/3 Active
+              </span>
+              <span style={{ fontSize: '0.55rem', color: 'var(--gold)', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(251,191,36,0.2)' }}>
+                ⛏ {harvestingHeroIds.length} Harvesting
+              </span>
+              <span style={{ fontSize: '0.55rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
+                💤 {idleHeroes.length} Idle
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
               {heroRoster.map(hero => {
                 const heroCls = classDefinitions[hero.classId];
                 const heroRace = hero.raceId ? raceDefinitions[hero.raceId] : null;
-                const isActive = activeHeroIds.includes(hero.id);
                 const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
+                const role = getHeroRole(hero);
+                const isActive = role === 'active';
+                const isHarvesting = role.startsWith('harvesting');
+                const harvestInfo = isHarvesting ? role.split(':') : null;
+
+                const borderColor = isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--border)';
+                const bgColor = isActive
+                  ? 'linear-gradient(135deg, rgba(110,231,183,0.15), rgba(110,231,183,0.05))'
+                  : isHarvesting
+                    ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))'
+                    : 'rgba(42,49,80,0.3)';
+
                 return (
-                  <div key={hero.id} onClick={() => toggleHeroActive(hero.id)} style={{
-                    background: isActive
-                      ? 'linear-gradient(135deg, rgba(110,231,183,0.15), rgba(110,231,183,0.05))'
-                      : 'rgba(42,49,80,0.3)',
-                    border: `2px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                  <div key={hero.id} style={{
+                    background: bgColor,
+                    border: `2px solid ${borderColor}`,
                     borderRadius: 8, padding: '6px 8px', cursor: 'pointer',
                     transition: 'all 0.2s', minWidth: 90, textAlign: 'center',
-                    opacity: isActive ? 1 : 0.6,
-                  }}>
-                    <div style={{ width: 70, height: 70, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.8} speed={150} />
+                    opacity: isActive || isHarvesting ? 1 : 0.6,
+                    position: 'relative',
+                  }}
+                    onClick={() => {
+                      if (isHarvesting) {
+                        const entry = Object.entries(activeHarvests).find(([, hId]) => hId === hero.id);
+                        if (entry) recallHarvest(entry[0]);
+                      } else {
+                        toggleHeroActive(hero.id);
+                      }
+                    }}
+                  >
+                    <div style={{ width: 60, height: 60, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.7} speed={150} />
                     </div>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : 'var(--muted)', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}
                     </div>
-                    <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>
+                    <div style={{ fontSize: '0.45rem', color: 'var(--muted)' }}>
                       Lv.{hero.level} {heroRace?.name} {heroCls?.name}
                     </div>
                     {heroStats && (
                       <div style={{ marginTop: 3, height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${(hero.currentHealth / heroStats.health) * 100}%`, background: '#22c55e', borderRadius: 2 }} />
+                        <div style={{ height: '100%', width: `${(hero.currentHealth / heroStats.health) * 100}%`, background: isActive ? '#22c55e' : isHarvesting ? 'var(--gold)' : '#64748b', borderRadius: 2 }} />
                       </div>
                     )}
-                    <div style={{ fontSize: '0.45rem', marginTop: 2, color: isActive ? 'var(--accent)' : 'var(--muted)', fontWeight: 600 }}>
-                      {isActive ? 'ACTIVE' : 'RESERVE'}
+                    <div style={{
+                      fontSize: '0.45rem', marginTop: 2, fontWeight: 600,
+                      color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)',
+                    }}>
+                      {isActive ? '⚔ ACTIVE' : isHarvesting ? `${harvestInfo?.[2] || '⛏'} ${harvestInfo?.[1] || 'Harvesting'}` : '💤 IDLE'}
                     </div>
+                    {isHarvesting && (
+                      <div style={{
+                        position: 'absolute', top: 2, right: 2,
+                        fontSize: '0.4rem', color: '#ef4444', cursor: 'pointer',
+                        background: 'rgba(239,68,68,0.15)', borderRadius: 3, padding: '1px 3px',
+                      }}>✕</div>
+                    )}
                   </div>
                 );
               })}
@@ -2333,89 +2394,87 @@ export default function WorldMap() {
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {showHarvest && harvestNodes && (
-          <div style={{
-            position: 'absolute', top: 70, right: 12, zIndex: 16,
-            background: 'rgba(14,22,48,0.95)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: 14, maxWidth: 360,
-            boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-            animation: 'fadeIn 0.15s ease-out',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <h4 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.85rem', margin: 0 }}>Auto Harvest</h4>
-              <div style={{ display: 'flex', gap: 6, fontSize: '0.6rem' }}>
-                {Object.entries(harvestResources).filter(([k, v]) => v > 0 || k === 'gold').map(([k, v]) => (
-                  <span key={k} style={{ background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', color: 'var(--muted)' }}>
-                    {k === 'gold' ? '💰' : k === 'herbs' ? '🌿' : k === 'wood' ? '🪵' : k === 'ore' ? '🪨' : '💎'} {Math.floor(v)}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'grid', gap: 6 }}>
-              {harvestNodes.filter(n => level >= n.unlockLevel).map(node => {
-                const assignedHeroId = activeHarvests[node.id];
-                const assignedHero = assignedHeroId ? heroRoster.find(h => h.id === assignedHeroId) : null;
-                const availableHeroes = heroRoster.filter(h =>
-                  !activeHeroIds.includes(h.id) && !Object.values(activeHarvests).includes(h.id)
-                );
-                return (
-                  <div key={node.id} style={{
-                    background: assignedHero ? 'rgba(34,197,94,0.08)' : 'rgba(42,49,80,0.3)',
-                    border: `1px solid ${assignedHero ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
-                    borderRadius: 6, padding: '8px 10px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: '1rem' }}>{node.icon}</span>
-                      <div>
-                        <div style={{ color: 'var(--text)', fontSize: '0.7rem', fontWeight: 600 }}>{node.name}</div>
-                        <div style={{ color: 'var(--muted)', fontSize: '0.5rem' }}>+{node.baseRate} {node.resource}/s</div>
-                      </div>
-                    </div>
-                    {assignedHero ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <SpriteAnimation spriteData={getPlayerSprite(assignedHero.classId, assignedHero.raceId)} animation="idle" scale={1.0} speed={200} />
-                          <span style={{ color: 'var(--accent)', fontSize: '0.6rem', fontWeight: 600 }}>{assignedHero.name}</span>
-                        </div>
-                        <button onClick={() => recallHarvest(node.id)} style={{
-                          background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-                          borderRadius: 4, padding: '2px 6px', color: '#ef4444', cursor: 'pointer', fontSize: '0.55rem',
-                        }}>Recall</button>
-                      </div>
-                    ) : (
-                      <div>
-                        {availableHeroes.length > 0 ? (
-                          <select
-                            onChange={(e) => { if (e.target.value) assignHarvest(node.id, e.target.value); e.target.value = ''; }}
-                            defaultValue=""
-                            style={{
-                              background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)',
-                              borderRadius: 4, padding: '3px 6px', color: 'var(--text)',
-                              fontSize: '0.6rem', width: '100%', cursor: 'pointer',
-                            }}
-                          >
-                            <option value="">Assign hero...</option>
-                            {availableHeroes.map(h => (
-                              <option key={h.id} value={h.id}>{h.name} (Lv.{h.level})</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <div style={{ color: 'var(--muted)', fontSize: '0.55rem', fontStyle: 'italic' }}>No idle heroes</div>
-                        )}
-                      </div>
-                    )}
+            {unlockedNodes.length > 0 && (
+              <>
+                <div style={{
+                  height: 1, background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.3), transparent)',
+                  marginBottom: 10,
+                }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div className="font-cinzel" style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700 }}>
+                    ⛏ Harvest Sites
                   </div>
-                );
-              })}
-            </div>
-            <div style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.5rem', fontStyle: 'italic' }}>
-              Assign reserve heroes to gather resources.
-            </div>
+                  <div style={{ display: 'flex', gap: 4, fontSize: '0.5rem', flexWrap: 'wrap' }}>
+                    {Object.entries(harvestResources).filter(([, v]) => v > 0).map(([k, v]) => (
+                      <span key={k} style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(251,191,36,0.15)', color: 'var(--gold)' }}>
+                        {k === 'gold' ? '💰' : k === 'herbs' ? '🌿' : k === 'wood' ? '🪵' : k === 'ore' ? '🪨' : '💎'} {Math.floor(v)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gap: 5 }}>
+                  {unlockedNodes.map(node => {
+                    const assignedHeroId = activeHarvests[node.id];
+                    const assignedHero = assignedHeroId ? heroRoster.find(h => h.id === assignedHeroId) : null;
+                    return (
+                      <div key={node.id} style={{
+                        background: assignedHero ? 'rgba(251,191,36,0.06)' : 'rgba(42,49,80,0.2)',
+                        border: `1px solid ${assignedHero ? 'rgba(251,191,36,0.25)' : 'var(--border)'}`,
+                        borderRadius: 6, padding: '6px 10px',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                      }}>
+                        <span style={{ fontSize: '0.9rem' }}>{node.icon}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ color: 'var(--text)', fontSize: '0.65rem', fontWeight: 600 }}>{node.name}</div>
+                            <div style={{ color: 'var(--muted)', fontSize: '0.45rem' }}>+{node.baseRate} {node.resource}/s</div>
+                          </div>
+                          {assignedHero ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3 }}>
+                              <span style={{ color: 'var(--gold)', fontSize: '0.55rem', fontWeight: 600 }}>
+                                {assignedHero.name} (Lv.{assignedHero.level})
+                              </span>
+                              <button onClick={(e) => { e.stopPropagation(); recallHarvest(node.id); }} style={{
+                                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
+                                borderRadius: 4, padding: '1px 5px', color: '#ef4444', cursor: 'pointer', fontSize: '0.5rem',
+                              }}>Recall</button>
+                            </div>
+                          ) : (
+                            <div style={{ marginTop: 3 }}>
+                              {idleHeroes.length > 0 ? (
+                                <select
+                                  onChange={(e) => { if (e.target.value) assignHarvest(node.id, e.target.value); e.target.value = ''; }}
+                                  defaultValue=""
+                                  style={{
+                                    background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)',
+                                    borderRadius: 4, padding: '2px 5px', color: 'var(--text)',
+                                    fontSize: '0.55rem', width: '100%', cursor: 'pointer',
+                                  }}
+                                >
+                                  <option value="">Assign idle hero...</option>
+                                  {idleHeroes.map(h => (
+                                    <option key={h.id} value={h.id}>{h.name} (Lv.{h.level})</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <div style={{ color: 'var(--muted)', fontSize: '0.5rem', fontStyle: 'italic' }}>No idle heroes available</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.45rem', fontStyle: 'italic', textAlign: 'center' }}>
+                  Idle heroes can be assigned to gather resources. Tap a harvesting hero to recall them.
+                </div>
+              </>
+            )}
           </div>
-        )}
+          );
+        })()}
 
         {showGruda && (
           <div style={{
