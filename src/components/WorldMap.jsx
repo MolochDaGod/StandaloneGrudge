@@ -1180,14 +1180,21 @@ export default function WorldMap() {
               )}
 
               {citySubmenu === 'trade' && (
-                <div style={{ padding: '8px' }}>
+                <div style={{ padding: '8px', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundImage: 'url(/backgrounds/camp_shop.png)',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    opacity: 0.2, pointerEvents: 'none',
+                  }} />
                   <button onClick={() => { setCitySubmenu(null); setTradeTab('buy'); }} style={{
                     background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
                     fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                    position: 'relative', zIndex: 1,
                   }}>
                     ← Back
                   </button>
-                  <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                  <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px', position: 'relative', zIndex: 1 }}>
                     Merchant
                   </div>
                   <div style={{ color: 'var(--gold)', fontSize: '0.65rem', padding: '0 8px 6px' }}>
