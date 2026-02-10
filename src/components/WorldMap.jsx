@@ -272,6 +272,7 @@ export default function WorldMap() {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [currentDialogue, setCurrentDialogue] = useState(null);
   const [dialoguePhase, setDialoguePhase] = useState(0);
+  const [bossWalkUp, setBossWalkUp] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
@@ -581,9 +582,24 @@ export default function WorldMap() {
   };
 
   const handleBoss = (locId, bossId) => {
-    useGameStore.setState({ currentLocation: locId });
-    startBossBattle(bossId);
+    const loc = locations.find(l => l.id === locId);
+    const bs = bossMapSprites[bossId] || {};
     setSelectedLocation(null);
+    setBossWalkUp({
+      locId, bossId, phase: 'walk',
+      terrain: bs.terrain,
+      glow: bs.glow || 'rgba(255,0,0,0.5)',
+      color1: bs.color1 || '#f44',
+      bossName: loc?.boss ? (bossId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())) : 'Boss',
+      isGodFight: loc?.isGodFight,
+    });
+    setTimeout(() => setBossWalkUp(prev => prev ? { ...prev, phase: 'confront' } : null), 1500);
+    setTimeout(() => setBossWalkUp(prev => prev ? { ...prev, phase: 'flash' } : null), 3000);
+    setTimeout(() => {
+      setBossWalkUp(null);
+      useGameStore.setState({ currentLocation: locId });
+      startBossBattle(bossId);
+    }, 3800);
   };
 
   const handleRest = () => {
@@ -913,8 +929,8 @@ export default function WorldMap() {
           if (!isLocUnlocked) return null;
           const bs = bossMapSprites[loc.boss] || {};
           const isGodBoss = loc.isGodFight;
-          const portalW = isGodBoss ? 80 : 60;
-          const portalH = isGodBoss ? 100 : 80;
+          const portalW = isGodBoss ? 64 : 56;
+          const portalH = isGodBoss ? 64 : 56;
           const shape = portalShapes[bs.shape] || portalShapes.archway;
           const bossX = Math.max(5, Math.min(95, pos.x + 3));
           const bossY = Math.max(5, Math.min(95, pos.y - 3));
@@ -2702,7 +2718,148 @@ export default function WorldMap() {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
           }
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          @keyframes bossAppear {
+            0% { transform: scale(0.3); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes bossNameReveal {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes bossFlashIn {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+          }
         `}</style>
+
+      {bossWalkUp && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 100,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          animation: 'fadeIn 0.5s ease-out',
+        }}>
+          {bossWalkUp.terrain && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${bossWalkUp.terrain})`,
+              backgroundSize: 'cover', backgroundPosition: 'center 70%',
+              opacity: bossWalkUp.phase === 'flash' ? 0.1 : 0.25,
+              transition: 'opacity 0.5s',
+            }} />
+          )}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(ellipse at 50% 60%, ${bossWalkUp.glow.replace(/[\d.]+\)$/, '0.15)')} 0%, transparent 60%)`,
+          }} />
+
+          <div style={{
+            position: 'absolute', bottom: '30%', left: '50%',
+            transform: `translateX(${bossWalkUp.phase === 'walk' ? '-120px' : bossWalkUp.phase === 'confront' ? '-60px' : '-60px'})`,
+            transition: 'transform 1.2s ease-out',
+            zIndex: 2,
+          }}>
+            {(() => {
+              const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+              const hero = activeHeroes[0];
+              if (!hero) return null;
+              const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+              return (
+                <div style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}>
+                  <SpriteAnimation
+                    spriteData={spriteData}
+                    animation={bossWalkUp.phase === 'walk' ? 'walk' : 'idle'}
+                    scale={2.5}
+                    speed={150}
+                  />
+                </div>
+              );
+            })()}
+          </div>
+
+          <div style={{
+            position: 'absolute', bottom: '30%', left: '50%',
+            transform: `translateX(${bossWalkUp.phase === 'walk' ? '120px' : bossWalkUp.phase === 'confront' ? '60px' : '60px'})`,
+            transition: 'transform 1.2s ease-out',
+            opacity: bossWalkUp.phase === 'walk' ? 0 : 1,
+            zIndex: 2,
+          }}>
+            {(() => {
+              const spriteData = getEnemySprite(bossWalkUp.bossId);
+              if (!spriteData) return null;
+              return (
+                <div style={{
+                  filter: `drop-shadow(0 0 20px ${bossWalkUp.glow})`,
+                  animation: bossWalkUp.phase === 'confront' ? 'bossAppear 0.6s ease-out' : 'none',
+                }}>
+                  <SpriteAnimation
+                    spriteData={spriteData}
+                    animation="idle"
+                    scale={bossWalkUp.isGodFight ? 3.0 : 2.5}
+                    flip={true}
+                    speed={180}
+                  />
+                </div>
+              );
+            })()}
+          </div>
+
+          {bossWalkUp.phase === 'walk' && (
+            <div className="font-cinzel" style={{
+              position: 'absolute', top: '20%', textAlign: 'center', zIndex: 3,
+              animation: 'fadeIn 0.8s ease-out',
+            }}>
+              <div style={{
+                fontSize: '0.7rem', color: 'rgba(200,200,220,0.6)',
+                letterSpacing: '0.3em', textTransform: 'uppercase',
+              }}>Entering</div>
+            </div>
+          )}
+
+          {(bossWalkUp.phase === 'confront' || bossWalkUp.phase === 'flash') && (
+            <div className="font-cinzel" style={{
+              position: 'absolute', top: '15%', textAlign: 'center', zIndex: 3,
+              animation: 'bossNameReveal 0.8s ease-out',
+            }}>
+              <div style={{
+                fontSize: bossWalkUp.isGodFight ? '0.65rem' : '0.55rem',
+                color: bossWalkUp.glow.replace(/[\d.]+\)$/, '0.8)'),
+                letterSpacing: '0.3em', textTransform: 'uppercase',
+                marginBottom: 6,
+              }}>{bossWalkUp.isGodFight ? 'GOD FIGHT' : 'BOSS ENCOUNTER'}</div>
+              <div style={{
+                fontSize: bossWalkUp.isGodFight ? '1.6rem' : '1.2rem', fontWeight: 700,
+                color: bossWalkUp.glow.replace(/[\d.]+\)$/, '1)'),
+                textShadow: `0 0 30px ${bossWalkUp.glow}, 0 2px 8px rgba(0,0,0,0.8)`,
+              }}>{bossWalkUp.bossName}</div>
+            </div>
+          )}
+
+          {bossWalkUp.phase === 'confront' && (
+            <div style={{
+              position: 'absolute', bottom: '28%', left: '50%', transform: 'translateX(-50%)',
+              width: 200, height: 2,
+              background: `linear-gradient(90deg, transparent, ${bossWalkUp.color1}, transparent)`,
+              animation: 'bossPortalPulse 1s ease-in-out infinite',
+              zIndex: 1,
+            }} />
+          )}
+
+          {bossWalkUp.phase === 'flash' && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: `radial-gradient(circle, ${bossWalkUp.glow.replace(/[\d.]+\)$/, '0.6)')} 0%, transparent 70%)`,
+              animation: 'bossFlashIn 0.8s ease-out',
+              zIndex: 4,
+            }} />
+          )}
+        </div>
+      )}
 
       <div style={{
         position: 'absolute', bottom: 60, right: 12, zIndex: 30,
