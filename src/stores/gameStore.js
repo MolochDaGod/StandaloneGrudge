@@ -1134,6 +1134,9 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  autoBattleEnabled: false,
+  toggleAutoBattle: () => set(s => ({ autoBattleEnabled: !s.autoBattleEnabled })),
+
   autoAttack: () => {
     const state = get();
     const bs = state.battleState;
@@ -1141,12 +1144,17 @@ const useGameStore = create(persist((set, get) => ({
     const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
     const unit = state.battleUnits.find(u => u.id === currentUnitId);
     if (!unit || !unit.alive) return;
-    const firstAbility = unit.abilities?.[0];
-    if (!firstAbility) return;
-    const enemies = state.battleUnits.filter(u => u.team === 'enemy' && u.alive && u.health > 0);
-    if (enemies.length === 0) return;
-    const target = enemies.reduce((lowest, e) => e.health < lowest.health ? e : lowest, enemies[0]);
-    get().useAbility(firstAbility.id, target.id);
+    const action = chooseAIAction(unit, state.battleUnits);
+    if (!action) {
+      const firstAbility = unit.abilities?.[0];
+      if (!firstAbility) return;
+      const enemies = state.battleUnits.filter(u => u.team === 'enemy' && u.alive && u.health > 0);
+      if (enemies.length === 0) return;
+      const target = enemies.reduce((lowest, e) => e.health < lowest.health ? e : lowest, enemies[0]);
+      get().useAbility(firstAbility.id, target.id);
+      return;
+    }
+    get().useAbility(action.abilityId, action.targetId);
   },
 
   useAbility: (abilityId, targetIdOverride) => {

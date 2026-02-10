@@ -24,6 +24,36 @@ const locationBackgrounds = {
   dreadmaw_canyon: '/backgrounds/infernal_arena.png',
 };
 
+const zoneGradients = {
+  camp: 'linear-gradient(180deg, #1a2a1a 0%, #0d1a0d 30%, #0a140a 60%, #060e06 100%)',
+  verdant_plains: 'linear-gradient(180deg, #1a2e1a 0%, #142614 30%, #0f1e0f 60%, #0a1a0a 100%)',
+  whispering_woods: 'linear-gradient(180deg, #1a2818 0%, #0e1e0d 40%, #091409 70%, #050e05 100%)',
+  ironhold: 'linear-gradient(180deg, #2a2020 0%, #1e1616 40%, #140e0e 70%, #0e0808 100%)',
+  crystal_lake: 'linear-gradient(180deg, #1a2030 0%, #0e1620 40%, #0a1018 70%, #060a10 100%)',
+  thornvale: 'linear-gradient(180deg, #2a1a2a 0%, #1e0e1e 40%, #140814 70%, #0e040e 100%)',
+  shadow_marsh: 'linear-gradient(180deg, #1a1a2e 0%, #10102a 40%, #0a0a20 70%, #060618 100%)',
+  dark_forest: 'linear-gradient(180deg, #0e1a0e 0%, #0a120a 40%, #060e06 70%, #040a04 100%)',
+  cursed_ruins: 'linear-gradient(180deg, #201520 0%, #180e18 40%, #100810 70%, #0a040a 100%)',
+  blood_canyon: 'linear-gradient(180deg, #2e1010 0%, #200a0a 40%, #180606 70%, #100404 100%)',
+  dragon_peaks: 'linear-gradient(180deg, #1e1e28 0%, #141420 40%, #0e0e18 70%, #080810 100%)',
+  shadow_citadel: 'linear-gradient(180deg, #18102e 0%, #100a22 40%, #0a0618 70%, #06040e 100%)',
+  demon_gate: 'linear-gradient(180deg, #2e0a10 0%, #200610 40%, #180408 70%, #100206 100%)',
+  void_throne: 'linear-gradient(180deg, #0a0a2e 0%, #060620 40%, #040418 70%, #020210 100%)',
+  molten_core: 'linear-gradient(180deg, #2e1a08 0%, #201206 40%, #180e04 70%, #100a02 100%)',
+  obsidian_wastes: 'linear-gradient(180deg, #1e1410 0%, #160e0a 40%, #100a06 70%, #0a0604 100%)',
+  volcanic_field: 'linear-gradient(180deg, #2a1208 0%, #1e0e06 40%, #160a04 70%, #0e0604 100%)',
+  infernal_forge: 'linear-gradient(180deg, #301008 0%, #220a06 40%, #1a0604 70%, #120402 100%)',
+  dreadmaw_canyon: 'linear-gradient(180deg, #281410 0%, #1e100a 40%, #160a06 70%, #0e0604 100%)',
+  frozen_pass: 'linear-gradient(180deg, #1a2030 0%, #141828 40%, #0e1220 70%, #0a0e18 100%)',
+  frost_hollow: 'linear-gradient(180deg, #182838 0%, #101e2e 40%, #0a1624 70%, #06101c 100%)',
+  glacial_tomb: 'linear-gradient(180deg, #142030 0%, #0e1828 40%, #0a1220 70%, #060e18 100%)',
+  icewind_summit: 'linear-gradient(180deg, #1a2838 0%, #121e2e 40%, #0c1626 70%, #08101e 100%)',
+  ruins_of_ashenmoor: 'linear-gradient(180deg, #201818 0%, #181010 40%, #100a0a 70%, #0a0606 100%)',
+  ashenmoor_gate: 'linear-gradient(180deg, #1e1416 0%, #160e10 40%, #10080a 70%, #0a0406 100%)',
+  citadel_of_ash: 'linear-gradient(180deg, #2a1a18 0%, #201210 40%, #180c0a 70%, #100806 100%)',
+  default: 'linear-gradient(180deg, #141828 0%, #0e1220 40%, #0a0e18 70%, #060a10 100%)',
+};
+
 const critEffects = {
   spell: {
     src: '/effects/explosion_crit.webp',
@@ -248,6 +278,7 @@ export default function BattleScreen() {
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
     inventory, useConsumable, useGrudge,
+    autoBattleEnabled, toggleAutoBattle,
   } = useGameStore();
 
   const [unitAnims, setUnitAnims] = useState({});
@@ -265,11 +296,13 @@ export default function BattleScreen() {
   const aiProcessing = useRef(false);
 
   const phase = battleState?.phase;
+  const spd = autoBattleEnabled ? 1 : 1.25;
   useEffect(() => { if (phase !== 'player_turn') setShowItemsPanel(false); }, [phase]);
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const isArena = battleState?.isArena;
   const bgImage = isArena ? '/backgrounds/arena_battle.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
+  const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];
   const currentUnit = battleUnits.find(u => u.id === currentUnitId);
@@ -340,10 +373,19 @@ export default function BattleScreen() {
       const timer = setTimeout(() => {
         processAIAction();
         aiProcessing.current = false;
-      }, 600);
+      }, autoBattleEnabled ? 400 : 600);
       return () => { clearTimeout(timer); aiProcessing.current = false; };
     }
   }, [phase, battleCurrentTurn, introComplete]);
+
+  useEffect(() => {
+    if (autoBattleEnabled && phase === 'player_turn' && introComplete) {
+      const timer = setTimeout(() => {
+        autoAttack();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoBattleEnabled, phase, battleCurrentTurn, introComplete]);
 
   useEffect(() => {
     if (phase === 'victory') playVictory();
@@ -363,7 +405,7 @@ export default function BattleScreen() {
     const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type } = lastAction;
 
     if (type === 'stunned' || type === 'skip') {
-      setTimeout(() => advanceTurn(), 500);
+      setTimeout(() => advanceTurn(), 500 * spd);
       return;
     }
 
@@ -375,9 +417,9 @@ export default function BattleScreen() {
         setTimeout(() => {
           setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
           advanceTurn();
-        }, 700);
+        }, 700 * spd);
       } else {
-        setTimeout(() => advanceTurn(), 300);
+        setTimeout(() => advanceTurn(), 300 * spd);
       }
       return;
     }
@@ -474,12 +516,12 @@ export default function BattleScreen() {
               } else {
                 playDodge();
               }
-              setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
-            }, 500);
+              setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+            }, 500 * spd);
           }
-          setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
-        }, 250);
-        setTimeout(() => advanceTurn(), 1300);
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600 * spd);
+        }, 250 * spd);
+        setTimeout(() => advanceTurn(), 1300 * spd);
       } else {
         if (abilityType === 'physical') playSwordHit();
         if (attacker.position && target.position) {
@@ -671,6 +713,26 @@ export default function BattleScreen() {
           opacity: 0.55, zIndex: 0,
         }} />
       )}
+      {!bgImage && bgGradient && (
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: bgGradient,
+          zIndex: 0,
+        }}>
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%',
+            background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)',
+          }} />
+          <div style={{
+            position: 'absolute', top: '60%', left: 0, right: 0, height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 80%, transparent 100%)',
+          }} />
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%)',
+          }} />
+        </div>
+      )}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         background: 'linear-gradient(180deg, rgba(11,16,32,0.2) 0%, rgba(11,16,32,0.4) 50%, rgba(11,16,32,0.8) 100%)',
@@ -795,7 +857,7 @@ export default function BattleScreen() {
                   animation={anim}
                   scale={spriteScale}
                   flip={flipSprite}
-                  speed={150}
+                  speed={autoBattleEnabled ? 150 : 188}
                   loop={anim === 'idle' || anim === 'walk'}
                 />
               </div>
@@ -986,6 +1048,29 @@ export default function BattleScreen() {
             fontSize: '0.68rem',
           }}>{msg}</div>
         ))}
+      </div>
+
+      <div style={{
+        position: 'fixed', bottom: 160, right: 16, zIndex: 50,
+      }}>
+        <button onClick={toggleAutoBattle} style={{
+          background: autoBattleEnabled
+            ? 'linear-gradient(135deg, rgba(251,191,36,0.4), rgba(245,158,11,0.2))'
+            : 'rgba(0,0,0,0.5)',
+          border: `2px solid ${autoBattleEnabled ? '#f59e0b' : '#4a4a5a'}`,
+          borderRadius: 10, padding: '8px 14px',
+          color: autoBattleEnabled ? '#fbbf24' : '#888',
+          cursor: 'pointer', fontSize: '0.7rem', fontWeight: 800,
+          letterSpacing: '0.08em',
+          backdropFilter: 'blur(4px)',
+          boxShadow: autoBattleEnabled ? '0 0 16px rgba(251,191,36,0.3), 0 0 32px rgba(251,191,36,0.1)' : 'none',
+          transition: 'all 0.3s',
+          display: 'flex', alignItems: 'center', gap: 6,
+          animation: autoBattleEnabled ? 'pulse 2s infinite' : 'none',
+        }}>
+          <span style={{ fontSize: '1rem' }}>{autoBattleEnabled ? '⚔️' : '🤖'}</span>
+          AUTO {autoBattleEnabled ? 'ON' : 'OFF'}
+        </button>
       </div>
 
       {!isVictory && !isDefeat && (
