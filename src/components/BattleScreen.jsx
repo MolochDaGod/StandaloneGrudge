@@ -1471,15 +1471,128 @@ export default function BattleScreen() {
                 pointerEvents: unit.alive ? 'auto' : 'none',
                 width: spriteSize,
                 height: spriteSize,
+                overflow: 'visible',
               }}
             >
+              {isCurrentTurnUnit && unit.alive && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                  width: 0, height: 0,
+                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                  borderTop: `8px solid ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
+                  animation: 'pulse 1s infinite',
+                  filter: `drop-shadow(0 0 4px ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'})`,
+                  zIndex: 15,
+                }} />
+              )}
+
+              <div style={{
+                position: 'absolute', top: 0, left: 0,
+                width: spriteSize, height: spriteSize,
+                filter: isCurrentTurnUnit && unit.alive
+                  ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
+                  : 'none',
+                transition: 'filter 0.3s',
+              }}>
+                <SpriteAnimation
+                  spriteData={spriteData}
+                  animation={anim}
+                  scale={spriteScale}
+                  flip={flipSprite}
+                  speed={autoBattleEnabled ? 150 : 188}
+                  loop={anim === 'idle' || anim === 'walk'}
+                />
+              </div>
+
+              {unit.alive && unit.stunned && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('stun', e) : undefined}
+                  title={adminMode ? `Stun: offsetY=${adminOverrides.stun.offsetY}, size=${adminOverrides.stun.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.nebula}
+                    displaySize={adminOverrides.stun.size}
+                    offsetY={adminOverrides.stun.offsetY}
+                    opacity={adminOverrides.stun.opacity}
+                    filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.stun.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#67e8f9', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>STUN y:{adminOverrides.stun.offsetY} s:{adminOverrides.stun.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('poison', e) : undefined}
+                  title={adminMode ? `Poison: offsetY=${adminOverrides.poison.offsetY}, size=${adminOverrides.poison.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.magicBubbles}
+                    displaySize={adminOverrides.poison.size}
+                    offsetY={adminOverrides.poison.offsetY}
+                    opacity={adminOverrides.poison.opacity}
+                    filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.poison.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#a3e635', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>POISON y:{adminOverrides.poison.offsetY} s:{adminOverrides.poison.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('dot', e) : undefined}
+                  title={adminMode ? `DoT: offsetY=${adminOverrides.dot.offsetY}, size=${adminOverrides.dot.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.fire}
+                    displaySize={adminOverrides.dot.size}
+                    offsetY={adminOverrides.dot.offsetY}
+                    opacity={adminOverrides.dot.opacity}
+                    filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.dot.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#f97316', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>DOT y:{adminOverrides.dot.offsetY} s:{adminOverrides.dot.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('buff', e) : undefined}
+                  title={adminMode ? `Buff: offsetY=${adminOverrides.buff.offsetY}, size=${adminOverrides.buff.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.blueFire}
+                    displaySize={adminOverrides.buff.size}
+                    offsetY={adminOverrides.buff.offsetY}
+                    opacity={adminOverrides.buff.opacity}
+                    filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.buff.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#38bdf8', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>BUFF y:{adminOverrides.buff.offsetY} s:{adminOverrides.buff.size}</div>}
+                </div>
+              )}
+
+              {isSelected && unit.alive && (
+                <div style={{
+                  position: 'absolute', top: spriteSize - 8, left: '50%', transform: 'translateX(-50%)',
+                  width: 50, height: 12, borderRadius: '50%',
+                  background: 'rgba(239,68,68,0.35)',
+                  border: '2px solid var(--danger)',
+                  animation: 'pulse 1s infinite',
+                  zIndex: 15,
+                }} />
+              )}
+
+              <div style={{
+                position: 'absolute', top: spriteSize - 4, left: '50%', transform: 'translateX(-50%)',
+                width: 40, height: 8, borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
+                zIndex: 1,
+              }} />
+
               <div
                 onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
                 style={{
-                position: 'absolute', top: adminOverrides.nameplate.offsetY, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: spriteSize, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
-                background: 'rgba(0,0,0,0.6)', borderRadius: 4, padding: '2px 5px',
-                backdropFilter: 'blur(2px)', minWidth: 50, zIndex: 20,
+                background: 'rgba(0,0,0,0.65)', borderRadius: 4, padding: '2px 5px',
+                minWidth: 55, zIndex: 20,
               }}>
                 <div style={{
                   fontSize: '0.5rem', fontWeight: 600,
@@ -1529,110 +1642,6 @@ export default function BattleScreen() {
                   </div>
                 )}
               </div>
-
-              {isCurrentTurnUnit && unit.alive && (
-                <div style={{
-                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                  width: 0, height: 0,
-                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                  borderTop: `8px solid ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
-                  animation: 'pulse 1s infinite',
-                  filter: `drop-shadow(0 0 4px ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'})`,
-                  zIndex: 15,
-                }} />
-              )}
-
-              {isSelected && unit.alive && (
-                <div style={{
-                  position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
-                  width: 40, height: 10, borderRadius: '50%',
-                  background: 'rgba(239,68,68,0.4)',
-                  border: '2px solid var(--danger)',
-                  animation: 'pulse 1s infinite',
-                  zIndex: 15,
-                }} />
-              )}
-
-              <div style={{
-                position: 'absolute', inset: 0,
-                filter: isCurrentTurnUnit && unit.alive
-                  ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
-                  : 'none',
-                transition: 'filter 0.3s',
-              }}>
-                <SpriteAnimation
-                  spriteData={spriteData}
-                  animation={anim}
-                  scale={spriteScale}
-                  flip={flipSprite}
-                  speed={autoBattleEnabled ? 150 : 188}
-                  loop={anim === 'idle' || anim === 'walk'}
-                />
-              </div>
-
-              {unit.alive && unit.stunned && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: adminMode ? 'auto' : 'none' }}
-                  onMouseDown={adminMode ? (e) => handleAdminDragStart('stun', e) : undefined}
-                  title={adminMode ? `Stun: offsetY=${adminOverrides.stun.offsetY}, size=${adminOverrides.stun.size}` : undefined}
-                >
-                  <LoopingEffectSprite
-                    sprite={effectSprites.nebula}
-                    displaySize={adminOverrides.stun.size}
-                    offsetY={adminOverrides.stun.offsetY}
-                    opacity={adminOverrides.stun.opacity}
-                    filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
-                  />
-                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.stun.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#67e8f9', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>STUN y:{adminOverrides.stun.offsetY} s:{adminOverrides.stun.size}</div>}
-                </div>
-              )}
-
-              {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: adminMode ? 'auto' : 'none' }}
-                  onMouseDown={adminMode ? (e) => handleAdminDragStart('poison', e) : undefined}
-                  title={adminMode ? `Poison: offsetY=${adminOverrides.poison.offsetY}, size=${adminOverrides.poison.size}` : undefined}
-                >
-                  <LoopingEffectSprite
-                    sprite={effectSprites.magicBubbles}
-                    displaySize={adminOverrides.poison.size}
-                    offsetY={adminOverrides.poison.offsetY}
-                    opacity={adminOverrides.poison.opacity}
-                    filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
-                  />
-                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.poison.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#a3e635', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>POISON y:{adminOverrides.poison.offsetY} s:{adminOverrides.poison.size}</div>}
-                </div>
-              )}
-
-              {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: adminMode ? 'auto' : 'none' }}
-                  onMouseDown={adminMode ? (e) => handleAdminDragStart('dot', e) : undefined}
-                  title={adminMode ? `DoT: offsetY=${adminOverrides.dot.offsetY}, size=${adminOverrides.dot.size}` : undefined}
-                >
-                  <LoopingEffectSprite
-                    sprite={effectSprites.fire}
-                    displaySize={adminOverrides.dot.size}
-                    offsetY={adminOverrides.dot.offsetY}
-                    opacity={adminOverrides.dot.opacity}
-                    filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
-                  />
-                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.dot.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#f97316', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>DOT y:{adminOverrides.dot.offsetY} s:{adminOverrides.dot.size}</div>}
-                </div>
-              )}
-
-              {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: adminMode ? 'auto' : 'none' }}
-                  onMouseDown={adminMode ? (e) => handleAdminDragStart('buff', e) : undefined}
-                  title={adminMode ? `Buff: offsetY=${adminOverrides.buff.offsetY}, size=${adminOverrides.buff.size}` : undefined}
-                >
-                  <LoopingEffectSprite
-                    sprite={effectSprites.blueFire}
-                    displaySize={adminOverrides.buff.size}
-                    offsetY={adminOverrides.buff.offsetY}
-                    opacity={adminOverrides.buff.opacity}
-                    filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
-                  />
-                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.buff.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#38bdf8', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>BUFF y:{adminOverrides.buff.offsetY} s:{adminOverrides.buff.size}</div>}
-                </div>
-              )}
             </div>
           );
         })}
