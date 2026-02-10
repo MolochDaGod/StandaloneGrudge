@@ -600,6 +600,62 @@ export default function BattleScreen() {
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
 
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminPaused, setAdminPaused] = useState(false);
+  const [adminOverrides, setAdminOverrides] = useState({
+    stun: { offsetY: -40, size: 30, opacity: 0.75 },
+    poison: { offsetY: -36, size: 28, opacity: 0.7 },
+    dot: { offsetY: -36, size: 30, opacity: 0.7 },
+    buff: { offsetY: -44, size: 24, opacity: 0.6 },
+    nameplate: { offsetY: -30 },
+  });
+  const [adminDragging, setAdminDragging] = useState(null);
+  const adminDragStart = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === '`' || e.key === '~') {
+        setAdminMode(prev => {
+          if (!prev) setAdminPaused(true);
+          else setAdminPaused(false);
+          return !prev;
+        });
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const handleAdminDragStart = useCallback((effectKey, e) => {
+    e.stopPropagation();
+    setAdminDragging(effectKey);
+    adminDragStart.current = { y: e.clientY, startOffset: adminOverrides[effectKey].offsetY };
+  }, [adminOverrides]);
+
+  const handleAdminDragMove = useCallback((e) => {
+    if (!adminDragging || !adminDragStart.current) return;
+    const dy = e.clientY - adminDragStart.current.y;
+    setAdminOverrides(prev => ({
+      ...prev,
+      [adminDragging]: { ...prev[adminDragging], offsetY: adminDragStart.current.startOffset + dy },
+    }));
+  }, [adminDragging]);
+
+  const handleAdminDragEnd = useCallback(() => {
+    setAdminDragging(null);
+    adminDragStart.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!adminDragging) return;
+    window.addEventListener('mousemove', handleAdminDragMove);
+    window.addEventListener('mouseup', handleAdminDragEnd);
+    return () => {
+      window.removeEventListener('mousemove', handleAdminDragMove);
+      window.removeEventListener('mouseup', handleAdminDragEnd);
+    };
+  }, [adminDragging, handleAdminDragMove, handleAdminDragEnd]);
+
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
   useEffect(() => { if (phase !== 'player_turn') { setShowItemsPanel(false); setHealTargetMode(null); } }, [phase]);
@@ -616,7 +672,7 @@ export default function BattleScreen() {
   const playerTeam = useMemo(() => battleUnits.filter(u => u.team === 'player'), [battleUnits]);
   const enemyTeam = useMemo(() => battleUnits.filter(u => u.team === 'enemy'), [battleUnits]);
 
-  const isPlayerTurn = phase === 'player_turn';
+  const isPlayerTurn = phase === 'player_turn' && !adminPaused;
   const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
 
   const displayedAbilities = useMemo(() => {
@@ -673,7 +729,7 @@ export default function BattleScreen() {
   }, [phase]);
 
   useEffect(() => {
-    if (phase === 'ai_turn' && introComplete && !aiProcessing.current) {
+    if (phase === 'ai_turn' && introComplete && !aiProcessing.current && !adminPaused) {
       aiProcessing.current = true;
       const timer = setTimeout(() => {
         processAIAction();
@@ -681,16 +737,16 @@ export default function BattleScreen() {
       }, autoBattleEnabled ? 400 : 600);
       return () => { clearTimeout(timer); aiProcessing.current = false; };
     }
-  }, [phase, battleCurrentTurn, introComplete]);
+  }, [phase, battleCurrentTurn, introComplete, adminPaused]);
 
   useEffect(() => {
-    if (autoBattleEnabled && phase === 'player_turn' && introComplete) {
+    if (autoBattleEnabled && phase === 'player_turn' && introComplete && !adminPaused) {
       const timer = setTimeout(() => {
         autoAttack();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [autoBattleEnabled, phase, battleCurrentTurn, introComplete]);
+  }, [autoBattleEnabled, phase, battleCurrentTurn, introComplete, adminPaused]);
 
   useEffect(() => {
     if (phase === 'victory') playVictory();
@@ -1340,47 +1396,73 @@ export default function BattleScreen() {
               </div>
 
               {unit.alive && unit.stunned && (
-                <LoopingEffectSprite
-                  sprite={effectSprites.nebula}
-                  displaySize={30}
-                  offsetY={-40}
-                  opacity={0.75}
-                  filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
-                />
+                <div style={{ position: 'relative' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('stun', e) : undefined}
+                  title={adminMode ? `Stun: offsetY=${adminOverrides.stun.offsetY}, size=${adminOverrides.stun.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.nebula}
+                    displaySize={adminOverrides.stun.size}
+                    offsetY={adminOverrides.stun.offsetY}
+                    opacity={adminOverrides.stun.opacity}
+                    filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.stun.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#67e8f9', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>STUN y:{adminOverrides.stun.offsetY} s:{adminOverrides.stun.size}</div>}
+                </div>
               )}
 
               {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <LoopingEffectSprite
-                  sprite={effectSprites.magicBubbles}
-                  displaySize={28}
-                  offsetY={-36}
-                  opacity={0.7}
-                  filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
-                />
+                <div style={{ position: 'relative' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('poison', e) : undefined}
+                  title={adminMode ? `Poison: offsetY=${adminOverrides.poison.offsetY}, size=${adminOverrides.poison.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.magicBubbles}
+                    displaySize={adminOverrides.poison.size}
+                    offsetY={adminOverrides.poison.offsetY}
+                    opacity={adminOverrides.poison.opacity}
+                    filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.poison.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#a3e635', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>POISON y:{adminOverrides.poison.offsetY} s:{adminOverrides.poison.size}</div>}
+                </div>
               )}
 
               {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <LoopingEffectSprite
-                  sprite={effectSprites.fire}
-                  displaySize={30}
-                  offsetY={-36}
-                  opacity={0.7}
-                  filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
-                />
+                <div style={{ position: 'relative' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('dot', e) : undefined}
+                  title={adminMode ? `DoT: offsetY=${adminOverrides.dot.offsetY}, size=${adminOverrides.dot.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.fire}
+                    displaySize={adminOverrides.dot.size}
+                    offsetY={adminOverrides.dot.offsetY}
+                    opacity={adminOverrides.dot.opacity}
+                    filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.dot.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#f97316', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>DOT y:{adminOverrides.dot.offsetY} s:{adminOverrides.dot.size}</div>}
+                </div>
               )}
 
               {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
-                <LoopingEffectSprite
-                  sprite={effectSprites.blueFire}
-                  displaySize={24}
-                  offsetY={-44}
-                  opacity={0.6}
-                  filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
-                />
+                <div style={{ position: 'relative' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('buff', e) : undefined}
+                  title={adminMode ? `Buff: offsetY=${adminOverrides.buff.offsetY}, size=${adminOverrides.buff.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.blueFire}
+                    displaySize={adminOverrides.buff.size}
+                    offsetY={adminOverrides.buff.offsetY}
+                    opacity={adminOverrides.buff.opacity}
+                    filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.buff.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#38bdf8', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>BUFF y:{adminOverrides.buff.offsetY} s:{adminOverrides.buff.size}</div>}
+                </div>
               )}
 
-              <div style={{
-                position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)',
+              <div
+                onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
+                style={{
+                position: 'absolute', top: adminOverrides.nameplate.offsetY, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
                 background: 'rgba(0,0,0,0.6)', borderRadius: 4, padding: '2px 5px',
                 backdropFilter: 'blur(2px)', minWidth: 50,
@@ -1646,6 +1728,73 @@ export default function BattleScreen() {
           AUTO {autoBattleEnabled ? 'ON' : 'OFF'}
         </button>
       </div>
+
+      {adminMode && (
+        <div style={{
+          position: 'fixed', top: 8, right: 8, zIndex: 500,
+          background: 'rgba(0,0,0,0.92)', border: '2px solid #f59e0b',
+          borderRadius: 10, padding: '10px 14px', width: 220,
+          backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.7rem', letterSpacing: '0.1em' }}>ADMIN MODE</span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button onClick={() => setAdminPaused(p => !p)} style={{
+                background: adminPaused ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)',
+                border: `1px solid ${adminPaused ? '#ef4444' : '#22c55e'}`,
+                color: adminPaused ? '#ef4444' : '#22c55e',
+                borderRadius: 4, padding: '2px 6px', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer',
+              }}>{adminPaused ? '⏸ PAUSED' : '▶ PLAYING'}</button>
+              <button onClick={() => { setAdminMode(false); setAdminPaused(false); }} style={{
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                color: '#ccc', borderRadius: 4, padding: '2px 6px', fontSize: '0.5rem', cursor: 'pointer',
+              }}>✕</button>
+            </div>
+          </div>
+          <div style={{ fontSize: '0.45rem', color: '#888', marginBottom: 6 }}>Drag effects on characters to reposition. Use sliders to resize.</div>
+          {Object.entries(adminOverrides).map(([key, val]) => (
+            <div key={key} style={{ marginBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#ddd', fontSize: '0.55rem', fontWeight: 600, textTransform: 'uppercase' }}>{key}</span>
+                <span style={{ color: '#888', fontSize: '0.45rem' }}>Y:{val.offsetY}{val.size !== undefined ? ` S:${val.size}` : ''}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>Y</span>
+                <input type="range" min={-80} max={20} value={val.offsetY}
+                  onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], offsetY: parseInt(e.target.value) } }))}
+                  style={{ flex: 1, height: 8, accentColor: '#f59e0b' }}
+                />
+              </div>
+              {val.size !== undefined && (
+                <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>S</span>
+                  <input type="range" min={8} max={80} value={val.size}
+                    onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], size: parseInt(e.target.value) } }))}
+                    style={{ flex: 1, height: 8, accentColor: '#3b82f6' }}
+                  />
+                </div>
+              )}
+              {val.opacity !== undefined && (
+                <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>O</span>
+                  <input type="range" min={10} max={100} value={Math.round(val.opacity * 100)}
+                    onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], opacity: parseInt(e.target.value) / 100 } }))}
+                    style={{ flex: 1, height: 8, accentColor: '#a78bfa' }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+          <button onClick={() => {
+            const json = JSON.stringify(adminOverrides, null, 2);
+            navigator.clipboard.writeText(json).then(() => alert('Copied to clipboard!')).catch(() => {});
+          }} style={{
+            width: '100%', background: 'rgba(251,191,36,0.15)', border: '1px solid #f59e0b',
+            color: '#f59e0b', borderRadius: 4, padding: '3px 0', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer', marginTop: 4,
+          }}>📋 Copy Values</button>
+          <div style={{ fontSize: '0.4rem', color: '#666', marginTop: 4, textAlign: 'center' }}>Press ~ to toggle admin mode</div>
+        </div>
+      )}
 
       {!isVictory && !isDefeat && (
         <div style={{

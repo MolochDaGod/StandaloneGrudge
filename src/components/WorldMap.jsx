@@ -306,15 +306,32 @@ export default function WorldMap() {
     if (camInitRef.current) return;
     const pos = locationPositions[currentZone] || locationPositions.verdant_plains;
     if (pos) {
-      setCamPos({ x: -(pos.x - 50), y: -(pos.y - 50) });
+      const initPos = { x: -(pos.x - 50), y: -(pos.y - 50) };
+      const maxPan = Math.max(0, 50 - 50 / 3);
+      setCamPos({
+        x: Math.max(-maxPan, Math.min(maxPan, initPos.x)),
+        y: Math.max(-maxPan, Math.min(maxPan, initPos.y)),
+      });
       camInitRef.current = true;
     }
   }, [currentZone]);
 
+  const clampCam = useCallback((pos, zoom) => {
+    const maxPan = Math.max(0, 50 - 50 / zoom);
+    return {
+      x: Math.max(-maxPan, Math.min(maxPan, pos.x)),
+      y: Math.max(-maxPan, Math.min(maxPan, pos.y)),
+    };
+  }, []);
+
   const handleMapWheel = useCallback((e) => {
     e.preventDefault();
-    setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25))));
-  }, []);
+    setCamZoom(z => {
+      const newZ = Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25)));
+      setCamPos(p => clampCam(p, newZ));
+      return newZ;
+    });
+  }, [clampCam]);
 
   const handleMapMouseDown = useCallback((e) => {
     if (e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-node]')) {
@@ -327,16 +344,26 @@ export default function WorldMap() {
     if (!isDragging) return;
     const dx = (e.clientX - dragStart.x) / camZoom * 0.12;
     const dy = (e.clientY - dragStart.y) / camZoom * 0.12;
-    setCamPos(p => ({ x: p.x + dx, y: p.y + dy }));
+    setCamPos(p => clampCam({ x: p.x + dx, y: p.y + dy }, camZoom));
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isDragging, dragStart, camZoom]);
+  }, [isDragging, dragStart, camZoom, clampCam]);
 
   const handleMapMouseUp = useCallback(() => { setIsDragging(false); }, []);
 
   useEffect(() => {
     const el = mapRef.current?.parentElement;
     if (!el) return;
-    const handler = (e) => { e.preventDefault(); setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25)))); };
+    const handler = (e) => {
+      e.preventDefault();
+      setCamZoom(z => {
+        const newZ = Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25)));
+        setCamPos(p => {
+          const maxPan = Math.max(0, 50 - 50 / newZ);
+          return { x: Math.max(-maxPan, Math.min(maxPan, p.x)), y: Math.max(-maxPan, Math.min(maxPan, p.y)) };
+        });
+        return newZ;
+      });
+    };
     el.addEventListener('wheel', handler, { passive: false });
     return () => el.removeEventListener('wheel', handler);
   }, []);
@@ -2605,14 +2632,14 @@ export default function WorldMap() {
         background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '6px 4px',
         backdropFilter: 'blur(4px)', border: '1px solid rgba(255,215,0,0.15)',
       }}>
-        <button onClick={() => setCamZoom(z => Math.min(5, z + 0.5))} style={{
+        <button onClick={() => { setCamZoom(z => { const nz = Math.min(5, z + 0.5); setCamPos(p => clampCam(p, nz)); return nz; }); }} style={{
           background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
           fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>+</button>
         <span style={{ color: 'var(--gold)', fontSize: '0.5rem', fontWeight: 700, textAlign: 'center' }}>
           {Math.round(camZoom * 100)}%
         </span>
-        <button onClick={() => setCamZoom(z => Math.max(1, z - 0.5))} style={{
+        <button onClick={() => { setCamZoom(z => { const nz = Math.max(1, z - 0.5); setCamPos(p => clampCam(p, nz)); return nz; }); }} style={{
           background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
           fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>-</button>
