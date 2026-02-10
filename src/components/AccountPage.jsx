@@ -14,6 +14,14 @@ import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
+const TAB_BG = {
+  stats: '/backgrounds/tab_stats.png',
+  equipment: '/backgrounds/tab_gear.png',
+  abilities: '/backgrounds/tab_abilities.png',
+  skills: '/backgrounds/tab_skills.png',
+  attributes: '/backgrounds/tab_attributes.png',
+};
+
 const CLASS_BG = {
   warrior: '/backgrounds/wc_red.png',
   mage: '/backgrounds/wc_purple.png',
@@ -82,14 +90,14 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
           filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
           transition: 'filter 0.3s',
         }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={2.8} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={5.6} speed={150} />
         </div>
 
         <div style={{ textAlign: 'center' }}>
           <div className="font-cinzel" style={{
             color: isSelected ? 'var(--gold)' : 'var(--text)',
             fontSize: '0.85rem', fontWeight: 700,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170,
           }}>
             {hero.name}
           </div>
@@ -495,7 +503,12 @@ function HeroDetailPanel({ hero, onClose }) {
         ))}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
+      <div style={{
+        flex: 1, overflow: 'auto', padding: 12,
+        backgroundImage: `linear-gradient(135deg, rgba(14,22,48,0.92), rgba(20,26,43,0.88)), url(${TAB_BG[tab] || ''})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        transition: 'background-image 0.3s',
+      }}>
         {tab === 'stats' && (() => {
           const build = getBuildClassification(stats, hero.attributePoints || {});
           const radar = getRadarData(stats);
@@ -1051,84 +1064,190 @@ function HeroDetailPanel({ hero, onClose }) {
           <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} />
         )}
 
-        {tab === 'skills' && tree && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h4 style={{ color: tree.color, fontSize: '0.85rem' }}>
-                {tree.className} Skill Tree
-              </h4>
-              <div style={{
-                background: 'rgba(110,231,183,0.1)', border: '1px solid var(--accent)',
-                borderRadius: 6, padding: '3px 10px', fontSize: '0.8rem',
-                color: 'var(--accent)', fontWeight: 700,
-              }}>
-                {hero.skillPoints || 0} pts
+        {tab === 'skills' && tree && (() => {
+          const allSkills = [];
+          const skillPositions = {};
+          const NODE_W = 90;
+          const NODE_H = 80;
+          const TIER_GAP = 110;
+          const SKILL_GAP = 110;
+
+          tree.tiers.forEach((tier, tierIdx) => {
+            const tierY = tierIdx * TIER_GAP + 40;
+            const totalWidth = tier.skills.length * SKILL_GAP;
+            const startX = Math.max(0, (Math.max(3, tree.tiers.reduce((m, t) => Math.max(m, t.skills.length), 0)) * SKILL_GAP - totalWidth) / 2);
+            tier.skills.forEach((skill, skillIdx) => {
+              const x = startX + skillIdx * SKILL_GAP + SKILL_GAP / 2;
+              const y = tierY;
+              skillPositions[skill.id] = { x, y };
+              allSkills.push({ ...skill, tier, tierIdx });
+            });
+          });
+
+          const connections = [];
+          allSkills.forEach(skill => {
+            if (skill.requires && skillPositions[skill.requires] && skillPositions[skill.id]) {
+              const from = skillPositions[skill.requires];
+              const to = skillPositions[skill.id];
+              const parentUnlocked = (heroSkills[skill.requires] || 0) > 0;
+              const childUnlocked = (heroSkills[skill.id] || 0) > 0;
+              connections.push({ from, to, active: parentUnlocked, complete: childUnlocked });
+            }
+          });
+
+          const posValues = Object.values(skillPositions);
+          const maxX = posValues.length > 0 ? Math.max(...posValues.map(p => p.x)) + NODE_W : 340;
+          const maxY = posValues.length > 0 ? Math.max(...posValues.map(p => p.y)) + NODE_H + 20 : 100;
+          const svgW = Math.max(maxX, 340);
+
+          return (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h4 className="font-cinzel" style={{ color: tree.color, fontSize: '0.9rem', margin: 0 }}>
+                  {tree.className} Skill Tree
+                </h4>
+                <div style={{
+                  background: (hero.skillPoints || 0) > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(110,231,183,0.1)',
+                  border: `1px solid ${(hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)'}`,
+                  borderRadius: 6, padding: '3px 10px', fontSize: '0.8rem',
+                  color: (hero.skillPoints || 0) > 0 ? 'var(--danger)' : 'var(--accent)', fontWeight: 700,
+                }}>
+                  {hero.skillPoints || 0} SP
+                </div>
+              </div>
+
+              <div style={{ position: 'relative', width: '100%', overflowX: 'auto' }}>
+                <svg width={svgW} height={maxY} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                  <defs>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+                  {connections.map((conn, i) => {
+                    const fx = conn.from.x;
+                    const fy = conn.from.y + NODE_H / 2 + 8;
+                    const tx = conn.to.x;
+                    const ty = conn.to.y - NODE_H / 2 + 18;
+                    const midY = (fy + ty) / 2;
+                    return (
+                      <g key={i}>
+                        <path
+                          d={`M ${fx} ${fy} C ${fx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`}
+                          fill="none"
+                          stroke={conn.complete ? tree.color : conn.active ? 'rgba(255,215,0,0.5)' : 'rgba(80,80,100,0.3)'}
+                          strokeWidth={conn.complete ? 3 : 2}
+                          strokeDasharray={conn.active || conn.complete ? 'none' : '4 4'}
+                          filter={conn.complete ? 'url(#glow)' : 'none'}
+                        />
+                        {conn.complete && (
+                          <circle cx={tx} cy={ty} r={4} fill={tree.color} filter="url(#glow)" />
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                <div style={{ position: 'relative', width: svgW, minHeight: maxY }}>
+                  {tree.tiers.map((tier, tierIdx) => {
+                    const tierLocked = hero.level < tier.requiredLevel;
+                    const tierY = tierIdx * TIER_GAP + 40;
+                    return (
+                      <React.Fragment key={tierIdx}>
+                        <div style={{
+                          position: 'absolute', top: tierY - 28, left: 0, right: 0,
+                          fontSize: '0.55rem', color: tierLocked ? 'rgba(120,120,140,0.5)' : 'rgba(212,169,106,0.7)',
+                          fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2,
+                          textAlign: 'center',
+                        }}>
+                          {tier.name}
+                          {tierLocked && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>Lv.{tier.requiredLevel}</span>}
+                        </div>
+
+                        {tier.skills.map(skill => {
+                          const pos = skillPositions[skill.id];
+                          const available = isSkillAvailable(skill, tier);
+                          const unlocked = (heroSkills[skill.id] || 0) > 0;
+                          const maxed = (heroSkills[skill.id] || 0) >= skill.maxPoints;
+                          const current = heroSkills[skill.id] || 0;
+                          const locked = tierLocked || (skill.requires && !(heroSkills[skill.requires] > 0));
+
+                          const borderColor = maxed ? tree.color : unlocked ? 'var(--gold)' : available ? 'var(--accent)' : 'rgba(60,60,80,0.6)';
+                          const bgColor = maxed
+                            ? `radial-gradient(circle at 50% 30%, ${tree.color}30, rgba(14,22,48,0.9))`
+                            : unlocked
+                              ? 'radial-gradient(circle at 50% 30%, rgba(255,215,0,0.12), rgba(14,22,48,0.85))'
+                              : 'radial-gradient(circle at 50% 30%, rgba(42,49,80,0.4), rgba(14,22,48,0.9))';
+
+                          return (
+                            <div key={skill.id}
+                              onClick={() => available && unlockHeroSkill(hero.id, skill.id)}
+                              title={`${skill.name}\n${skill.description}\n${skill.effect}`}
+                              style={{
+                                position: 'absolute',
+                                left: pos.x - NODE_W / 2,
+                                top: pos.y - NODE_H / 2 + 18,
+                                width: NODE_W,
+                                height: NODE_H,
+                                background: bgColor,
+                                border: `2px solid ${borderColor}`,
+                                borderRadius: 12,
+                                cursor: available ? 'pointer' : 'default',
+                                opacity: locked ? 0.35 : 1,
+                                transition: 'all 0.25s ease',
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center',
+                                boxShadow: maxed ? `0 0 12px ${tree.color}40, inset 0 0 8px ${tree.color}15` : unlocked ? '0 0 8px rgba(255,215,0,0.15)' : 'none',
+                                zIndex: 1,
+                              }}
+                              onMouseEnter={e => { if (available) e.currentTarget.style.transform = 'scale(1.08)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                            >
+                              <div style={{
+                                fontSize: '1.4rem', lineHeight: 1,
+                                filter: maxed ? `drop-shadow(0 0 6px ${tree.color})` : unlocked ? 'drop-shadow(0 0 4px rgba(255,215,0,0.4))' : 'none',
+                              }}>{skill.icon}</div>
+                              <div style={{
+                                fontWeight: 700, fontSize: '0.6rem', marginTop: 3,
+                                color: maxed ? tree.color : unlocked ? 'var(--gold)' : 'var(--text)',
+                                textAlign: 'center', lineHeight: 1.1,
+                                maxWidth: NODE_W - 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              }}>{skill.name}</div>
+                              <div style={{
+                                marginTop: 2, fontSize: '0.55rem', fontWeight: 700, fontFamily: 'monospace',
+                                color: maxed ? tree.color : unlocked ? '#fbbf24' : 'var(--muted)',
+                                background: 'rgba(0,0,0,0.35)', borderRadius: 6, padding: '0px 6px',
+                              }}>{current}/{skill.maxPoints}</div>
+                              {maxed && (
+                                <div style={{
+                                  position: 'absolute', top: -5, right: -5,
+                                  background: `linear-gradient(135deg, ${tree.color}, ${tree.color}cc)`,
+                                  borderRadius: '50%', width: 16, height: 16,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.55rem', color: '#fff', fontWeight: 900,
+                                  boxShadow: `0 0 8px ${tree.color}60`,
+                                }}>✓</div>
+                              )}
+                              {skill.grantedAbility && (
+                                <div style={{
+                                  position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+                                  background: unlocked ? 'rgba(139,92,246,0.8)' : 'rgba(80,80,100,0.4)',
+                                  borderRadius: 4, padding: '0px 4px', fontSize: '0.4rem',
+                                  color: '#fff', fontWeight: 700, whiteSpace: 'nowrap',
+                                  letterSpacing: 0.5,
+                                }}>ABILITY</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-
-            {tree.tiers.map((tier, tierIdx) => {
-              const tierLocked = hero.level < tier.requiredLevel;
-              return (
-                <div key={tierIdx} style={{ marginBottom: 20 }}>
-                  <div style={{
-                    fontSize: '0.7rem', color: tierLocked ? 'var(--muted)' : 'var(--gold)',
-                    fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
-                  }}>
-                    {tier.name}
-                    {tierLocked && <span style={{ color: 'var(--danger)', marginLeft: 6, fontSize: '0.65rem' }}>(Lv.{tier.requiredLevel})</span>}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {tier.skills.map(skill => {
-                      const available = isSkillAvailable(skill, tier);
-                      const unlocked = (heroSkills[skill.id] || 0) > 0;
-                      const maxed = (heroSkills[skill.id] || 0) >= skill.maxPoints;
-                      const current = heroSkills[skill.id] || 0;
-                      const locked = tierLocked || (skill.requires && !(heroSkills[skill.requires] > 0));
-
-                      return (
-                        <div key={skill.id}
-                          onClick={() => available && unlockHeroSkill(hero.id, skill.id)}
-                          style={{
-                            background: maxed
-                              ? `linear-gradient(135deg, ${tree.color}25, ${tree.color}10)`
-                              : unlocked ? 'rgba(42,49,80,0.6)' : 'rgba(20,26,43,0.5)',
-                            border: `2px solid ${maxed ? tree.color : unlocked ? 'var(--gold)' : available ? 'var(--accent)' : 'var(--border)'}`,
-                            borderRadius: 10, padding: 12, flex: '1 1 140px', maxWidth: 180,
-                            cursor: available ? 'pointer' : 'default',
-                            opacity: locked ? 0.4 : 1, transition: 'all 0.2s',
-                            textAlign: 'center', position: 'relative',
-                          }}
-                        >
-                          <div style={{ fontSize: '1.3rem', marginBottom: 4 }}>{skill.icon}</div>
-                          <div style={{ fontWeight: 600, fontSize: '0.75rem', color: unlocked ? 'var(--gold)' : 'var(--text)', marginBottom: 2 }}>
-                            {skill.name}
-                          </div>
-                          <div style={{ color: 'var(--muted)', fontSize: '0.6rem', marginBottom: 4 }}>{skill.description}</div>
-                          <div style={{ color: 'var(--accent)', fontSize: '0.65rem', fontWeight: 600, marginBottom: 4 }}>{skill.effect}</div>
-                          <div style={{
-                            background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '2px 8px',
-                            display: 'inline-block', fontSize: '0.7rem',
-                            color: maxed ? tree.color : 'var(--gold)', fontWeight: 700,
-                          }}>
-                            {current}/{skill.maxPoints}
-                          </div>
-                          {maxed && (
-                            <div style={{
-                              position: 'absolute', top: -6, right: -6,
-                              background: tree.color, borderRadius: '50%',
-                              width: 18, height: 18, display: 'flex', alignItems: 'center',
-                              justifyContent: 'center', fontSize: '0.65rem',
-                            }}>✓</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          );
+        })()}
 
         {tab === 'attributes' && (
           <div>
@@ -1240,7 +1359,7 @@ export default function AccountPage() {
         flex: 1, display: 'flex', gap: 16, padding: 16, overflow: 'hidden', minHeight: 0,
       }}>
         <div style={{
-          flex: '0 0 auto', width: 200, display: 'flex', flexDirection: 'column', gap: 10,
+          flex: '0 0 auto', width: 220, display: 'flex', flexDirection: 'column', gap: 10,
           overflow: 'auto', paddingRight: 4,
         }}>
           {heroRoster.map(hero => (
