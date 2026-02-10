@@ -256,7 +256,9 @@ export default function WorldMap() {
   const [camZoom, setCamZoom] = useState(3);
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
   const [devUnlocked, setDevUnlocked] = useState({});
-  const [devPositions, setDevPositions] = useState({});
+  const [devPositions, setDevPositions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('devNodePositions') || '{}'); } catch { return {}; }
+  });
   const [devDragging, setDevDragging] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -444,7 +446,11 @@ export default function WorldMap() {
       const rect = mapEl.getBoundingClientRect();
       const x = Math.round(Math.max(2, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100)));
       const y = Math.round(Math.max(2, Math.min(98, ((e.clientY - rect.top) / rect.height) * 100)));
-      setDevPositions(prev => ({ ...prev, [devDragging]: { x, y } }));
+      setDevPositions(prev => {
+        const next = { ...prev, [devDragging]: { x, y } };
+        localStorage.setItem('devNodePositions', JSON.stringify(next));
+        return next;
+      });
     };
     const onUp = () => setDevDragging(null);
     window.addEventListener('mousemove', onMove);
