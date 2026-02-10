@@ -1019,58 +1019,63 @@ export default function WorldMap() {
           );
         })}
 
-        {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
+        {(() => {
           const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
-          const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
-          const baseOffsetX = (idx - 1) * 0.4;
-          const baseOffsetY = -0.6 - idx * 0.2;
-          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.2));
-          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.2));
-          const walk = heroWalking[hero.id];
-          const isWalking = walk?.moving;
-          const flipX = walk?.flipX;
-          const mapSpriteScale = 1.2;
-          const spriteW = 100 * mapSpriteScale;
-          const spriteH = 100 * mapSpriteScale;
-          const footCrop = 0.82;
-          const visibleH = Math.round(spriteH * footCrop);
+          const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const heroScale = Math.max(0.35, 1 / camZoom);
           return (
-            <div key={hero.id} style={{
+            <div style={{
               position: 'absolute',
-              left: `${clampedX}%`,
-              top: `${clampedY}%`,
+              left: `${zonePos.x}%`,
+              top: `${zonePos.y}%`,
               transform: `translate(-50%, -100%) scale(${heroScale})`,
               zIndex: 5,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              display: 'flex', flexDirection: 'row', alignItems: 'flex-end',
+              gap: '2px',
             }}>
-              <div style={{
-                width: spriteW, height: visibleH,
-                overflow: 'hidden',
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
-              }}>
-                <SpriteAnimation
-                  spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                  animation={isWalking ? 'walk' : 'idle'}
-                  flip={isWalking && flipX}
-                  scale={mapSpriteScale}
-                  speed={isWalking ? 100 : (150 + idx * 30)}
-                />
-              </div>
-              <div style={{
-                width: 36, height: 6, borderRadius: '50%', marginTop: -2,
-                background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
-              }} />
-              <div style={{
-                textAlign: 'center',
-                fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
-                textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: 0,
-              }}>{hero.name}</div>
+              {activeHeroes.map((hero, idx) => {
+                const walk = heroWalking[hero.id];
+                const isWalking = walk?.moving;
+                const flipX = walk?.flipX;
+                const mapSpriteScale = 1.2;
+                const spriteW = 100 * mapSpriteScale;
+                const spriteH = 100 * mapSpriteScale;
+                const footCrop = 0.82;
+                const visibleH = Math.round(spriteH * footCrop);
+                return (
+                  <div key={hero.id} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  }}>
+                    <div style={{
+                      width: spriteW, height: visibleH,
+                      overflow: 'hidden',
+                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
+                    }}>
+                      <SpriteAnimation
+                        spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                        animation={isWalking ? 'walk' : 'idle'}
+                        flip={isWalking && flipX}
+                        scale={mapSpriteScale}
+                        speed={isWalking ? 100 : (150 + idx * 30)}
+                      />
+                    </div>
+                    <div style={{
+                      width: 36, height: 6, borderRadius: '50%', marginTop: -2,
+                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
+                    }} />
+                    <div style={{
+                      textAlign: 'center',
+                      fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                      textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: 0,
+                    }}>{hero.name}</div>
+                  </div>
+                );
+              })}
             </div>
           );
-        })}
+        })()}
 
         {hoveredNode && (() => {
           if (hoveredNode.type === 'location') {
