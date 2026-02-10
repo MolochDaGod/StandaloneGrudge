@@ -1470,6 +1470,9 @@ export default function BattleScreen() {
           const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * (isBossUnit ? 1.6 : 1);
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
+          const footCrop = 0.72;
+          const visibleHeight = Math.round(spriteSize * footCrop);
+          const footY = visibleHeight;
 
           return (
             <div
@@ -1487,7 +1490,7 @@ export default function BattleScreen() {
                 zIndex: Math.floor(posY),
                 pointerEvents: unit.alive ? 'auto' : 'none',
                 width: spriteSize,
-                height: spriteSize,
+                height: footY,
                 overflow: 'visible',
               }}
             >
@@ -1587,7 +1590,7 @@ export default function BattleScreen() {
 
               {isSelected && unit.alive && (
                 <div style={{
-                  position: 'absolute', top: spriteSize - 8, left: '50%', transform: 'translateX(-50%)',
+                  position: 'absolute', top: footY - 8, left: '50%', transform: 'translateX(-50%)',
                   width: 50, height: 12, borderRadius: '50%',
                   background: 'rgba(239,68,68,0.35)',
                   border: '2px solid var(--danger)',
@@ -1597,7 +1600,7 @@ export default function BattleScreen() {
               )}
 
               <div style={{
-                position: 'absolute', top: spriteSize - 4, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: footY - 2, left: '50%', transform: 'translateX(-50%)',
                 width: 40, height: 8, borderRadius: '50%',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
                 zIndex: 1,
@@ -1606,7 +1609,7 @@ export default function BattleScreen() {
               <div
                 onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
                 style={{
-                position: 'absolute', top: spriteSize, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: footY + 2, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
                 background: 'rgba(0,0,0,0.65)', borderRadius: 4, padding: '2px 5px',
                 minWidth: 55, zIndex: 20,

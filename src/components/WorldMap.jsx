@@ -982,6 +982,8 @@ export default function WorldMap() {
           const mapSpriteScale = 1.2;
           const spriteW = 100 * mapSpriteScale;
           const spriteH = 100 * mapSpriteScale;
+          const footCrop = 0.72;
+          const visibleH = Math.round(spriteH * footCrop);
           const heroScale = Math.max(0.35, 1 / camZoom);
           return (
             <div key={hero.id} style={{
@@ -995,7 +997,7 @@ export default function WorldMap() {
               display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
               <div style={{
-                width: spriteW, height: spriteH,
+                width: spriteW, height: visibleH,
                 overflow: 'hidden',
                 filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
               }}>
@@ -1008,7 +1010,7 @@ export default function WorldMap() {
                 />
               </div>
               <div style={{
-                width: 40, height: 6, borderRadius: '50%', marginTop: -4,
+                width: 36, height: 6, borderRadius: '50%', marginTop: -2,
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
               }} />
               <div style={{
