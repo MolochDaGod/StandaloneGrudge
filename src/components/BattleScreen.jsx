@@ -1380,23 +1380,25 @@ export default function BattleScreen() {
               )}
 
               <div style={{
-                position: 'absolute', top: -55, left: '50%', transform: 'translateX(-50%)',
-                textAlign: 'center', marginBottom: 2,
-                background: 'rgba(0,0,0,0.6)', borderRadius: 5, padding: '2px 4px',
-                backdropFilter: 'blur(2px)', minWidth: 50,
+                position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                textAlign: 'center',
+                background: 'rgba(0,0,0,0.7)', borderRadius: 6, padding: '3px 6px',
+                backdropFilter: 'blur(4px)', minWidth: 60,
+                border: `1px solid ${unit.team === 'player' ? 'rgba(110,231,183,0.2)' : 'rgba(239,68,68,0.2)'}`,
               }}>
                 <div style={{
-                  fontSize: '0.5rem', fontWeight: 600,
+                  fontSize: '0.5rem', fontWeight: 700,
                   color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 65,
-                  marginBottom: 1,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 70,
+                  marginBottom: 2,
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                 }}>
                   {unit.name}
                 </div>
-                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={50} />
+                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={54} />
                 <div style={{ display: 'flex', gap: 2, marginTop: 1, justifyContent: 'center' }}>
-                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
-                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
+                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={25} />
+                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={25} />
                 </div>
                 {unit.team === 'player' && (
                   <div style={{ marginTop: 1 }}>
@@ -1405,7 +1407,7 @@ export default function BattleScreen() {
                       max={100} 
                       color="#dc2626" 
                       height={3} 
-                      width={50} 
+                      width={54} 
                     />
                     {(unit.grudge || 0) >= 100 && (
                       <div style={{
@@ -1417,16 +1419,16 @@ export default function BattleScreen() {
                   </div>
                 )}
                 {(unit.buffs?.length > 0 || unit.focusStacks > 0) && (
-                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 2, flexWrap: 'wrap' }}>
                     {unit.focusStacks > 0 && (
                       <span style={{
-                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
+                        fontSize: '0.4rem', padding: '0 3px', borderRadius: 2,
                         background: 'rgba(239,68,68,0.3)', color: '#ef4444',
                       }}>🎯{unit.focusStacks}</span>
                     )}
                     {(unit.buffs || []).slice(0, 3).map((b, i) => (
                       <span key={i} style={{
-                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
+                        fontSize: '0.4rem', padding: '0 3px', borderRadius: 2,
                         background: 'rgba(110,231,183,0.3)', color: 'var(--accent)',
                       }}>{b.source?.slice(0, 4)}</span>
                     ))}
