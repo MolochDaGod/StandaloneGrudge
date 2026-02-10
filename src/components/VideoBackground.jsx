@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { createVideoElement } from '../utils/assetManager';
 
-export default function VideoBackground({ blurred = false }) {
+export default function VideoBackground({ blurred = false, visible = true }) {
   const clearHolderRef = useRef(null);
   const blurHolderRef = useRef(null);
+  const videosRef = useRef({ clear: null, blur: null });
 
   useEffect(() => {
     const clearHolder = clearHolderRef.current;
@@ -20,16 +21,16 @@ export default function VideoBackground({ blurred = false }) {
     const clearVideo = createVideoElement('/videos/bg-clear.mp4');
     const blurVideo = createVideoElement('/videos/bg-blur.mp4');
 
+    videosRef.current = { clear: clearVideo, blur: blurVideo };
+
     if (clearVideo && clearHolder) {
       Object.assign(clearVideo.style, videoStyle);
       clearHolder.appendChild(clearVideo);
-      clearVideo.play().catch(() => {});
     }
 
     if (blurVideo && blurHolder) {
       Object.assign(blurVideo.style, videoStyle);
       blurHolder.appendChild(blurVideo);
-      blurVideo.play().catch(() => {});
     }
 
     return () => {
@@ -41,13 +42,26 @@ export default function VideoBackground({ blurred = false }) {
         blurVideo.pause();
         blurHolder.removeChild(blurVideo);
       }
+      videosRef.current = { clear: null, blur: null };
     };
   }, []);
+
+  useEffect(() => {
+    const { clear, blur } = videosRef.current;
+    if (visible) {
+      if (clear) clear.play().catch(() => {});
+      if (blur) blur.play().catch(() => {});
+    } else {
+      if (clear) clear.pause();
+      if (blur) blur.pause();
+    }
+  }, [visible]);
 
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      zIndex: 0, overflow: 'hidden', background: '#050a15'
+      zIndex: 0, overflow: 'hidden', background: '#050a15',
+      visibility: visible ? 'visible' : 'hidden'
     }}>
       <div ref={clearHolderRef} style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',

@@ -69,6 +69,8 @@ export default function App() {
     );
   }
 
+  const screensWithOwnBackground = ['world', 'battle', 'location'];
+  const bgVisible = !screensWithOwnBackground.includes(screen);
   const bgBlurred = screen !== 'title';
 
   const renderScreen = () => {
@@ -89,7 +91,7 @@ export default function App() {
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-      <VideoBackground blurred={bgBlurred} />
+      <VideoBackground blurred={bgBlurred} visible={bgVisible} />
       <div style={{
         position: 'relative', zIndex: 1, width: '100%', height: '100%',
         opacity: transitioning ? 0 : 1,
