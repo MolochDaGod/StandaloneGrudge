@@ -418,19 +418,19 @@ export default function WorldMap() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getNodePos = useCallback((locId) => {
-    return devPositions[locId] || locationPositions[locId];
+  const getNodePos = useCallback((id) => {
+    return devPositions[id] || locationPositions[id] || cityPositions[id];
   }, [devPositions]);
 
-  const handleNodeRightClick = useCallback((e, loc) => {
+  const handleNodeRightClick = useCallback((e, node) => {
     e.preventDefault();
     e.stopPropagation();
-    const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
+    const isUnlocked = node.unlocked || (node.unlockLevel && level >= node.unlockLevel) || devUnlocked[node.id];
     if (!isUnlocked) {
-      setDevUnlocked(prev => ({ ...prev, [loc.id]: true }));
+      setDevUnlocked(prev => ({ ...prev, [node.id]: true }));
       return;
     }
-    setDevDragging(loc.id);
+    setDevDragging(node.id);
     setSelectedLocation(null);
     setSelectedCity(null);
     setSelectedEvent(null);
@@ -440,7 +440,7 @@ export default function WorldMap() {
     if (!devDragging) return;
     const onMove = (e) => {
       if (!mapRef.current) return;
-      const mapEl = mapRef.current.querySelector('[data-map-inner]') || mapRef.current;
+      const mapEl = mapRef.current;
       const rect = mapEl.getBoundingClientRect();
       const x = Math.round(Math.max(2, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100)));
       const y = Math.round(Math.max(2, Math.min(98, ((e.clientY - rect.top) / rect.height) * 100)));
@@ -504,13 +504,13 @@ export default function WorldMap() {
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
     e.stopPropagation();
-    const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel);
+    const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
     if (!isCityUnlocked) return;
 
     const rect = mapRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const pos = cityPositions[city.id];
+    const pos = getNodePos(city.id);
     const nodeXPx = (pos.x / 100) * rect.width;
     const nodeYPx = (pos.y / 100) * rect.height;
     const menuWidth = 300;
@@ -537,13 +537,13 @@ export default function WorldMap() {
     setCitySubmenu(null);
     setSelectedEvent(null);
 
-    const target = cityPositions[city.id];
+    const target = getNodePos(city.id);
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
       setIsMoving(true);
       setHeroPos(target);
       setTimeout(() => setIsMoving(false), 600);
     }
-  }, [level, heroPos]);
+  }, [level, heroPos, getNodePos, devUnlocked]);
 
   const handleBattle = (locId) => {
     useGameStore.setState({ currentLocation: locId });
@@ -595,7 +595,7 @@ export default function WorldMap() {
       onMouseLeave={handleMapMouseUp}
       style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab', border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
     >
-      <div ref={mapRef} data-map-inner style={{
+      <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
         backgroundImage: 'url(/backgrounds/world_map.png)',
         backgroundSize: 'cover', backgroundPosition: 'center',
@@ -687,8 +687,8 @@ export default function WorldMap() {
 
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {pathConnections.map(([from, to], idx) => {
-            const a = locationPositions[from];
-            const b = locationPositions[to];
+            const a = getNodePos(from);
+            const b = getNodePos(to);
             const fromUnlocked = unlockedLocs.some(l => l.id === from);
             const toUnlocked = unlockedLocs.some(l => l.id === to);
             const bothUnlocked = fromUnlocked && toUnlocked;
@@ -704,8 +704,8 @@ export default function WorldMap() {
             );
           })}
           {cityConnections.map(([cityId, locId], idx) => {
-            const cityPos = cityPositions[cityId];
-            const locPos = locationPositions[locId];
+            const cityPos = getNodePos(cityId);
+            const locPos = getNodePos(locId);
             if (!cityPos || !locPos) return null;
             const city = cities.find(c => c.id === cityId);
             const isCityUnlocked = city && (city.unlocked || (city.unlockLevel && level >= city.unlockLevel));
@@ -943,24 +943,26 @@ export default function WorldMap() {
         })}
 
         {cities.map((city) => {
-          const pos = cityPositions[city.id];
+          const pos = getNodePos(city.id);
           if (!pos) return null;
-          const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel);
+          const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
           const isSelected = selectedCity === city.id;
           const cityScale = Math.max(0.3, 1 / camZoom);
+          const isCityDragging = devDragging === city.id;
 
           return (
             <div key={city.id}
               onClick={(e) => handleCityClick(e, city)}
+              onContextMenu={(e) => handleNodeRightClick(e, city)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'city', id: city.id, x: pos.x, y: pos.y, name: city.name }); }}
               onMouseLeave={() => setHoveredNode(null)}
               style={{
                 position: 'absolute',
                 left: `${pos.x}%`, top: `${pos.y}%`,
                 transform: `translate(-50%, -50%) scale(${cityScale})`,
-                zIndex: isSelected ? 10 : 3,
-                cursor: isCityUnlocked ? 'pointer' : 'not-allowed',
-                transition: 'transform 0.3s',
+                zIndex: isCityDragging ? 999 : isSelected ? 10 : 3,
+                cursor: isCityDragging ? 'grabbing' : isCityUnlocked ? 'pointer' : 'not-allowed',
+                transition: isCityDragging ? 'none' : 'transform 0.3s',
               }}
             >
               <div style={{ position: 'relative', width: 58, height: 58 }}>
@@ -1012,7 +1014,7 @@ export default function WorldMap() {
         })}
 
         {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
-          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
+          const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
           const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
           const baseOffsetX = (idx - 1) * 0.8;
           const baseOffsetY = -1.2 - idx * 0.4;
@@ -1121,7 +1123,7 @@ export default function WorldMap() {
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const speaker1Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker1?.id);
           const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
-          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
+          const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
 
           const getHeroMapPos = (idx) => {
             const hero = activeHeroes[idx];
