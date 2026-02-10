@@ -1,9 +1,9 @@
 export const cities = [
   {
     id: 'greenhollow',
-    name: 'Greenhollow',
-    description: 'A peaceful hamlet nestled at the edge of the Verdant Plains. Traders and adventurers gather here.',
-    icon: '🏘️',
+    name: 'Camp',
+    description: 'Your basecamp at the edge of the Verdant Plains. A merchant offers supplies and buys your spoils of war.',
+    icon: '⛺',
     color: '#4ade80',
     glow: 'rgba(74,222,128,0.4)',
     unlocked: true,

@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
@@ -327,6 +327,8 @@ const useGameStore = create(persist((set, get) => ({
   locationsCleared: [],
   zoneConquer: {},
   inventory: [],
+  shopInventory: [],
+  shopLastRefresh: 0,
   pendingLoot: [],
   harvestNodes: [
     { id: 'gold_mine', name: 'Gold Mine', icon: '⛏️', resource: 'gold', baseRate: 3, unlockLevel: 1 },
@@ -1797,6 +1799,38 @@ const useGameStore = create(persist((set, get) => ({
   },
   discardPendingLoot: () => set({ pendingLoot: [] }),
 
+  refreshShop: () => {
+    const state = get();
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    const classId = primaryHero?.classId || state.playerClass || 'warrior';
+    const inventory = generateShopInventory(state.level, classId);
+    set({ shopInventory: inventory, shopLastRefresh: Date.now() });
+  },
+
+  buyItem: (itemId) => {
+    const state = get();
+    const item = state.shopInventory.find(i => i.id === itemId);
+    if (!item) return;
+    const price = getItemPrice(item);
+    if (state.gold < price) return;
+    set({
+      gold: state.gold - price,
+      inventory: [...state.inventory, { ...item, id: `bought_${item.templateId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }],
+      shopInventory: state.shopInventory.filter(i => i.id !== itemId),
+    });
+  },
+
+  sellItem: (itemId) => {
+    const state = get();
+    const item = state.inventory.find(i => i.id === itemId);
+    if (!item) return;
+    const price = getSellPrice(item);
+    set({
+      gold: state.gold + price,
+      inventory: state.inventory.filter(i => i.id !== itemId),
+    });
+  },
+
   upgradeEquipment: (heroId, slot) => {
     const state = get();
     const hero = state.heroRoster.find(h => h.id === heroId);
@@ -2133,6 +2167,8 @@ const useGameStore = create(persist((set, get) => ({
       locationsCleared: [],
       zoneConquer: {},
       inventory: [],
+      shopInventory: [],
+      shopLastRefresh: 0,
       pendingLoot: [],
       activeHarvests: {},
       harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
@@ -2202,6 +2238,8 @@ const useGameStore = create(persist((set, get) => ({
     locationsCleared: state.locationsCleared,
     zoneConquer: state.zoneConquer,
     inventory: state.inventory,
+    shopInventory: state.shopInventory,
+    shopLastRefresh: state.shopLastRefresh,
     harvestResources: state.harvestResources,
     activeHarvests: state.activeHarvests,
     trainingPhase: state.trainingPhase,

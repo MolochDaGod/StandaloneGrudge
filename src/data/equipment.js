@@ -537,3 +537,77 @@ export function getEquipmentStatBonuses(equipment) {
   });
   return bonuses;
 }
+
+export function getItemPrice(item) {
+  const statWeights = {
+    physicalDamage: 8, magicDamage: 8, defense: 6, health: 0.8, mana: 0.6, stamina: 0.5,
+    criticalChance: 7, criticalDamage: 3, block: 5, evasion: 6, resistance: 5,
+    attackSpeed: 6, armorPenetration: 7, drainHealth: 10, damageReduction: 8,
+    accuracy: 4, healthRegen: 8, manaRegen: 6, cooldownReduction: 7,
+    blockEffect: 3, defenseBreak: 5, criticalEvasion: 5,
+  };
+  
+  let statValue = 0;
+  if (item.stats) {
+    Object.entries(item.stats).forEach(([key, val]) => {
+      statValue += Math.abs(val) * (statWeights[key] || 3);
+    });
+  }
+  
+  const slotMult = { weapon: 1.2, offhand: 1.0, armor: 1.1, accessory: 0.9 };
+  const mult = slotMult[item.slot] || 1.0;
+  
+  const tierPremium = { 1: 1, 2: 1.5, 3: 2.2, 4: 3.2, 5: 4.5, 6: 6, 7: 8, 8: 11 };
+  const tierMult = tierPremium[item.tier] || 1;
+  
+  const basePrice = Math.max(5, Math.floor(statValue * mult * tierMult));
+  return basePrice;
+}
+
+export function getSellPrice(item) {
+  return Math.max(1, Math.floor(getItemPrice(item) * 0.4));
+}
+
+export function generateShopInventory(playerLevel, classId) {
+  const shopItems = [];
+  const maxTier = Math.min(8, Math.max(1, Math.ceil(playerLevel / 3)));
+  
+  const availableTemplates = allEquipmentTemplates.filter(t => {
+    if (t.classReq && !t.classReq.includes(classId)) return false;
+    return true;
+  });
+  
+  const shuffled = [...availableTemplates].sort(() => Math.random() - 0.5);
+  const count = 8 + Math.floor(Math.random() * 5);
+  
+  for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+    const template = shuffled[i];
+    let tier = maxTier;
+    const roll = Math.random();
+    if (roll < 0.3) tier = Math.max(1, maxTier - 1);
+    if (roll < 0.1) tier = Math.max(1, maxTier - 2);
+    
+    const mult = TIERS[tier].multiplier;
+    const scaledStats = {};
+    Object.entries(template.stats).forEach(([key, val]) => {
+      scaledStats[key] = Math.round(val * mult * 10) / 10;
+    });
+    
+    const item = {
+      id: `shop_${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      templateId: template.id,
+      name: template.name,
+      slot: template.slot,
+      icon: template.icon,
+      weaponType: template.weaponType || null,
+      armorType: template.armorType || null,
+      relicType: template.relicType || null,
+      tier,
+      classReq: template.classReq || null,
+      stats: scaledStats,
+    };
+    shopItems.push(item);
+  }
+  
+  return shopItems;
+}

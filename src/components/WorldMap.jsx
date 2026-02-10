@@ -8,7 +8,7 @@ import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
-import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
+import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
 
 const bossMapSprites = {
   nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)' },
@@ -146,6 +146,7 @@ export default function WorldMap() {
     harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
     startMissionBattle, startArenaBattle, completedMissions,
     upgradeEquipment,
+    shopInventory, inventory, buyItem, sellItem, refreshShop,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -162,6 +163,7 @@ export default function WorldMap() {
   const [showHarvest, setShowHarvest] = useState(false);
   const [upgradeHeroId, setUpgradeHeroId] = useState(null);
   const [upgradeMsg, setUpgradeMsg] = useState(null);
+  const [tradeTab, setTradeTab] = useState('buy');
   const [heroPos, setHeroPos] = useState(locationPositions.verdant_plains);
   const [currentZone, setCurrentZone] = useState('verdant_plains');
   const [isMoving, setIsMoving] = useState(false);
@@ -833,7 +835,11 @@ export default function WorldMap() {
                   />
                   <MenuButton
                     icon="🛒" label="Trade" sublabel="Buy supplies & sell loot"
-                    color="var(--gold)" disabled
+                    color="var(--gold)" onClick={() => {
+                      setCitySubmenu('trade');
+                      setTradeTab('buy');
+                      if (shopInventory.length === 0) refreshShop();
+                    }}
                   />
                   <MenuButton
                     icon="🏨" label="Rest" sublabel={`Heal party (${city.innCost}g)`}
@@ -1072,6 +1078,145 @@ export default function WorldMap() {
                       })()}
                     </div>
                   )}
+                </div>
+              )}
+
+              {citySubmenu === 'trade' && (
+                <div style={{ padding: '8px' }}>
+                  <button onClick={() => { setCitySubmenu(null); setTradeTab('buy'); }} style={{
+                    background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    ← Back
+                  </button>
+                  <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                    Merchant
+                  </div>
+                  <div style={{ color: 'var(--gold)', fontSize: '0.65rem', padding: '0 8px 6px' }}>
+                    Gold: {gold}g
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 4, padding: '0 8px 8px' }}>
+                    <button onClick={() => setTradeTab('buy')} style={{
+                      flex: 1, padding: '5px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
+                      fontSize: '0.7rem', fontWeight: 700,
+                      background: tradeTab === 'buy' ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'rgba(255,255,255,0.06)',
+                      color: tradeTab === 'buy' ? '#000' : 'var(--muted)',
+                    }}>Buy</button>
+                    <button onClick={() => setTradeTab('sell')} style={{
+                      flex: 1, padding: '5px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
+                      fontSize: '0.7rem', fontWeight: 700,
+                      background: tradeTab === 'sell' ? 'linear-gradient(135deg, #16a34a, #22c55e)' : 'rgba(255,255,255,0.06)',
+                      color: tradeTab === 'sell' ? '#000' : 'var(--muted)',
+                    }}>Sell</button>
+                    <button onClick={() => refreshShop()} style={{
+                      padding: '5px 10px', border: 'none', borderRadius: 6, cursor: 'pointer',
+                      fontSize: '0.65rem', fontWeight: 600,
+                      background: 'rgba(255,255,255,0.06)', color: 'var(--muted)',
+                    }}>Refresh</button>
+                  </div>
+
+                  <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                    {tradeTab === 'buy' && (
+                      <>
+                        {shopInventory.length === 0 && (
+                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                            The merchant has nothing for sale. Try refreshing.
+                          </div>
+                        )}
+                        {shopInventory.map(item => {
+                          const price = getItemPrice(item);
+                          const canAfford = gold >= price;
+                          const tierDef = TIERS[item.tier] || TIERS[1];
+                          return (
+                            <div key={item.id} style={{
+                              background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.15)',
+                              borderRadius: 8, padding: '8px 10px', marginBottom: 4,
+                              transition: 'all 0.15s',
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
+                                  {item.icon} {item.name}
+                                </span>
+                                <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                  T{item.tier} {tierDef.name}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
+                                {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                {item.stats && Object.entries(item.stats).map(([k, v]) => (
+                                  <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => { if (canAfford) buyItem(item.id); }}
+                                disabled={!canAfford}
+                                style={{
+                                  width: '100%', padding: '4px 0', border: 'none', borderRadius: 6, cursor: canAfford ? 'pointer' : 'not-allowed',
+                                  fontSize: '0.65rem', fontWeight: 700,
+                                  background: canAfford ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'rgba(100,100,100,0.3)',
+                                  color: canAfford ? '#000' : 'var(--muted)',
+                                }}
+                              >
+                                Buy - {price}g
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {tradeTab === 'sell' && (
+                      <>
+                        {inventory.length === 0 && (
+                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                            Your inventory is empty.
+                          </div>
+                        )}
+                        {inventory.map(item => {
+                          const price = getSellPrice(item);
+                          const tierDef = TIERS[item.tier] || TIERS[1];
+                          return (
+                            <div key={item.id} style={{
+                              background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)',
+                              borderRadius: 8, padding: '8px 10px', marginBottom: 4,
+                              transition: 'all 0.15s',
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
+                                  {item.icon} {item.name}
+                                </span>
+                                <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                  T{item.tier} {tierDef.name}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
+                                {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                {item.stats && Object.entries(item.stats).map(([k, v]) => (
+                                  <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => sellItem(item.id)}
+                                style={{
+                                  width: '100%', padding: '4px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
+                                  fontSize: '0.65rem', fontWeight: 700,
+                                  background: 'linear-gradient(135deg, #16a34a, #22c55e)',
+                                  color: '#000',
+                                }}
+                              >
+                                Sell - {price}g
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
