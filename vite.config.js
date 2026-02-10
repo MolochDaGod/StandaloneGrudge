@@ -8,6 +8,7 @@ export default defineConfig({
     port: 5000,
     allowedHosts: true,
   },
+  appType: 'spa',
   build: {
     outDir: 'dist',
     chunkSizeWarningLimit: 800,

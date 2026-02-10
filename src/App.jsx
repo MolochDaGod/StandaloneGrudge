@@ -15,8 +15,10 @@ import AccountPage from './components/AccountPage';
 import TrainingScreen from './components/TrainingScreen';
 import LootPopup from './components/LootPopup';
 import SettingsMenu from './components/SettingsMenu';
+import AdminMap from './components/AdminMap';
+import AdminBattle from './components/AdminBattle';
 
-export default function App() {
+function GameApp() {
   const screen = useGameStore(s => s.screen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
@@ -125,4 +127,13 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  const path = window.location.pathname;
+
+  if (path === '/adminmap') return <AdminMap />;
+  if (path === '/adminbattle') return <AdminBattle />;
+
+  return <GameApp />;
 }
