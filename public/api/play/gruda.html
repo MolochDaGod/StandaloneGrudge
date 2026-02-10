@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grudge Warlords - Gruda Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0f1e;--surface:rgba(14,22,48,0.95);--accent:#6ee7b7;--gold:#fbbf24;--hp:#ef4444;--mana:#6366f1;--stamina:#22c55e;--text:#e2e8f0;--dim:#64748b}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3{font-family:'Cinzel',serif}
+.container{max-width:900px;margin:0 auto;padding:20px}
+.title-bar{text-align:center;padding:24px 0 16px;border-bottom:1px solid rgba(110,231,183,0.15);margin-bottom:20px}
+.title-bar h1{font-size:1.6rem;background:linear-gradient(135deg,#6ee7b7,#fbbf24,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.title-bar p{color:var(--dim);font-size:0.75rem;letter-spacing:2px;margin-top:4px}
+.phase{display:none}.phase.active{display:block}
+.hero-cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.hero-card{background:var(--surface);border:1px solid rgba(110,231,183,0.2);border-radius:12px;padding:14px;width:220px;transition:all 0.3s}
+.hero-card:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(110,231,183,0.15)}
+.hero-card .name{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--accent);margin-bottom:6px}
+.hero-card .info{font-size:0.7rem;color:var(--dim);margin-bottom:4px}
+.hero-card .info span{color:var(--text)}
+.bar-container{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin:3px 0;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.bar-hp{background:linear-gradient(90deg,#dc2626,#ef4444)}.bar-mp{background:linear-gradient(90deg,#4f46e5,#6366f1)}.bar-sp{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.stat-row{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--dim);margin:1px 0}
+.stat-row .val{color:var(--text)}
+.btn{font-family:'Cinzel',serif;padding:10px 28px;border:1px solid var(--accent);background:rgba(110,231,183,0.08);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.85rem;letter-spacing:1px;transition:all 0.3s}
+.btn:hover{background:rgba(110,231,183,0.2);box-shadow:0 0 16px rgba(110,231,183,0.2)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-gold{border-color:var(--gold);color:var(--gold);background:rgba(251,191,36,0.08)}
+.btn-gold:hover{background:rgba(251,191,36,0.2)}
+.btn-red{border-color:var(--hp);color:var(--hp);background:rgba(239,68,68,0.08)}
+.btn-red:hover{background:rgba(239,68,68,0.2)}
+.center{text-align:center}
+.mt{margin-top:16px}.mb{margin-bottom:16px}
+.battle-field{position:relative;width:100%;height:340px;background:linear-gradient(180deg,rgba(14,22,48,0.9) 0%,rgba(30,10,60,0.85) 100%);border-radius:12px;border:1px solid rgba(110,231,183,0.1);overflow:hidden;margin:16px 0}
+.battle-field::before{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(180deg,transparent,rgba(20,10,40,0.5));pointer-events:none}
+.battle-unit{position:absolute;text-align:center;transition:all 0.5s}
+.battle-unit .unit-name{font-family:'Cinzel',serif;font-size:0.55rem;color:var(--accent);white-space:nowrap}
+.battle-unit.enemy .unit-name{color:#f87171}
+.battle-unit .sprite-box{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 2px}
+.battle-unit.player .sprite-box{background:rgba(110,231,183,0.1);border:2px solid rgba(110,231,183,0.3)}
+.battle-unit.enemy .sprite-box{background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.3)}
+.battle-unit .unit-bars{width:70px;margin:0 auto}
+.battle-unit .mini-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin:1px 0;overflow:hidden}
+.battle-unit .mini-bar .fill{height:100%;border-radius:2px;transition:width 0.4s}
+.action-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:12px;background:var(--surface);border-radius:10px;border:1px solid rgba(110,231,183,0.1);margin:8px 0}
+.ability-btn{padding:8px 14px;border:1px solid rgba(110,231,183,0.2);background:rgba(110,231,183,0.05);color:var(--text);border-radius:6px;cursor:pointer;font-size:0.7rem;transition:all 0.2s;font-family:'Jost',sans-serif}
+.ability-btn:hover:not(:disabled){background:rgba(110,231,183,0.15);border-color:var(--accent)}
+.ability-btn:disabled{opacity:0.3;cursor:not-allowed}
+.ability-btn.selected{border-color:var(--gold);background:rgba(251,191,36,0.15);color:var(--gold)}
+.battle-log{max-height:120px;overflow-y:auto;padding:8px;background:var(--surface);border-radius:8px;border:1px solid rgba(255,255,255,0.05);font-size:0.65rem;color:var(--dim)}
+.battle-log .entry{padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03)}.battle-log .entry:last-child{border:none}
+.battle-log .dmg{color:#f87171}.battle-log .heal{color:#4ade80}.battle-log .info{color:#93c5fd}
+.target-select{display:flex;gap:6px;justify-content:center;margin:4px 0}
+.target-btn{padding:4px 12px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#fca5a5;border-radius:5px;cursor:pointer;font-size:0.65rem;transition:all 0.2s}
+.target-btn:hover{background:rgba(239,68,68,0.2);border-color:#f87171}
+.target-btn.ally{border-color:rgba(110,231,183,0.3);background:rgba(110,231,183,0.08);color:var(--accent)}
+.target-btn.ally:hover{background:rgba(110,231,183,0.2)}
+.flash{animation:flash 0.3s}@keyframes flash{0%,100%{opacity:1}50%{opacity:0.3}}
+.shake{animation:shake 0.4s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.float-dmg{position:absolute;font-family:'Cinzel',serif;font-weight:700;font-size:1rem;color:#ef4444;pointer-events:none;animation:floatUp 1s forwards;z-index:20}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-20px) scale(1.2)}100%{opacity:0;transform:translateY(-40px) scale(0.8)}}
+.victory-screen,.defeat-screen{text-align:center;padding:40px 20px}
+.victory-screen h2{font-size:1.8rem;color:var(--gold);margin-bottom:12px}
+.defeat-screen h2{font-size:1.8rem;color:var(--hp);margin-bottom:12px}
+.import-area{background:var(--surface);border:1px solid rgba(110,231,183,0.15);border-radius:12px;padding:20px;margin:16px 0}
+.import-area textarea{width:100%;height:100px;background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.15);border-radius:8px;color:var(--text);font-family:'Jost',sans-serif;padding:10px;font-size:0.8rem;resize:vertical}
+.import-area textarea::placeholder{color:var(--dim)}
+.glow{animation:glow 2s ease-in-out infinite}@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(110,231,183,0.2)}50%{box-shadow:0 0 20px rgba(110,231,183,0.5)}}
+.active-turn{box-shadow:0 0 16px rgba(251,191,36,0.6) !important;border-color:var(--gold) !important}
+.dead{opacity:0.3;filter:grayscale(1)}
+select{background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.2);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'Jost',sans-serif;font-size:0.8rem}
+.error{color:#f87171;font-size:0.75rem;margin-top:8px}
+.grudge-bar{height:4px;background:rgba(239,68,68,0.15);border-radius:2px;margin:2px 0;overflow:hidden}
+.grudge-fill{height:100%;background:linear-gradient(90deg,#b91c1c,#ef4444,#fbbf24);border-radius:2px;transition:width 0.5s}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="title-bar">
+<h1>GRUDA ARENA</h1>
+<p>GRUDGE WARLORDS CHALLENGE MODE</p>
+</div>
+
+<div id="phase-load" class="phase active">
+<div class="center mb">
+<h2 style="font-size:1.1rem;color:var(--accent);margin-bottom:8px">Enter the Arena</h2>
+<p style="font-size:0.75rem;color:var(--dim)">Import hero data to begin your challenge battle</p>
+</div>
+<div class="import-area">
+<p style="font-size:0.75rem;color:var(--dim);margin-bottom:8px">Paste hero JSON or a share code below:</p>
+<textarea id="heroInput" placeholder='[{"name":"Kael","race":"elf","class":"mage","level":5,"attrs":{"Strength":2,"Vitality":3,"Endurance":2,"Dexterity":4,"Agility":4,"Intellect":10,"Wisdom":7,"Tactics":1}}]'></textarea>
+<div id="loadError" class="error" style="display:none"></div>
+<div class="center mt">
+<button class="btn glow" onclick="loadHeroes()">IMPORT &amp; FIGHT</button>
+</div>
+</div>
+<div class="center mt" style="padding-top:12px;border-top:1px solid rgba(255,255,255,0.05)">
+<p style="font-size:0.7rem;color:var(--dim);margin-bottom:8px">Or generate a quick demo team:</p>
+<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+<button class="btn" onclick="quickDemo('warrior')">Warrior Team</button>
+<button class="btn" onclick="quickDemo('mage')">Mage Team</button>
+<button class="btn" onclick="quickDemo('ranger')">Ranger Team</button>
+<button class="btn" onclick="quickDemo('worge')">Worge Team</button>
+</div>
+</div>
+</div>
+
+<div id="phase-roster" class="phase">
+<div class="center mb">
+<h2 style="font-size:1rem;color:var(--accent)">Your Warband</h2>
+<p style="font-size:0.7rem;color:var(--dim)">Review your heroes before battle</p>
+</div>
+<div id="heroCards" class="hero-cards"></div>
+<div class="center mt">
+<button class="btn btn-gold glow" onclick="startBattle()">ENTER THE ARENA</button>
+<button class="btn mt" onclick="showPhase('phase-load')" style="margin-left:8px">BACK</button>
+</div>
+</div>
+
+<div id="phase-battle" class="phase">
+<div id="battleField" class="battle-field"></div>
+<div id="turnIndicator" class="center" style="font-size:0.7rem;color:var(--gold);margin:4px 0"></div>
+<div id="actionBar" class="action-bar" style="display:none"></div>
+<div id="targetBar" class="target-select" style="display:none"></div>
+<div id="battleLog" class="battle-log"><div class="entry info">Preparing for battle...</div></div>
+</div>
+
+<div id="phase-victory" class="phase">
+<div class="victory-screen">
+<h2>VICTORY</h2>
+<p style="color:var(--dim);margin-bottom:20px">Your warband has conquered the arena!</p>
+<div id="victoryStats" style="margin-bottom:20px"></div>
+<button class="btn btn-gold" onclick="resetArena()">FIGHT AGAIN</button>
+<button class="btn mt" style="margin-left:8px" onclick="goHome()">RETURN HOME</button>
+</div>
+</div>
+
+<div id="phase-defeat" class="phase">
+<div class="defeat-screen">
+<h2>DEFEATED</h2>
+<p style="color:var(--dim);margin-bottom:20px">Your warband has fallen in the arena...</p>
+<button class="btn btn-red" onclick="resetArena()">TRY AGAIN</button>
+<button class="btn mt" style="margin-left:8px" onclick="goHome()">RETURN HOME</button>
+</div>
+</div>
+</div>
+
+<script>
+const CLASSES = {
+  warrior: { name:'Warrior', icon:'⚔️', color:'#ef4444', startAttrs:{Strength:5,Vitality:3,Endurance:2,Dexterity:1,Agility:1,Intellect:0,Wisdom:0,Tactics:0},
+    abilities:[
+      {id:'slash',name:'Slash',icon:'⚔️',type:'physical',damage:0.9,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic attack, restores resources'},
+      {id:'power_strike',name:'Power Strike',icon:'💥',type:'physical',damage:2.0,manaCost:0,staminaCost:25,cd:2,target:'enemy',desc:'Devastating 2x damage blow'},
+      {id:'war_cry',name:'War Cry',icon:'📢',type:'buff',damage:0,manaCost:0,staminaCost:30,cd:5,target:'self',desc:'+30% damage for 3 turns',effect:{stat:'damage',mult:1.3,dur:3}},
+      {id:'shield_bash',name:'Shield Bash',icon:'🛡️',type:'physical',damage:0.8,manaCost:0,staminaCost:20,cd:4,target:'enemy',desc:'Stun 1 turn',effect:{type:'stun',dur:1}},
+      {id:'cleave',name:'Cleave',icon:'🩸',type:'physical',damage:1.5,manaCost:0,staminaCost:22,cd:3,target:'enemy',desc:'Bleed for 3 turns',effect:{type:'dot',dmg:0.12,dur:3}},
+    ]},
+  mage: { name:'Mage Priest', icon:'🔮', color:'#8b5cf6', startAttrs:{Strength:0,Vitality:1,Endurance:1,Dexterity:0,Agility:0,Intellect:5,Wisdom:4,Tactics:1},
+    abilities:[
+      {id:'arcane_bolt',name:'Arcane Bolt',icon:'✨',type:'magical',damage:1.0,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic spell, restores mana'},
+      {id:'fireball',name:'Fireball',icon:'🔥',type:'magical',damage:2.5,manaCost:35,staminaCost:0,cd:3,target:'enemy',desc:'Massive fire damage + burn'},
+      {id:'heal',name:'Divine Heal',icon:'💚',type:'heal',damage:0,manaCost:40,staminaCost:0,cd:4,target:'ally',desc:'Restore 30% max HP',healPct:0.3},
+      {id:'ice_storm',name:'Ice Storm',icon:'❄️',type:'magical',damage:1.8,manaCost:30,staminaCost:0,cd:3,target:'enemy',desc:'Freeze, -40% enemy damage 2 turns'},
+    ]},
+  ranger: { name:'Ranger', icon:'🏹', color:'#22c55e', startAttrs:{Strength:1,Vitality:1,Endurance:1,Dexterity:5,Agility:3,Intellect:0,Wisdom:0,Tactics:1},
+    abilities:[
+      {id:'quick_shot',name:'Quick Shot',icon:'🏹',type:'physical',damage:0.85,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic shot, restores resources'},
+      {id:'aimed_shot',name:'Aimed Shot',icon:'🎯',type:'physical',damage:2.2,manaCost:0,staminaCost:28,cd:2,target:'enemy',desc:'Precise high-damage shot'},
+      {id:'multi_shot',name:'Multi-Shot',icon:'🌟',type:'physical',damage:1.2,manaCost:0,staminaCost:30,cd:3,target:'all_enemies',desc:'Hit all enemies'},
+      {id:'evade',name:'Evade',icon:'💨',type:'buff',damage:0,manaCost:0,staminaCost:15,cd:4,target:'self',desc:'+50% dodge for 2 turns',effect:{stat:'dodge',add:50,dur:2}},
+    ]},
+  worge: { name:'Worge', icon:'🐺', color:'#d97706', startAttrs:{Strength:2,Vitality:2,Endurance:1,Dexterity:2,Agility:2,Intellect:2,Wisdom:1,Tactics:0},
+    abilities:[
+      {id:'claw_strike',name:'Claw Strike',icon:'🐾',type:'physical',damage:0.95,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic claw attack'},
+      {id:'lightning_bolt',name:'Lightning Bolt',icon:'⚡',type:'magical',damage:2.0,manaCost:25,staminaCost:0,cd:2,target:'enemy',desc:'Electric shock damage'},
+      {id:'bear_form',name:'Bear Form',icon:'🐻',type:'buff',damage:0,manaCost:20,staminaCost:0,cd:6,target:'self',desc:'Transform: +50% HP, +30% damage 4 turns',effect:{stat:'transform',dur:4}},
+      {id:'root',name:'Entangle',icon:'🌿',type:'magical',damage:1.0,manaCost:20,staminaCost:0,cd:3,target:'enemy',desc:'Root + DoT 2 turns',effect:{type:'dot',dmg:0.15,dur:2}},
+    ]},
+};
+const RACES = {
+  human:{name:'Human',icon:'👤',bonuses:{Strength:1,Intellect:1,Vitality:1,Dexterity:1,Endurance:1,Wisdom:1,Agility:1,Tactics:1}},
+  orc:{name:'Orc',icon:'👹',bonuses:{Strength:4,Vitality:2,Endurance:2,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:0}},
+  elf:{name:'Elf',icon:'🧝',bonuses:{Strength:0,Vitality:0,Endurance:0,Dexterity:2,Agility:2,Intellect:3,Wisdom:1,Tactics:0}},
+  undead:{name:'Undead',icon:'💀',bonuses:{Strength:2,Vitality:3,Endurance:3,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:0}},
+  dwarf:{name:'Dwarf',icon:'⛏️',bonuses:{Strength:2,Vitality:2,Endurance:3,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:1}},
+  barbarian:{name:'Barbarian',icon:'🪓',bonuses:{Strength:3,Vitality:1,Endurance:1,Dexterity:1,Agility:2,Intellect:0,Wisdom:0,Tactics:0}},
+};
+
+const ENEMY_TEMPLATES = [
+  {name:'Shadow Knight',icon:'🗡️',cls:'warrior',hp:1.1,dmg:1.0,def:1.0,spd:85},
+  {name:'Dark Mage',icon:'🔮',cls:'mage',hp:0.7,dmg:1.3,def:0.6,spd:90},
+  {name:'Beast Hunter',icon:'🏹',cls:'ranger',hp:0.8,dmg:1.1,def:0.7,spd:100},
+  {name:'Cursed Shifter',icon:'🐺',cls:'worge',hp:1.0,dmg:1.0,def:0.8,spd:95},
+  {name:'Bone Warrior',icon:'💀',cls:'warrior',hp:1.3,dmg:0.9,def:1.2,spd:75},
+  {name:'Void Sorcerer',icon:'🌀',cls:'mage',hp:0.6,dmg:1.5,def:0.5,spd:92},
+];
+
+let gameHeroes = [];
+let battleUnits = [];
+let turnOrder = [];
+let currentTurnIdx = 0;
+let selectedAbility = null;
+let battlePhase = 'idle';
+let cooldowns = {};
+let buffs = {};
+let dots = {};
+let stunned = {};
+let grudge = {};
+let floatId = 0;
+
+function calcStats(attrs, level) {
+  const s = {health:250,mana:100,stamina:80,physicalDamage:10,magicDamage:8,defense:5,speed:50,critChance:5,dodge:3};
+  s.health += level*10; s.mana += level*5; s.stamina += level*3;
+  s.physicalDamage += level*2; s.magicDamage += level*1.5; s.defense += level*2;
+  const eff = p => p <= 10 ? p : 10 + (p-10)*0.6;
+  if(attrs.Strength){const e=eff(attrs.Strength);s.health+=e*5;s.physicalDamage+=e*1.25;s.defense+=e*4}
+  if(attrs.Vitality){const e=eff(attrs.Vitality);s.health+=e*12;s.defense+=e*2}
+  if(attrs.Endurance){const e=eff(attrs.Endurance);s.stamina+=e*8;s.mana+=e*3}
+  if(attrs.Dexterity){const e=eff(attrs.Dexterity);s.physicalDamage+=e*0.75;s.critChance+=e*0.8}
+  if(attrs.Agility){const e=eff(attrs.Agility);s.speed+=e*3;s.dodge+=e*1.2}
+  if(attrs.Intellect){const e=eff(attrs.Intellect);s.magicDamage+=e*2;s.mana+=e*5}
+  if(attrs.Wisdom){const e=eff(attrs.Wisdom);s.mana+=e*4;s.magicDamage+=e*0.8}
+  if(attrs.Tactics){const e=eff(attrs.Tactics);s.critChance+=e*0.5;s.speed+=e*1}
+  return s;
+}
+
+function mergeAttrs(base, race, classAttrs) {
+  const r = {};
+  for(const k of ['Strength','Vitality','Endurance','Dexterity','Agility','Intellect','Wisdom','Tactics']) {
+    r[k] = (base[k]||0) + (race[k]||0) + (classAttrs[k]||0);
+  }
+  return r;
+}
+
+function parseHeroInput(raw) {
+  try {
+    if (raw.startsWith('GW:')) {
+      const decoded = atob(raw.slice(3));
+      return JSON.parse(decoded);
+    }
+    return JSON.parse(raw);
+  } catch(e) {
+    throw new Error('Invalid hero data format. Use JSON array or GW: share code.');
+  }
+}
+
+function validateHero(h) {
+  if (!h.name || typeof h.name !== 'string') throw new Error('Each hero needs a "name"');
+  const r = (h.race || h.raceId || '').toLowerCase();
+  const c = (h.class || h.classId || '').toLowerCase();
+  if (!RACES[r]) throw new Error(`Unknown race "${r}" for ${h.name}. Use: ${Object.keys(RACES).join(', ')}`);
+  if (!CLASSES[c]) throw new Error(`Unknown class "${c}" for ${h.name}. Use: ${Object.keys(CLASSES).join(', ')}`);
+  const lvl = Math.max(1, Math.min(20, parseInt(h.level)||1));
+  const hasFullAttrs = h.attributePoints != null;
+  const baseAttrs = h.attributePoints || h.attrs || h.attributes || {};
+  return { name: h.name, raceId: r, classId: c, level: lvl, baseAttrs, premerged: hasFullAttrs };
+}
+
+function buildHero(data) {
+  const cls = CLASSES[data.classId];
+  const race = RACES[data.raceId];
+  const finalAttrs = data.premerged ? data.baseAttrs : mergeAttrs(data.baseAttrs, race.bonuses, cls.startAttrs);
+  const stats = calcStats(finalAttrs, data.level);
+  return {
+    id: 'hero_' + Math.random().toString(36).slice(2,8),
+    name: data.name,
+    raceId: data.raceId,
+    classId: data.classId,
+    level: data.level,
+    attrs: finalAttrs,
+    team: 'player',
+    ...stats,
+    maxHealth: Math.floor(stats.health),
+    health: Math.floor(stats.health),
+    maxMana: Math.floor(stats.mana),
+    mana: Math.floor(stats.mana),
+    maxStamina: Math.floor(stats.stamina),
+    stamina: Math.floor(stats.stamina),
+    abilities: cls.abilities,
+    icon: cls.icon,
+    color: cls.color,
+  };
+}
+
+function generateEnemies(heroes) {
+  const avgLevel = heroes.reduce((s,h)=>s+h.level,0)/heroes.length;
+  const count = Math.min(heroes.length + 1, 4);
+  const enemies = [];
+  for (let i = 0; i < count; i++) {
+    const tmpl = ENEMY_TEMPLATES[Math.floor(Math.random()*ENEMY_TEMPLATES.length)];
+    const eCls = CLASSES[tmpl.cls];
+    const scale = 1 + avgLevel * 0.18;
+    const hp = Math.floor(250 * tmpl.hp * scale);
+    const spd = tmpl.spd + avgLevel;
+    enemies.push({
+      id: 'enemy_' + i + '_' + Math.random().toString(36).slice(2,6),
+      name: tmpl.name,
+      team: 'enemy',
+      classId: tmpl.cls,
+      raceId: null,
+      level: Math.round(avgLevel),
+      icon: tmpl.icon,
+      color: '#f87171',
+      health: hp, maxHealth: hp,
+      mana: Math.floor(100 * scale), maxMana: Math.floor(100 * scale),
+      stamina: Math.floor(80 * scale), maxStamina: Math.floor(80 * scale),
+      physicalDamage: Math.floor(12 * tmpl.dmg * scale),
+      magicDamage: Math.floor(10 * tmpl.dmg * scale),
+      defense: Math.floor(8 * tmpl.def * scale),
+      speed: spd,
+      critChance: 5 + avgLevel * 0.3,
+      dodge: 3 + avgLevel * 0.2,
+      abilities: eCls.abilities,
+    });
+  }
+  return enemies;
+}
+
+function loadHeroes() {
+  const input = document.getElementById('heroInput').value.trim();
+  const errEl = document.getElementById('loadError');
+  errEl.style.display = 'none';
+  if (!input) { errEl.textContent = 'Please paste hero data first'; errEl.style.display = 'block'; return; }
+  try {
+    let data = parseHeroInput(input);
+    if (!Array.isArray(data)) data = [data];
+    if (data.length === 0) throw new Error('Need at least 1 hero');
+    if (data.length > 3) data = data.slice(0, 3);
+    gameHeroes = data.map(h => buildHero(validateHero(h)));
+    showRoster();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function quickDemo(cls) {
+  const names = {warrior:['Ragnar','Thane','Brynhild'],mage:['Elara','Zephyr','Isolde'],ranger:['Aelith','Faelen','Sylas'],worge:['Fenris','Ulfric','Luna']};
+  const races = ['human','orc','elf','undead','dwarf','barbarian'];
+  const n = names[cls] || names.warrior;
+  const heroes = n.map((name, i) => ({
+    name, race: races[i % races.length], class: cls, level: 5 + i * 2,
+    attrs: { Strength: 3+i, Vitality: 3, Endurance: 2, Dexterity: 2+i, Agility: 2, Intellect: 2+i, Wisdom: 2, Tactics: 1 }
+  }));
+  document.getElementById('heroInput').value = JSON.stringify(heroes);
+  loadHeroes();
+}
+
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showRoster() {
+  const container = document.getElementById('heroCards');
+  container.innerHTML = '';
+  gameHeroes.forEach(h => {
+    const cls = CLASSES[h.classId];
+    const race = RACES[h.raceId];
+    container.innerHTML += `
+      <div class="hero-card">
+        <div class="name">${h.icon} ${h.name}</div>
+        <div class="info">${race?.name||''} ${cls?.name||''} &bull; Level <span>${h.level}</span></div>
+        <div class="bar-container"><div class="bar-fill bar-hp" style="width:100%"></div></div>
+        <div class="stat-row"><span>HP</span><span class="val">${h.maxHealth}</span></div>
+        <div class="bar-container"><div class="bar-fill bar-mp" style="width:100%"></div></div>
+        <div class="stat-row"><span>MP</span><span class="val">${h.maxMana}</span></div>
+        <div class="bar-container"><div class="bar-fill bar-sp" style="width:100%"></div></div>
+        <div class="stat-row"><span>SP</span><span class="val">${h.maxStamina}</span></div>
+        <div class="stat-row"><span>Phys Dmg</span><span class="val">${Math.floor(h.physicalDamage)}</span></div>
+        <div class="stat-row"><span>Magic Dmg</span><span class="val">${Math.floor(h.magicDamage)}</span></div>
+        <div class="stat-row"><span>Defense</span><span class="val">${Math.floor(h.defense)}</span></div>
+        <div class="stat-row"><span>Speed</span><span class="val">${Math.floor(h.speed)}</span></div>
+      </div>`;
+  });
+  showPhase('phase-roster');
+}
+
+function startBattle() {
+  const enemies = generateEnemies(gameHeroes);
+  battleUnits = [...gameHeroes, ...enemies];
+  cooldowns = {}; buffs = {}; dots = {}; stunned = {}; grudge = {};
+  battleUnits.forEach(u => { cooldowns[u.id] = {}; buffs[u.id] = []; dots[u.id] = []; stunned[u.id] = false; grudge[u.id] = u.team === 'player' ? 0 : -1; });
+  turnOrder = battleUnits.map(u=>u.id).sort((a,b)=> getUnit(b).speed - getUnit(a).speed);
+  currentTurnIdx = 0;
+  selectedAbility = null;
+  battlePhase = 'playing';
+  document.getElementById('battleLog').innerHTML = '<div class="entry info">Battle begins!</div>';
+  showPhase('phase-battle');
+  renderBattleField();
+  nextTurn();
+}
+
+function getUnit(id) { return battleUnits.find(u => u.id === id); }
+function alive(u) { return u && u.health > 0; }
+function aliveTeam(team) { return battleUnits.filter(u => u.team === team && alive(u)); }
+
+function renderBattleField() {
+  const field = document.getElementById('battleField');
+  field.innerHTML = '';
+  const players = battleUnits.filter(u => u.team === 'player');
+  const enemies = battleUnits.filter(u => u.team === 'enemy');
+  const currentId = turnOrder[currentTurnIdx];
+
+  players.forEach((u, i) => {
+    const x = 15 + i * 18;
+    const y = 55 + i * 12;
+    field.innerHTML += unitHTML(u, x, y, currentId);
+  });
+  enemies.forEach((u, i) => {
+    const x = 55 + i * 14;
+    const y = 20 + i * 10;
+    field.innerHTML += unitHTML(u, x, y, currentId);
+  });
+}
+
+function unitHTML(u, x, y, currentId) {
+  const dead = u.health <= 0;
+  const isCurrent = u.id === currentId && !dead;
+  const hpPct = Math.max(0, u.health / u.maxHealth * 100);
+  const mpPct = Math.max(0, u.mana / u.maxMana * 100);
+  const spPct = Math.max(0, u.stamina / u.maxStamina * 100);
+  const grudgePct = grudge[u.id] >= 0 ? grudge[u.id] : 0;
+  const showGrudge = grudge[u.id] >= 0;
+  return `<div id="unit-${u.id}" class="battle-unit ${u.team} ${dead?'dead':''} ${isCurrent?'active-turn':''}" style="left:${x}%;top:${y}%;">
+    <div class="unit-name">${u.name}</div>
+    <div class="sprite-box">${u.icon}</div>
+    <div class="unit-bars">
+      <div class="mini-bar"><div class="fill bar-hp" style="width:${hpPct}%"></div></div>
+      <div class="mini-bar"><div class="fill bar-mp" style="width:${mpPct}%"></div></div>
+      <div class="mini-bar"><div class="fill bar-sp" style="width:${spPct}%"></div></div>
+      ${showGrudge ? `<div class="grudge-bar"><div class="grudge-fill" style="width:${grudgePct}%"></div></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function nextTurn() {
+  if (battlePhase !== 'playing') return;
+  if (aliveTeam('player').length === 0) { endBattle(false); return; }
+  if (aliveTeam('enemy').length === 0) { endBattle(true); return; }
+
+  let safety = 0;
+  while (safety++ < 20) {
+    currentTurnIdx = currentTurnIdx % turnOrder.length;
+    const unit = getUnit(turnOrder[currentTurnIdx]);
+    if (alive(unit)) break;
+    currentTurnIdx++;
+  }
+
+  const unit = getUnit(turnOrder[currentTurnIdx]);
+  if (!unit) return;
+
+  processTurnStart(unit);
+  renderBattleField();
+  document.getElementById('turnIndicator').textContent = `${unit.name}'s turn`;
+
+  if (stunned[unit.id]) {
+    logEntry(`${unit.name} is stunned!`, 'info');
+    stunned[unit.id] = false;
+    setTimeout(() => { currentTurnIdx++; nextTurn(); }, 800);
+    return;
+  }
+
+  if (unit.team === 'player') {
+    showPlayerActions(unit);
+  } else {
+    setTimeout(() => enemyAI(unit), 600);
+  }
+}
+
+function processTurnStart(unit) {
+  if (unit.team === 'player') {
+    unit.mana = Math.min(unit.maxMana, unit.mana + 3);
+    unit.stamina = Math.min(unit.maxStamina, unit.stamina + 5);
+  }
+
+  const newDots = [];
+  for (const dot of (dots[unit.id]||[])) {
+    const dmg = Math.floor(unit.maxHealth * dot.dmg);
+    unit.health = Math.max(0, unit.health - dmg);
+    logEntry(`${unit.name} takes ${dmg} DoT damage`, 'dmg');
+    floatDamage(unit.id, dmg);
+    if (dot.dur > 1) newDots.push({...dot, dur: dot.dur - 1});
+  }
+  dots[unit.id] = newDots;
+
+  const newBuffs = [];
+  for (const buff of (buffs[unit.id]||[])) {
+    if (buff.dur > 1) newBuffs.push({...buff, dur: buff.dur - 1});
+    else logEntry(`${unit.name}'s ${buff.name||'buff'} fades`, 'info');
+  }
+  buffs[unit.id] = newBuffs;
+
+  for (const aid in (cooldowns[unit.id]||{})) {
+    if (cooldowns[unit.id][aid] > 0) cooldowns[unit.id][aid]--;
+  }
+}
+
+function showPlayerActions(unit) {
+  const bar = document.getElementById('actionBar');
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+  selectedAbility = null;
+
+  const abilities = unit.abilities || [];
+  abilities.forEach((ab, i) => {
+    const onCd = (cooldowns[unit.id]?.[ab.id] || 0) > 0;
+    const noRes = (ab.manaCost > unit.mana) || (ab.staminaCost > unit.stamina);
+    const cdText = onCd ? ` (${cooldowns[unit.id][ab.id]}cd)` : '';
+    const btn = document.createElement('button');
+    btn.className = 'ability-btn';
+    btn.disabled = onCd || noRes;
+    btn.innerHTML = `<span>${ab.icon}</span> ${ab.name}${cdText}`;
+    btn.title = ab.desc;
+    btn.onclick = () => selectAbility(unit, ab, i, bar);
+    bar.appendChild(btn);
+  });
+
+  if (grudge[unit.id] >= 100) {
+    const revBtn = document.createElement('button');
+    revBtn.className = 'ability-btn';
+    revBtn.style.borderColor = '#ef4444';
+    revBtn.style.color = '#ef4444';
+    revBtn.innerHTML = '💀 REVENGE';
+    revBtn.title = 'Unleash grudge: 2.5x AoE damage to all enemies';
+    revBtn.onclick = () => executeRevenge(unit);
+    bar.appendChild(revBtn);
+  }
+
+  document.getElementById('targetBar').style.display = 'none';
+}
+
+function selectAbility(unit, ab, idx, bar) {
+  selectedAbility = ab;
+  bar.querySelectorAll('.ability-btn').forEach((b,i) => b.classList.toggle('selected', i === idx));
+
+  const targetBar = document.getElementById('targetBar');
+  targetBar.style.display = 'flex';
+  targetBar.innerHTML = '';
+
+  if (ab.target === 'self') {
+    executeAbility(unit, ab, unit);
+  } else if (ab.target === 'ally') {
+    aliveTeam('player').forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'target-btn ally';
+      btn.textContent = t.name;
+      btn.onclick = () => executeAbility(unit, ab, t);
+      targetBar.appendChild(btn);
+    });
+  } else if (ab.target === 'all_enemies') {
+    executeAbility(unit, ab, null);
+  } else {
+    aliveTeam('enemy').forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'target-btn';
+      btn.textContent = `${t.icon} ${t.name} (${Math.ceil(t.health/t.maxHealth*100)}%)`;
+      btn.onclick = () => executeAbility(unit, ab, t);
+      targetBar.appendChild(btn);
+    });
+  }
+}
+
+function executeAbility(attacker, ab, target) {
+  document.getElementById('actionBar').style.display = 'none';
+  document.getElementById('targetBar').style.display = 'none';
+
+  if (ab.manaCost) attacker.mana = Math.max(0, attacker.mana - ab.manaCost);
+  if (ab.staminaCost) attacker.stamina = Math.max(0, attacker.stamina - ab.staminaCost);
+  if (ab.cd > 0) { if(!cooldowns[attacker.id]) cooldowns[attacker.id]={}; cooldowns[attacker.id][ab.id] = ab.cd; }
+
+  if (ab.type === 'heal' && target) {
+    const heal = Math.floor(target.maxHealth * (ab.healPct || 0.3));
+    target.health = Math.min(target.maxHealth, target.health + heal);
+    logEntry(`${attacker.name} heals ${target.name} for ${heal}`, 'heal');
+    floatDamage(target.id, heal, true);
+  } else if (ab.type === 'buff') {
+    if (ab.effect) {
+      buffs[attacker.id] = buffs[attacker.id] || [];
+      buffs[attacker.id].push({ ...ab.effect, name: ab.name });
+      logEntry(`${attacker.name} uses ${ab.name}!`, 'info');
+    }
+  } else if (ab.target === 'all_enemies') {
+    const targets = aliveTeam('enemy');
+    targets.forEach(t => {
+      const dmg = calcDamage(attacker, ab, t);
+      applyDamage(t, dmg, attacker);
+      logEntry(`${attacker.name}'s ${ab.name} hits ${t.name} for ${dmg}`, 'dmg');
+    });
+  } else if (target) {
+    const dmg = calcDamage(attacker, ab, target);
+    applyDamage(target, dmg, attacker);
+    logEntry(`${attacker.name}'s ${ab.name} hits ${target.name} for ${dmg}`, 'dmg');
+    if (ab.effect?.type === 'stun') { stunned[target.id] = true; logEntry(`${target.name} is stunned!`, 'info'); }
+    if (ab.effect?.type === 'dot') { dots[target.id] = dots[target.id]||[]; dots[target.id].push({dmg:ab.effect.dmg,dur:ab.effect.dur}); }
+  }
+
+  if (ab.id === ab.id && (ab.manaCost === 0 && ab.staminaCost === 0)) {
+    attacker.mana = Math.min(attacker.maxMana, attacker.mana + 5);
+    attacker.stamina = Math.min(attacker.maxStamina, attacker.stamina + 5);
+  }
+
+  renderBattleField();
+  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 500);
+}
+
+function executeRevenge(unit) {
+  document.getElementById('actionBar').style.display = 'none';
+  document.getElementById('targetBar').style.display = 'none';
+  const baseDmg = (unit.physicalDamage + unit.magicDamage) * 2.5 + unit.level * 5;
+  aliveTeam('enemy').forEach(e => {
+    const variance = 0.8 + Math.random() * 0.4;
+    const dmg = Math.floor(baseDmg * variance);
+    applyDamage(e, dmg, unit);
+    logEntry(`${unit.name}'s REVENGE hits ${e.name} for ${dmg}!`, 'dmg');
+  });
+  grudge[unit.id] = 0;
+  renderBattleField();
+  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 500);
+}
+
+function calcDamage(attacker, ab, target) {
+  const dmgBuff = (buffs[attacker.id]||[]).reduce((m,b) => b.stat==='damage' ? m * (b.mult||1) : m, 1);
+  let base;
+  if (ab.type === 'magical') base = attacker.magicDamage * (ab.damage || 1);
+  else base = attacker.physicalDamage * (ab.damage || 1);
+  base *= dmgBuff;
+  const def = Math.max(0, target.defense * 0.5);
+  let dmg = Math.max(1, Math.floor(base - def));
+  const crit = Math.random() * 100 < (attacker.critChance || 5);
+  if (crit) { dmg = Math.floor(dmg * 1.8); logEntry('Critical hit!', 'info'); }
+  const variance = 0.9 + Math.random() * 0.2;
+  return Math.floor(dmg * variance);
+}
+
+function applyDamage(target, dmg, attacker) {
+  const dodged = Math.random() * 100 < (target.dodge || 0) + ((buffs[target.id]||[]).reduce((s,b)=>b.stat==='dodge'?s+(b.add||0):s,0));
+  if (dodged) { logEntry(`${target.name} dodges!`, 'info'); floatDamage(target.id, 'MISS', false); return; }
+  target.health = Math.max(0, target.health - dmg);
+  floatDamage(target.id, dmg);
+
+  if (target.team === 'player' && grudge[target.id] >= 0) {
+    const pct = dmg / target.maxHealth * 100;
+    const gain = Math.min(30, Math.max(5, Math.floor(pct)));
+    grudge[target.id] = Math.min(100, grudge[target.id] + gain);
+  }
+
+  const el = document.getElementById('unit-' + target.id);
+  if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); }
+  if (target.health <= 0) logEntry(`${target.name} has fallen!`, 'info');
+}
+
+function floatDamage(unitId, val, isHeal) {
+  const el = document.getElementById('unit-' + unitId);
+  if (!el) return;
+  const float = document.createElement('div');
+  float.className = 'float-dmg';
+  float.style.color = isHeal ? '#4ade80' : (val === 'MISS' ? '#93c5fd' : '#ef4444');
+  float.style.left = '30%';
+  float.style.top = '10%';
+  float.textContent = isHeal ? `+${val}` : (val === 'MISS' ? 'MISS' : `-${val}`);
+  el.appendChild(float);
+  setTimeout(() => float.remove(), 1000);
+}
+
+function enemyAI(unit) {
+  const targets = aliveTeam('player');
+  if (targets.length === 0) { currentTurnIdx++; nextTurn(); return; }
+
+  const abilities = unit.abilities || [];
+  const usable = abilities.filter(ab => {
+    if ((cooldowns[unit.id]?.[ab.id]||0) > 0) return false;
+    if (ab.manaCost > unit.mana || ab.staminaCost > unit.stamina) return false;
+    return true;
+  });
+
+  let chosen;
+  if (usable.length > 1 && Math.random() > 0.4) {
+    const specials = usable.filter(a => a.cd > 0);
+    chosen = specials.length > 0 ? specials[Math.floor(Math.random()*specials.length)] : usable[0];
+  } else {
+    chosen = usable[0] || abilities[0];
+  }
+
+  if (!chosen) { currentTurnIdx++; nextTurn(); return; }
+
+  if (chosen.manaCost) unit.mana = Math.max(0, unit.mana - chosen.manaCost);
+  if (chosen.staminaCost) unit.stamina = Math.max(0, unit.stamina - chosen.staminaCost);
+  if (chosen.cd > 0) { if(!cooldowns[unit.id]) cooldowns[unit.id]={}; cooldowns[unit.id][chosen.id] = chosen.cd; }
+
+  if (chosen.type === 'heal') {
+    const healTarget = aliveTeam('enemy').sort((a,b) => a.health/a.maxHealth - b.health/b.maxHealth)[0];
+    if (healTarget) {
+      const heal = Math.floor(healTarget.maxHealth * 0.3);
+      healTarget.health = Math.min(healTarget.maxHealth, healTarget.health + heal);
+      logEntry(`${unit.name} heals ${healTarget.name} for ${heal}`, 'heal');
+      floatDamage(healTarget.id, heal, true);
+    }
+  } else if (chosen.type === 'buff') {
+    buffs[unit.id] = buffs[unit.id] || [];
+    if (chosen.effect) buffs[unit.id].push({...chosen.effect, name: chosen.name});
+    logEntry(`${unit.name} uses ${chosen.name}!`, 'info');
+  } else if (chosen.target === 'all_enemies') {
+    targets.forEach(t => {
+      const dmg = calcDamage(unit, chosen, t);
+      applyDamage(t, dmg, unit);
+      logEntry(`${unit.name}'s ${chosen.name} hits ${t.name} for ${dmg}`, 'dmg');
+    });
+  } else {
+    const target = targets.sort((a,b) => a.health - b.health)[0];
+    const dmg = calcDamage(unit, chosen, target);
+    applyDamage(target, dmg, unit);
+    logEntry(`${unit.name}'s ${chosen.name} hits ${target.name} for ${dmg}`, 'dmg');
+    if (chosen.effect?.type === 'stun') { stunned[target.id] = true; logEntry(`${target.name} is stunned!`, 'info'); }
+    if (chosen.effect?.type === 'dot') { dots[target.id] = dots[target.id]||[]; dots[target.id].push({dmg:chosen.effect.dmg,dur:chosen.effect.dur}); }
+  }
+
+  unit.mana = Math.min(unit.maxMana, unit.mana + 3);
+  unit.stamina = Math.min(unit.maxStamina, unit.stamina + 3);
+
+  renderBattleField();
+  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 500);
+}
+
+function endBattle(victory) {
+  battlePhase = 'ended';
+  if (victory) {
+    const survivors = aliveTeam('player');
+    const statsHTML = survivors.map(h => `<div style="font-size:0.8rem;color:var(--dim)">${h.icon} ${h.name} - ${Math.ceil(h.health/h.maxHealth*100)}% HP remaining</div>`).join('');
+    document.getElementById('victoryStats').innerHTML = statsHTML;
+    showPhase('phase-victory');
+  } else {
+    showPhase('phase-defeat');
+  }
+}
+
+function logEntry(text, type) {
+  const log = document.getElementById('battleLog');
+  const entry = document.createElement('div');
+  entry.className = `entry ${type||''}`;
+  entry.textContent = text;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
+
+function resetArena() {
+  gameHeroes.forEach(h => {
+    h.health = h.maxHealth;
+    h.mana = h.maxMana;
+    h.stamina = h.maxStamina;
+  });
+  showRoster();
+}
+
+function goHome() {
+  const origin = window.location.origin;
+  window.location.href = origin;
+}
+
+(function init() {
+  const params = new URLSearchParams(window.location.search);
+  const heroData = params.get('heroes');
+  if (heroData) {
+    document.getElementById('heroInput').value = heroData;
+    try {
+      loadHeroes();
+    } catch(e) {
+      console.error('Auto-load failed:', e);
+    }
+  }
+})();
+</script>
+</body>
+</html>

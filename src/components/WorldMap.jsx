@@ -164,6 +164,8 @@ export default function WorldMap() {
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showWarParty, setShowWarParty] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
+  const [showGruda, setShowGruda] = useState(false);
+  const [grudaCopied, setGrudaCopied] = useState(null);
   const [upgradeHeroId, setUpgradeHeroId] = useState(null);
   const [upgradeMsg, setUpgradeMsg] = useState(null);
   const [tradeTab, setTradeTab] = useState('buy');
@@ -1421,6 +1423,13 @@ export default function WorldMap() {
                 cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
               }}>⛏ Harvest</button>
             )}
+
+            <button onClick={() => { setShowGruda(!showGruda); setShowWarParty(false); setShowHarvest(false); setGrudaCopied(null); }} style={{
+              background: showGruda ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.08)',
+              border: `1px solid ${showGruda ? 'var(--danger)' : 'rgba(239,68,68,0.3)'}`,
+              borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
+              cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>💀 Gruda</button>
           </div>
         </div>
 
@@ -1571,6 +1580,122 @@ export default function WorldMap() {
             </div>
             <div style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.5rem', fontStyle: 'italic' }}>
               Assign reserve heroes to gather resources.
+            </div>
+          </div>
+        )}
+
+        {showGruda && (
+          <div style={{
+            position: 'absolute', top: 70, right: 12, zIndex: 16,
+            background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(239,68,68,0.25)',
+            borderRadius: 12, padding: 14, maxWidth: 380, width: 360,
+            boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+            animation: 'fadeIn 0.15s ease-out',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <h4 className="font-cinzel" style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
+                💀 Gruda Arena
+              </h4>
+              <button onClick={() => setShowGruda(false)} style={{
+                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.9rem',
+              }}>×</button>
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: '0.6rem', marginBottom: 10 }}>
+              Challenge others by sharing your heroes. They'll fight arena enemies with your exact builds.
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ color: 'var(--text)', fontSize: '0.7rem', fontWeight: 600, marginBottom: 6 }}>Active Heroes ({activeHeroIds.length})</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {heroRoster.filter(h => activeHeroIds.includes(h.id)).map(hero => {
+                  const heroCls = classDefinitions[hero.classId];
+                  const heroRace = raceDefinitions[hero.raceId];
+                  return (
+                    <div key={hero.id} style={{
+                      background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
+                      borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4,
+                    }}>
+                      <span style={{ fontSize: '0.85rem' }}>{heroCls?.icon}</span>
+                      <div>
+                        <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text)' }}>{hero.name}</div>
+                        <div style={{ fontSize: '0.45rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroRace?.name} {heroCls?.name}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => {
+                const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+                const exportData = activeHeroes.map(h => ({
+                  name: h.name,
+                  race: h.raceId,
+                  class: h.classId,
+                  level: h.level,
+                  attrs: h.attributePoints || h.baseAttributePoints || {},
+                }));
+                const json = JSON.stringify(exportData);
+                const url = `${window.location.origin}/api/play/gruda.html?heroes=${encodeURIComponent(json)}`;
+                navigator.clipboard.writeText(url).then(() => {
+                  setGrudaCopied('link');
+                  setTimeout(() => setGrudaCopied(null), 2000);
+                });
+              }} style={{
+                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: 6, padding: '6px 12px', color: '#fca5a5',
+                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+              }}>
+                {grudaCopied === 'link' ? '✓ Link Copied!' : '🔗 Copy Share Link'}
+              </button>
+
+              <button onClick={() => {
+                const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+                const exportData = activeHeroes.map(h => ({
+                  name: h.name,
+                  race: h.raceId,
+                  class: h.classId,
+                  level: h.level,
+                  attrs: h.attributePoints || h.baseAttributePoints || {},
+                }));
+                const code = 'GW:' + btoa(JSON.stringify(exportData));
+                navigator.clipboard.writeText(code).then(() => {
+                  setGrudaCopied('code');
+                  setTimeout(() => setGrudaCopied(null), 2000);
+                });
+              }} style={{
+                background: 'rgba(110,231,183,0.08)', border: '1px solid rgba(110,231,183,0.2)',
+                borderRadius: 6, padding: '6px 12px', color: 'var(--accent)',
+                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+              }}>
+                {grudaCopied === 'code' ? '✓ Code Copied!' : '📋 Copy Share Code'}
+              </button>
+
+              <button onClick={() => {
+                const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+                const exportData = activeHeroes.map(h => ({
+                  name: h.name,
+                  race: h.raceId,
+                  class: h.classId,
+                  level: h.level,
+                  attrs: h.attributePoints || h.baseAttributePoints || {},
+                }));
+                const json = JSON.stringify(exportData);
+                const url = `/api/play/gruda.html?heroes=${encodeURIComponent(json)}`;
+                window.open(url, '_blank');
+              }} style={{
+                background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(251,191,36,0.1))',
+                border: '1px solid rgba(251,191,36,0.3)',
+                borderRadius: 6, padding: '6px 12px', color: 'var(--gold)',
+                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+              }}>
+                ⚔ Play Gruda
+              </button>
+            </div>
+
+            <div style={{ marginTop: 10, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
+              Share the link or code with anyone. They can paste it into the Gruda Arena page to fight with your heroes against AI enemies.
             </div>
           </div>
         )}

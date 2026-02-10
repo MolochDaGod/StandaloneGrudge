@@ -1,0 +1,145 @@
+============================================
+  GRUDGE WARLORDS - GRUDA ARENA CONNECTION
+  How to Connect & Play Challenge Mode
+============================================
+
+OVERVIEW
+--------
+Gruda Arena is a standalone battle mode for Grudge Warlords. It lets anyone
+with hero data jump straight into a turn-based arena fight — no save file needed.
+
+Players export their hero roster as a shareable link or JSON code. Anyone
+who receives it can open the link and immediately fight with those heroes
+against AI enemies.
+
+
+ENDPOINT
+--------
+  /api/play/gruda.html
+
+Full URL pattern:
+  https://<your-domain>/api/play/gruda.html?heroes=<encoded-hero-data>
+
+
+HERO DATA FORMAT
+----------------
+Heroes are passed as a JSON array. Each hero object requires:
+
+  {
+    "name":  "string"    (hero display name)
+    "race":  "string"    (one of: human, orc, elf, undead, dwarf, barbarian)
+    "class": "string"    (one of: warrior, mage, ranger, worge)
+    "level": number      (1-20, determines stat scaling)
+    "attrs": {           (attribute point allocation)
+      "Strength":  number,
+      "Vitality":  number,
+      "Endurance": number,
+      "Dexterity": number,
+      "Agility":   number,
+      "Intellect": number,
+      "Wisdom":    number,
+      "Tactics":   number
+    }
+  }
+
+Up to 3 heroes per team. If more than 3 are provided, only the first 3 are used.
+
+
+EXAMPLE - SINGLE HERO
+----------------------
+  [{"name":"Kael","race":"elf","class":"mage","level":8,"attrs":{"Strength":2,"Vitality":3,"Endurance":2,"Dexterity":4,"Agility":4,"Intellect":12,"Wisdom":8,"Tactics":2}}]
+
+
+EXAMPLE - FULL TEAM (3 heroes)
+------------------------------
+  [
+    {"name":"Ragnar","race":"orc","class":"warrior","level":10,"attrs":{"Strength":12,"Vitality":8,"Endurance":5,"Dexterity":3,"Agility":2,"Intellect":0,"Wisdom":0,"Tactics":2}},
+    {"name":"Elara","race":"elf","class":"mage","level":10,"attrs":{"Strength":1,"Vitality":3,"Endurance":2,"Dexterity":2,"Agility":3,"Intellect":14,"Wisdom":10,"Tactics":2}},
+    {"name":"Faelen","race":"human","class":"ranger","level":10,"attrs":{"Strength":4,"Vitality":3,"Endurance":3,"Dexterity":12,"Agility":8,"Intellect":1,"Wisdom":1,"Tactics":3}}
+  ]
+
+
+HOW TO GENERATE A LINK
+-----------------------
+1. In the main Grudge Warlords app, go to the World Map
+2. Click the "GRUDA" button in the top-right corner
+3. The app generates a shareable URL with your active heroes encoded
+4. Copy the link and share it with anyone (or an AI)
+
+OR manually:
+1. Format your hero JSON as shown above
+2. Append it as a URL parameter:
+   /api/play/gruda.html?heroes=[{"name":"Kael",...}]
+3. The page auto-loads and shows the roster
+
+
+SHARE CODE FORMAT (ALTERNATIVE)
+--------------------------------
+Instead of raw JSON, you can use a base64-encoded share code prefixed with "GW:"
+
+To create:
+  1. Take your hero JSON array
+  2. Base64 encode it
+  3. Prefix with "GW:"
+
+Example:
+  GW:W3sibmFtZSI6IkthZWwiLCJyYWNlIjoiZWxmIiwiY2xhc3MiOiJtYWdlIiwibGV2ZWwiOjgsImF0dHJzIjp7IlN0cmVuZ3RoIjoyLCJWaXRhbGl0eSI6MywiRW5kdXJhbmNlIjoyLCJEZXh0ZXJpdHkiOjQsIkFnaWxpdHkiOjQsIkludGVsbGVjdCI6MTIsIldpc2RvbSI6OCwiVGFjdGljcyI6Mn19XQ==
+
+Paste this code into the import box on gruda.html, it will decode automatically.
+
+
+WHAT THE AI NEEDS TO KNOW
+--------------------------
+If you are sharing this with an AI assistant to play:
+
+1. The AI should create heroes matching the format above
+2. Valid races: human, orc, elf, undead, dwarf, barbarian
+3. Valid classes: warrior, mage, ranger, worge
+4. Levels range from 1-20
+5. Attribute points should be distributed sensibly:
+   - Total available = 20 + (level * 7) minus class starting attrs and race bonuses
+   - Warriors focus: Strength, Vitality, Endurance
+   - Mages focus: Intellect, Wisdom, Vitality
+   - Rangers focus: Dexterity, Agility, Tactics
+   - Worges focus: balanced across Strength, Agility, Intellect
+6. The gruda.html page handles stat calculation, ability assignment, and enemy generation
+7. The battle is turn-based with speed-ordered initiative
+
+
+STAT CALCULATIONS
+-----------------
+Stats are calculated from attributes + level:
+  - Health:  250 + level*10 + Strength*5 + Vitality*12
+  - Mana:    100 + level*5  + Endurance*3 + Intellect*5 + Wisdom*4
+  - Stamina: 80  + level*3  + Endurance*8
+  - PhysDmg: 10  + level*2  + Strength*1.25 + Dexterity*0.75
+  - MagDmg:  8   + level*1.5 + Intellect*2 + Wisdom*0.8
+  - Defense: 5   + level*2  + Strength*4 + Vitality*2
+  - Speed:   50  + Agility*3 + Tactics*1
+  - Crit%:   5   + Dexterity*0.8 + Tactics*0.5
+
+Note: Attributes above 10 have diminishing returns (60% effectiveness).
+
+
+CLASSES & ABILITIES
+-------------------
+Warrior: Slash, Power Strike, War Cry, Shield Bash, Cleave
+Mage:    Arcane Bolt, Fireball, Divine Heal, Ice Storm
+Ranger:  Quick Shot, Aimed Shot, Multi-Shot, Evade
+Worge:   Claw Strike, Lightning Bolt, Bear Form, Entangle
+
+All heroes also have access to REVENGE (grudge ability) when their grudge bar reaches 100%.
+Grudge fills when taking damage (5-30 points based on damage %).
+
+
+CONNECTING FROM MAIN APP
+--------------------------
+The main Grudge Warlords app has a "GRUDA" button on the World Map screen.
+Clicking it opens a panel where players can:
+  1. See their active heroes exported as shareable data
+  2. Copy the share link to clipboard
+  3. Copy the share code (GW: format)
+  4. Open gruda.html directly with their heroes
+
+The gruda.html page also has a "RETURN HOME" button that navigates back
+to the main app at the root URL.

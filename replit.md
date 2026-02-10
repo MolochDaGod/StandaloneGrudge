@@ -38,6 +38,8 @@ The application is a React 19 frontend utilizing Vite for development, with stat
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 - **Zone Conquer System:** Each zone has a 0-100% conquer rating that increases with victories. Higher conquer % reduces XP gains (up to -70% at 100%) but boosts auto-harvest output (up to +300%). Conquered zones (100%) display an idle worker sprite. Active heroes wander near the current zone on the world map. Conquer progress shown as SVG ring around zone nodes and progress bar in location popup.
 
+- **Gruda Arena:** Standalone challenge mode at `public/api/play/gruda.html`. Accepts hero data via URL params (`?heroes=JSON`) or pasted JSON/GW: share codes. Simplified turn-based battle against AI enemies. Main app has "Gruda" button on World Map that exports active heroes (name, race, class, level, attributePoints) as shareable links or codes. `connect.txt` documents the data format and connection instructions for sharing with AI or other players. When data comes from main app (`attributePoints` key present), attrs are used as-is (already include race+class bonuses). When manual `attrs` provided, race+class bonuses are added.
+
 ## External Dependencies
 - **React:** Frontend library.
 - **Vite:** Development server and build tool.
