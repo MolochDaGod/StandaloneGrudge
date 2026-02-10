@@ -595,7 +595,7 @@ export default function WorldMap() {
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
       onMouseLeave={handleMapMouseUp}
-      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab', border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
     >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
@@ -604,6 +604,7 @@ export default function WorldMap() {
         transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
         transformOrigin: '50% 50%',
         transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+        boxShadow: 'inset 0 0 0 4px rgba(45,35,18,0.85), inset 0 0 0 5px rgba(139,109,56,0.5), inset 0 0 0 6px rgba(30,22,10,0.9), inset 0 0 20px rgba(0,0,0,0.6), inset 0 0 4px rgba(180,140,60,0.15)',
       }}>
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -1260,6 +1261,231 @@ export default function WorldMap() {
           );
         })}
 
+        {hoveredNode && (() => {
+          if (hoveredNode.type === 'location') {
+            const loc = locations.find(l => l.id === hoveredNode.id);
+            if (!loc) return null;
+            const conquer = (zoneConquer || {})[loc.id] || 0;
+            const hasBoss = loc.boss && !bossesDefeated.includes(loc.boss);
+            const bossDown = loc.boss && bossesDefeated.includes(loc.boss);
+            return (
+              <div style={{
+                position: 'absolute',
+                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
+                transform: 'translate(-50%, -120%)',
+                marginTop: -40,
+                zIndex: 25, pointerEvents: 'none',
+                background: 'rgba(8,12,28,0.95)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 8, padding: '8px 12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+                whiteSpace: 'nowrap',
+                animation: 'fadeIn 0.1s ease-out',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
+                  Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {conquer}% conquered
+                </div>
+                {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
+                {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
+              </div>
+            );
+          }
+          if (hoveredNode.type === 'city') {
+            return (
+              <div style={{
+                position: 'absolute',
+                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
+                transform: 'translate(-50%, -120%)',
+                marginTop: -40,
+                zIndex: 25, pointerEvents: 'none',
+                background: 'rgba(8,12,28,0.95)',
+                border: '1px solid rgba(74,222,128,0.3)',
+                borderRadius: 8, padding: '8px 12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+                whiteSpace: 'nowrap',
+                animation: 'fadeIn 0.1s ease-out',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4ade80' }}>{hoveredNode.name}</div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        {currentDialogue && dialoguePhase > 0 && (() => {
+          const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+          const speaker1Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker1?.id);
+          const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
+          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
+
+          const getHeroMapPos = (idx) => {
+            const hero = activeHeroes[idx];
+            const offset = hero ? (wanderOffsets[hero.id] || { x: 0, y: 0 }) : { x: 0, y: 0 };
+            const baseOffsetX = (idx - 1) * 1.8;
+            const baseOffsetY = -2.5 - idx * 1;
+            return {
+              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x)),
+              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y)),
+            };
+          };
+
+          return (
+            <>
+              {dialoguePhase >= 1 && speaker1Idx >= 0 && (() => {
+                const pos = getHeroMapPos(speaker1Idx);
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    left: `${Math.max(4, Math.min(82, pos.x))}%`,
+                    top: `${Math.max(2, pos.y - 6)}%`,
+                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    animation: 'fadeIn 0.4s ease-out',
+                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, opacity 0.5s',
+                  }}>
+                    <div style={{
+                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
+                      borderRadius: 10, padding: '5px 8px',
+                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    }}>
+                      <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.45rem', marginBottom: 2 }}>
+                        {currentDialogue.speaker1?.name}
+                      </div>
+                      {currentDialogue.line1}
+                    </div>
+                    <div style={{
+                      width: 0, height: 0,
+                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(14,22,48,0.92)',
+                      marginLeft: 12,
+                    }} />
+                  </div>
+                );
+              })()}
+              {dialoguePhase >= 2 && speaker2Idx >= 0 && (() => {
+                const pos = getHeroMapPos(speaker2Idx);
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    left: `${Math.max(4, Math.min(82, pos.x + 3))}%`,
+                    top: `${Math.max(2, pos.y - 6)}%`,
+                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    animation: 'fadeIn 0.4s ease-out',
+                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
+                  }}>
+                    <div style={{
+                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
+                      borderRadius: 10, padding: '5px 8px',
+                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    }}>
+                      <div style={{ fontWeight: 700, color: 'var(--gold)', fontSize: '0.45rem', marginBottom: 2 }}>
+                        {currentDialogue.speaker2?.name}
+                      </div>
+                      {currentDialogue.line2}
+                    </div>
+                    <div style={{
+                      width: 0, height: 0,
+                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(14,22,48,0.92)',
+                      marginLeft: 12,
+                    }} />
+                  </div>
+                );
+              })()}
+            </>
+          );
+        })()}
+
+        {(randomEvents || []).map(event => {
+          const pos = locationPositions[event.locationId];
+          if (!pos) return null;
+          const timeLeft = Math.max(0, Math.floor((event.expiresAt - Date.now()) / 1000));
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          const spriteData = getEnemySprite('skeleton');
+
+          return (
+            <div key={event.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                const rect = mapRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const nodeXPx = (pos.x / 100) * rect.width;
+                const nodeYPx = (pos.y / 100) * rect.height;
+                let mx = nodeXPx + 40;
+                let my = pos.y > 40 ? nodeYPx - 280 : nodeYPx + 40;
+                if (mx + 260 > rect.width) mx = nodeXPx - 270;
+                if (mx < 10) mx = 10;
+                if (my < 10) my = 10;
+                setMenuPos({ x: mx, y: my });
+                setSelectedEvent(event);
+                setSelectedLocation(null);
+                setSelectedCity(null);
+                setCitySubmenu(null);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 6, cursor: 'pointer',
+              }}
+            >
+              <div style={{
+                position: 'relative', width: 56, height: 56,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{
+                  position: 'absolute', inset: -6,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${event.color}40, transparent 70%)`,
+                  animation: 'eventPulse 1.5s ease-in-out infinite',
+                }} />
+                <div style={{
+                  width: 46, height: 46, borderRadius: '50%',
+                  background: `radial-gradient(circle, ${event.color}30, rgba(20,20,40,0.9))`,
+                  border: `2px solid ${event.color}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.4rem',
+                  boxShadow: `0 0 12px ${event.color}60, 0 0 24px ${event.color}30`,
+                  animation: 'eventPulse 1.5s ease-in-out infinite',
+                }}>
+                  {event.icon}
+                </div>
+                <div style={{
+                  position: 'absolute', right: -16, bottom: -4,
+                  width: 32, height: 32, overflow: 'hidden',
+                  imageRendering: 'pixelated',
+                  filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
+                }}>
+                  <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.4} speed={180} />
+                </div>
+              </div>
+              <div style={{
+                textAlign: 'center', marginTop: 2, whiteSpace: 'nowrap',
+              }}>
+                <div style={{
+                  fontSize: '0.5rem', fontWeight: 800, color: event.color,
+                  textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
+                  letterSpacing: '0.1em',
+                }}>
+                  EVENT
+                </div>
+                <div style={{
+                  fontSize: '0.48rem', color: 'rgba(255,255,255,0.7)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {minutes}:{seconds.toString().padStart(2, '0')}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
         {selectedLoc && (
           <div ref={menuRef} style={{
             position: 'absolute',
@@ -1862,6 +2088,67 @@ export default function WorldMap() {
           );
         })()}
 
+        {selectedEvent && (
+          <div ref={menuRef} style={{
+            position: 'absolute',
+            left: menuPos.x, top: menuPos.y,
+            zIndex: 20,
+            background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
+            border: `2px solid ${selectedEvent.color}`,
+            borderRadius: 14, padding: 0,
+            minWidth: 240, maxHeight: '60vh', overflowY: 'auto',
+            boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${selectedEvent.color}40`,
+            animation: 'fadeIn 0.15s ease-out',
+          }}>
+            <div style={{
+              padding: '14px 16px 10px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              background: `linear-gradient(135deg, ${selectedEvent.color}20, transparent)`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: '1.4rem' }}>{selectedEvent.icon}</span>
+                <div>
+                  <div className="font-cinzel" style={{ color: selectedEvent.color, fontSize: '0.95rem', fontWeight: 700 }}>
+                    {selectedEvent.name}
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
+                    Level {selectedEvent.level} Event
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+                {selectedEvent.description}
+              </div>
+              <div style={{
+                marginTop: 8, fontSize: '0.65rem', color: '#a5b4fc',
+                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '6px 10px',
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--gold)' }}>Rewards:</div>
+                {getRewardDescription(selectedEvent)}
+              </div>
+              <div style={{ marginTop: 6, fontSize: '0.55rem', color: 'var(--muted)' }}>
+                ⚔ {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
+              </div>
+            </div>
+            <div style={{ padding: 8 }}>
+              <MenuButton
+                icon="⚔️" label="Challenge" sublabel={`Fight Lv.${selectedEvent.level} event`}
+                color={selectedEvent.color}
+                onClick={() => { startEventBattle(selectedEvent.id); setSelectedEvent(null); }}
+                glow
+              />
+            </div>
+            <div style={{
+              padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
+              textAlign: 'center',
+            }}>
+              <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
+                Click anywhere to close
+              </span>
+            </div>
+          </div>
+        )}
+
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0,
           background: 'linear-gradient(180deg, rgba(10,14,30,0.92) 0%, rgba(10,14,30,0.7) 70%, transparent 100%)',
@@ -2243,291 +2530,6 @@ export default function WorldMap() {
           </div>
         )}
 
-        {hoveredNode && (() => {
-          if (hoveredNode.type === 'location') {
-            const loc = locations.find(l => l.id === hoveredNode.id);
-            if (!loc) return null;
-            const conquer = (zoneConquer || {})[loc.id] || 0;
-            const hasBoss = loc.boss && !bossesDefeated.includes(loc.boss);
-            const bossDown = loc.boss && bossesDefeated.includes(loc.boss);
-            return (
-              <div style={{
-                position: 'absolute',
-                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
-                transform: 'translate(-50%, -120%)',
-                marginTop: -40,
-                zIndex: 25, pointerEvents: 'none',
-                background: 'rgba(8,12,28,0.95)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 8, padding: '8px 12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
-                whiteSpace: 'nowrap',
-                animation: 'fadeIn 0.1s ease-out',
-              }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
-                  Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {conquer}% conquered
-                </div>
-                {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
-                {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
-              </div>
-            );
-          }
-          if (hoveredNode.type === 'city') {
-            return (
-              <div style={{
-                position: 'absolute',
-                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
-                transform: 'translate(-50%, -120%)',
-                marginTop: -40,
-                zIndex: 25, pointerEvents: 'none',
-                background: 'rgba(8,12,28,0.95)',
-                border: '1px solid rgba(74,222,128,0.3)',
-                borderRadius: 8, padding: '8px 12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
-                whiteSpace: 'nowrap',
-                animation: 'fadeIn 0.1s ease-out',
-              }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4ade80' }}>{hoveredNode.name}</div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
-              </div>
-            );
-          }
-          return null;
-        })()}
-
-        {currentDialogue && dialoguePhase > 0 && (() => {
-          const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-          const speaker1Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker1?.id);
-          const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
-          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
-
-          const getHeroMapPos = (idx) => {
-            const hero = activeHeroes[idx];
-            const offset = hero ? (wanderOffsets[hero.id] || { x: 0, y: 0 }) : { x: 0, y: 0 };
-            const baseOffsetX = (idx - 1) * 1.8;
-            const baseOffsetY = -2.5 - idx * 1;
-            return {
-              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x)),
-              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y)),
-            };
-          };
-
-          return (
-            <>
-              {dialoguePhase >= 1 && speaker1Idx >= 0 && (() => {
-                const pos = getHeroMapPos(speaker1Idx);
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    left: `${Math.max(4, Math.min(82, pos.x))}%`,
-                    top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
-                    animation: 'fadeIn 0.4s ease-out',
-                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, opacity 0.5s',
-                  }}>
-                    <div style={{
-                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
-                      borderRadius: 10, padding: '5px 8px',
-                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    }}>
-                      <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.45rem', marginBottom: 2 }}>
-                        {currentDialogue.speaker1?.name}
-                      </div>
-                      {currentDialogue.line1}
-                    </div>
-                    <div style={{
-                      width: 0, height: 0,
-                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                      borderTop: '5px solid rgba(14,22,48,0.92)',
-                      marginLeft: 12,
-                    }} />
-                  </div>
-                );
-              })()}
-              {dialoguePhase >= 2 && speaker2Idx >= 0 && (() => {
-                const pos = getHeroMapPos(speaker2Idx);
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    left: `${Math.max(4, Math.min(82, pos.x + 3))}%`,
-                    top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
-                    animation: 'fadeIn 0.4s ease-out',
-                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
-                  }}>
-                    <div style={{
-                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
-                      borderRadius: 10, padding: '5px 8px',
-                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    }}>
-                      <div style={{ fontWeight: 700, color: 'var(--gold)', fontSize: '0.45rem', marginBottom: 2 }}>
-                        {currentDialogue.speaker2?.name}
-                      </div>
-                      {currentDialogue.line2}
-                    </div>
-                    <div style={{
-                      width: 0, height: 0,
-                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                      borderTop: '5px solid rgba(14,22,48,0.92)',
-                      marginLeft: 12,
-                    }} />
-                  </div>
-                );
-              })()}
-            </>
-          );
-        })()}
-
-        {(randomEvents || []).map(event => {
-          const pos = locationPositions[event.locationId];
-          if (!pos) return null;
-          const timeLeft = Math.max(0, Math.floor((event.expiresAt - Date.now()) / 1000));
-          const minutes = Math.floor(timeLeft / 60);
-          const seconds = timeLeft % 60;
-          const spriteData = getEnemySprite('skeleton');
-
-          return (
-            <div key={event.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                const rect = mapRef.current?.getBoundingClientRect();
-                if (!rect) return;
-                const nodeXPx = (pos.x / 100) * rect.width;
-                const nodeYPx = (pos.y / 100) * rect.height;
-                let mx = nodeXPx + 40;
-                let my = pos.y > 40 ? nodeYPx - 280 : nodeYPx + 40;
-                if (mx + 260 > rect.width) mx = nodeXPx - 270;
-                if (mx < 10) mx = 10;
-                if (my < 10) my = 10;
-                setMenuPos({ x: mx, y: my });
-                setSelectedEvent(event);
-                setSelectedLocation(null);
-                setSelectedCity(null);
-                setCitySubmenu(null);
-              }}
-              style={{
-                position: 'absolute',
-                left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
-                transform: 'translate(-50%, -50%)',
-                zIndex: 6, cursor: 'pointer',
-              }}
-            >
-              <div style={{
-                position: 'relative', width: 56, height: 56,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <div style={{
-                  position: 'absolute', inset: -6,
-                  borderRadius: '50%',
-                  background: `radial-gradient(circle, ${event.color}40, transparent 70%)`,
-                  animation: 'eventPulse 1.5s ease-in-out infinite',
-                }} />
-                <div style={{
-                  width: 46, height: 46, borderRadius: '50%',
-                  background: `radial-gradient(circle, ${event.color}30, rgba(20,20,40,0.9))`,
-                  border: `2px solid ${event.color}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.4rem',
-                  boxShadow: `0 0 12px ${event.color}60, 0 0 24px ${event.color}30`,
-                  animation: 'eventPulse 1.5s ease-in-out infinite',
-                }}>
-                  {event.icon}
-                </div>
-                <div style={{
-                  position: 'absolute', right: -16, bottom: -4,
-                  width: 32, height: 32, overflow: 'hidden',
-                  imageRendering: 'pixelated',
-                  filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
-                }}>
-                  <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.4} speed={180} />
-                </div>
-              </div>
-              <div style={{
-                textAlign: 'center', marginTop: 2, whiteSpace: 'nowrap',
-              }}>
-                <div style={{
-                  fontSize: '0.5rem', fontWeight: 800, color: event.color,
-                  textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
-                  letterSpacing: '0.1em',
-                }}>
-                  EVENT
-                </div>
-                <div style={{
-                  fontSize: '0.48rem', color: 'rgba(255,255,255,0.7)',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {minutes}:{seconds.toString().padStart(2, '0')}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {selectedEvent && (
-          <div ref={menuRef} style={{
-            position: 'absolute',
-            left: menuPos.x, top: menuPos.y,
-            zIndex: 20,
-            background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
-            border: `2px solid ${selectedEvent.color}`,
-            borderRadius: 14, padding: 0,
-            minWidth: 240, maxHeight: '60vh', overflowY: 'auto',
-            boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${selectedEvent.color}40`,
-            animation: 'fadeIn 0.15s ease-out',
-          }}>
-            <div style={{
-              padding: '14px 16px 10px',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              background: `linear-gradient(135deg, ${selectedEvent.color}20, transparent)`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: '1.4rem' }}>{selectedEvent.icon}</span>
-                <div>
-                  <div className="font-cinzel" style={{ color: selectedEvent.color, fontSize: '0.95rem', fontWeight: 700 }}>
-                    {selectedEvent.name}
-                  </div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
-                    Level {selectedEvent.level} Event
-                  </div>
-                </div>
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
-                {selectedEvent.description}
-              </div>
-              <div style={{
-                marginTop: 8, fontSize: '0.65rem', color: '#a5b4fc',
-                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '6px 10px',
-              }}>
-                <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--gold)' }}>Rewards:</div>
-                {getRewardDescription(selectedEvent)}
-              </div>
-              <div style={{ marginTop: 6, fontSize: '0.55rem', color: 'var(--muted)' }}>
-                ⚔ {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
-              </div>
-            </div>
-            <div style={{ padding: 8 }}>
-              <MenuButton
-                icon="⚔️" label="Challenge" sublabel={`Fight Lv.${selectedEvent.level} event`}
-                color={selectedEvent.color}
-                onClick={() => { startEventBattle(selectedEvent.id); setSelectedEvent(null); }}
-                glow
-              />
-            </div>
-            <div style={{
-              padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
-              textAlign: 'center',
-            }}>
-              <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
-                Click anywhere to close
-              </span>
-            </div>
-          </div>
-        )}
-
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           background: 'linear-gradient(0deg, rgba(8,10,24,0.95) 0%, rgba(8,10,24,0.85) 60%, rgba(8,10,24,0.4) 85%, transparent 100%)',
@@ -2624,7 +2626,6 @@ export default function WorldMap() {
             50% { opacity: 0.6; }
           }
         `}</style>
-      </div>
 
       <div style={{
         position: 'absolute', bottom: 60, right: 12, zIndex: 30,
