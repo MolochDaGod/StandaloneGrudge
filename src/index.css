@@ -29,8 +29,45 @@ html, body, #root {
 
 body {
   font-family: 'Jost', sans-serif;
-  background: var(--bg);
+  background: #050810;
   color: var(--text);
+}
+
+#root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+
+.game-frame {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 900px;
+  position: relative;
+  border: 3px solid #2a3150;
+  border-image: linear-gradient(135deg, #8b7355, #d4a96a 30%, #8b7355 50%, #d4a96a 70%, #8b7355) 1;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 30px rgba(139,115,85,0.15),
+    inset 0 0 30px rgba(0,0,0,0.3);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+@media (max-width: 768px) {
+  .game-frame {
+    max-width: 100%;
+    max-height: 100%;
+    border-width: 2px;
+  }
+}
+
+@media (min-width: 1201px) {
+  .game-frame {
+    border-radius: 4px;
+  }
 }
 
 .font-cinzel {

@@ -90,37 +90,39 @@ export default function App() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-      <VideoBackground blurred={bgBlurred} visible={bgVisible} />
-      <div style={{
-        position: 'relative', zIndex: 1, width: '100%', height: '100%',
-        opacity: transitioning ? 0 : 1,
-        transition: 'opacity 0.3s ease',
-        animation: 'fadeIn 0.5s ease'
-      }}>
-        {renderScreen()}
-      </div>
-      <SettingsMenu />
-      {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
-      {gameMessage && (
+    <div className="game-frame">
+      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+        <VideoBackground blurred={bgBlurred} visible={bgVisible} />
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, animation: 'fadeIn 0.3s ease'
-        }} onClick={clearMessage}>
-          <div style={{
-            background: 'linear-gradient(135deg, #141a2b, #1e293b)',
-            border: '2px solid var(--gold)', borderRadius: 16, padding: '30px 50px',
-            textAlign: 'center', maxWidth: 400, animation: 'slideUp 0.3s ease'
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: 10 }}>🎉</div>
-            <div className="font-cinzel" style={{ fontSize: '1.2rem', color: 'var(--gold)', marginBottom: 10 }}>
-              {gameMessage}
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Click to continue</div>
-          </div>
+          position: 'relative', zIndex: 1, width: '100%', height: '100%',
+          opacity: transitioning ? 0 : 1,
+          transition: 'opacity 0.3s ease',
+          animation: 'fadeIn 0.5s ease'
+        }}>
+          {renderScreen()}
         </div>
-      )}
+        <SettingsMenu />
+        {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
+        {gameMessage && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, animation: 'fadeIn 0.3s ease'
+          }} onClick={clearMessage}>
+            <div style={{
+              background: 'linear-gradient(135deg, #141a2b, #1e293b)',
+              border: '2px solid var(--gold)', borderRadius: 16, padding: '30px 50px',
+              textAlign: 'center', maxWidth: 400, animation: 'slideUp 0.3s ease'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: 10 }}>🎉</div>
+              <div className="font-cinzel" style={{ fontSize: '1.2rem', color: 'var(--gold)', marginBottom: 10 }}>
+                {gameMessage}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Click to continue</div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

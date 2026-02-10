@@ -1822,7 +1822,7 @@ export default function BattleScreen() {
       </div>
 
       <div style={{
-        position: 'fixed', bottom: 160, right: 16, zIndex: 50,
+        position: 'absolute', bottom: 210, right: 16, zIndex: 50,
       }}>
         <button onClick={toggleAutoBattle} style={{
           background: autoBattleEnabled
@@ -1846,7 +1846,7 @@ export default function BattleScreen() {
 
       {adminMode && (
         <div style={{
-          position: 'fixed', top: 8, right: 8, zIndex: 500,
+          position: 'absolute', top: 8, right: 8, zIndex: 500,
           background: 'rgba(0,0,0,0.92)', border: '2px solid #f59e0b',
           borderRadius: 10, padding: '10px 14px', width: 220,
           backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
@@ -1911,25 +1911,33 @@ export default function BattleScreen() {
         </div>
       )}
 
-      {!isVictory && !isDefeat && (
-        <div style={{
-          flex: '0 0 auto', minHeight: 80,
+      <div style={{
+          flex: '0 0 140px', height: 140,
           backgroundImage: `url(${UI_PANELS.hotbarBg})`,
           backgroundSize: 'cover', backgroundRepeat: 'repeat-x',
           imageRendering: 'pixelated',
-          borderTop: `2px solid ${isPlayerTurn ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
+          borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           padding: '8px 10px', zIndex: 10,
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
           transition: 'border-color 0.3s',
           position: 'relative',
+          overflow: 'hidden',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
-            background: isPlayerTurn ? 'rgba(14,22,48,0.75)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.8)' : 'rgba(14,22,48,0.7)'),
+            background: (!isVictory && !isDefeat && isPlayerTurn) ? 'rgba(14,22,48,0.75)' : (currentUnit?.team === 'enemy' ? 'rgba(30,10,10,0.8)' : 'rgba(14,22,48,0.7)'),
             transition: 'background 0.3s', pointerEvents: 'none',
           }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
-          {isPlayerTurn && currentUnit ? (
+          {isVictory || isDefeat ? (
+            <div style={{
+              textAlign: 'center', padding: '8px 0',
+              color: isVictory ? 'var(--gold)' : 'var(--danger)',
+              fontSize: '0.85rem', fontWeight: 700,
+            }}>
+              {isVictory ? 'Victory!' : 'Defeated...'}
+            </div>
+          ) : isPlayerTurn && currentUnit ? (
             <>
               <div style={{
                 display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 5,
@@ -2186,7 +2194,6 @@ export default function BattleScreen() {
           )}
           </div>
         </div>
-      )}
     </div>
   );
 }
