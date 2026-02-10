@@ -211,10 +211,6 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
   const handleSlotSelect = (abilityId) => {
     if (selectingSlot === null) return;
     const newLoadout = [...loadout];
-    const existingIdx = newLoadout.indexOf(abilityId);
-    if (existingIdx !== -1 && existingIdx !== selectingSlot) {
-      newLoadout[existingIdx] = newLoadout[selectingSlot];
-    }
     newLoadout[selectingSlot] = abilityId;
     setHeroLoadout(hero.id, newLoadout);
     setSelectingSlot(null);
@@ -239,7 +235,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
       </div>
 
       <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.4 }}>
-        Tap a slot to change its ability. Slot 5 is locked to your class signature ability.{weaponType ? ` Weapon skills from: ${weaponType}.` : ''}
+        Tap a slot to change its ability. Slot 5 is locked to your signature. Each ability can only be slotted once.{weaponType ? ` Weapon: ${weaponType}.` : ''}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
@@ -324,9 +320,12 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
               color: 'var(--muted)', cursor: 'pointer',
             }}>Cancel</button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {(slotAbilities[selectingSlot] || []).map(ability => {
-              const alreadySlotted = loadout.includes(ability.id);
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 280, overflowY: 'auto' }}>
+            {(slotAbilities[selectingSlot] || []).filter(ability => {
+              const isCurrentSlot = loadout[selectingSlot] === ability.id;
+              if (isCurrentSlot) return true;
+              return !loadout.includes(ability.id);
+            }).map(ability => {
               const isCurrentSlot = loadout[selectingSlot] === ability.id;
               return (
                 <div key={ability.id}
@@ -334,7 +333,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                   style={{
                     display: 'flex', gap: 8, alignItems: 'center',
                     background: isCurrentSlot ? 'rgba(110,231,183,0.1)' : 'rgba(30,35,55,0.5)',
-                    border: `1px solid ${isCurrentSlot ? 'var(--accent)' : alreadySlotted ? 'rgba(245,158,11,0.3)' : 'var(--border)'}`,
+                    border: `1px solid ${isCurrentSlot ? 'var(--accent)' : 'var(--border)'}`,
                     borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
                     transition: 'all 0.1s',
                   }}
@@ -348,11 +347,6 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                     <div style={{ fontWeight: 600, fontSize: '0.7rem', color: 'var(--text)' }}>{ability.name}</div>
                     <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>{ability.description}</div>
                   </div>
-                  {alreadySlotted && !isCurrentSlot && (
-                    <div style={{ fontSize: '0.5rem', color: '#f59e0b', fontWeight: 600 }}>
-                      Slot {loadout.indexOf(ability.id) + 1}
-                    </div>
-                  )}
                   {isCurrentSlot && <div style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 600 }}>Current</div>}
                 </div>
               );

@@ -45,9 +45,16 @@ export function getAbilitiesForSlot(slotIndex, classId, weaponType, unlockedSkil
     return [...weaponSlot23, ...classAbilities];
   }
   if (slotIndex === 3) {
-    const treeAbilities = getSkillTreeAbilities(classId, unlockedSkills);
+    const weaponSlot1 = getWeaponSkillsForSlot(weaponType, 'slot1');
+    const weaponSlot23 = getWeaponSkillsForSlot(weaponType, 'slot23');
     const classAbilities = getClassActiveAbilities(classId);
-    return [...classAbilities, ...treeAbilities];
+    const treeAbilities = getSkillTreeAbilities(classId, unlockedSkills);
+    const seen = new Set();
+    const all = [];
+    for (const ab of [...classAbilities, ...treeAbilities, ...weaponSlot1, ...weaponSlot23]) {
+      if (!seen.has(ab.id)) { seen.add(ab.id); all.push(ab); }
+    }
+    return all;
   }
   if (slotIndex === 4) {
     return [];
