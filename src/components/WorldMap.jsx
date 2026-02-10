@@ -918,6 +918,7 @@ export default function WorldMap() {
           const isConquered = conquer >= 100;
           const circumference = 2 * Math.PI * 26;
           const strokeDash = (conquer / 100) * circumference;
+          const nodeScale = Math.max(0.3, 1 / camZoom);
 
           return (
             <div key={loc.id}
@@ -928,10 +929,10 @@ export default function WorldMap() {
               style={{
                 position: 'absolute',
                 left: `${pos.x}%`, top: `${pos.y}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) scale(${nodeScale})`,
                 zIndex: isSelected ? 10 : 3,
                 cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                transition: 'transform 0.2s',
+                transition: 'transform 0.3s',
               }}
             >
               <div style={{ position: 'relative', width: (icon.w || 56) + 6, height: (icon.h || 56) + 6 }}>
@@ -1094,14 +1095,16 @@ export default function WorldMap() {
           const bossX = pos.x + 3.5;
           const bossY = pos.y - 4.5;
 
+          const bossScale = Math.max(0.3, 1 / camZoom);
           return (
             <div key={`boss_${loc.boss}`} style={{
               position: 'absolute',
               left: `${Math.max(4, Math.min(96, bossX))}%`,
               top: `${Math.max(4, Math.min(96, bossY))}%`,
-              transform: 'translate(-50%, -50%)',
+              transform: `translate(-50%, -50%) scale(${bossScale})`,
               zIndex: 4,
               pointerEvents: 'none',
+              transition: 'transform 0.3s',
             }}>
               {bossStyle.portal && (
                 <div style={{
@@ -1154,6 +1157,7 @@ export default function WorldMap() {
           if (!pos) return null;
           const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel);
           const isSelected = selectedCity === city.id;
+          const cityScale = Math.max(0.3, 1 / camZoom);
 
           return (
             <div key={city.id}
@@ -1163,9 +1167,10 @@ export default function WorldMap() {
               style={{
                 position: 'absolute',
                 left: `${pos.x}%`, top: `${pos.y}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) scale(${cityScale})`,
                 zIndex: isSelected ? 10 : 3,
                 cursor: isCityUnlocked ? 'pointer' : 'not-allowed',
+                transition: 'transform 0.3s',
               }}
             >
               <div style={{ position: 'relative', width: 58, height: 58 }}>
@@ -1226,14 +1231,15 @@ export default function WorldMap() {
           const walk = heroWalking[hero.id];
           const isWalking = walk?.moving;
           const flipX = walk?.flipX;
+          const heroScale = Math.max(0.35, 1 / camZoom);
           return (
             <div key={hero.id} style={{
               position: 'absolute',
               left: `${clampedX}%`,
               top: `${clampedY}%`,
-              transform: 'translate(-50%, -100%)',
+              transform: `translate(-50%, -100%) scale(${heroScale})`,
               zIndex: 5,
-              transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
+              transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
             }}>
               <div style={{
@@ -1432,8 +1438,9 @@ export default function WorldMap() {
               style={{
                 position: 'absolute',
                 left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: `translate(-50%, -50%) scale(${Math.max(0.3, 1 / camZoom)})`,
                 zIndex: 6, cursor: 'pointer',
+                transition: 'transform 0.3s',
               }}
             >
               <div style={{
