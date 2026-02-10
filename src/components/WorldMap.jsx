@@ -14,54 +14,61 @@ import { generateRandomEvent, getRewardDescription } from '../data/randomEvents'
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 
 const bossMapSprites = {
-  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png' },
-  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)', terrain: '/backgrounds/storm_ruins.png' },
-  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)', terrain: '/backgrounds/shadow_citadel.png' },
-  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)', terrain: '/backgrounds/demon_gate.png' },
-  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)', terrain: '/backgrounds/void_throne.png' },
-  grand_shaman: { filter: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)', glow: 'rgba(0,200,100,0.5)', terrain: '/backgrounds/dark_forest.png' },
-  canyon_warlord: { filter: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)', glow: 'rgba(220,100,30,0.5)', terrain: '/backgrounds/blood_canyon.png' },
-  frost_wyrm: { filter: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)', glow: 'rgba(100,180,255,0.5)', terrain: '/backgrounds/winter_arena.png' },
-  shadow_beast: { filter: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)', glow: 'rgba(100,50,200,0.6)', terrain: '/backgrounds/cursed_ruins.png' },
-  void_sentinel: { filter: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7) drop-shadow(0 0 6px rgba(180,80,255,0.7))', glow: 'rgba(180,80,255,0.6)', terrain: '/backgrounds/volcanic_field.png' },
-  god_odin: { filter: 'hue-rotate(40deg) saturate(3.0) brightness(0.6) contrast(1.5) drop-shadow(0 0 10px rgba(251,191,36,0.8))', glow: 'rgba(251,191,36,0.8)', terrain: '/backgrounds/boss_mountain.png' },
-  god_madra: { filter: 'hue-rotate(350deg) saturate(3.0) brightness(0.5) contrast(1.6) drop-shadow(0 0 10px rgba(220,38,38,0.8))', glow: 'rgba(220,38,38,0.8)', terrain: '/backgrounds/demon_gate.png' },
-  god_omni: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.6) contrast(1.4) drop-shadow(0 0 10px rgba(167,139,250,0.8))', glow: 'rgba(167,139,250,0.8)', terrain: '/backgrounds/boss_blue.png' },
+  nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
+  water_elemental: { glow: 'rgba(60,100,255,0.5)', terrain: '/backgrounds/storm_ruins.png', shape: 'rift', effect: 'waves', color1: '#48f', color2: '#026' },
+  lich: { glow: 'rgba(130,50,255,0.6)', terrain: '/backgrounds/shadow_citadel.png', shape: 'archway', effect: 'souls', color1: '#a4f', color2: '#407' },
+  demon_lord: { glow: 'rgba(255,30,30,0.6)', terrain: '/backgrounds/demon_gate.png', shape: 'volcano', effect: 'lava', color1: '#f42', color2: '#810' },
+  void_king: { glow: 'rgba(200,100,255,0.7)', terrain: '/backgrounds/void_throne.png', shape: 'rift', effect: 'void', color1: '#c4f', color2: '#408' },
+  grand_shaman: { glow: 'rgba(0,200,100,0.5)', terrain: '/backgrounds/dark_forest.png', shape: 'archway', effect: 'portal', color1: '#0c6', color2: '#063' },
+  canyon_warlord: { glow: 'rgba(220,100,30,0.5)', terrain: '/backgrounds/blood_canyon.png', shape: 'volcano', effect: 'lava', color1: '#f80', color2: '#820' },
+  frost_wyrm: { glow: 'rgba(100,180,255,0.5)', terrain: '/backgrounds/winter_arena.png', shape: 'rift', effect: 'frost', color1: '#8df', color2: '#248' },
+  shadow_beast: { glow: 'rgba(100,50,200,0.6)', terrain: '/backgrounds/cursed_ruins.png', shape: 'archway', effect: 'souls', color1: '#84f', color2: '#306' },
+  void_sentinel: { glow: 'rgba(180,80,255,0.6)', terrain: '/backgrounds/volcanic_field.png', shape: 'volcano', effect: 'void', color1: '#b5f', color2: '#508' },
+  god_odin: { glow: 'rgba(251,191,36,0.8)', terrain: '/backgrounds/boss_mountain.png', shape: 'godgate', effect: 'lightning', color1: '#fb4', color2: '#a60' },
+  god_madra: { glow: 'rgba(220,38,38,0.8)', terrain: '/backgrounds/demon_gate.png', shape: 'godgate', effect: 'lava', color1: '#f33', color2: '#800' },
+  god_omni: { glow: 'rgba(167,139,250,0.8)', terrain: '/backgrounds/boss_blue.png', shape: 'godgate', effect: 'void', color1: '#a8f', color2: '#508' },
+};
+
+const portalShapes = {
+  archway: 'polygon(15% 100%, 5% 60%, 5% 25%, 15% 5%, 30% 0%, 70% 0%, 85% 5%, 95% 25%, 95% 60%, 85% 100%)',
+  volcano: 'polygon(50% 0%, 35% 15%, 20% 35%, 10% 55%, 5% 75%, 8% 90%, 15% 100%, 85% 100%, 92% 90%, 95% 75%, 90% 55%, 80% 35%, 65% 15%)',
+  rift: 'polygon(40% 0%, 30% 10%, 20% 25%, 15% 40%, 18% 55%, 12% 70%, 10% 85%, 15% 100%, 85% 100%, 90% 85%, 88% 70%, 82% 55%, 85% 40%, 80% 25%, 70% 10%, 60% 0%)',
+  godgate: 'polygon(20% 100%, 5% 70%, 0% 45%, 5% 20%, 15% 5%, 30% 0%, 50% -2%, 70% 0%, 85% 5%, 95% 20%, 100% 45%, 95% 70%, 80% 100%)',
 };
 
 const locationPositions = {
-  verdant_plains:     { x: 10, y: 88 },
-  dark_forest:        { x: 22, y: 78 },
-  mystic_grove:       { x: 12, y: 68 },
-  whispering_caverns: { x: 28, y: 88 },
-  haunted_marsh:      { x: 38, y: 78 },
-  cursed_ruins:       { x: 35, y: 65 },
-  crystal_caves:      { x: 20, y: 55 },
-  thornwood_pass:     { x: 48, y: 72 },
-  sunken_temple:      { x: 50, y: 85 },
-  iron_peaks:         { x: 30, y: 45 },
-  blood_canyon:       { x: 60, y: 65 },
+  verdant_plains:     { x: 12, y: 85 },
+  dark_forest:        { x: 22, y: 76 },
+  mystic_grove:       { x: 12, y: 66 },
+  whispering_caverns: { x: 28, y: 85 },
+  haunted_marsh:      { x: 38, y: 76 },
+  cursed_ruins:       { x: 35, y: 63 },
+  crystal_caves:      { x: 20, y: 54 },
+  thornwood_pass:     { x: 48, y: 70 },
+  sunken_temple:      { x: 50, y: 82 },
+  iron_peaks:         { x: 30, y: 44 },
+  blood_canyon:       { x: 60, y: 63 },
   frozen_tundra:      { x: 42, y: 38 },
   dragon_peaks:       { x: 55, y: 50 },
-  ashen_battlefield:  { x: 68, y: 75 },
+  ashen_battlefield:  { x: 68, y: 73 },
   windswept_ridge:    { x: 45, y: 28 },
-  molten_core:        { x: 72, y: 58 },
+  molten_core:        { x: 72, y: 57 },
   shadow_forest:      { x: 25, y: 35 },
-  obsidian_wastes:    { x: 78, y: 68 },
+  obsidian_wastes:    { x: 78, y: 66 },
   ruins_of_ashenmoor: { x: 58, y: 38 },
   blight_hollow:      { x: 35, y: 22 },
   shadow_citadel:     { x: 65, y: 28 },
-  stormspire_peak:    { x: 50, y: 15 },
+  stormspire_peak:    { x: 50, y: 16 },
   demon_gate:         { x: 80, y: 42 },
   abyssal_depths:     { x: 75, y: 30 },
-  infernal_forge:     { x: 88, y: 52 },
-  dreadmaw_canyon:    { x: 85, y: 38 },
+  infernal_forge:     { x: 85, y: 52 },
+  dreadmaw_canyon:    { x: 82, y: 38 },
   void_threshold:     { x: 72, y: 18 },
-  corrupted_spire:    { x: 88, y: 22 },
-  void_throne:        { x: 82, y: 8 },
-  hall_of_odin:       { x: 65, y: 5 },
-  maw_of_madra:       { x: 92, y: 5 },
-  sanctum_of_omni:    { x: 78, y: 2 },
+  corrupted_spire:    { x: 85, y: 22 },
+  void_throne:        { x: 80, y: 12 },
+  hall_of_odin:       { x: 65, y: 10 },
+  maw_of_madra:       { x: 88, y: 10 },
+  sanctum_of_omni:    { x: 76, y: 6 },
 };
 
 const pathConnections = [
@@ -904,66 +911,182 @@ export default function WorldMap() {
           const locReqOk = !loc.unlockRequiredBosses || loc.unlockRequiredBosses.every(b => bossesDefeated.includes(b));
           const isLocUnlocked = loc.unlocked || (locBossOk && locReqOk && loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
           if (!isLocUnlocked) return null;
-          const bossStyle = bossMapSprites[loc.boss] || {};
-          const spriteData = getEnemySprite(loc.boss);
-          const corruptedSprite = { ...spriteData, filter: bossStyle.filter || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
-          const bossX = pos.x + 3.5;
-          const bossY = pos.y - 4.5;
+          const bs = bossMapSprites[loc.boss] || {};
           const isGodBoss = loc.isGodFight;
-          const portalSize = isGodBoss ? 120 : 100;
-          const spriteSize = isGodBoss ? 90 : 80;
-
+          const portalW = isGodBoss ? 80 : 60;
+          const portalH = isGodBoss ? 100 : 80;
+          const shape = portalShapes[bs.shape] || portalShapes.archway;
+          const bossX = Math.max(5, Math.min(95, pos.x + 3));
+          const bossY = Math.max(5, Math.min(95, pos.y - 3));
           const bossScale = Math.max(0.3, 1 / camZoom);
+          const glowColor = bs.glow || 'rgba(255,0,0,0.5)';
+          const solidGlow = glowColor.replace(/,\s*[\d.]+\)$/, ', 1)');
+          const c1 = bs.color1 || '#f44';
+          const c2 = bs.color2 || '#800';
+          const eff = bs.effect || 'portal';
+
           return (
             <div key={`boss_${loc.boss}`} style={{
               position: 'absolute',
-              left: `${Math.max(4, Math.min(96, bossX))}%`,
-              top: `${Math.max(4, Math.min(96, bossY))}%`,
+              left: `${bossX}%`, top: `${bossY}%`,
               transform: `translate(-50%, -50%) scale(${bossScale})`,
               zIndex: isGodBoss ? 5 : 4,
               pointerEvents: 'none',
               transition: 'transform 0.3s',
             }}>
-              {bossStyle.terrain && (
-                <div style={{
-                  position: 'absolute', top: '50%', left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: portalSize, height: portalSize, borderRadius: '50%',
-                  backgroundImage: `url(${bossStyle.terrain})`,
-                  backgroundSize: 'cover', backgroundPosition: 'center',
-                  opacity: isGodBoss ? 0.75 : 0.6,
-                  border: `${isGodBoss ? 3 : 2}px solid ${bossStyle.glow || 'rgba(255,0,0,0.5)'}`,
-                  boxShadow: `0 0 ${isGodBoss ? 30 : 20}px ${bossStyle.glow || 'rgba(255,0,0,0.5)'}, inset 0 0 20px rgba(0,0,0,0.5)`,
-                  animation: 'glow 2s infinite',
-                  zIndex: -1,
-                }} />
-              )}
               <div style={{
-                position: 'relative',
-                width: spriteSize, height: spriteSize,
-                overflow: 'hidden',
-                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                filter: `drop-shadow(0 0 ${isGodBoss ? 16 : 12}px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
-                animation: 'glow 2s infinite',
+                position: 'relative', width: portalW, height: portalH,
+                clipPath: shape,
+                filter: `drop-shadow(0 0 ${isGodBoss ? 14 : 8}px ${glowColor})`,
               }}>
-                <SpriteAnimation
-                  spriteData={corruptedSprite}
-                  animation="idle"
-                  scale={isGodBoss ? 2.4 : 2.0}
-                  flip={true}
-                  speed={180}
-                />
+                {bs.terrain && (
+                  <img src={bs.terrain} alt="" style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    objectFit: 'cover', opacity: 0.85,
+                  }} />
+                )}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `linear-gradient(180deg, ${c2}44 0%, transparent 40%, ${c2}88 100%)`,
+                }} />
+
+                {eff === 'portal' && (<>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `radial-gradient(ellipse at 50% 40%, ${c1}66 0%, transparent 60%)`,
+                    animation: 'bossPortalPulse 2.5s ease-in-out infinite',
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: '15%', left: '20%', width: '60%', height: '50%',
+                    borderRadius: '50%',
+                    background: `conic-gradient(from 0deg, ${c1}00, ${c1}88, ${c1}00, ${c1}44, ${c1}00)`,
+                    animation: 'portalSpin 3s linear infinite',
+                    opacity: 0.6,
+                  }} />
+                </>)}
+
+                {eff === 'lava' && (<>
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%',
+                    background: `linear-gradient(0deg, ${c1}cc 0%, ${c1}66 40%, transparent 100%)`,
+                    animation: 'bossLavaFlow 2s ease-in-out infinite',
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: '10%', left: '15%', width: '70%', height: '20%',
+                    background: `radial-gradient(ellipse, ${c1}ff, ${c1}44, transparent)`,
+                    animation: 'bossPortalPulse 1.5s ease-in-out infinite alternate',
+                    borderRadius: '50%',
+                  }} />
+                  {[0.2, 0.4, 0.6, 0.8].map((xp, i) => (
+                    <div key={i} style={{
+                      position: 'absolute', bottom: '30%', left: `${xp * 100}%`,
+                      width: 4, height: 4, borderRadius: '50%',
+                      background: c1, opacity: 0.8,
+                      animation: `bossEmberRise 1.8s ease-out infinite ${i * 0.4}s`,
+                    }} />
+                  ))}
+                </>)}
+
+                {eff === 'souls' && (<>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `radial-gradient(ellipse at 50% 60%, ${c1}44 0%, transparent 70%)`,
+                    animation: 'bossPortalPulse 3s ease-in-out infinite',
+                  }} />
+                  {[0.2, 0.4, 0.6, 0.8].map((xp, i) => (
+                    <div key={i} style={{
+                      position: 'absolute', bottom: '20%', left: `${xp * 100}%`,
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: `radial-gradient(circle, ${c1}cc, transparent)`,
+                      animation: `bossSoulFloat ${2 + i * 0.3}s ease-in-out infinite ${i * 0.5}s`,
+                    }} />
+                  ))}
+                </>)}
+
+                {eff === 'waves' && (<>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{
+                      position: 'absolute', bottom: `${10 + i * 15}%`, left: 0, right: 0, height: '12%',
+                      background: `linear-gradient(90deg, transparent, ${c1}66, transparent)`,
+                      animation: `bossWaveFlow 2.5s ease-in-out infinite ${i * 0.6}s`,
+                      borderRadius: '50%',
+                    }} />
+                  ))}
+                </>)}
+
+                {eff === 'frost' && (<>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `radial-gradient(ellipse at 50% 30%, ${c1}55 0%, transparent 70%)`,
+                    animation: 'bossPortalPulse 3s ease-in-out infinite',
+                  }} />
+                  {[0.15, 0.4, 0.65, 0.85].map((xp, i) => (
+                    <div key={i} style={{
+                      position: 'absolute', top: `${15 + i * 12}%`, left: `${xp * 100}%`,
+                      width: 3, height: 3, borderRadius: '50%',
+                      background: '#fff', opacity: 0.7,
+                      animation: `bossFrostSparkle 2s ease-in-out infinite ${i * 0.4}s`,
+                    }} />
+                  ))}
+                </>)}
+
+                {eff === 'void' && (<>
+                  <div style={{
+                    position: 'absolute', top: '20%', left: '20%', width: '60%', height: '50%',
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${c2}ff 0%, ${c1}44 50%, transparent 70%)`,
+                    animation: 'bossVoidPulse 2s ease-in-out infinite',
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: '15%', left: '15%', width: '70%', height: '55%',
+                    borderRadius: '50%',
+                    border: `1px solid ${c1}66`,
+                    animation: 'bossVoidRing 3s linear infinite',
+                  }} />
+                </>)}
+
+                {eff === 'vines' && (<>
+                  {[0, 1, 2, 3].map(i => (
+                    <div key={i} style={{
+                      position: 'absolute', bottom: 0, left: `${10 + i * 22}%`,
+                      width: 3, height: `${30 + i * 10}%`,
+                      background: `linear-gradient(0deg, ${c1}aa, ${c1}33, transparent)`,
+                      animation: `bossVineGrow 3s ease-in-out infinite ${i * 0.5}s`,
+                      borderRadius: 2,
+                    }} />
+                  ))}
+                </>)}
+
+                {eff === 'lightning' && (<>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `radial-gradient(ellipse at 50% 30%, ${c1}44 0%, transparent 60%)`,
+                    animation: 'bossLightningFlash 1.5s ease-in-out infinite',
+                  }} />
+                  {[0.3, 0.5, 0.7].map((xp, i) => (
+                    <div key={i} style={{
+                      position: 'absolute', top: 0, left: `${xp * 100}%`,
+                      width: 2, height: '60%',
+                      background: `linear-gradient(180deg, ${c1}ee, ${c1}44, transparent)`,
+                      animation: `bossLightningBolt 0.8s ease-out infinite ${i * 0.3 + 0.2}s`,
+                      opacity: 0,
+                    }} />
+                  ))}
+                </>)}
+
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  boxShadow: `inset 0 0 15px ${c2}aa, inset 0 -8px 12px ${c2}cc`,
+                  pointerEvents: 'none',
+                }} />
               </div>
-              <div style={{
-                width: isGodBoss ? 40 : 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
-                background: `radial-gradient(ellipse, ${bossStyle.glow || 'rgba(255,0,0,0.4)'}, transparent)`,
-              }} />
+
               <div className="font-cinzel" style={{
-                textAlign: 'center',
-                fontSize: isGodBoss ? '0.6rem' : '0.5rem', fontWeight: 700,
-                color: bossStyle.glow ? bossStyle.glow.replace('0.5', '1').replace('0.6', '1').replace('0.7', '1').replace('0.8', '1') : '#ff4444',
-                textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
-                whiteSpace: 'nowrap', marginTop: 2,
+                textAlign: 'center', marginTop: 3,
+                fontSize: isGodBoss ? '0.55rem' : '0.45rem', fontWeight: 700,
+                color: solidGlow,
+                textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${glowColor}`,
+                whiteSpace: 'nowrap',
               }}>
                 {isGodBoss ? 'GOD' : 'BOSS'}
               </div>
@@ -2516,6 +2639,57 @@ export default function WorldMap() {
           @keyframes portalSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+          @keyframes bossPortalPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+          @keyframes bossLavaFlow {
+            0%, 100% { transform: translateY(0); opacity: 0.7; }
+            50% { transform: translateY(-8%); opacity: 1; }
+          }
+          @keyframes bossEmberRise {
+            0% { transform: translateY(0) scale(1); opacity: 0.9; }
+            100% { transform: translateY(-40px) scale(0.3); opacity: 0; }
+          }
+          @keyframes bossSoulFloat {
+            0% { transform: translateY(0) scale(0.8); opacity: 0.3; }
+            50% { transform: translateY(-25px) scale(1.2); opacity: 0.8; }
+            100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+          }
+          @keyframes bossWaveFlow {
+            0% { transform: translateX(-30%) scaleY(0.8); opacity: 0.3; }
+            50% { transform: translateX(30%) scaleY(1.2); opacity: 0.7; }
+            100% { transform: translateX(-30%) scaleY(0.8); opacity: 0.3; }
+          }
+          @keyframes bossFrostSparkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.5); }
+          }
+          @keyframes bossVoidPulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+          }
+          @keyframes bossVoidRing {
+            0% { transform: rotate(0deg) scale(1); opacity: 0.4; }
+            50% { transform: rotate(180deg) scale(0.85); opacity: 0.8; }
+            100% { transform: rotate(360deg) scale(1); opacity: 0.4; }
+          }
+          @keyframes bossVineGrow {
+            0%, 100% { transform: scaleY(0.7); opacity: 0.4; }
+            50% { transform: scaleY(1.1); opacity: 0.8; }
+          }
+          @keyframes bossLightningFlash {
+            0%, 85%, 100% { opacity: 0.2; }
+            88% { opacity: 1; }
+            92% { opacity: 0.3; }
+            95% { opacity: 0.9; }
+          }
+          @keyframes bossLightningBolt {
+            0%, 70%, 100% { opacity: 0; }
+            75% { opacity: 1; }
+            80% { opacity: 0.2; }
+            85% { opacity: 0.8; }
           }
           @keyframes dayNightCycle {
             0% { background: rgba(255,180,80,0.05); }
