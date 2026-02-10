@@ -1167,6 +1167,15 @@ export default function WorldMap() {
           const minutes = Math.floor(timeLeft / 60);
           const seconds = timeLeft % 60;
           const spriteData = getEnemySprite('skeleton');
+          const count = event.enemyCount || 1;
+          const eventScale = Math.max(0.3, 1 / camZoom);
+          const spriteW = 80;
+          const spriteVisH = Math.round(spriteW * 0.72);
+          const spriteOffsets = count === 1
+            ? [{ x: 0, y: 0 }]
+            : count === 2
+              ? [{ x: -14, y: 0 }, { x: 14, y: 4 }]
+              : [{ x: -20, y: 0 }, { x: 0, y: -6 }, { x: 20, y: 4 }];
 
           return (
             <div key={event.id}
@@ -1190,57 +1199,61 @@ export default function WorldMap() {
               style={{
                 position: 'absolute',
                 left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
-                transform: `translate(-50%, -50%) scale(${Math.max(0.3, 1 / camZoom)})`,
+                transform: `translate(-50%, -100%) scale(${eventScale})`,
                 zIndex: 6, cursor: 'pointer',
                 transition: 'transform 0.3s',
               }}
             >
               <div style={{
-                position: 'relative', width: 56, height: 56,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative',
+                width: count === 1 ? spriteW : (count === 2 ? spriteW + 28 : spriteW + 40),
+                height: spriteVisH + 10,
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
               }}>
                 <div style={{
-                  position: 'absolute', inset: -6,
+                  position: 'absolute', inset: -8,
                   borderRadius: '50%',
-                  background: `radial-gradient(circle, ${event.color}40, transparent 70%)`,
+                  background: `radial-gradient(circle, ${event.color}30, transparent 70%)`,
                   animation: 'eventPulse 1.5s ease-in-out infinite',
+                  pointerEvents: 'none',
+                }} />
+                {spriteOffsets.map((off, i) => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    left: '50%', bottom: 0,
+                    transform: `translateX(calc(-50% + ${off.x}px)) translateY(${off.y}px)`,
+                    width: spriteW, height: spriteVisH,
+                    overflow: 'hidden',
+                    imageRendering: 'pixelated',
+                    filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
+                    zIndex: i,
+                  }}>
+                    <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.8} speed={180 + i * 40} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                <div style={{
+                  width: 30 + count * 6, height: 6, borderRadius: '50%',
+                  background: `radial-gradient(ellipse, ${event.color}50, transparent)`,
                 }} />
                 <div style={{
-                  width: 46, height: 46, borderRadius: '50%',
-                  background: `radial-gradient(circle, ${event.color}30, rgba(20,20,40,0.9))`,
-                  border: `2px solid ${event.color}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.4rem',
-                  boxShadow: `0 0 12px ${event.color}60, 0 0 24px ${event.color}30`,
-                  animation: 'eventPulse 1.5s ease-in-out infinite',
+                  textAlign: 'center', whiteSpace: 'nowrap',
                 }}>
-                  {event.icon}
-                </div>
-                <div style={{
-                  position: 'absolute', right: -16, bottom: -4,
-                  width: 32, height: 32, overflow: 'hidden',
-                  imageRendering: 'pixelated',
-                  filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
-                }}>
-                  <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.4} speed={180} />
-                </div>
-              </div>
-              <div style={{
-                textAlign: 'center', marginTop: 2, whiteSpace: 'nowrap',
-              }}>
-                <div style={{
-                  fontSize: '0.5rem', fontWeight: 800, color: event.color,
-                  textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
-                  letterSpacing: '0.1em',
-                }}>
-                  EVENT
-                </div>
-                <div style={{
-                  fontSize: '0.48rem', color: 'rgba(255,255,255,0.7)',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {minutes}:{seconds.toString().padStart(2, '0')}
+                  <div style={{
+                    fontSize: '0.5rem', fontWeight: 800, color: event.color,
+                    textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
+                    letterSpacing: '0.1em',
+                  }}>
+                    {event.icon} {event.name}
+                  </div>
+                  <div style={{
+                    fontSize: '0.48rem', color: 'rgba(255,255,255,0.7)',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {minutes}:{seconds.toString().padStart(2, '0')}
+                  </div>
                 </div>
               </div>
             </div>
