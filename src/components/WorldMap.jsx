@@ -11,6 +11,7 @@ import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
 import { generateDialogue } from '../data/dialogue';
 import { generateRandomEvent, getRewardDescription } from '../data/randomEvents';
+import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 
 const bossMapSprites = {
   nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', portal: '/backgrounds/boss_green.png' },
@@ -2457,17 +2458,10 @@ export default function WorldMap() {
             </div>
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={() => {
+              <button onClick={async () => {
                 const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-                const exportData = activeHeroes.map(h => ({
-                  name: h.name,
-                  race: h.raceId,
-                  class: h.classId,
-                  level: h.level,
-                  attrs: h.attributePoints || h.baseAttributePoints || {},
-                }));
-                const json = JSON.stringify(exportData);
-                const url = `${window.location.origin}/api/play/gruda.html?heroes=${encodeURIComponent(json)}`;
+                const token = await encodeGrudaShare(activeHeroes);
+                const url = generateShareUrl(token);
                 navigator.clipboard.writeText(url).then(() => {
                   setGrudaCopied('link');
                   setTimeout(() => setGrudaCopied(null), 2000);
@@ -2480,16 +2474,10 @@ export default function WorldMap() {
                 {grudaCopied === 'link' ? '✓ Link Copied!' : '🔗 Copy Share Link'}
               </button>
 
-              <button onClick={() => {
+              <button onClick={async () => {
                 const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-                const exportData = activeHeroes.map(h => ({
-                  name: h.name,
-                  race: h.raceId,
-                  class: h.classId,
-                  level: h.level,
-                  attrs: h.attributePoints || h.baseAttributePoints || {},
-                }));
-                const code = 'GW:' + btoa(JSON.stringify(exportData));
+                const token = await encodeGrudaShare(activeHeroes);
+                const code = generateShareCode(token);
                 navigator.clipboard.writeText(code).then(() => {
                   setGrudaCopied('code');
                   setTimeout(() => setGrudaCopied(null), 2000);
@@ -2502,17 +2490,10 @@ export default function WorldMap() {
                 {grudaCopied === 'code' ? '✓ Code Copied!' : '📋 Copy Share Code'}
               </button>
 
-              <button onClick={() => {
+              <button onClick={async () => {
                 const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-                const exportData = activeHeroes.map(h => ({
-                  name: h.name,
-                  race: h.raceId,
-                  class: h.classId,
-                  level: h.level,
-                  attrs: h.attributePoints || h.baseAttributePoints || {},
-                }));
-                const json = JSON.stringify(exportData);
-                const url = `/api/play/gruda.html?heroes=${encodeURIComponent(json)}`;
+                const token = await encodeGrudaShare(activeHeroes);
+                const url = `/api/play/gruda.html?s=${token}`;
                 window.open(url, '_blank');
               }} style={{
                 background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(251,191,36,0.1))',
@@ -2525,7 +2506,7 @@ export default function WorldMap() {
             </div>
 
             <div style={{ marginTop: 10, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
-              Share the link or code with anyone. They can paste it into the Gruda Arena page to fight with your heroes against AI enemies.
+              Share the link or code with anyone. Full hero builds including equipment, skills, and loadouts are encoded. They can paste it into the Gruda Arena page to fight with your heroes against AI enemies.
             </div>
           </div>
         )}

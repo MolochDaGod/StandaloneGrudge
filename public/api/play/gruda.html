@@ -4,28 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grudge Warlords - Gruda Arena</title>
+<meta property="og:title" content="Grudge Warlords - Arena Challenge">
+<meta property="og:description" content="Accept the arena challenge! Face warriors in turn-based tactical combat.">
+<meta property="og:image" content="/images/og-gruda.png">
+<meta property="og:image:width" content="1456">
+<meta property="og:image:height" content="816">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Grudge Warlords - Arena Challenge">
+<meta name="twitter:description" content="Accept the arena challenge! Face warriors in turn-based tactical combat.">
+<meta name="twitter:image" content="/images/og-gruda.png">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0f1e;--surface:rgba(14,22,48,0.95);--accent:#6ee7b7;--gold:#fbbf24;--hp:#ef4444;--mana:#6366f1;--stamina:#22c55e;--text:#e2e8f0;--dim:#64748b}
 body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 h1,h2,h3{font-family:'Cinzel',serif}
-.container{max-width:900px;margin:0 auto;padding:20px}
-.title-bar{text-align:center;padding:24px 0 16px;border-bottom:1px solid rgba(110,231,183,0.15);margin-bottom:20px}
-.title-bar h1{font-size:1.6rem;background:linear-gradient(135deg,#6ee7b7,#fbbf24,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.container{max-width:960px;margin:0 auto;padding:20px;position:relative;border:1px solid transparent;border-radius:16px;animation:containerGlow 3s ease-in-out infinite}
+@keyframes containerGlow{0%,100%{border-color:rgba(110,231,183,0.1);box-shadow:0 0 15px rgba(110,231,183,0.05)}50%{border-color:rgba(110,231,183,0.25);box-shadow:0 0 30px rgba(110,231,183,0.1)}}
+.title-bar{text-align:center;padding:24px 0 16px;border-bottom:1px solid rgba(110,231,183,0.15);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.title-bar .logo{width:64px;height:64px;border-radius:8px}
+.title-bar .title-text{text-align:center}
+.title-bar h1{font-size:1.6rem;background:linear-gradient(135deg,#6ee7b7,#fbbf24,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px}
 .title-bar p{color:var(--dim);font-size:0.75rem;letter-spacing:2px;margin-top:4px}
+.challenge-id{display:inline-block;background:rgba(110,231,183,0.08);border:1px solid rgba(110,231,183,0.2);border-radius:20px;padding:3px 12px;font-size:0.65rem;color:var(--dim);letter-spacing:1px;margin-top:8px}
 .phase{display:none}.phase.active{display:block}
-.hero-cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:16px 0}
-.hero-card{background:var(--surface);border:1px solid rgba(110,231,183,0.2);border-radius:12px;padding:14px;width:220px;transition:all 0.3s}
+.hero-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.hero-card{border:1px solid rgba(110,231,183,0.2);border-radius:12px;padding:16px;width:280px;transition:all 0.3s;position:relative;overflow:hidden}
 .hero-card:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(110,231,183,0.15)}
-.hero-card .name{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--accent);margin-bottom:6px}
-.hero-card .info{font-size:0.7rem;color:var(--dim);margin-bottom:4px}
+.hero-card .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:6rem;opacity:0.06;pointer-events:none;z-index:0}
+.hero-card .card-content{position:relative;z-index:1}
+.hero-card .name{font-family:'Cinzel',serif;font-size:0.95rem;margin-bottom:6px}
+.hero-card .info{font-size:0.7rem;color:var(--dim);margin-bottom:6px}
 .hero-card .info span{color:var(--text)}
 .bar-container{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin:3px 0;overflow:hidden}
 .bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
 .bar-hp{background:linear-gradient(90deg,#dc2626,#ef4444)}.bar-mp{background:linear-gradient(90deg,#4f46e5,#6366f1)}.bar-sp{background:linear-gradient(90deg,#16a34a,#22c55e)}
 .stat-row{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--dim);margin:1px 0}
 .stat-row .val{color:var(--text)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px 8px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05)}
+.equip-section{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)}
+.equip-title{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.equip-item{display:flex;align-items:center;gap:4px;font-size:0.6rem;padding:2px 0}
+.equip-item .eq-icon{font-size:0.75rem}
+.equip-item .eq-name{flex:1}
+.equip-item .eq-tier{font-size:0.55rem;padding:1px 4px;border-radius:3px;background:rgba(0,0,0,0.3)}
 .btn{font-family:'Cinzel',serif;padding:10px 28px;border:1px solid var(--accent);background:rgba(110,231,183,0.08);color:var(--accent);border-radius:8px;cursor:pointer;font-size:0.85rem;letter-spacing:1px;transition:all 0.3s}
 .btn:hover{background:rgba(110,231,183,0.2);box-shadow:0 0 16px rgba(110,231,183,0.2)}
 .btn:disabled{opacity:0.4;cursor:not-allowed}
@@ -33,6 +56,8 @@ h1,h2,h3{font-family:'Cinzel',serif}
 .btn-gold:hover{background:rgba(251,191,36,0.2)}
 .btn-red{border-color:var(--hp);color:var(--hp);background:rgba(239,68,68,0.08)}
 .btn-red:hover{background:rgba(239,68,68,0.2)}
+.btn-arena{font-size:1rem;padding:14px 40px;border-width:2px;animation:arenaGlow 2s ease-in-out infinite;position:relative}
+@keyframes arenaGlow{0%,100%{box-shadow:0 0 10px rgba(251,191,36,0.2),0 0 20px rgba(251,191,36,0.1)}50%{box-shadow:0 0 20px rgba(251,191,36,0.5),0 0 40px rgba(251,191,36,0.2)}}
 .center{text-align:center}
 .mt{margin-top:16px}.mb{margin-bottom:16px}
 .battle-field{position:relative;width:100%;height:340px;background:linear-gradient(180deg,rgba(14,22,48,0.9) 0%,rgba(30,10,60,0.85) 100%);border-radius:12px;border:1px solid rgba(110,231,183,0.1);overflow:hidden;margin:16px 0}
@@ -81,8 +106,11 @@ select{background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.2);color:v
 <body>
 <div class="container">
 <div class="title-bar">
+<img src="/images/logo.png" alt="Grudge Warlords" class="logo">
+<div class="title-text">
 <h1>GRUDA ARENA</h1>
 <p>GRUDGE WARLORDS CHALLENGE MODE</p>
+</div>
 </div>
 
 <div id="phase-load" class="phase active">
@@ -91,7 +119,7 @@ select{background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.2);color:v
 <p style="font-size:0.75rem;color:var(--dim)">Import hero data to begin your challenge battle</p>
 </div>
 <div class="import-area">
-<p style="font-size:0.75rem;color:var(--dim);margin-bottom:8px">Paste hero JSON or a share code below:</p>
+<p style="font-size:0.75rem;color:var(--dim);margin-bottom:8px">Paste hero JSON, GW: code, or GW2: share code below:</p>
 <textarea id="heroInput" placeholder='[{"name":"Kael","race":"elf","class":"mage","level":5,"attrs":{"Strength":2,"Vitality":3,"Endurance":2,"Dexterity":4,"Agility":4,"Intellect":10,"Wisdom":7,"Tactics":1}}]'></textarea>
 <div id="loadError" class="error" style="display:none"></div>
 <div class="center mt">
@@ -111,13 +139,15 @@ select{background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.2);color:v
 
 <div id="phase-roster" class="phase">
 <div class="center mb">
-<h2 style="font-size:1rem;color:var(--accent)">Your Warband</h2>
+<h2 id="rosterTitle" style="font-size:1rem;color:var(--accent)">Your Warband</h2>
 <p style="font-size:0.7rem;color:var(--dim)">Review your heroes before battle</p>
+<div id="challengeIdBadge" style="display:none"></div>
 </div>
 <div id="heroCards" class="hero-cards"></div>
 <div class="center mt">
-<button class="btn btn-gold glow" onclick="startBattle()">ENTER THE ARENA</button>
-<button class="btn mt" onclick="showPhase('phase-load')" style="margin-left:8px">BACK</button>
+<button class="btn btn-gold btn-arena" onclick="startBattle()">⚔️ ENTER THE ARENA ⚔️</button>
+<br>
+<button class="btn mt" onclick="showPhase('phase-load')" style="margin-top:12px">BACK</button>
 </div>
 </div>
 
@@ -199,7 +229,28 @@ const ENEMY_TEMPLATES = [
   {name:'Void Sorcerer',icon:'🌀',cls:'mage',hp:0.6,dmg:1.5,def:0.5,spd:92},
 ];
 
+const TIER_COLORS = {
+  1: '#9ca3af',
+  2: '#22c55e',
+  3: '#3b82f6',
+  4: '#a855f7',
+  5: '#f59e0b',
+  6: '#ef4444',
+  7: '#ec4899',
+  8: '#f472b6',
+};
+const TIER_NAMES = {1:'Common',2:'Uncommon',3:'Rare',4:'Epic',5:'Legendary',6:'Ancient',7:'Divine',8:'Mythic'};
+
+const CLASS_GRADIENTS = {
+  warrior: 'linear-gradient(135deg, rgba(180,30,30,0.3), rgba(80,10,10,0.8))',
+  mage: 'linear-gradient(135deg, rgba(100,40,180,0.3), rgba(40,10,80,0.8))',
+  ranger: 'linear-gradient(135deg, rgba(30,130,50,0.3), rgba(10,60,20,0.8))',
+  worge: 'linear-gradient(135deg, rgba(180,120,20,0.3), rgba(80,50,10,0.8))',
+};
+
 let gameHeroes = [];
+let heroEquipmentData = {};
+let currentShareHash = null;
 let battleUnits = [];
 let turnOrder = [];
 let currentTurnIdx = 0;
@@ -211,6 +262,59 @@ let dots = {};
 let stunned = {};
 let grudge = {};
 let floatId = 0;
+
+function decompressFromBase64Url(encoded) {
+  let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) base64 += '=';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function decodeShareToken(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('Invalid share token');
+  const [version, compressed, hash] = parts;
+  const json = decompressFromBase64Url(compressed);
+  currentShareHash = hash;
+  return JSON.parse(json);
+}
+
+function deserializeEquipment(data) {
+  if (!data) return {};
+  const result = {};
+  for (const [slot, item] of Object.entries(data)) {
+    result[slot] = {
+      id: 'imp_' + slot + '_' + Math.random().toString(36).slice(2, 8),
+      name: item.n,
+      icon: item.i,
+      slot: item.s,
+      tier: item.t || 1,
+      stats: item.st || {},
+      weaponType: item.wt || undefined,
+      armorType: item.at || undefined,
+      hand: item.h || undefined,
+    };
+  }
+  return result;
+}
+
+function deserializeHero(data) {
+  return {
+    name: data.n,
+    raceId: data.r,
+    classId: data.c,
+    level: data.l,
+    attributePoints: data.a,
+    equipment: deserializeEquipment(data.e),
+    unlockedSkills: data.sk || {},
+    abilityLoadout: data.lo || null,
+    premerged: true,
+  };
+}
 
 function calcStats(attrs, level) {
   const s = {health:250,mana:100,stamina:80,physicalDamage:10,magicDamage:8,defense:5,speed:50,critChance:5,dodge:3};
@@ -236,15 +340,34 @@ function mergeAttrs(base, race, classAttrs) {
   return r;
 }
 
+function applyEquipmentStats(stats, equipment) {
+  if (!equipment) return stats;
+  for (const item of Object.values(equipment)) {
+    if (!item || !item.stats) continue;
+    for (const [stat, val] of Object.entries(item.stats)) {
+      if (typeof val === 'number' && stats[stat] !== undefined) {
+        stats[stat] += val;
+      }
+    }
+  }
+  return stats;
+}
+
 function parseHeroInput(raw) {
   try {
+    if (raw.startsWith('GW2:')) {
+      const token = raw.slice(4);
+      const payload = decodeShareToken(token);
+      if (!Array.isArray(payload)) throw new Error('Invalid share data');
+      return payload.map(deserializeHero);
+    }
     if (raw.startsWith('GW:')) {
       const decoded = atob(raw.slice(3));
       return JSON.parse(decoded);
     }
     return JSON.parse(raw);
   } catch(e) {
-    throw new Error('Invalid hero data format. Use JSON array or GW: share code.');
+    throw new Error('Invalid hero data format. Use JSON array, GW: or GW2: share code.');
   }
 }
 
@@ -257,7 +380,7 @@ function validateHero(h) {
   const lvl = Math.max(1, Math.min(20, parseInt(h.level)||1));
   const hasFullAttrs = h.attributePoints != null;
   const baseAttrs = h.attributePoints || h.attrs || h.attributes || {};
-  return { name: h.name, raceId: r, classId: c, level: lvl, baseAttrs, premerged: hasFullAttrs };
+  return { name: h.name, raceId: r, classId: c, level: lvl, baseAttrs, premerged: hasFullAttrs || h.premerged, equipment: h.equipment || null };
 }
 
 function buildHero(data) {
@@ -265,8 +388,13 @@ function buildHero(data) {
   const race = RACES[data.raceId];
   const finalAttrs = data.premerged ? data.baseAttrs : mergeAttrs(data.baseAttrs, race.bonuses, cls.startAttrs);
   const stats = calcStats(finalAttrs, data.level);
+  applyEquipmentStats(stats, data.equipment);
+  const heroId = 'hero_' + Math.random().toString(36).slice(2,8);
+  if (data.equipment) {
+    heroEquipmentData[heroId] = data.equipment;
+  }
   return {
-    id: 'hero_' + Math.random().toString(36).slice(2,8),
+    id: heroId,
     name: data.name,
     raceId: data.raceId,
     classId: data.classId,
@@ -330,11 +458,35 @@ function loadHeroes() {
     if (!Array.isArray(data)) data = [data];
     if (data.length === 0) throw new Error('Need at least 1 hero');
     if (data.length > 3) data = data.slice(0, 3);
+    heroEquipmentData = {};
     gameHeroes = data.map(h => buildHero(validateHero(h)));
     showRoster();
   } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
+  }
+}
+
+function loadFromShareToken(token) {
+  try {
+    const payload = decodeShareToken(token);
+    if (!Array.isArray(payload)) throw new Error('Invalid share data');
+    let heroes = payload.map(deserializeHero);
+    if (heroes.length > 3) heroes = heroes.slice(0, 3);
+    heroEquipmentData = {};
+    gameHeroes = heroes.map(h => buildHero(validateHero(h)));
+    const firstName = gameHeroes[0]?.name || 'Unknown';
+    document.getElementById('rosterTitle').textContent = `Challenge from ${firstName}'s warband`;
+    if (currentShareHash) {
+      const badge = document.getElementById('challengeIdBadge');
+      badge.innerHTML = `<span class="challenge-id">Challenge ID: ${currentShareHash}</span>`;
+      badge.style.display = 'block';
+    }
+    showPhase('phase-roster');
+    showRosterCards();
+  } catch(e) {
+    console.error('Share token load failed:', e);
+    showPhase('phase-load');
   }
 }
 
@@ -356,28 +508,59 @@ function showPhase(id) {
 }
 
 function showRoster() {
+  showRosterCards();
+  showPhase('phase-roster');
+}
+
+function showRosterCards() {
   const container = document.getElementById('heroCards');
   container.innerHTML = '';
   gameHeroes.forEach(h => {
     const cls = CLASSES[h.classId];
     const race = RACES[h.raceId];
+    const gradient = CLASS_GRADIENTS[h.classId] || CLASS_GRADIENTS.warrior;
+    const equipment = heroEquipmentData[h.id] || {};
+    const hasEquip = Object.keys(equipment).length > 0;
+
+    let equipHTML = '';
+    if (hasEquip) {
+      equipHTML = '<div class="equip-section"><div class="equip-title">Equipment</div>';
+      for (const [slot, item] of Object.entries(equipment)) {
+        const tierColor = TIER_COLORS[item.tier] || TIER_COLORS[1];
+        const tierName = TIER_NAMES[item.tier] || 'Common';
+        equipHTML += `<div class="equip-item">
+          <span class="eq-icon">${item.icon || '📦'}</span>
+          <span class="eq-name" style="color:${tierColor}">${item.name}</span>
+          <span class="eq-tier" style="color:${tierColor};border:1px solid ${tierColor}33">${tierName}</span>
+        </div>`;
+      }
+      equipHTML += '</div>';
+    }
+
     container.innerHTML += `
-      <div class="hero-card">
-        <div class="name">${h.icon} ${h.name}</div>
-        <div class="info">${race?.name||''} ${cls?.name||''} &bull; Level <span>${h.level}</span></div>
-        <div class="bar-container"><div class="bar-fill bar-hp" style="width:100%"></div></div>
-        <div class="stat-row"><span>HP</span><span class="val">${h.maxHealth}</span></div>
-        <div class="bar-container"><div class="bar-fill bar-mp" style="width:100%"></div></div>
-        <div class="stat-row"><span>MP</span><span class="val">${h.maxMana}</span></div>
-        <div class="bar-container"><div class="bar-fill bar-sp" style="width:100%"></div></div>
-        <div class="stat-row"><span>SP</span><span class="val">${h.maxStamina}</span></div>
-        <div class="stat-row"><span>Phys Dmg</span><span class="val">${Math.floor(h.physicalDamage)}</span></div>
-        <div class="stat-row"><span>Magic Dmg</span><span class="val">${Math.floor(h.magicDamage)}</span></div>
-        <div class="stat-row"><span>Defense</span><span class="val">${Math.floor(h.defense)}</span></div>
-        <div class="stat-row"><span>Speed</span><span class="val">${Math.floor(h.speed)}</span></div>
+      <div class="hero-card" style="background:${gradient}">
+        <div class="watermark">${cls?.icon || '⚔️'}</div>
+        <div class="card-content">
+          <div class="name" style="color:${cls?.color || 'var(--accent)'}">${h.icon} ${h.name}</div>
+          <div class="info">${race?.name||''} ${cls?.name||''} &bull; Level <span>${h.level}</span></div>
+          <div class="bar-container"><div class="bar-fill bar-hp" style="width:100%"></div></div>
+          <div class="stat-row"><span>HP</span><span class="val">${h.maxHealth}</span></div>
+          <div class="bar-container"><div class="bar-fill bar-mp" style="width:100%"></div></div>
+          <div class="stat-row"><span>MP</span><span class="val">${h.maxMana}</span></div>
+          <div class="bar-container"><div class="bar-fill bar-sp" style="width:100%"></div></div>
+          <div class="stat-row"><span>SP</span><span class="val">${h.maxStamina}</span></div>
+          <div class="stat-grid">
+            <div class="stat-row"><span>Phys Dmg</span><span class="val">${Math.floor(h.physicalDamage)}</span></div>
+            <div class="stat-row"><span>Magic Dmg</span><span class="val">${Math.floor(h.magicDamage)}</span></div>
+            <div class="stat-row"><span>Defense</span><span class="val">${Math.floor(h.defense)}</span></div>
+            <div class="stat-row"><span>Speed</span><span class="val">${Math.floor(h.speed)}</span></div>
+            <div class="stat-row"><span>Crit</span><span class="val">${h.critChance.toFixed(1)}%</span></div>
+            <div class="stat-row"><span>Dodge</span><span class="val">${h.dodge.toFixed(1)}%</span></div>
+          </div>
+          ${equipHTML}
+        </div>
       </div>`;
   });
-  showPhase('phase-roster');
 }
 
 function startBattle() {
@@ -763,6 +946,11 @@ function goHome() {
 
 (function init() {
   const params = new URLSearchParams(window.location.search);
+  const shareToken = params.get('s');
+  if (shareToken) {
+    loadFromShareToken(shareToken);
+    return;
+  }
   const heroData = params.get('heroes');
   if (heroData) {
     document.getElementById('heroInput').value = heroData;
