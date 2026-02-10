@@ -483,9 +483,6 @@ export default function WorldMap() {
               style={{ filter: `drop-shadow(0 0 2px ${region.stroke})`, animation: 'regionPulse 6s ease-in-out infinite' }}
             />
           ))}
-          <path d="M 71,60 Q 73,63 72,66 Q 71,69 73,72" fill="none" stroke="rgba(251,146,60,0.3)" strokeWidth="0.4" strokeDasharray="2 1" style={{ animation: 'lavaFlow 3s linear infinite' }} />
-          <path d="M 77,59 Q 79,62 78,65 Q 77,68 79,71" fill="none" stroke="rgba(239,68,68,0.25)" strokeWidth="0.3" strokeDasharray="2 1" style={{ animation: 'lavaFlow 4s linear infinite', animationDelay: '1s' }} />
-          <path d="M 87,54 Q 85,57 86,60 Q 87,63 85,66" fill="none" stroke="rgba(251,146,60,0.2)" strokeWidth="0.35" strokeDasharray="2 1" style={{ animation: 'lavaFlow 3.5s linear infinite', animationDelay: '0.5s' }} />
         </svg>
 
         {terrainRegions.map((region, idx) => (
@@ -502,6 +499,48 @@ export default function WorldMap() {
             opacity: 0.6,
           }}>
             {region.name}
+          </div>
+        ))}
+
+        {[
+          { x: 70, y: 58, w: 6, h: 16, rot: 5 },
+          { x: 76, y: 56, w: 5, h: 14, rot: -8 },
+          { x: 85, y: 52, w: 5, h: 15, rot: 12 },
+        ].map((lava, idx) => (
+          <div key={`lava_${idx}`} style={{
+            position: 'absolute',
+            left: `${lava.x}%`, top: `${lava.y}%`,
+            width: `${lava.w}%`, height: `${lava.h}%`,
+            transform: `rotate(${lava.rot}deg)`,
+            pointerEvents: 'none', zIndex: 1,
+            borderRadius: '40%',
+            overflow: 'hidden',
+            opacity: 0.6,
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: `
+                radial-gradient(ellipse at 30% 20%, rgba(251,146,60,0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(239,68,68,0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.25) 0%, transparent 40%)
+              `,
+              animation: `lavaShader ${3 + idx * 0.7}s ease-in-out infinite alternate`,
+              filter: 'blur(2px)',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: `
+                radial-gradient(ellipse at 60% 40%, rgba(255,100,0,0.35) 0%, transparent 45%),
+                radial-gradient(ellipse at 40% 70%, rgba(200,50,20,0.25) 0%, transparent 50%)
+              `,
+              animation: `lavaShader2 ${4 + idx * 0.5}s ease-in-out infinite alternate-reverse`,
+              filter: 'blur(3px)',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse at 50% 50%, rgba(255,200,50,0.15) 0%, transparent 60%)',
+              animation: `lavaPulse ${2 + idx * 0.3}s ease-in-out infinite`,
+            }} />
           </div>
         ))}
 
@@ -2243,9 +2282,20 @@ export default function WorldMap() {
             0%, 100% { transform: scale(1); opacity: 0.7; }
             50% { transform: scale(1.15); opacity: 1; }
           }
-          @keyframes lavaFlow {
-            0% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -20; }
+          @keyframes lavaShader {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+            33% { transform: scale(1.1) translate(2%, -3%); opacity: 0.7; }
+            66% { transform: scale(0.95) translate(-1%, 2%); opacity: 0.6; }
+            100% { transform: scale(1.05) translate(1%, -1%); opacity: 0.8; }
+          }
+          @keyframes lavaShader2 {
+            0% { transform: scale(1.05) translate(-2%, 1%); opacity: 0.4; }
+            50% { transform: scale(0.9) translate(3%, -2%); opacity: 0.7; }
+            100% { transform: scale(1.1) translate(-1%, 3%); opacity: 0.5; }
+          }
+          @keyframes lavaPulse {
+            0%, 100% { opacity: 0.1; transform: scale(0.9); }
+            50% { opacity: 0.4; transform: scale(1.1); }
           }
           @keyframes steamRise {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
