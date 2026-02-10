@@ -327,6 +327,8 @@ const useGameStore = create(persist((set, get) => ({
   maxHeroSlots: 1,
   locationsCleared: [],
   zoneConquer: {},
+  zoneStats: {},
+  completedQuests: {},
   inventory: [],
   shopInventory: [],
   shopLastRefresh: 0,
@@ -1715,6 +1717,19 @@ const useGameStore = create(persist((set, get) => ({
       log.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
     }
 
+    const zoneStatsMap = { ...state.zoneStats };
+    if (locId) {
+      const prev = zoneStatsMap[locId] || { kills: 0, flawless: 0 };
+      const heroUnits = state.battleUnits.filter(u => u.team === 'player');
+      const allAlive = heroUnits.every(u => u.health > 0);
+      zoneStatsMap[locId] = {
+        ...prev,
+        zoneId: locId,
+        kills: (prev.kills || 0) + 1,
+        flawless: (prev.flawless || 0) + (allAlive ? 1 : 0),
+      };
+    }
+
     const newConquer = zoneConquer[locId] || 0;
     log.push(`✨ Victory! Gained ${adjustedTotalXp} XP and ${totalGold} Gold.${eventBonus ? ' (Event Bonus!)' : ''}`);
     if (locId) log.push(`📊 Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
@@ -1788,6 +1803,7 @@ const useGameStore = create(persist((set, get) => ({
       bossesDefeated,
       locationsCleared,
       zoneConquer,
+      zoneStats: zoneStatsMap,
       maxHeroSlots: newMaxSlots,
       heroRoster: updatedRoster,
       pendingLoot: lootDrops,
@@ -2015,6 +2031,24 @@ const useGameStore = create(persist((set, get) => ({
     set({
       gold: state.gold + price,
       inventory: state.inventory.filter(i => i.id !== itemId),
+    });
+  },
+
+  completeQuest: (zoneId, questId, rewards, conquerBonus) => {
+    const state = get();
+    const completed = { ...state.completedQuests };
+    if (!completed[zoneId]) completed[zoneId] = [];
+    if (completed[zoneId].includes(questId)) return;
+    completed[zoneId] = [...completed[zoneId], questId];
+    const zoneConquer = { ...state.zoneConquer };
+    if (conquerBonus && zoneId) {
+      zoneConquer[zoneId] = Math.min(100, (zoneConquer[zoneId] || 0) + conquerBonus);
+    }
+    set({
+      completedQuests: completed,
+      gold: state.gold + (rewards?.gold || 0),
+      xp: state.xp + (rewards?.xp || 0),
+      zoneConquer,
     });
   },
 
@@ -2395,7 +2429,7 @@ const useGameStore = create(persist((set, get) => ({
   },
 }), {
   name: 'grudge-warlords-save',
-  version: 3,
+  version: 4,
   migrate: (persistedState, version) => {
     if (version < 2) {
       const rarityToTier = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
@@ -2459,6 +2493,10 @@ const useGameStore = create(persist((set, get) => ({
       if (persistedState.shopInventory) {
         persistedState.shopInventory = persistedState.shopInventory.map(migrateAccessorySlot);
       }
+    }
+    if (version < 4) {
+      if (!persistedState.zoneStats) persistedState.zoneStats = {};
+      if (!persistedState.completedQuests) persistedState.completedQuests = {};
     }
     return persistedState;
   },
