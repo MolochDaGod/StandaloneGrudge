@@ -264,15 +264,16 @@ export default function CharacterCreate() {
                       position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
                     }}>&#10003;</div>}
                     <div style={{
-                      display: 'flex', justifyContent: 'center', alignItems: 'center',
+                      display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
                       marginBottom: 6, width: 100, height: 100, margin: '0 auto 6px',
                       border: `1px solid ${cls.color}50`, borderRadius: 10,
                       background: 'rgba(0,0,0,0.25)',
+                      overflow: 'hidden',
                     }}>
                       {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={1} speed={150} />
+                        <WorgeMorphPreview raceId={selectedRace} scale={0.9} speed={150} />
                       ) : (
-                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={1} speed={150} />
+                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.9} speed={150} />
                       )}
                     </div>
                     <div style={{
@@ -341,10 +342,11 @@ export default function CharacterCreate() {
                 width: 120, height: 120, borderRadius: 14,
                 background: `radial-gradient(circle, ${cls.color}15, transparent)`,
                 border: `2px solid ${cls.color}30`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                flexShrink: 0,
+                overflow: 'hidden',
               }}>
-                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={4.4} speed={150} />
+                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.1} speed={150} />
               </div>
               <div style={{ flex: 1, minWidth: 180, textAlign: 'center' }}>
                 <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>
