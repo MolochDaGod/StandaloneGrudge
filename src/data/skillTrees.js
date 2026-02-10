@@ -15,7 +15,7 @@ export const skillTrees = {
         name: 'Level 5 - Specialization',
         requiredLevel: 5,
         skills: [
-          { id: 'w_damage_surge', name: 'Damage Surge', icon: '💥', description: 'Temporary damage boost', effect: '+25% Damage for 5s', maxPoints: 3, requires: 'w_quick_strike', bonuses: { damage: 3 } },
+          { id: 'w_damage_surge', name: 'Damage Surge', icon: '💥', description: 'Temporary damage boost', effect: '+25% Damage for 3 turns', maxPoints: 3, requires: 'w_quick_strike', bonuses: { damage: 3 } },
           { id: 'w_guardian_aura', name: "Guardian's Aura", icon: '🔰', description: 'Defense buff', effect: '+15% Party Defense', maxPoints: 3, requires: 'w_taunt', bonuses: { defense: 8 },
             grantedAbility: { id: 'guardian_aura', name: "Guardian's Aura", icon: '🔰', description: 'Raise your defenses, gaining +20 defense for 3 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 20, duration: 3 } }
           }
@@ -191,7 +191,7 @@ export const skillTrees = {
           { id: 'r_multishot', name: 'Multishot', icon: '🌀', description: 'Fire multiple arrows', effect: '3 Arrow Spread', maxPoints: 3, requires: 'r_swift_draw', bonuses: { damage: 4 },
             grantedAbility: { id: 'multishot', name: 'Multishot', icon: '🌀', description: 'Fire a spread of arrows dealing moderate damage', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy' }
           },
-          { id: 'r_trap', name: 'Bear Trap', icon: '🪤', description: 'Place traps that root', effect: '2s Root', maxPoints: 2, requires: 'r_evasion', bonuses: { defense: 5 },
+          { id: 'r_trap', name: 'Bear Trap', icon: '🪤', description: 'Place traps that root', effect: '1 Turn Stun', maxPoints: 2, requires: 'r_evasion', bonuses: { defense: 5 },
             grantedAbility: { id: 'bear_trap', name: 'Bear Trap', icon: '🪤', description: 'Set a trap that stuns the enemy for 1 turn', type: 'physical', damage: 0.6, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } }
           }
         ]
