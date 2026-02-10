@@ -14,6 +14,13 @@ import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
+const CLASS_BG = {
+  warrior: '/backgrounds/wc_red.png',
+  mage: '/backgrounds/wc_purple.png',
+  ranger: '/backgrounds/wc_green.png',
+  worge: '/backgrounds/wc_gold.png',
+};
+
 function MiniBar({ current, max, color, height = 6, label }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -38,11 +45,12 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const cp = calculateCombatPower(stats);
   const hasPoints = (hero.unspentPoints || 0) > 0 || (hero.skillPoints || 0) > 0;
 
+  const classBg = CLASS_BG[hero.classId] || CLASS_BG.warrior;
+
   return (
     <div onClick={onClick} style={{
-      background: isSelected
-        ? 'linear-gradient(135deg, rgba(110,231,183,0.2), rgba(110,231,183,0.05))'
-        : 'linear-gradient(135deg, rgba(20,26,43,0.9), rgba(42,49,80,0.5))',
+      backgroundImage: `linear-gradient(135deg, ${isSelected ? 'rgba(110,231,183,0.25)' : 'rgba(14,22,48,0.75)'}, rgba(11,16,32,0.85)), url(${classBg})`,
+      backgroundSize: 'cover', backgroundPosition: 'center',
       border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
       borderRadius: 14, padding: 16, cursor: 'pointer',
       transition: 'all 0.3s', position: 'relative', overflow: 'hidden',
@@ -429,7 +437,8 @@ function HeroDetailPanel({ hero, onClose }) {
       height: '100%',
     }}>
       <div style={{
-        background: `linear-gradient(135deg, ${cls?.color || 'var(--accent)'}15, transparent)`,
+        backgroundImage: `linear-gradient(135deg, ${cls?.color || 'var(--accent)'}40, rgba(14,22,48,0.8)), url(${CLASS_BG[hero.classId] || CLASS_BG.warrior})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
         borderBottom: `2px solid ${cls?.color || 'var(--border)'}`,
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
