@@ -108,35 +108,35 @@ const pathConnections = [
 ];
 
 const locationIcons = {
-  verdant_plains:     { symbol: '🌿', color: '#4ade80', glow: 'rgba(74,222,128,0.4)', shape: 'forest', w: 58, h: 42, clip: 'polygon(20% 0%, 50% 5%, 80% 0%, 100% 60%, 85% 100%, 15% 100%, 0% 60%)', bg: 'linear-gradient(180deg, #1a3a1a, #0d2a0d 60%, #0a1e0a)' },
-  dark_forest:        { symbol: '🌲', color: '#22d3ee', glow: 'rgba(34,211,238,0.4)', shape: 'forest', w: 54, h: 44, clip: 'polygon(15% 0%, 50% 8%, 85% 0%, 95% 55%, 80% 100%, 20% 100%, 5% 55%)', bg: 'linear-gradient(180deg, #0a2020, #082828 60%, #061e1e)' },
-  mystic_grove:       { symbol: '✨', color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', shape: 'grove', w: 50, h: 46, clip: 'polygon(30% 0%, 70% 0%, 95% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 5% 30%)', bg: 'linear-gradient(135deg, #1a1030, #2a1850 50%, #1a1030)' },
-  whispering_caverns: { symbol: '🕳️', color: '#94a3b8', glow: 'rgba(148,163,184,0.4)', shape: 'cave', w: 52, h: 40, clip: 'ellipse(50% 45% at 50% 55%)', bg: 'linear-gradient(180deg, #1a1a2a, #0e0e1e 70%, #080818)' },
-  haunted_marsh:      { symbol: '💀', color: '#86efac', glow: 'rgba(134,239,172,0.3)', shape: 'marsh', w: 56, h: 36, clip: 'polygon(5% 20%, 20% 0%, 40% 15%, 60% 0%, 80% 10%, 95% 25%, 100% 70%, 80% 100%, 20% 100%, 0% 70%)', bg: 'linear-gradient(180deg, #0a1a10, #061810 70%, #041208)' },
-  cursed_ruins:       { symbol: '🏚️', color: '#c084fc', glow: 'rgba(192,132,252,0.4)', shape: 'ruins', w: 50, h: 48, clip: 'polygon(10% 0%, 30% 5%, 45% 0%, 55% 8%, 70% 0%, 90% 5%, 100% 40%, 95% 100%, 5% 100%, 0% 40%)', bg: 'linear-gradient(180deg, #1e1028, #140a1e 60%, #0e0618)' },
-  crystal_caves:      { symbol: '💎', color: '#67e8f9', glow: 'rgba(103,232,249,0.4)', shape: 'crystal', w: 44, h: 50, clip: 'polygon(50% 0%, 85% 25%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 15% 25%)', bg: 'linear-gradient(180deg, #0a2030, #082838 60%, #061e28)' },
-  thornwood_pass:     { symbol: '🌳', color: '#6ee7b7', glow: 'rgba(110,231,183,0.3)', shape: 'forest', w: 60, h: 40, clip: 'polygon(10% 0%, 35% 10%, 50% 0%, 65% 10%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%)', bg: 'linear-gradient(180deg, #0e2418, #0a1e12 60%, #061a0e)' },
-  sunken_temple:      { symbol: '🏛️', color: '#38bdf8', glow: 'rgba(56,189,248,0.4)', shape: 'temple', w: 48, h: 52, clip: 'polygon(25% 0%, 75% 0%, 100% 15%, 100% 100%, 0% 100%, 0% 15%)', bg: 'linear-gradient(180deg, #0e1828, #0a1420 60%, #060e18)' },
-  iron_peaks:         { symbol: '⛰️', color: '#9ca3af', glow: 'rgba(156,163,175,0.4)', shape: 'mountain', w: 56, h: 48, clip: 'polygon(50% 0%, 80% 30%, 100% 80%, 90% 100%, 10% 100%, 0% 80%, 20% 30%)', bg: 'linear-gradient(180deg, #1e1e20, #141418 60%, #0e0e10)' },
-  blood_canyon:       { symbol: '🏔️', color: '#ef4444', glow: 'rgba(239,68,68,0.4)', shape: 'canyon', w: 58, h: 40, clip: 'polygon(0% 30%, 15% 0%, 40% 20%, 60% 0%, 85% 15%, 100% 35%, 95% 100%, 5% 100%)', bg: 'linear-gradient(180deg, #2a0a0a, #1e0606 60%, #140404)' },
-  frozen_tundra:      { symbol: '❄️', color: '#7dd3fc', glow: 'rgba(125,211,252,0.4)', shape: 'ice', w: 52, h: 44, clip: 'polygon(50% 0%, 90% 20%, 100% 60%, 80% 100%, 20% 100%, 0% 60%, 10% 20%)', bg: 'linear-gradient(180deg, #1a2838, #0e1e30 60%, #0a1828)' },
-  dragon_peaks:       { symbol: '🐉', color: '#f97316', glow: 'rgba(249,115,22,0.4)', shape: 'volcano', w: 50, h: 50, clip: 'polygon(50% 0%, 75% 25%, 100% 50%, 90% 100%, 10% 100%, 0% 50%, 25% 25%)', bg: 'linear-gradient(180deg, #2a1a08, #1e1206 60%, #140e04)' },
-  ashen_battlefield:  { symbol: '⚔️', color: '#a8a29e', glow: 'rgba(168,162,158,0.3)', shape: 'field', w: 60, h: 36, clip: 'polygon(5% 15%, 95% 15%, 100% 50%, 95% 85%, 5% 85%, 0% 50%)', bg: 'linear-gradient(180deg, #1a1816, #14120e 60%, #0e0c0a)' },
-  windswept_ridge:    { symbol: '🌬️', color: '#93c5fd', glow: 'rgba(147,197,253,0.3)', shape: 'ridge', w: 56, h: 38, clip: 'polygon(0% 40%, 20% 0%, 50% 15%, 80% 0%, 100% 35%, 95% 90%, 5% 90%)', bg: 'linear-gradient(180deg, #141e2e, #0e1624 60%, #0a101e)' },
-  molten_core:        { symbol: '🔥', color: '#fb923c', glow: 'rgba(251,146,60,0.4)', shape: 'lava', w: 52, h: 44, clip: 'polygon(15% 0%, 85% 0%, 100% 30%, 95% 70%, 80% 100%, 20% 100%, 5% 70%, 0% 30%)', bg: 'linear-gradient(180deg, #2a1208, #201006 50%, #180a04)' },
-  shadow_forest:      { symbol: '🌑', color: '#818cf8', glow: 'rgba(129,140,248,0.4)', shape: 'forest', w: 54, h: 44, clip: 'polygon(15% 0%, 50% 5%, 85% 0%, 100% 55%, 80% 100%, 20% 100%, 0% 55%)', bg: 'linear-gradient(180deg, #10102a, #0a0a20 60%, #060618)' },
-  obsidian_wastes:    { symbol: '🌋', color: '#f87171', glow: 'rgba(248,113,113,0.4)', shape: 'volcano', w: 48, h: 48, clip: 'polygon(50% 0%, 80% 30%, 100% 60%, 85% 100%, 15% 100%, 0% 60%, 20% 30%)', bg: 'linear-gradient(180deg, #1e0a0a, #180606 60%, #120404)' },
-  ruins_of_ashenmoor: { symbol: '🏚️', color: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', shape: 'ruins', w: 52, h: 46, clip: 'polygon(8% 0%, 25% 8%, 50% 0%, 75% 5%, 92% 0%, 100% 45%, 90% 100%, 10% 100%, 0% 45%)', bg: 'linear-gradient(180deg, #1a1a1e, #121216 60%, #0e0e10)' },
-  blight_hollow:      { symbol: '☠️', color: '#a3e635', glow: 'rgba(163,230,53,0.3)', shape: 'marsh', w: 54, h: 38, clip: 'polygon(10% 15%, 30% 0%, 50% 10%, 70% 0%, 90% 15%, 100% 60%, 85% 100%, 15% 100%, 0% 60%)', bg: 'linear-gradient(180deg, #141e08, #0e1806 60%, #0a1204)' },
-  shadow_citadel:     { symbol: '🏰', color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', shape: 'gate', w: 44, h: 56, clip: 'polygon(15% 0%, 85% 0%, 100% 10%, 100% 100%, 0% 100%, 0% 10%)', bg: 'linear-gradient(180deg, #1e1040, #140a30 60%, #0e0620)' },
-  stormspire_peak:    { symbol: '⚡', color: '#fcd34d', glow: 'rgba(252,211,77,0.4)', shape: 'mountain', w: 48, h: 50, clip: 'polygon(50% 0%, 80% 30%, 100% 75%, 85% 100%, 15% 100%, 0% 75%, 20% 30%)', bg: 'linear-gradient(180deg, #2a2208, #1e1a06 60%, #181404)' },
-  demon_gate:         { symbol: '🌀', color: '#f43f5e', glow: 'rgba(244,63,94,0.4)', shape: 'gate', w: 44, h: 56, clip: 'polygon(15% 0%, 85% 0%, 100% 10%, 100% 100%, 0% 100%, 0% 10%)', bg: 'linear-gradient(180deg, #2e0810, #200610 60%, #180408)' },
-  abyssal_depths:     { symbol: '🕳️', color: '#6366f1', glow: 'rgba(99,102,241,0.4)', shape: 'cave', w: 50, h: 42, clip: 'ellipse(50% 45% at 50% 55%)', bg: 'linear-gradient(180deg, #0e0e2a, #0a0a20 60%, #060618)' },
-  infernal_forge:     { symbol: '🔨', color: '#ef4444', glow: 'rgba(239,68,68,0.4)', shape: 'lava', w: 50, h: 44, clip: 'polygon(10% 0%, 90% 0%, 100% 35%, 90% 75%, 75% 100%, 25% 100%, 10% 75%, 0% 35%)', bg: 'linear-gradient(180deg, #2a0808, #1e0606 50%, #140404)' },
-  dreadmaw_canyon:    { symbol: '💀', color: '#d946ef', glow: 'rgba(217,70,239,0.4)', shape: 'canyon', w: 56, h: 40, clip: 'polygon(0% 25%, 20% 0%, 45% 20%, 55% 0%, 80% 15%, 100% 30%, 95% 100%, 5% 100%)', bg: 'linear-gradient(180deg, #1e0a20, #140618 60%, #0e0412)' },
-  void_threshold:     { symbol: '🌌', color: '#c084fc', glow: 'rgba(192,132,252,0.5)', shape: 'crystal', w: 46, h: 48, clip: 'polygon(50% 0%, 85% 25%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 15% 25%)', bg: 'linear-gradient(180deg, #1a0a2a, #120820 60%, #0a0418)' },
-  corrupted_spire:    { symbol: '🗼', color: '#e879f9', glow: 'rgba(232,121,249,0.4)', shape: 'mountain', w: 42, h: 52, clip: 'polygon(50% 0%, 75% 30%, 100% 70%, 85% 100%, 15% 100%, 0% 70%, 25% 30%)', bg: 'linear-gradient(180deg, #200a28, #180620 60%, #100418)' },
-  void_throne:        { symbol: '👑', color: '#fbbf24', glow: 'rgba(251,191,36,0.5)', shape: 'gate', w: 48, h: 58, clip: 'polygon(15% 0%, 85% 0%, 100% 10%, 100% 100%, 0% 100%, 0% 10%)', bg: 'linear-gradient(180deg, #2a2008, #1e1806 60%, #141004)' },
+  verdant_plains:     { color: '#4ade80', glow: 'rgba(74,222,128,0.4)', img: '/map_nodes/verdant_plains.png' },
+  dark_forest:        { color: '#22d3ee', glow: 'rgba(34,211,238,0.4)', img: '/map_nodes/dark_forest.png' },
+  mystic_grove:       { color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', img: '/map_nodes/mystic_grove.png' },
+  whispering_caverns: { color: '#94a3b8', glow: 'rgba(148,163,184,0.4)', img: '/map_nodes/whispering_caverns.png' },
+  haunted_marsh:      { color: '#86efac', glow: 'rgba(134,239,172,0.3)', img: '/map_nodes/haunted_marsh.png' },
+  cursed_ruins:       { color: '#c084fc', glow: 'rgba(192,132,252,0.4)', img: '/map_nodes/cursed_ruins.png' },
+  crystal_caves:      { color: '#67e8f9', glow: 'rgba(103,232,249,0.4)', img: '/map_nodes/crystal_caves.png' },
+  thornwood_pass:     { color: '#6ee7b7', glow: 'rgba(110,231,183,0.3)', img: '/map_nodes/thornwood_pass.png' },
+  sunken_temple:      { color: '#38bdf8', glow: 'rgba(56,189,248,0.4)', img: '/map_nodes/sunken_temple.png' },
+  iron_peaks:         { color: '#9ca3af', glow: 'rgba(156,163,175,0.4)', img: '/map_nodes/iron_peaks.png' },
+  blood_canyon:       { color: '#ef4444', glow: 'rgba(239,68,68,0.4)', img: '/map_nodes/blood_canyon.png' },
+  frozen_tundra:      { color: '#7dd3fc', glow: 'rgba(125,211,252,0.4)', img: '/map_nodes/frozen_tundra.png' },
+  dragon_peaks:       { color: '#f97316', glow: 'rgba(249,115,22,0.4)', img: '/map_nodes/dragon_peaks.png' },
+  ashen_battlefield:  { color: '#a8a29e', glow: 'rgba(168,162,158,0.3)', img: '/map_nodes/ashen_battlefield.png' },
+  windswept_ridge:    { color: '#93c5fd', glow: 'rgba(147,197,253,0.3)', img: '/map_nodes/windswept_ridge.png' },
+  molten_core:        { color: '#fb923c', glow: 'rgba(251,146,60,0.4)', img: '/map_nodes/molten_core.png' },
+  shadow_forest:      { color: '#818cf8', glow: 'rgba(129,140,248,0.4)', img: '/map_nodes/shadow_forest.png' },
+  obsidian_wastes:    { color: '#f87171', glow: 'rgba(248,113,113,0.4)', img: '/map_nodes/obsidian_wastes.png' },
+  ruins_of_ashenmoor: { color: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', img: '/map_nodes/ruins_of_ashenmoor.png' },
+  blight_hollow:      { color: '#a3e635', glow: 'rgba(163,230,53,0.3)', img: '/map_nodes/blight_hollow.png' },
+  shadow_citadel:     { color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', img: '/map_nodes/shadow_citadel.png' },
+  stormspire_peak:    { color: '#fcd34d', glow: 'rgba(252,211,77,0.4)', img: '/map_nodes/stormspire_peak.png' },
+  demon_gate:         { color: '#f43f5e', glow: 'rgba(244,63,94,0.4)', img: '/map_nodes/demon_gate.png' },
+  abyssal_depths:     { color: '#6366f1', glow: 'rgba(99,102,241,0.4)', img: '/map_nodes/abyssal_depths.png' },
+  infernal_forge:     { color: '#ef4444', glow: 'rgba(239,68,68,0.4)', img: '/map_nodes/infernal_forge.png' },
+  dreadmaw_canyon:    { color: '#d946ef', glow: 'rgba(217,70,239,0.4)', img: '/map_nodes/dreadmaw_canyon.png' },
+  void_threshold:     { color: '#c084fc', glow: 'rgba(192,132,252,0.5)', img: '/map_nodes/void_threshold.png' },
+  corrupted_spire:    { color: '#e879f9', glow: 'rgba(232,121,249,0.4)', img: '/map_nodes/corrupted_spire.png' },
+  void_throne:        { color: '#fbbf24', glow: 'rgba(251,191,36,0.5)', img: '/map_nodes/void_throne.png' },
 };
 
 const terrainRegions = [
@@ -179,14 +179,6 @@ const terrainRegions = [
 
 const portalLocations = ['shadow_citadel', 'demon_gate', 'void_throne'];
 
-const steamPositions = [
-  { x: 42, y: 35, delay: 0 },
-  { x: 44, y: 37, delay: 1.5 },
-  { x: 20, y: 52, delay: 0.8 },
-  { x: 22, y: 54, delay: 2.2 },
-  { x: 38, y: 75, delay: 0.4 },
-  { x: 40, y: 77, delay: 1.8 },
-];
 
 const MAP_GRID = { cols: 100, rows: 100 };
 
@@ -212,44 +204,9 @@ const mapLandmarks = [
   { type: 'river', points: [[32,90],[34,86],[36,82],[38,78],[40,75]], color: 'rgba(56,189,248,0.2)', width: 1 },
   { type: 'river', points: [[40,75],[44,72],[48,70],[50,68]], color: 'rgba(56,189,248,0.15)', width: 0.8 },
   { type: 'river', points: [[44,40],[42,44],[40,48],[38,52],[36,56]], color: 'rgba(125,211,252,0.2)', width: 0.9 },
-
   { type: 'lava', points: [[70,62],[72,58],[74,55],[76,52]], color: 'rgba(251,146,60,0.35)', width: 1.1 },
   { type: 'lava', points: [[78,70],[80,66],[82,62],[84,58],[86,54]], color: 'rgba(239,68,68,0.3)', width: 1.0 },
   { type: 'lava', points: [[86,54],[88,50],[90,48]], color: 'rgba(251,146,60,0.25)', width: 0.8 },
-
-  { type: 'tower', x: 27, y: 33, label: 'Watchtower' },
-  { type: 'tower', x: 63, y: 26, label: 'Dark Spire' },
-  { type: 'tower', x: 49, y: 13, label: 'Storm Tower' },
-  { type: 'tower', x: 90, y: 20, label: 'Void Beacon' },
-
-  { type: 'gate', x: 65, y: 30, label: 'Shadow Gate' },
-  { type: 'gate', x: 80, y: 44, label: 'Demon Gate' },
-  { type: 'gate', x: 82, y: 10, label: 'Void Gate' },
-
-  { type: 'monument', x: 15, y: 86, label: 'Waystone' },
-  { type: 'monument', x: 56, y: 40, label: 'Ashenmoor Obelisk' },
-  { type: 'monument', x: 37, y: 63, label: 'Cursed Pillar' },
-  { type: 'monument', x: 73, y: 16, label: 'Void Marker' },
-
-  { type: 'bridge', x: 16, y: 66, rot: 25 },
-  { type: 'bridge', x: 37, y: 80, rot: -15 },
-  { type: 'bridge', x: 42, y: 42, rot: 35 },
-
-  { type: 'ruins', x: 33, y: 67, label: 'Broken Wall' },
-  { type: 'ruins', x: 57, y: 36, label: 'Old Foundation' },
-  { type: 'ruins', x: 85, y: 36, label: 'Shattered Arch' },
-
-  { type: 'tree_cluster', x: 8, y: 75, count: 3 },
-  { type: 'tree_cluster', x: 18, y: 82, count: 2 },
-  { type: 'tree_cluster', x: 24, y: 72, count: 4 },
-  { type: 'tree_cluster', x: 46, y: 74, count: 2 },
-  { type: 'tree_cluster', x: 14, y: 62, count: 3 },
-
-  { type: 'crystal', x: 21, y: 53, color: '#67e8f9' },
-  { type: 'crystal', x: 18, y: 57, color: '#67e8f9' },
-
-  { type: 'skull', x: 36, y: 20, color: '#a3e635' },
-  { type: 'skull', x: 66, y: 72, color: '#a8a29e' },
 ];
 
 export default function WorldMap() {
@@ -640,9 +597,8 @@ export default function WorldMap() {
             <polygon key={idx}
               points={region.points}
               fill={region.fill}
-              stroke={region.stroke}
-              strokeWidth="0.3"
-              style={{ filter: `drop-shadow(0 0 2px ${region.stroke})`, animation: 'regionPulse 6s ease-in-out infinite' }}
+              stroke="none"
+              strokeWidth="0"
             />
           ))}
         </svg>
@@ -686,187 +642,7 @@ export default function WorldMap() {
           })}
         </svg>
 
-        {mapLandmarks.filter(l => l.type === 'tower').map((t, idx) => (
-          <div key={`tower_${idx}`} title={t.label} style={{
-            position: 'absolute', left: `${t.x}%`, top: `${t.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-          }}>
-            <div style={{
-              width: 8, height: 16, position: 'relative',
-              background: 'linear-gradient(180deg, #3a3a4a, #1e1e28)',
-              border: '1px solid rgba(150,150,170,0.3)', borderRadius: '2px 2px 0 0',
-              boxShadow: '0 0 6px rgba(100,100,150,0.2)',
-            }}>
-              <div style={{
-                position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
-                width: 0, height: 0,
-                borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                borderBottom: '5px solid #4a4a5a',
-              }} />
-              <div style={{
-                position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)',
-                width: 3, height: 3, borderRadius: '50%',
-                background: 'rgba(251,191,36,0.6)',
-                boxShadow: '0 0 4px rgba(251,191,36,0.4)',
-                animation: 'lavaPulse 3s ease-in-out infinite',
-              }} />
-            </div>
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'gate').map((g, idx) => (
-          <div key={`gate_${idx}`} title={g.label} style={{
-            position: 'absolute', left: `${g.x}%`, top: `${g.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-          }}>
-            <div style={{
-              width: 14, height: 18, position: 'relative',
-              display: 'flex', justifyContent: 'center',
-            }}>
-              <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #4a3a2a, #2a1e14)', borderRadius: '1px 1px 0 0', position: 'absolute', left: 0, bottom: 0 }} />
-              <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #4a3a2a, #2a1e14)', borderRadius: '1px 1px 0 0', position: 'absolute', right: 0, bottom: 0 }} />
-              <div style={{
-                position: 'absolute', top: 0, width: 14, height: 6,
-                borderRadius: '7px 7px 0 0',
-                background: 'linear-gradient(180deg, #5a4a3a, #3a2e20)',
-                border: '1px solid rgba(180,140,100,0.3)', borderBottom: 'none',
-              }} />
-              <div style={{
-                position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)',
-                width: 6, height: 10, borderRadius: '3px 3px 0 0',
-                background: 'rgba(0,0,0,0.6)',
-                boxShadow: 'inset 0 0 3px rgba(200,100,255,0.3)',
-              }} />
-            </div>
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'monument').map((m, idx) => (
-          <div key={`mon_${idx}`} title={m.label} style={{
-            position: 'absolute', left: `${m.x}%`, top: `${m.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-          }}>
-            <div style={{
-              width: 4, height: 14,
-              background: 'linear-gradient(180deg, #8a8a9a, #4a4a5a)',
-              borderRadius: '1px',
-              boxShadow: '0 0 4px rgba(150,150,200,0.15)',
-              position: 'relative',
-            }}>
-              <div style={{
-                position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
-                width: 6, height: 3,
-                background: 'linear-gradient(180deg, #a0a0b0, #6a6a7a)',
-                borderRadius: '1px',
-              }} />
-            </div>
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'bridge').map((b, idx) => (
-          <div key={`bridge_${idx}`} style={{
-            position: 'absolute', left: `${b.x}%`, top: `${b.y}%`,
-            transform: `translate(-50%, -50%) rotate(${b.rot}deg)`,
-            pointerEvents: 'none', zIndex: 3,
-          }}>
-            <div style={{
-              width: 18, height: 6,
-              background: 'linear-gradient(180deg, #5a4a30, #3a2e1a)',
-              border: '1px solid rgba(140,110,70,0.3)',
-              borderRadius: 1,
-              position: 'relative',
-            }}>
-              <div style={{ position: 'absolute', left: 2, top: -2, width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
-              <div style={{ position: 'absolute', right: 2, top: -2, width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
-              <div style={{ position: 'absolute', left: '50%', top: -2, transform: 'translateX(-50%)', width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
-            </div>
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'ruins').map((r, idx) => (
-          <div key={`ruins_${idx}`} title={r.label} style={{
-            position: 'absolute', left: `${r.x}%`, top: `${r.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-          }}>
-            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
-              <div style={{ width: 3, height: 8, background: 'linear-gradient(180deg, #6a6a6a, #3a3a3a)', borderRadius: '1px 1px 0 0', transform: 'rotate(-5deg)' }} />
-              <div style={{ width: 3, height: 5, background: 'linear-gradient(180deg, #5a5a5a, #2a2a2a)', borderRadius: '1px 1px 0 0', transform: 'rotate(3deg)' }} />
-              <div style={{ width: 3, height: 10, background: 'linear-gradient(180deg, #7a7a7a, #4a4a4a)', borderRadius: '1px 1px 0 0', transform: 'rotate(-2deg)' }} />
-            </div>
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'tree_cluster').map((tc, idx) => (
-          <div key={`trees_${idx}`} style={{
-            position: 'absolute', left: `${tc.x}%`, top: `${tc.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 1,
-            display: 'flex', gap: 2,
-          }}>
-            {Array.from({ length: tc.count }).map((_, i) => (
-              <div key={i} style={{
-                width: 6, height: 8,
-                position: 'relative', marginTop: i % 2 === 0 ? 0 : 2,
-              }}>
-                <div style={{
-                  width: 0, height: 0,
-                  borderLeft: '3px solid transparent', borderRight: '3px solid transparent',
-                  borderBottom: `6px solid rgba(34,${140 + i * 20},70,0.35)`,
-                  position: 'absolute', top: 0,
-                }} />
-                <div style={{
-                  width: 1, height: 3,
-                  background: 'rgba(90,60,30,0.4)',
-                  position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-                }} />
-              </div>
-            ))}
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'crystal').map((c, idx) => (
-          <div key={`crystal_${idx}`} style={{
-            position: 'absolute', left: `${c.x}%`, top: `${c.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-          }}>
-            <div style={{
-              width: 0, height: 0,
-              borderLeft: '3px solid transparent', borderRight: '3px solid transparent',
-              borderBottom: `8px solid ${c.color}`,
-              opacity: 0.5,
-              filter: `drop-shadow(0 0 3px ${c.color})`,
-              animation: 'lavaPulse 4s ease-in-out infinite',
-            }} />
-          </div>
-        ))}
-
-        {mapLandmarks.filter(l => l.type === 'skull').map((s, idx) => (
-          <div key={`skull_${idx}`} style={{
-            position: 'absolute', left: `${s.x}%`, top: `${s.y}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 2,
-            fontSize: '0.5rem', opacity: 0.4,
-            filter: `drop-shadow(0 0 2px ${s.color})`,
-          }}>💀</div>
-        ))}
-
-        {steamPositions.map((sp, idx) => (
-          <div key={`steam_${idx}`} style={{
-            position: 'absolute',
-            left: `${sp.x}%`, top: `${sp.y}%`,
-            width: 8, height: 8,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(200,220,255,0.15), transparent)',
-            pointerEvents: 'none', zIndex: 2,
-            animation: `steamRise 4s ease-out infinite`,
-            animationDelay: `${sp.delay}s`,
-          }} />
-        ))}
+        {/* Decorative landmarks removed for cleaner map */}
 
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {pathConnections.map(([from, to], idx) => {
@@ -935,12 +711,51 @@ export default function WorldMap() {
                 transition: 'transform 0.3s',
               }}
             >
-              <div style={{ position: 'relative', width: (icon.w || 56) + 6, height: (icon.h || 56) + 6 }}>
+              <div style={{ position: 'relative', width: 56, height: 56 }}>
+                {isUnlocked && portalLocations.includes(loc.id) && (
+                  <div style={{
+                    position: 'absolute', inset: -6,
+                    borderRadius: '50%',
+                    background: `conic-gradient(from 0deg, ${icon.color}00, ${icon.color}66, ${icon.color}00, ${icon.color}44, ${icon.color}00)`,
+                    animation: 'portalSpin 3s linear infinite',
+                    opacity: 0.5,
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                <div style={{
+                  width: 56, height: 56,
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: `2px solid ${isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color + '80') : 'rgba(80,80,100,0.4)'}`,
+                  opacity: isUnlocked ? 1 : 0.4,
+                  boxShadow: isSelected
+                    ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}`
+                    : isUnlocked
+                      ? `0 0 8px ${icon.glow}`
+                      : 'none',
+                  transition: 'all 0.3s',
+                  animation: isSelected ? 'pulse 1.5s infinite' : 'none',
+                  position: 'relative',
+                }}>
+                  {isUnlocked && icon.img ? (
+                    <img src={icon.img} alt={loc.name} style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                      filter: cleared ? 'saturate(0.7) brightness(0.8)' : 'none',
+                    }} />
+                  ) : (
+                    <div style={{
+                      width: '100%', height: '100%',
+                      background: 'rgba(30,30,50,0.8)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.2rem',
+                    }}>🔒</div>
+                  )}
+                </div>
                 {isUnlocked && conquer > 0 && (
                   <div style={{
-                    position: 'absolute', top: -3, left: -3,
-                    width: (icon.w || 56) + 12, height: 4, borderRadius: 2,
-                    background: 'rgba(255,255,255,0.08)',
+                    position: 'absolute', bottom: -4, left: 4, right: 4,
+                    height: 4, borderRadius: 2,
+                    background: 'rgba(0,0,0,0.5)',
                     overflow: 'hidden',
                   }}>
                     <div style={{
@@ -952,76 +767,9 @@ export default function WorldMap() {
                     }} />
                   </div>
                 )}
-                {isUnlocked && portalLocations.includes(loc.id) && (
-                  <>
-                    <div style={{
-                      position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-                      width: (icon.w || 44) - 8, height: (icon.h || 56) - 14,
-                      borderRadius: '50% 50% 40% 40%',
-                      background: `conic-gradient(from 0deg, ${icon.color}00, ${icon.color}88, ${icon.color}00, ${icon.color}66, ${icon.color}00)`,
-                      animation: 'portalSpin 3s linear infinite',
-                      opacity: 0.6,
-                      filter: `blur(2px)`,
-                      pointerEvents: 'none',
-                    }} />
-                    <div style={{
-                      position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-                      width: (icon.w || 44) - 14, height: (icon.h || 56) - 20,
-                      borderRadius: '50% 50% 40% 40%',
-                      background: `radial-gradient(ellipse, ${icon.glow}, transparent 70%)`,
-                      animation: 'portalSpin 2s linear infinite reverse',
-                      opacity: 0.5,
-                      pointerEvents: 'none',
-                    }} />
-                    <div style={{
-                      position: 'absolute', top: -2, left: -2,
-                      width: (icon.w || 44) + 10, height: (icon.h || 56) + 10,
-                      boxShadow: `0 0 16px ${icon.glow}, 0 0 32px ${icon.glow}`,
-                      borderRadius: 4,
-                      opacity: 0.4,
-                      animation: 'glow 2s infinite',
-                      pointerEvents: 'none',
-                    }} />
-                  </>
-                )}
-              <div style={{
-                  position: 'absolute', top: 3, left: 3,
-                  width: icon.w || 56, height: icon.h || 56,
-                  clipPath: icon.clip || 'none',
-                  background: isUnlocked
-                    ? (icon.bg || `radial-gradient(circle, ${icon.glow}, rgba(20,26,43,0.9))`)
-                    : 'rgba(30,30,50,0.8)',
-                  border: `2px solid ${isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color + '80') : 'rgba(80,80,100,0.4)'}`,
-                  borderRadius: icon.clip ? 4 : '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: isUnlocked ? '1.4rem' : '1rem',
-                  opacity: isUnlocked ? 1 : 0.4,
-                  boxShadow: isSelected
-                    ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}, inset 0 0 10px ${icon.glow}`
-                    : isUnlocked
-                      ? `0 0 8px ${icon.glow}, inset 0 0 6px rgba(0,0,0,0.5)`
-                      : 'none',
-                  transition: 'all 0.3s',
-                  animation: isSelected ? 'pulse 1.5s infinite' : (cleared ? 'none' : (isUnlocked ? 'glow 3s infinite' : 'none')),
-                  overflow: 'hidden',
-                }}>
-                  <span style={{
-                    filter: isUnlocked ? `drop-shadow(0 0 4px ${icon.glow})` : 'none',
-                    position: 'relative', zIndex: 1,
-                  }}>
-                    {isUnlocked ? icon.symbol : '🔒'}
-                  </span>
-                  {isUnlocked && (
-                    <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%',
-                      background: `linear-gradient(transparent, ${icon.color}15)`,
-                      pointerEvents: 'none',
-                    }} />
-                  )}
-                </div>
                 {isUnlocked && conquer > 0 && (
                   <div style={{
-                    position: 'absolute', top: -8, right: -8,
+                    position: 'absolute', top: -6, right: -6,
                     background: isConquered ? 'var(--gold)' : 'rgba(14,22,48,0.95)',
                     border: `1px solid ${isConquered ? 'var(--gold)' : icon.color}`,
                     borderRadius: 6, padding: '1px 4px',
@@ -1518,7 +1266,7 @@ export default function WorldMap() {
               background: `linear-gradient(135deg, ${locationIcons[selectedLoc.id]?.glow || 'rgba(0,0,0,0.2)'}, transparent)`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: '1.4rem' }}>{selectedLoc.icon}</span>
+                <img src={locationIcons[selectedLoc.id]?.img} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}` }} />
                 <div>
                   <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700 }}>
                     {selectedLoc.name}
