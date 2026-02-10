@@ -9,7 +9,7 @@ import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELME
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
@@ -372,6 +372,7 @@ function HeroDetailPanel({ hero, onClose }) {
   const [tab, setTab] = useState('stats');
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [hoveredItemId, setHoveredItemId] = useState(null);
 
   const cls = classDefinitions[hero.classId];
   const race = hero.raceId ? raceDefinitions[hero.raceId] : null;
@@ -606,19 +607,35 @@ function HeroDetailPanel({ hero, onClose }) {
         {tab === 'equipment' && (() => {
           const eq = hero.equipment || {};
           const is2H = eq.weapon?.weaponType && WEAPON_TYPES[eq.weapon.weaponType]?.hand === '2h';
-          const SLOT_LABELS = { weapon: 'Main Hand', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
-          const SLOT_EMOJIS = { weapon: '⚔️', offhand: '🛡️', helmet: '⛑️', armor: '🛡️', feet: '🥾', ring: '💍', relic: '🔮' };
+          const SLOT_LABELS = { weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
 
           const selectedItem = selectedItemId ? inventory.find(i => i.id === selectedItemId) : null;
+          const hoveredItem = hoveredItemId ? (inventory.find(i => i.id === hoveredItemId) || (() => { for (const s of Object.keys(eq)) { if (eq[s]?.id === hoveredItemId) return eq[s]; } return null; })()) : null;
           const slotCanReceiveSelected = (slot) => selectedItem && selectedItem.slot === slot && canClassEquip(hero.classId, selectedItem);
 
-          const renderSlot = (slot, size = 52, disabled = false) => {
+          const SLOT_POSITIONS = {
+            helmet:  { top: 4, left: '50%', transform: 'translateX(-50%)' },
+            offhand: { top: 44, left: 6 },
+            armor:   { top: 42, left: '50%', transform: 'translateX(-50%)' },
+            weapon:  { top: 44, right: 6 },
+            feet:    { top: 82, left: '50%', transform: 'translateX(-50%)' },
+            ring:    { top: 120, left: 16 },
+            relic:   { top: 120, right: 16 },
+          };
+
+          const slotSize = 36;
+
+          const renderEquipSlot = (slot, disabled = false) => {
             const equipped = eq[slot];
             const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
             const canReceive = !disabled && slotCanReceiveSelected(slot);
+            const slotIcon = SLOT_ICON_MAP[slot];
+            const pos = SLOT_POSITIONS[slot];
             return (
               <div
-                title={equipped ? `${equipped.name} [T${equipped.tier}]\n${Object.entries(equipped.stats).map(([k,v]) => `+${v} ${k}`).join(', ')}\nClick to unequip` : disabled ? 'Locked (2H weapon)' : `${SLOT_LABELS[slot]} - Empty`}
+                key={slot}
+                onMouseEnter={() => { if (equipped) setHoveredItemId(equipped.id); }}
+                onMouseLeave={() => setHoveredItemId(null)}
                 onClick={() => {
                   if (canReceive) {
                     equipItem(hero.id, selectedItem);
@@ -627,11 +644,11 @@ function HeroDetailPanel({ hero, onClose }) {
                     unequipItem(hero.id, slot);
                   }
                 }}
-                onDragOver={e => { if (!disabled) { e.preventDefault(); e.currentTarget.style.borderColor = '#f59e0b'; } }}
-                onDragLeave={e => { e.currentTarget.style.borderColor = canReceive ? '#22c55e' : (tierDef ? tierDef.color + '80' : '#5c4a32'); }}
+                onDragOver={e => { if (!disabled) { e.preventDefault(); e.currentTarget.style.boxShadow = '0 0 8px #f59e0b'; } }}
+                onDragLeave={e => { if (!disabled) e.currentTarget.style.boxShadow = canReceive ? '0 0 6px rgba(34,197,94,0.5)' : 'none'; }}
                 onDrop={e => {
                   e.preventDefault();
-                  e.currentTarget.style.borderColor = tierDef ? tierDef.color + '80' : '#5c4a32';
+                  e.currentTarget.style.boxShadow = 'none';
                   if (disabled) return;
                   try {
                     const itemData = JSON.parse(e.dataTransfer.getData('text/plain'));
@@ -645,150 +662,181 @@ function HeroDetailPanel({ hero, onClose }) {
                   } catch {}
                 }}
                 style={{
-                  width: size, height: size, borderRadius: 6,
+                  position: 'absolute', ...pos,
+                  width: slotSize, height: slotSize,
                   backgroundImage: `url(${UI_SLOTS.empty})`,
-                  backgroundSize: `${size}px ${size}px`, imageRendering: 'pixelated',
+                  backgroundSize: `${slotSize}px ${slotSize}px`, imageRendering: 'pixelated',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexDirection: 'column',
-                  border: `2px solid ${canReceive ? '#22c55e' : (tierDef ? tierDef.color + '80' : '#5c4a32')}`,
                   cursor: canReceive ? 'pointer' : (equipped ? 'pointer' : 'default'),
-                  position: 'relative',
                   opacity: disabled ? 0.3 : 1,
-                  transition: 'border-color 0.15s, box-shadow 0.15s',
-                  boxShadow: canReceive ? '0 0 8px rgba(34,197,94,0.4), inset 0 0 6px rgba(34,197,94,0.15)' : 'none',
+                  transition: 'box-shadow 0.15s',
+                  boxShadow: canReceive ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
                 }}
               >
                 {equipped ? (
-                  <span style={{ fontSize: size > 48 ? '1.5rem' : '1.2rem', filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
+                  <span style={{ fontSize: '1.1rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
                 ) : (
-                  <span style={{ fontSize: size > 48 ? '1.2rem' : '1rem', opacity: canReceive ? 0.7 : 0.3 }}>{SLOT_EMOJIS[slot]}</span>
-                )}
-                {tierDef && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: tierDef.color, borderRadius: '0 0 4px 4px' }} />}
-                <div style={{ position: 'absolute', top: -14, fontSize: '0.5rem', color: canReceive ? '#22c55e' : '#a08b6d', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
-                  {SLOT_LABELS[slot]}
-                </div>
-                {canReceive && (
                   <div style={{
-                    position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
-                    width: 0, height: 0,
-                    borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                    borderBottom: '6px solid #22c55e',
-                    filter: 'drop-shadow(0 0 3px rgba(34,197,94,0.6))',
+                    width: slotSize - 8, height: slotSize - 8,
+                    backgroundImage: `url(${slotIcon})`,
+                    backgroundSize: `${slotSize - 8}px ${slotSize - 8}px`,
+                    imageRendering: 'pixelated',
+                    opacity: 0.3,
                   }} />
                 )}
+                {tierDef && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: tierDef.color }} />}
               </div>
             );
           };
 
+          const displayItem = hoveredItem || selectedItem;
+          const displayTier = displayItem ? (TIERS[displayItem.tier] || TIERS[1]) : null;
+
           return (
-            <div>
-              <div style={{
-                background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 12, marginBottom: 10,
-                border: '2px solid #8b7355',
-              }}>
-
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                  <div style={{ paddingTop: 12 }}>
-                    {renderSlot('helmet', 48)}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 10 }}>
-                    {renderSlot('offhand', 48, is2H)}
-                    {renderSlot('armor', 52)}
-                    {renderSlot('weapon', 48)}
-                  </div>
-
-                  <div style={{ paddingTop: 10 }}>
-                    {renderSlot('feet', 48)}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: 14, paddingTop: 10 }}>
-                    {renderSlot('ring', 44)}
-                    {renderSlot('relic', 44)}
-                  </div>
-                </div>
-
-                {is2H && (
-                  <div style={{ textAlign: 'center', marginTop: 8, fontSize: '0.6rem', color: '#f59e0b', fontStyle: 'italic' }}>
-                    2H weapon equipped — off-hand locked
-                  </div>
-                )}
-              </div>
-
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8,
-                background: 'rgba(0,0,0,0.3)', borderRadius: 4, padding: '4px 12px',
-                border: '2px solid #8b7355',
-              }}>
-                <span className="font-cinzel" style={{ color: '#d4a96a', fontSize: '0.85rem', letterSpacing: 2 }}>INVENTORY</span>
-                <span style={{ color: '#a08b6d', fontSize: '0.7rem', marginLeft: 6 }}>({inventory.length})</span>
-              </div>
-              {inventory.length === 0 ? (
-                <div style={{ color: '#6b5c47', fontSize: '0.8rem', fontStyle: 'italic', padding: '12px 0', textAlign: 'center' }}>
-                  No items. Defeat enemies to find loot!
-                </div>
-              ) : (
+            <div style={{ display: 'flex', gap: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))', gap: 4,
-                  maxHeight: 220, overflowY: 'auto', padding: 8,
-                  background: 'rgba(0,0,0,0.2)', borderRadius: 4, border: '2px solid #5c4a32',
+                  width: 192, height: 172,
+                  backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+                  backgroundSize: '192px 256px', imageRendering: 'pixelated',
+                  backgroundPosition: 'top center',
+                  position: 'relative',
                 }}>
-                  {inventory.map(item => {
-                    const r = TIERS[item.tier] || TIERS[1];
-                    const itemCanEquip = canClassEquip(hero.classId, item);
-                    const isSelected = selectedItemId === item.id;
-                    return (
-                      <div key={item.id}
-                        draggable={itemCanEquip}
-                        onDragStart={e => {
-                          e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
-                          e.dataTransfer.effectAllowed = 'move';
-                          setSelectedItemId(null);
-                        }}
-                        onClick={() => {
-                          if (!itemCanEquip) return;
-                          if (isSelected) {
-                            setSelectedItemId(null);
-                          } else {
-                            setSelectedItemId(item.id);
-                          }
-                        }}
-                        title={`${item.name} [T${item.tier} ${r.name}]\n${item.slot}${item.weaponType ? ' - ' + (WEAPON_TYPES[item.weaponType]?.name || item.weaponType) : ''}${item.armorType ? ' - ' + (ARMOR_TYPES[item.armorType]?.name || item.armorType) : ''}${item.helmetType ? ' - ' + (HELMET_TYPES[item.helmetType]?.name || item.helmetType) : ''}${item.feetType ? ' - ' + (FEET_TYPES[item.feetType]?.name || item.feetType) : ''}\n${Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}${!itemCanEquip ? '\n(Cannot equip)' : isSelected ? '\nClick slot to equip · Click again to deselect' : '\nClick to select · Drag to equip'}`}
-                        style={{
-                          width: 56, height: 56,
-                          backgroundImage: `url(${UI_SLOTS.empty})`,
-                          backgroundSize: '56px 56px', imageRendering: 'pixelated',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: `2px solid ${isSelected ? '#22c55e' : r.color + '80'}`,
-                          borderRadius: 4, cursor: itemCanEquip ? 'pointer' : 'not-allowed',
-                          position: 'relative',
-                          opacity: itemCanEquip ? 1 : 0.5,
-                          transition: 'transform 0.1s, border-color 0.15s, box-shadow 0.15s',
-                          boxShadow: isSelected ? '0 0 10px rgba(34,197,94,0.5), inset 0 0 8px rgba(34,197,94,0.15)' : 'none',
-                        }}
-                        onMouseEnter={e => { if (itemCanEquip) e.currentTarget.style.transform = 'scale(1.1)'; }}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                      >
-                        <span style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
-                        <div style={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0,
-                          height: 3, background: isSelected ? '#22c55e' : r.color, borderRadius: '0 0 2px 2px',
-                        }} />
-                        {isSelected && (
-                          <div style={{
-                            position: 'absolute', top: -8, right: -8,
-                            width: 0, height: 0,
-                            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                            borderBottom: '7px solid #22c55e',
-                            filter: 'drop-shadow(0 0 3px rgba(34,197,94,0.8))',
-                            transform: 'rotate(180deg)',
-                          }} />
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div style={{
+                    position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
+                    width: 60, height: 80,
+                    backgroundImage: `url(${UI_ICONS.mannequin})`,
+                    backgroundSize: '60px 80px', imageRendering: 'pixelated',
+                    opacity: 0.5,
+                  }} />
+
+                  {renderEquipSlot('helmet')}
+                  {renderEquipSlot('offhand', is2H)}
+                  {renderEquipSlot('armor')}
+                  {renderEquipSlot('weapon')}
+                  {renderEquipSlot('feet')}
+                  {renderEquipSlot('ring')}
+                  {renderEquipSlot('relic')}
+
+                  {is2H && (
+                    <div style={{ position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center', fontSize: '0.5rem', color: '#f59e0b' }}>
+                      2H — off-hand locked
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <div style={{
+                  width: 192, minHeight: 68,
+                  backgroundImage: `url(${UI_PANELS.equipPanelBottom})`,
+                  backgroundSize: '192px 128px', imageRendering: 'pixelated',
+                  backgroundPosition: 'top center',
+                  padding: '8px 10px',
+                }}>
+                  {displayItem ? (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                        <span style={{ fontSize: '0.9rem' }}>{displayItem.icon}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 700, color: displayTier.color, fontFamily: 'var(--font-heading)' }}>
+                          {displayItem.name}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginBottom: 3 }}>
+                        T{displayItem.tier} {displayTier.name} · {SLOT_LABELS[displayItem.slot] || displayItem.slot}
+                        {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
+                        {Object.entries(displayItem.stats).map(([k, v]) => (
+                          <span key={k} style={{ fontSize: '0.55rem', color: '#7ec87e' }}>+{v} {k}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 8 }}>
+                      Hover over an item to see details
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <div style={{
+                  height: 24,
+                  backgroundImage: `url(${UI_PANELS.invHeader})`,
+                  backgroundSize: '100% 24px', imageRendering: 'pixelated',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span className="font-cinzel" style={{ fontSize: '0.6rem', color: '#c8e6c8', letterSpacing: 2 }}>EQUIPMENT</span>
+                  <span style={{ fontSize: '0.5rem', color: '#8aaa8a', marginLeft: 4 }}>({inventory.length})</span>
+                </div>
+
+                <div style={{
+                  flex: 1,
+                  backgroundImage: `url(${UI_PANELS.equipGrid})`,
+                  backgroundSize: '128px 256px', imageRendering: 'pixelated',
+                  backgroundRepeat: 'repeat',
+                  padding: 6,
+                  minHeight: 200,
+                  overflowY: 'auto',
+                }}>
+                  {inventory.length === 0 ? (
+                    <div style={{ color: '#6b5c47', fontSize: '0.65rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
+                      No items yet. Defeat enemies to find loot!
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
+                    }}>
+                      {inventory.map(item => {
+                        const r = TIERS[item.tier] || TIERS[1];
+                        const itemCanEquip = canClassEquip(hero.classId, item);
+                        const isSelected = selectedItemId === item.id;
+                        const isHovered = hoveredItemId === item.id;
+                        return (
+                          <div key={item.id}
+                            draggable={itemCanEquip}
+                            onDragStart={e => {
+                              e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
+                              e.dataTransfer.effectAllowed = 'move';
+                              setSelectedItemId(null);
+                            }}
+                            onClick={() => {
+                              if (!itemCanEquip) return;
+                              if (isSelected) {
+                                const slotKey = item.slot;
+                                if (slotKey && !( slotKey === 'offhand' && is2H)) {
+                                  equipItem(hero.id, item);
+                                }
+                                setSelectedItemId(null);
+                              } else {
+                                setSelectedItemId(item.id);
+                              }
+                            }}
+                            onMouseEnter={() => setHoveredItemId(item.id)}
+                            onMouseLeave={() => setHoveredItemId(null)}
+                            style={{
+                              aspectRatio: '1', 
+                              backgroundImage: `url(${isSelected ? UI_SLOTS.highlight : UI_SLOTS.empty})`,
+                              backgroundSize: '100%', imageRendering: 'pixelated',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              cursor: itemCanEquip ? 'pointer' : 'not-allowed',
+                              position: 'relative',
+                              opacity: itemCanEquip ? 1 : 0.4,
+                              transition: 'transform 0.1s',
+                              transform: isHovered && itemCanEquip ? 'scale(1.08)' : 'scale(1)',
+                            }}
+                          >
+                            <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                            <div style={{
+                              position: 'absolute', bottom: 1, left: 1, right: 1,
+                              height: 2, background: r.color, borderRadius: 1,
+                            }} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })()}
