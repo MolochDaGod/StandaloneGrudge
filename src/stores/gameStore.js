@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { calculateStats, TOTAL_POINTS_AT_LEVEL, POINTS_PER_LEVEL, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import { locations, createEnemy } from '../data/enemies';
+import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
@@ -679,9 +679,19 @@ const useGameStore = create(persist((set, get) => ({
     const [minEnemies, maxEnemies] = loc.enemyCount || [2, 3];
     const enemyCount = minEnemies + Math.floor(Math.random() * (maxEnemies - minEnemies + 1));
     const enemyUnits = [];
+    const zonePresets = getZoneEnemyPresets(locationId);
     for (let i = 0; i < enemyCount; i++) {
-      const templateId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
-      const enemy = createEnemy(templateId, state.level);
+      let enemy = null;
+      if (zonePresets && zonePresets.presets && zonePresets.presets.length > 0) {
+        const preset = zonePresets.presets[Math.floor(Math.random() * zonePresets.presets.length)];
+        const [minLv, maxLv] = preset.levelRange;
+        const enemyLevel = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
+        enemy = createRaceClassEnemy(preset.raceId, preset.classId, enemyLevel);
+      }
+      if (!enemy) {
+        const templateId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
+        enemy = createEnemy(templateId, state.level);
+      }
       if (enemy) enemyUnits.push(enemy);
     }
 
@@ -755,14 +765,24 @@ const useGameStore = create(persist((set, get) => ({
 
     const addEnemies = [];
     if (loc) {
-      const addPool = loc.enemies.filter(e => e !== bossTemplateId);
-      if (addPool.length > 0) {
-        const addCount = 1 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < addCount; i++) {
-          const tId = addPool[Math.floor(Math.random() * addPool.length)];
-          const add = createEnemy(tId, state.level);
-          if (add) addEnemies.push(add);
+      const addCount = 1 + Math.floor(Math.random() * 2);
+      const zonePresets = getZoneEnemyPresets(state.currentLocation);
+      for (let i = 0; i < addCount; i++) {
+        let add = null;
+        if (zonePresets && zonePresets.presets && zonePresets.presets.length > 0) {
+          const preset = zonePresets.presets[Math.floor(Math.random() * zonePresets.presets.length)];
+          const [minLv, maxLv] = preset.levelRange;
+          const enemyLevel = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
+          add = createRaceClassEnemy(preset.raceId, preset.classId, enemyLevel);
         }
+        if (!add) {
+          const addPool = loc.enemies.filter(e => e !== bossTemplateId);
+          if (addPool.length > 0) {
+            const tId = addPool[Math.floor(Math.random() * addPool.length)];
+            add = createEnemy(tId, state.level);
+          }
+        }
+        if (add) addEnemies.push(add);
       }
     }
 

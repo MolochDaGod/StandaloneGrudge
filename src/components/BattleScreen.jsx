@@ -87,14 +87,18 @@ function MiniBar({ current, max, color, height = 5, width = 60 }) {
 }
 
 function getUnitSprite(unit) {
-  if (unit.team === 'player' && unit.classId) {
-    if (unit.classId === 'worge' && unit.bearForm) {
-      return getWorgTransformSprite(unit.raceId);
+  if (unit.classId && unit.classId === 'worge' && unit.bearForm) {
+    return getWorgTransformSprite(unit.raceId);
+  }
+  if (unit.classId && unit.classId === 'warrior' && unit.demonBlade) {
+    return warriorTransformSprite;
+  }
+  if (unit.classId && unit.raceId) {
+    const sprite = getPlayerSprite(unit.classId, unit.raceId);
+    if (unit.team === 'enemy') {
+      return { ...sprite, filter: sprite.filter ? sprite.filter + ' brightness(0.8)' : 'brightness(0.8)' };
     }
-    if (unit.classId === 'warrior' && unit.demonBlade) {
-      return warriorTransformSprite;
-    }
-    return getPlayerSprite(unit.classId, unit.raceId);
+    return sprite;
   }
   if (unit.templateId) {
     const sprite = getEnemySprite(unit.templateId);
@@ -105,6 +109,11 @@ function getUnitSprite(unit) {
         lich: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)',
         demon_lord: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)',
         void_king: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8)',
+        grand_shaman: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)',
+        canyon_warlord: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)',
+        frost_wyrm: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)',
+        shadow_beast: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)',
+        void_sentinel: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7)',
       };
       return { ...sprite, filter: bossFilters[unit.templateId] || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
     }
