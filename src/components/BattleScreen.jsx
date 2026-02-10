@@ -28,16 +28,17 @@ const locationBackgrounds = {
   crystal_caves: '/map_nodes/crystal_caves.png',
   thornwood_pass: '/map_nodes/thornwood_pass.png',
   sunken_temple: '/map_nodes/sunken_temple.png',
-  iron_peaks: '/map_nodes/iron_peaks.png',
+  iron_peaks: '/backgrounds/boss_mountain.png',
   shadow_forest: '/map_nodes/shadow_forest.png',
-  frozen_tundra: '/map_nodes/frozen_tundra.png',
+  frozen_tundra: '/backgrounds/winter_arena.png',
   blight_hollow: '/map_nodes/blight_hollow.png',
-  stormspire_peak: '/map_nodes/stormspire_peak.png',
+  stormspire_peak: '/backgrounds/storm_ruins.png',
   corrupted_spire: '/map_nodes/corrupted_spire.png',
   abyssal_depths: '/map_nodes/abyssal_depths.png',
-  ashen_battlefield: '/map_nodes/ashen_battlefield.png',
-  windswept_ridge: '/map_nodes/windswept_ridge.png',
+  ashen_battlefield: '/backgrounds/storm_ruins.png',
+  windswept_ridge: '/backgrounds/boss_mountain.png',
   void_threshold: '/map_nodes/void_threshold.png',
+  crystal_lake: '/backgrounds/winter_arena.png',
 };
 
 const zoneGradients = {
