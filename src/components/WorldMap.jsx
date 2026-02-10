@@ -1231,6 +1231,9 @@ export default function WorldMap() {
           const walk = heroWalking[hero.id];
           const isWalking = walk?.moving;
           const flipX = walk?.flipX;
+          const mapSpriteScale = 1.2;
+          const spriteW = 100 * mapSpriteScale;
+          const spriteH = 100 * mapSpriteScale;
           const heroScale = Math.max(0.35, 1 / camZoom);
           return (
             <div key={hero.id} style={{
@@ -1241,30 +1244,29 @@ export default function WorldMap() {
               zIndex: 5,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
               <div style={{
-                width: 48, height: 56, overflow: 'hidden',
-                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                width: spriteW, height: spriteH,
+                overflow: 'hidden',
                 filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
               }}>
-                <div style={{ marginBottom: -6, marginLeft: -2 }}>
-                  <SpriteAnimation
-                    spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                    animation={isWalking ? 'walk' : 'idle'}
-                    flip={isWalking && flipX}
-                    scale={0.6}
-                    speed={isWalking ? 100 : (150 + idx * 30)}
-                  />
-                </div>
+                <SpriteAnimation
+                  spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                  animation={isWalking ? 'walk' : 'idle'}
+                  flip={isWalking && flipX}
+                  scale={mapSpriteScale}
+                  speed={isWalking ? 100 : (150 + idx * 30)}
+                />
               </div>
               <div style={{
-                width: 24, height: 5, borderRadius: '50%', margin: '-1px auto 0',
-                background: 'radial-gradient(ellipse, rgba(0,0,0,0.5), transparent)',
+                width: 40, height: 6, borderRadius: '50%', marginTop: -4,
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
               }} />
               <div style={{
                 textAlign: 'center',
-                fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
-                textShadow: '0 1px 3px rgba(0,0,0,0.9)', marginTop: 1,
+                fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: 0,
               }}>{hero.name}</div>
             </div>
           );
