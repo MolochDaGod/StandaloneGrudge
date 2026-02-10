@@ -436,26 +436,28 @@ function HeroDetailPanel({ hero, onClose }) {
       <div style={{
         background: `linear-gradient(135deg, ${cls?.color || 'var(--accent)'}15, transparent)`,
         borderBottom: `2px solid ${cls?.color || 'var(--border)'}`,
-        padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
+        padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
-        <div style={{ filter: `drop-shadow(0 0 12px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={4} speed={150} />
+        <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3} speed={150} />
         </div>
         <div style={{ flex: 1 }}>
-          <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem' }}>{hero.name}</div>
-          <div style={{ color: cls?.color, fontSize: '0.85rem', fontWeight: 600 }}>
-            Level {hero.level} {race?.name || ''} {cls?.name || ''}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <span className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.1rem' }}>{hero.name}</span>
+            <span style={{ color: cls?.color, fontSize: '0.75rem', fontWeight: 600 }}>
+              Lv.{hero.level} {race?.name || ''} {cls?.name || ''}
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{
               background: 'rgba(255,215,0,0.15)', border: '1px solid var(--gold)',
-              padding: '2px 10px', borderRadius: 6, fontSize: '0.75rem',
+              padding: '1px 8px', borderRadius: 4, fontSize: '0.65rem',
               color: 'var(--gold)', fontWeight: 700,
             }}>CP: {cp.toLocaleString()}</span>
             <button onClick={toggleActive} style={{
               background: isActive ? 'rgba(110,231,183,0.2)' : 'rgba(42,49,80,0.5)',
               border: `1px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-              padding: '2px 10px', borderRadius: 6, fontSize: '0.7rem',
+              padding: '1px 8px', borderRadius: 4, fontSize: '0.65rem',
               color: isActive ? 'var(--accent)' : 'var(--muted)',
               cursor: 'pointer', fontWeight: 600,
             }}>
@@ -470,14 +472,14 @@ function HeroDetailPanel({ hero, onClose }) {
       }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => { setTab(t.id); setSelectedItemId(null); }} style={{
-            flex: 1, padding: '10px 8px', border: 'none',
+            flex: 1, padding: '6px 4px', border: 'none',
             background: tab === t.id ? 'rgba(110,231,183,0.1)' : 'transparent',
             borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
             color: tab === t.id ? 'var(--accent)' : 'var(--muted)',
-            cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+            cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             transition: 'all 0.2s',
           }}>
-            <span style={{ marginRight: 4 }}>{t.icon}</span>{t.label}
+            <span style={{ marginRight: 3 }}>{t.icon}</span>{t.label}
             {t.id === 'attributes' && (hero.unspentPoints || 0) > 0 && (
               <span style={{ color: 'var(--danger)', marginLeft: 4, fontSize: '0.65rem' }}>({hero.unspentPoints})</span>
             )}
@@ -488,7 +490,7 @@ function HeroDetailPanel({ hero, onClose }) {
         ))}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
         {tab === 'stats' && (() => {
           const build = getBuildClassification(stats, hero.attributePoints || {});
           const radar = getRadarData(stats);
@@ -677,55 +679,28 @@ function HeroDetailPanel({ hero, onClose }) {
           return (
             <div>
               <div style={{
-                background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 16, marginBottom: 12,
+                background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 12, marginBottom: 10,
                 border: '2px solid #8b7355',
               }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 14,
-                  background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: '4px 12px',
-                }}>
-                  <span className="font-cinzel" style={{ color: '#d4a96a', fontSize: '0.85rem', letterSpacing: 2 }}>EQUIPMENT</span>
-                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ filter: `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}50)` }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.5} speed={150} />
-                    </div>
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.95rem' }}>{hero.name}</div>
-                    <div style={{ color: cls?.color, fontSize: '0.7rem', fontWeight: 600 }}>
-                      Lv.{hero.level} {race?.name || ''} {cls?.name || ''}
-                    </div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--gold)', marginTop: 4 }}>CP: {cp.toLocaleString()}</div>
-                  </div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.6 }}>
-                    <div>❤️ {Math.floor(stats.health)}</div>
-                    <div>⚔️ {Math.floor(stats.physicalDamage)}</div>
-                    <div>🔮 {Math.floor(stats.magicDamage)}</div>
-                    <div>🛡️ {Math.floor(stats.defense)}</div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <div style={{ paddingTop: 14 }}>
-                    {renderSlot('helmet', 50)}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <div style={{ paddingTop: 12 }}>
+                    {renderSlot('helmet', 48)}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 14 }}>
-                    {renderSlot('offhand', 50, is2H)}
-                    {renderSlot('armor', 56)}
-                    {renderSlot('weapon', 50)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 10 }}>
+                    {renderSlot('offhand', 48, is2H)}
+                    {renderSlot('armor', 52)}
+                    {renderSlot('weapon', 48)}
                   </div>
 
-                  <div style={{ paddingTop: 14 }}>
-                    {renderSlot('feet', 50)}
+                  <div style={{ paddingTop: 10 }}>
+                    {renderSlot('feet', 48)}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 16, paddingTop: 14 }}>
-                    {renderSlot('ring', 46)}
-                    {renderSlot('relic', 46)}
+                  <div style={{ display: 'flex', gap: 14, paddingTop: 10 }}>
+                    {renderSlot('ring', 44)}
+                    {renderSlot('relic', 44)}
                   </div>
                 </div>
 
