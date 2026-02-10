@@ -595,16 +595,10 @@ export default function BattleScreen() {
   const [fireballFx, setFireballFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
-  const [camZoom, setCamZoom] = useState(3);
-  const [camPos, setCamPos] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const battlefieldRef = useRef(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
-  const camInitialized = useRef(false);
 
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
@@ -621,55 +615,6 @@ export default function BattleScreen() {
 
   const playerTeam = useMemo(() => battleUnits.filter(u => u.team === 'player'), [battleUnits]);
   const enemyTeam = useMemo(() => battleUnits.filter(u => u.team === 'enemy'), [battleUnits]);
-
-  useEffect(() => {
-    if (camInitialized.current || !battleUnits.length) return;
-    const firstPlayer = battleUnits.find(u => u.team === 'player' && u.position);
-    if (firstPlayer?.position) {
-      setCamPos({ x: -(firstPlayer.position.x - 50), y: -(firstPlayer.position.y - 50) });
-      camInitialized.current = true;
-    }
-  }, [battleUnits]);
-
-  useEffect(() => {
-    if (!currentUnit?.position || !currentUnit.alive) return;
-    const pos = currentUnit.position;
-    setCamPos(prev => {
-      const targetX = -(pos.x - 50);
-      const targetY = -(pos.y - 50);
-      return { x: prev.x + (targetX - prev.x) * 0.4, y: prev.y + (targetY - prev.y) * 0.4 };
-    });
-  }, [currentUnit?.id]);
-
-  const handleCamWheel = useCallback((e) => {
-    e.preventDefault();
-    setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.2 : 0.2))));
-  }, []);
-
-  const handleCamMouseDown = useCallback((e) => {
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.shiftKey)) {
-      e.preventDefault();
-      setIsDragging(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
-  }, []);
-
-  const handleCamMouseMove = useCallback((e) => {
-    if (!isDragging) return;
-    const dx = (e.clientX - dragStart.x) / camZoom * 0.15;
-    const dy = (e.clientY - dragStart.y) / camZoom * 0.15;
-    setCamPos(p => ({ x: p.x + dx, y: p.y + dy }));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isDragging, dragStart, camZoom]);
-
-  const handleCamMouseUp = useCallback(() => { setIsDragging(false); }, []);
-
-  useEffect(() => {
-    const el = battlefieldRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', handleCamWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleCamWheel);
-  }, [handleCamWheel]);
 
   const isPlayerTurn = phase === 'player_turn';
   const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
@@ -1317,24 +1262,9 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      <div
-        ref={battlefieldRef}
-        onMouseDown={handleCamMouseDown}
-        onMouseMove={handleCamMouseMove}
-        onMouseUp={handleCamMouseUp}
-        onMouseLeave={handleCamMouseUp}
-        onContextMenu={(e) => e.preventDefault()}
-        style={{
-          flex: 1, position: 'relative', zIndex: 1, minHeight: 0, overflow: 'hidden',
-          cursor: isDragging ? 'grabbing' : 'default',
-        }}
-      >
-        <div style={{
-          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-          transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
-          transformOrigin: '50% 50%',
-          transition: isDragging ? 'none' : 'transform 0.4s ease-out',
-        }}>
+      <div style={{
+        flex: 1, position: 'relative', zIndex: 1, minHeight: 0, overflow: 'hidden',
+      }}>
         <AmbientParticles />
 
         {battleUnits.map((unit, idx) => {
@@ -1412,8 +1342,8 @@ export default function BattleScreen() {
               {unit.alive && unit.stunned && (
                 <LoopingEffectSprite
                   sprite={effectSprites.nebula}
-                  displaySize={36}
-                  offsetY={-18}
+                  displaySize={30}
+                  offsetY={-40}
                   opacity={0.75}
                   filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
                 />
@@ -1422,8 +1352,8 @@ export default function BattleScreen() {
               {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
                 <LoopingEffectSprite
                   sprite={effectSprites.magicBubbles}
-                  displaySize={34}
-                  offsetY={-16}
+                  displaySize={28}
+                  offsetY={-36}
                   opacity={0.7}
                   filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
                 />
@@ -1432,8 +1362,8 @@ export default function BattleScreen() {
               {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
                 <LoopingEffectSprite
                   sprite={effectSprites.fire}
-                  displaySize={36}
-                  offsetY={-16}
+                  displaySize={30}
+                  offsetY={-36}
                   opacity={0.7}
                   filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
                 />
@@ -1442,33 +1372,31 @@ export default function BattleScreen() {
               {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
                 <LoopingEffectSprite
                   sprite={effectSprites.blueFire}
-                  displaySize={28}
-                  offsetY={-24}
+                  displaySize={24}
+                  offsetY={-44}
                   opacity={0.6}
                   filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
                 />
               )}
 
               <div style={{
-                position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: -30, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
-                background: 'rgba(0,0,0,0.7)', borderRadius: 6, padding: '3px 6px',
-                backdropFilter: 'blur(4px)', minWidth: 60,
-                border: `1px solid ${unit.team === 'player' ? 'rgba(110,231,183,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                background: 'rgba(0,0,0,0.6)', borderRadius: 4, padding: '2px 5px',
+                backdropFilter: 'blur(2px)', minWidth: 50,
               }}>
                 <div style={{
-                  fontSize: '0.5rem', fontWeight: 700,
+                  fontSize: '0.5rem', fontWeight: 600,
                   color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 70,
-                  marginBottom: 2,
-                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 65,
+                  marginBottom: 1,
                 }}>
                   {unit.name}
                 </div>
-                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={54} />
+                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={50} />
                 <div style={{ display: 'flex', gap: 2, marginTop: 1, justifyContent: 'center' }}>
-                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={25} />
-                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={25} />
+                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
+                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
                 </div>
                 {unit.team === 'player' && (
                   <div style={{ marginTop: 1 }}>
@@ -1477,7 +1405,7 @@ export default function BattleScreen() {
                       max={100} 
                       color="#dc2626" 
                       height={3} 
-                      width={54} 
+                      width={50} 
                     />
                     {(unit.grudge || 0) >= 100 && (
                       <div style={{
@@ -1489,16 +1417,16 @@ export default function BattleScreen() {
                   </div>
                 )}
                 {(unit.buffs?.length > 0 || unit.focusStacks > 0) && (
-                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 2, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
                     {unit.focusStacks > 0 && (
                       <span style={{
-                        fontSize: '0.4rem', padding: '0 3px', borderRadius: 2,
+                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(239,68,68,0.3)', color: '#ef4444',
                       }}>🎯{unit.focusStacks}</span>
                     )}
                     {(unit.buffs || []).slice(0, 3).map((b, i) => (
                       <span key={i} style={{
-                        fontSize: '0.4rem', padding: '0 3px', borderRadius: 2,
+                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(110,231,183,0.3)', color: 'var(--accent)',
                       }}>{b.source?.slice(0, 4)}</span>
                     ))}
@@ -1622,8 +1550,6 @@ export default function BattleScreen() {
           </div>
         ))}
 
-        </div>
-
         {(isVictory || isDefeat) && (
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -1677,28 +1603,6 @@ export default function BattleScreen() {
           </div>
         )}
 
-        <div style={{
-          position: 'absolute', bottom: 8, right: 8, zIndex: 200,
-          display: 'flex', alignItems: 'center', gap: 4,
-          background: 'rgba(0,0,0,0.6)', borderRadius: 6, padding: '3px 6px',
-          backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
-        }}>
-          <button onClick={() => setCamZoom(z => Math.max(1, z - 0.5))} style={{
-            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-            fontSize: '0.7rem', padding: '0 4px', lineHeight: 1,
-          }}>-</button>
-          <span style={{ color: 'var(--muted)', fontSize: '0.55rem', minWidth: 30, textAlign: 'center' }}>
-            {Math.round(camZoom * 100)}%
-          </span>
-          <button onClick={() => setCamZoom(z => Math.min(5, z + 0.5))} style={{
-            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-            fontSize: '0.7rem', padding: '0 4px', lineHeight: 1,
-          }}>+</button>
-          <button onClick={() => { setCamZoom(1); setCamPos({ x: 0, y: 0 }); }} style={{
-            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-            fontSize: '0.5rem', padding: '0 4px',
-          }}>FIT</button>
-        </div>
       </div>
 
       <div style={{

@@ -296,6 +296,50 @@ export default function WorldMap() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
+  const [camZoom, setCamZoom] = useState(3);
+  const [camPos, setCamPos] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const camInitRef = useRef(false);
+
+  useEffect(() => {
+    if (camInitRef.current) return;
+    const pos = locationPositions[currentZone] || locationPositions.verdant_plains;
+    if (pos) {
+      setCamPos({ x: -(pos.x - 50), y: -(pos.y - 50) });
+      camInitRef.current = true;
+    }
+  }, [currentZone]);
+
+  const handleMapWheel = useCallback((e) => {
+    e.preventDefault();
+    setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25))));
+  }, []);
+
+  const handleMapMouseDown = useCallback((e) => {
+    if (e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-node]')) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+  }, []);
+
+  const handleMapMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    const dx = (e.clientX - dragStart.x) / camZoom * 0.12;
+    const dy = (e.clientY - dragStart.y) / camZoom * 0.12;
+    setCamPos(p => ({ x: p.x + dx, y: p.y + dy }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isDragging, dragStart, camZoom]);
+
+  const handleMapMouseUp = useCallback(() => { setIsDragging(false); }, []);
+
+  useEffect(() => {
+    const el = mapRef.current?.parentElement;
+    if (!el) return;
+    const handler = (e) => { e.preventDefault(); setCamZoom(z => Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25)))); };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -519,11 +563,20 @@ export default function WorldMap() {
   const isCleared = selectedLoc ? locationsCleared.includes(selectedLoc.id) : false;
 
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020' }}>
+    <div
+      onMouseDown={handleMapMouseDown}
+      onMouseMove={handleMapMouseMove}
+      onMouseUp={handleMapMouseUp}
+      onMouseLeave={handleMapMouseUp}
+      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab' }}
+    >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
         backgroundImage: 'url(/backgrounds/world_map.png)',
         backgroundSize: 'cover', backgroundPosition: 'center',
+        transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
+        transformOrigin: '50% 50%',
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
       }}>
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -2544,6 +2597,29 @@ export default function WorldMap() {
             50% { opacity: 0.6; }
           }
         `}</style>
+      </div>
+
+      <div style={{
+        position: 'absolute', bottom: 60, right: 12, zIndex: 30,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+        background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '6px 4px',
+        backdropFilter: 'blur(4px)', border: '1px solid rgba(255,215,0,0.15)',
+      }}>
+        <button onClick={() => setCamZoom(z => Math.min(5, z + 0.5))} style={{
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
+          fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>+</button>
+        <span style={{ color: 'var(--gold)', fontSize: '0.5rem', fontWeight: 700, textAlign: 'center' }}>
+          {Math.round(camZoom * 100)}%
+        </span>
+        <button onClick={() => setCamZoom(z => Math.max(1, z - 0.5))} style={{
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
+          fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>-</button>
+        <button onClick={() => { setCamZoom(1); setCamPos({ x: 0, y: 0 }); }} style={{
+          background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--gold)', cursor: 'pointer',
+          fontSize: '0.45rem', fontWeight: 700, width: 28, height: 20, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>FIT</button>
       </div>
     </div>
   );
