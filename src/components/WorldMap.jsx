@@ -2300,7 +2300,9 @@ export default function WorldMap() {
                     transition: 'all 0.2s', minWidth: 90, textAlign: 'center',
                     opacity: isActive ? 1 : 0.6,
                   }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={1.4} speed={150} />
+                    <div style={{ width: 70, height: 70, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.8} speed={150} />
+                    </div>
                     <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}
                     </div>
