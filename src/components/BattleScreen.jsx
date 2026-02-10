@@ -1353,8 +1353,8 @@ export default function BattleScreen() {
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          opacity: 0.55, zIndex: 0,
+          backgroundSize: 'cover', backgroundPosition: 'center bottom',
+          opacity: 0.7, zIndex: 0,
         }} />
       )}
       {!bgImage && bgGradient && (
@@ -1379,7 +1379,7 @@ export default function BattleScreen() {
       )}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'linear-gradient(180deg, rgba(11,16,32,0.2) 0%, rgba(11,16,32,0.4) 50%, rgba(11,16,32,0.8) 100%)',
+        background: 'linear-gradient(180deg, rgba(11,16,32,0.3) 0%, rgba(11,16,32,0.15) 40%, rgba(11,16,32,0.4) 100%)',
         zIndex: 0,
       }} />
 
@@ -1447,7 +1447,7 @@ export default function BattleScreen() {
           const flipSprite = unit.team === 'enemy';
           const introDelay = introComplete ? 0 : (idx * 100);
           const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
-          const targetDisplaySize = 250;
+          const targetDisplaySize = 200;
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * (isBossUnit ? 1.6 : 1);
