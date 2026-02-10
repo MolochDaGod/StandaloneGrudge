@@ -106,6 +106,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
       overflow: 'hidden',
       zIndex: 250,
       pointerEvents: 'none',
+      mixBlendMode: 'screen',
     }}>
       <div style={{
         width: displaySize,
@@ -161,6 +162,7 @@ function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 })
       overflow: 'hidden',
       zIndex: 260,
       pointerEvents: 'none',
+      mixBlendMode: 'screen',
       opacity: progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1,
     }}>
       <div style={{
