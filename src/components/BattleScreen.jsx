@@ -281,7 +281,7 @@ export default function BattleScreen() {
     if (!lastAction || lastAction === actionProcessed.current) return;
     actionProcessed.current = lastAction;
 
-    const { attackerId, targetId, abilityType, abilityName, totalDmg, evaded, blocked, isCrit, healAmt, type } = lastAction;
+    const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type } = lastAction;
 
     if (type === 'stunned' || type === 'skip') {
       setTimeout(() => advanceTurn(), 500);
@@ -309,7 +309,7 @@ export default function BattleScreen() {
 
     const spriteData = getUnitSprite(attacker);
     const getAttackAnim = () => {
-      const effectMapping = getAbilityEffect(attacker.classId, abilityName);
+      const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
       if (effectMapping && effectMapping.anim) {
         const desired = effectMapping.anim;
         if (desired === 'heal' && spriteData.heal) return 'heal';
@@ -322,6 +322,14 @@ export default function BattleScreen() {
       if (anims.length > 2 && (abilityType === 'physical' || abilityType === 'magical')) return anims[Math.floor(Math.random() * anims.length)];
       if (anims.length > 1) return anims[1];
       return 'attack1';
+    };
+
+    const getComboAnims = () => {
+      const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
+      if (effectMapping?.comboAnims) {
+        return effectMapping.comboAnims.filter(a => spriteData[a]);
+      }
+      return null;
     };
 
     if (abilityType === 'physical' || abilityType === 'magical') {
@@ -390,23 +398,59 @@ export default function BattleScreen() {
           const dashY = target.position.y;
           setDashPositions(prev => ({ ...prev, [attackerId]: { x: dashX, y: dashY } }));
         }
-        setTimeout(() => {
-          setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
-        }, 300);
-        setTimeout(() => {
-          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
-          if (!evaded) {
-            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
-            if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
-            const hfx = getHitEffect(attacker, abilityName);
-            if (hfx && target.position) {
-              const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-              const effectDur = (hfx.frames || 36) * 30 + 100;
-              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+        const combo = getComboAnims();
+        if (combo && combo.length > 1) {
+          combo.forEach((anim, i) => {
+            setTimeout(() => {
+              setUnitAnims(prev => ({ ...prev, [attackerId]: anim }));
+              if (i > 0 && target.position) {
+                addParticle('hit', target.position.x + (Math.random() - 0.5) * 4, target.position.y, '#ef4444');
+                playSwordHit();
+              }
+            }, 300 + i * 250);
+          });
+          const comboEnd = 300 + combo.length * 250;
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
+              const hfx = getHitEffect(attacker, abilityName);
+              if (hfx && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+                const effectDur = (hfx.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              }
+              if (isCrit) playCrit(); else playHurt();
+            } else {
+              playDodge();
             }
-            if (isCrit) playCrit(); else playHurt();
-          } else {
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
+          }, comboEnd);
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+          }, comboEnd + 300);
+          setTimeout(() => advanceTurn(), comboEnd + 600);
+        } else {
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+          }, 300);
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
+              const hfx = getHitEffect(attacker, abilityName);
+              if (hfx && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+                const effectDur = (hfx.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              }
+              if (isCrit) playCrit(); else playHurt();
+            } else {
             playDodge();
           }
           setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
@@ -416,6 +460,7 @@ export default function BattleScreen() {
           setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
         }, 800);
         setTimeout(() => advanceTurn(), 1300);
+        }
       }
     } else {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
