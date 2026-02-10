@@ -1573,6 +1573,8 @@ const useGameStore = create(persist((set, get) => ({
           updates.currentHealth = battleUnit.health;
           updates.currentMana = battleUnit.mana;
           updates.currentStamina = battleUnit.stamina;
+          const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+          updates.battleRecord = { ...rec, wins: rec.wins + 1 };
         }
         if (hero.id === 'player') {
           updates.level = newLevel;
@@ -1645,6 +1647,8 @@ const useGameStore = create(persist((set, get) => ({
           updates.currentHealth = battleUnit.health;
           updates.currentMana = battleUnit.mana;
           updates.currentStamina = battleUnit.stamina;
+          const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+          updates.battleRecord = { ...rec, wins: rec.wins + 1 };
         }
         if (hero.id === 'player') {
           updates.level = newLevel;
@@ -1773,6 +1777,10 @@ const useGameStore = create(persist((set, get) => ({
     const playerUnit = state.battleUnits.find(u => u.id === 'player');
 
     const levelsGained = newLevel - state.level;
+    const isBossWin = !!state.battleState?.isBoss;
+    const deadEnemyCount = state.battleUnits.filter(u => u.team === 'enemy' && !u.alive).length;
+    const participatingHeroes = state.battleUnits.filter(u => u.team === 'player').length;
+    const killsPerHero = participatingHeroes > 0 ? Math.ceil(deadEnemyCount / participatingHeroes) : 0;
     const updatedRoster = state.heroRoster.map(hero => {
       const battleUnit = state.battleUnits.find(u => u.id === hero.id);
       const updates = {};
@@ -1780,6 +1788,13 @@ const useGameStore = create(persist((set, get) => ({
         updates.currentHealth = battleUnit.health;
         updates.currentMana = battleUnit.mana;
         updates.currentStamina = battleUnit.stamina;
+        const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+        updates.battleRecord = {
+          ...rec,
+          wins: rec.wins + 1,
+          kills: rec.kills + killsPerHero,
+          bossKills: rec.bossKills + (isBossWin ? 1 : 0),
+        };
       }
       if (hero.id === 'player') {
         updates.level = newLevel;
@@ -1838,9 +1853,18 @@ const useGameStore = create(persist((set, get) => ({
 
   handleDefeat: () => {
     const state = get();
+    const updatedRoster = state.heroRoster.map(hero => {
+      const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+      if (battleUnit) {
+        const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+        return { ...hero, battleRecord: { ...rec, losses: rec.losses + 1 } };
+      }
+      return hero;
+    });
     set({
       battleState: { ...state.battleState, phase: 'defeat' },
       losses: state.losses + 1,
+      heroRoster: updatedRoster,
       battleLog: [...state.battleLog, '💀 Your party has been defeated...'],
     });
   },

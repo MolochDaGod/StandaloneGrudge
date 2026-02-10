@@ -692,151 +692,357 @@ function HeroDetailPanel({ hero, onClose }) {
           const displayItem = hoveredItem || selectedItem;
           const displayTier = displayItem ? (TIERS[displayItem.tier] || TIERS[1]) : null;
 
+          const build = getBuildClassification(stats, hero.attributePoints || {});
+          const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+          const totalBattles = rec.wins + rec.losses;
+          const winRate = totalBattles > 0 ? Math.round((rec.wins / totalBattles) * 100) : 0;
+
+          const equippedCount = Object.values(eq).filter(Boolean).length;
+          const heroWeaponType = eq.weapon?.weaponType || null;
+          const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId, heroWeaponType);
+          const abilityMap = getAllAbilityMap(hero.classId, heroWeaponType, heroSkills);
+
+          const totalSkillPoints = Object.values(heroSkills).reduce((a, b) => a + b, 0);
+          const maxSkillPoints = tree ? tree.tiers.reduce((sum, t) => sum + t.skills.reduce((s, sk) => s + sk.maxPoints, 0), 0) : 0;
+
+          const sectionStyle = {
+            background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '8px 10px',
+            border: '1px solid rgba(139,115,85,0.3)', marginBottom: 6,
+          };
+          const sectionTitle = (icon, text) => (
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#d4a96a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid rgba(139,115,85,0.2)', paddingBottom: 3 }}>
+              <span style={{ marginRight: 4 }}>{icon}</span>{text}
+            </div>
+          );
+
           return (
-            <div style={{ display: 'flex', gap: 0 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                <div style={{
-                  width: 192, height: 172,
-                  backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
-                  backgroundSize: '192px 256px', imageRendering: 'pixelated',
-                  backgroundPosition: 'top center',
-                  position: 'relative',
-                }}>
+            <div>
+              <div style={{ display: 'flex', gap: 0, marginBottom: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                   <div style={{
-                    position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
-                    width: 60, height: 80,
-                    backgroundImage: `url(${UI_ICONS.mannequin})`,
-                    backgroundSize: '60px 80px', imageRendering: 'pixelated',
-                    opacity: 0.5,
-                  }} />
+                    width: 192, height: 172,
+                    backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+                    backgroundSize: '192px 256px', imageRendering: 'pixelated',
+                    backgroundPosition: 'top center',
+                    position: 'relative',
+                  }}>
+                    <div style={{
+                      position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
+                      width: 60, height: 80,
+                      backgroundImage: `url(${UI_ICONS.mannequin})`,
+                      backgroundSize: '60px 80px', imageRendering: 'pixelated',
+                      opacity: 0.5,
+                    }} />
 
-                  {renderEquipSlot('helmet')}
-                  {renderEquipSlot('offhand', is2H)}
-                  {renderEquipSlot('armor')}
-                  {renderEquipSlot('weapon')}
-                  {renderEquipSlot('feet')}
-                  {renderEquipSlot('ring')}
-                  {renderEquipSlot('relic')}
+                    {renderEquipSlot('helmet')}
+                    {renderEquipSlot('offhand', is2H)}
+                    {renderEquipSlot('armor')}
+                    {renderEquipSlot('weapon')}
+                    {renderEquipSlot('feet')}
+                    {renderEquipSlot('ring')}
+                    {renderEquipSlot('relic')}
 
-                  {is2H && (
-                    <div style={{ position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center', fontSize: '0.5rem', color: '#f59e0b' }}>
-                      2H — off-hand locked
-                    </div>
-                  )}
+                    {is2H && (
+                      <div style={{ position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center', fontSize: '0.5rem', color: '#f59e0b' }}>
+                        2H — off-hand locked
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{
+                    width: 192, minHeight: 68,
+                    backgroundImage: `url(${UI_PANELS.equipPanelBottom})`,
+                    backgroundSize: '192px 128px', imageRendering: 'pixelated',
+                    backgroundPosition: 'top center',
+                    padding: '8px 10px',
+                  }}>
+                    {displayItem ? (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                          <span style={{ fontSize: '0.9rem' }}>{displayItem.icon}</span>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: displayTier.color, fontFamily: 'var(--font-heading)' }}>
+                            {displayItem.name}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginBottom: 3 }}>
+                          T{displayItem.tier} {displayTier.name} · {SLOT_LABELS[displayItem.slot] || displayItem.slot}
+                          {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
+                          {Object.entries(displayItem.stats).map(([k, v]) => (
+                            <span key={k} style={{ fontSize: '0.55rem', color: '#7ec87e' }}>+{v} {k}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 8 }}>
+                        Hover over an item to see details
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{
-                  width: 192, minHeight: 68,
-                  backgroundImage: `url(${UI_PANELS.equipPanelBottom})`,
-                  backgroundSize: '192px 128px', imageRendering: 'pixelated',
-                  backgroundPosition: 'top center',
-                  padding: '8px 10px',
-                }}>
-                  {displayItem ? (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-                        <span style={{ fontSize: '0.9rem' }}>{displayItem.icon}</span>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 700, color: displayTier.color, fontFamily: 'var(--font-heading)' }}>
-                          {displayItem.name}
-                        </span>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div style={{
+                    height: 24,
+                    backgroundImage: `url(${UI_PANELS.invHeader})`,
+                    backgroundSize: '100% 24px', imageRendering: 'pixelated',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span className="font-cinzel" style={{ fontSize: '0.6rem', color: '#c8e6c8', letterSpacing: 2 }}>EQUIPMENT</span>
+                    <span style={{ fontSize: '0.5rem', color: '#8aaa8a', marginLeft: 4 }}>({inventory.length})</span>
+                  </div>
+
+                  <div style={{
+                    flex: 1,
+                    backgroundImage: `url(${UI_PANELS.equipGrid})`,
+                    backgroundSize: '128px 256px', imageRendering: 'pixelated',
+                    backgroundRepeat: 'repeat',
+                    padding: 6,
+                    minHeight: 200,
+                    overflowY: 'auto',
+                  }}>
+                    {inventory.length === 0 ? (
+                      <div style={{ color: '#6b5c47', fontSize: '0.65rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
+                        No items yet. Defeat enemies to find loot!
                       </div>
-                      <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginBottom: 3 }}>
-                        T{displayItem.tier} {displayTier.name} · {SLOT_LABELS[displayItem.slot] || displayItem.slot}
-                        {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
+                    ) : (
+                      <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
+                      }}>
+                        {inventory.map(item => {
+                          const r = TIERS[item.tier] || TIERS[1];
+                          const itemCanEquip = canClassEquip(hero.classId, item);
+                          const isSelected = selectedItemId === item.id;
+                          const isHovered = hoveredItemId === item.id;
+                          return (
+                            <div key={item.id}
+                              draggable={itemCanEquip}
+                              onDragStart={e => {
+                                e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
+                                e.dataTransfer.effectAllowed = 'move';
+                                setSelectedItemId(null);
+                              }}
+                              onClick={() => {
+                                if (!itemCanEquip) return;
+                                if (isSelected) {
+                                  const slotKey = item.slot;
+                                  if (slotKey && !( slotKey === 'offhand' && is2H)) {
+                                    equipItem(hero.id, item);
+                                  }
+                                  setSelectedItemId(null);
+                                } else {
+                                  setSelectedItemId(item.id);
+                                }
+                              }}
+                              onMouseEnter={() => setHoveredItemId(item.id)}
+                              onMouseLeave={() => setHoveredItemId(null)}
+                              style={{
+                                aspectRatio: '1', 
+                                backgroundImage: `url(${isSelected ? UI_SLOTS.highlight : UI_SLOTS.empty})`,
+                                backgroundSize: '100%', imageRendering: 'pixelated',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: itemCanEquip ? 'pointer' : 'not-allowed',
+                                position: 'relative',
+                                opacity: itemCanEquip ? 1 : 0.4,
+                                transition: 'transform 0.1s',
+                                transform: isHovered && itemCanEquip ? 'scale(1.08)' : 'scale(1)',
+                              }}
+                            >
+                              <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                              <div style={{
+                                position: 'absolute', bottom: 1, left: 1, right: 1,
+                                height: 2, background: r.color, borderRadius: 1,
+                              }} />
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
-                        {Object.entries(displayItem.stats).map(([k, v]) => (
-                          <span key={k} style={{ fontSize: '0.55rem', color: '#7ec87e' }}>+{v} {k}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 8 }}>
-                      Hover over an item to see details
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <div style={{
-                  height: 24,
-                  backgroundImage: `url(${UI_PANELS.invHeader})`,
-                  backgroundSize: '100% 24px', imageRendering: 'pixelated',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span className="font-cinzel" style={{ fontSize: '0.6rem', color: '#c8e6c8', letterSpacing: 2 }}>EQUIPMENT</span>
-                  <span style={{ fontSize: '0.5rem', color: '#8aaa8a', marginLeft: 4 }}>({inventory.length})</span>
+              <div style={sectionStyle}>
+                {sectionTitle('📋', 'Warlord Profile')}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Class</span>
+                    <span style={{ color: cls?.color || 'var(--accent)', fontWeight: 600 }}>{cls?.name || '?'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Race</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{race?.name || '?'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Level</span>
+                    <span style={{ color: '#fbbf24', fontWeight: 700, fontFamily: 'monospace' }}>{hero.level}/20</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Power</span>
+                    <span style={{ color: '#fbbf24', fontWeight: 700, fontFamily: 'monospace' }}>{cp.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Build Rank</span>
+                    <span style={{ color: build.tierColor, fontWeight: 600 }}>{build.tier} #{build.rank}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Rating</span>
+                    <span style={{ color: build.rating.startsWith('S') ? '#fbbf24' : build.rating === 'A' ? '#a855f7' : 'var(--text)', fontWeight: 700, fontFamily: 'monospace', fontSize: '0.75rem' }}>{build.rating}</span>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
+                    <span style={{ color: 'var(--muted)' }}>Title</span>
+                    <span className="font-cinzel" style={{ color: build.tierColor, fontWeight: 600, fontSize: '0.6rem' }}>{build.name}</span>
+                  </div>
                 </div>
+              </div>
 
-                <div style={{
-                  flex: 1,
-                  backgroundImage: `url(${UI_PANELS.equipGrid})`,
-                  backgroundSize: '128px 256px', imageRendering: 'pixelated',
-                  backgroundRepeat: 'repeat',
-                  padding: 6,
-                  minHeight: 200,
-                  overflowY: 'auto',
-                }}>
-                  {inventory.length === 0 ? (
-                    <div style={{ color: '#6b5c47', fontSize: '0.65rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
-                      No items yet. Defeat enemies to find loot!
+              <div style={sectionStyle}>
+                {sectionTitle('⚔️', 'Combat Record')}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, textAlign: 'center' }}>
+                  {[
+                    { label: 'Victories', val: rec.wins, color: '#22c55e' },
+                    { label: 'Defeats', val: rec.losses, color: '#ef4444' },
+                    { label: 'Win Rate', val: `${winRate}%`, color: winRate >= 70 ? '#22c55e' : winRate >= 40 ? '#f59e0b' : '#ef4444' },
+                    { label: 'Boss Kills', val: rec.bossKills, color: '#a855f7' },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: s.color, fontFamily: 'monospace' }}>{s.val}</div>
+                      <div style={{ fontSize: '0.5rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</div>
                     </div>
+                  ))}
+                </div>
+                {totalBattles === 0 && (
+                  <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>
+                    No battles fought yet
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ ...sectionStyle, flex: 1, marginBottom: 6 }}>
+                  {sectionTitle('🗡️', `Gear (${equippedCount}/7)`)}
+                  {equippedCount === 0 ? (
+                    <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic' }}>No gear equipped</div>
                   ) : (
-                    <div style={{
-                      display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
-                    }}>
-                      {inventory.map(item => {
-                        const r = TIERS[item.tier] || TIERS[1];
-                        const itemCanEquip = canClassEquip(hero.classId, item);
-                        const isSelected = selectedItemId === item.id;
-                        const isHovered = hoveredItemId === item.id;
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {Object.entries(eq).filter(([, v]) => v).map(([slot, item]) => {
+                        const t = TIERS[item.tier] || TIERS[1];
                         return (
-                          <div key={item.id}
-                            draggable={itemCanEquip}
-                            onDragStart={e => {
-                              e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
-                              e.dataTransfer.effectAllowed = 'move';
-                              setSelectedItemId(null);
-                            }}
-                            onClick={() => {
-                              if (!itemCanEquip) return;
-                              if (isSelected) {
-                                const slotKey = item.slot;
-                                if (slotKey && !( slotKey === 'offhand' && is2H)) {
-                                  equipItem(hero.id, item);
-                                }
-                                setSelectedItemId(null);
-                              } else {
-                                setSelectedItemId(item.id);
-                              }
-                            }}
-                            onMouseEnter={() => setHoveredItemId(item.id)}
-                            onMouseLeave={() => setHoveredItemId(null)}
-                            style={{
-                              aspectRatio: '1', 
-                              backgroundImage: `url(${isSelected ? UI_SLOTS.highlight : UI_SLOTS.empty})`,
-                              backgroundSize: '100%', imageRendering: 'pixelated',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              cursor: itemCanEquip ? 'pointer' : 'not-allowed',
-                              position: 'relative',
-                              opacity: itemCanEquip ? 1 : 0.4,
-                              transition: 'transform 0.1s',
-                              transform: isHovered && itemCanEquip ? 'scale(1.08)' : 'scale(1)',
-                            }}
-                          >
-                            <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
-                            <div style={{
-                              position: 'absolute', bottom: 1, left: 1, right: 1,
-                              height: 2, background: r.color, borderRadius: 1,
-                            }} />
+                          <div key={slot} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.6rem' }}>
+                            <span>{item.icon}</span>
+                            <span style={{ color: t.color, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                            <span style={{ color: '#7ec87e', fontSize: '0.5rem', whiteSpace: 'nowrap' }}>
+                              {Object.entries(item.stats).slice(0, 2).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                            </span>
                           </div>
                         );
                       })}
                     </div>
                   )}
                 </div>
+
+                <div style={{ ...sectionStyle, flex: 1, marginBottom: 6 }}>
+                  {sectionTitle('📊', 'Core Stats')}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {mainStats.map(s => (
+                      <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem' }}>
+                        <span style={{ color: 'var(--muted)' }}>{s.icon} {s.label}</span>
+                        <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace' }}>{Math.floor(stats[s.key])}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              <div style={sectionStyle}>
+                {sectionTitle('✨', `Ability Loadout`)}
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {loadout.map((abilityId, i) => {
+                    const ability = abilityMap[abilityId];
+                    return (
+                      <div key={i} style={{
+                        flex: 1, textAlign: 'center', padding: '4px 2px',
+                        backgroundImage: `url(${UI_SLOTS.empty})`,
+                        backgroundSize: '100%', imageRendering: 'pixelated',
+                        borderRadius: 4, minHeight: 40,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {ability ? (
+                          <>
+                            <span style={{ fontSize: '1rem' }}>{ability.icon}</span>
+                            <div style={{ fontSize: '0.45rem', color: 'var(--accent)', marginTop: 2, lineHeight: 1.1 }}>{ability.name}</div>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '0.9rem', opacity: 0.2 }}>—</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={sectionStyle}>
+                {sectionTitle('🌳', `Skills (${totalSkillPoints}/${maxSkillPoints})`)}
+                {totalSkillPoints === 0 ? (
+                  <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic' }}>No skills unlocked yet</div>
+                ) : (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {tree && tree.tiers.map(tier =>
+                      tier.skills.filter(sk => (heroSkills[sk.id] || 0) > 0).map(sk => (
+                        <div key={sk.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 3,
+                          background: 'rgba(110,231,183,0.08)', borderRadius: 4, padding: '2px 6px',
+                          border: '1px solid rgba(110,231,183,0.15)',
+                        }}>
+                          <span style={{ fontSize: '0.7rem' }}>{sk.icon}</span>
+                          <span style={{ fontSize: '0.55rem', color: 'var(--accent)' }}>{sk.name}</span>
+                          <span style={{ fontSize: '0.5rem', color: 'var(--muted)', fontFamily: 'monospace' }}>{heroSkills[sk.id]}/{sk.maxPoints}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div style={sectionStyle}>
+                {sectionTitle('📈', 'Attribute Spread')}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px 6px' }}>
+                  {ATTRIBUTES.map(attr => {
+                    const pts = (hero.attributePoints || {})[attr] || 0;
+                    const def = attributeDefinitions[attr];
+                    const maxPts = Object.values(hero.attributePoints || {}).reduce((a, b) => a + b, 0);
+                    const pct = maxPts > 0 ? (pts / maxPts) * 100 : 0;
+                    return (
+                      <div key={attr} style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.5rem', color: def.color, fontWeight: 600 }}>{def.icon}</div>
+                        <div style={{ height: 3, background: 'rgba(0,0,0,0.4)', borderRadius: 2, overflow: 'hidden', margin: '1px 0' }}>
+                          <div style={{ height: '100%', width: `${pct}%`, background: def.color, borderRadius: 2 }} />
+                        </div>
+                        <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>{pts}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {(hero.unspentPoints || 0) > 0 && (
+                  <div style={{ textAlign: 'center', marginTop: 4, fontSize: '0.55rem', color: '#ef4444' }}>
+                    {hero.unspentPoints} unspent attribute points!
+                  </div>
+                )}
+              </div>
+
+              {race && (
+                <div style={sectionStyle}>
+                  {sectionTitle(race.icon ? '' : '🏷️', `Racial Trait — ${race.name}`)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {race.icon && <img src={race.icon} alt={race.name} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />}
+                    <div>
+                      <div style={{ fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 600 }}>{race.trait}</div>
+                      <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>{race.traitDescription}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
