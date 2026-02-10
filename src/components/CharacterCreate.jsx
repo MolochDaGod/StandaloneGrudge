@@ -65,10 +65,18 @@ export default function CharacterCreate() {
     <div style={{
       width: '100%', height: '100%', overflow: 'auto',
       background: 'radial-gradient(circle at 50% 0%, rgba(110,231,183,0.05), transparent 50%), rgba(11,16,32,0.75)',
+      position: 'relative',
     }}>
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: 'url(/backgrounds/character_create.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        opacity: 0.35, zIndex: 0, pointerEvents: 'none',
+      }} />
       <header style={{
         background: 'linear-gradient(135deg, rgba(14,22,48,0.8), rgba(20,26,43,0.6))',
-        borderBottom: '2px solid var(--border)', padding: '14px 20px', textAlign: 'center'
+        borderBottom: '2px solid var(--border)', padding: '14px 20px', textAlign: 'center',
+        position: 'relative', zIndex: 1,
       }}>
         <h1 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 10 }}>
           Create Your Warlord
@@ -98,7 +106,7 @@ export default function CharacterCreate() {
         </div>
       </header>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: 20 }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: 20, position: 'relative', zIndex: 1 }}>
 
         {step === 1 && (
           <div style={{ animation: 'fadeIn 0.4s ease', textAlign: 'center', paddingTop: 40 }}>
