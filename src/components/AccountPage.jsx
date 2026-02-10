@@ -368,6 +368,7 @@ function HeroDetailPanel({ hero, onClose }) {
   const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout } = useGameStore();
   const [tab, setTab] = useState('stats');
   const [selectingSlot, setSelectingSlot] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   const cls = classDefinitions[hero.classId];
   const race = hero.raceId ? raceDefinitions[hero.raceId] : null;
@@ -468,7 +469,7 @@ function HeroDetailPanel({ hero, onClose }) {
         display: 'flex', borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)',
       }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          <button key={t.id} onClick={() => { setTab(t.id); setSelectedItemId(null); }} style={{
             flex: 1, padding: '10px 8px', border: 'none',
             background: tab === t.id ? 'rgba(110,231,183,0.1)' : 'transparent',
             borderBottom: tab === t.id ? '2px solid var(--accent)' : '2px solid transparent',
@@ -602,15 +603,26 @@ function HeroDetailPanel({ hero, onClose }) {
           const SLOT_LABELS = { weapon: 'Main Hand', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
           const SLOT_EMOJIS = { weapon: '⚔️', offhand: '🛡️', helmet: '⛑️', armor: '🛡️', feet: '🥾', ring: '💍', relic: '🔮' };
 
+          const selectedItem = selectedItemId ? inventory.find(i => i.id === selectedItemId) : null;
+          const slotCanReceiveSelected = (slot) => selectedItem && selectedItem.slot === slot && canClassEquip(hero.classId, selectedItem);
+
           const renderSlot = (slot, size = 52, disabled = false) => {
             const equipped = eq[slot];
             const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
+            const canReceive = !disabled && slotCanReceiveSelected(slot);
             return (
               <div
-                title={equipped ? `${equipped.name} [T${equipped.tier}]\n${Object.entries(equipped.stats).map(([k,v]) => `+${v} ${k}`).join(', ')}\nClick to unequip` : disabled ? 'Locked (2H weapon)' : `${SLOT_LABELS[slot]} - Empty\nDrag item here`}
-                onClick={() => equipped && !disabled && unequipItem(hero.id, slot)}
+                title={equipped ? `${equipped.name} [T${equipped.tier}]\n${Object.entries(equipped.stats).map(([k,v]) => `+${v} ${k}`).join(', ')}\nClick to unequip` : disabled ? 'Locked (2H weapon)' : `${SLOT_LABELS[slot]} - Empty`}
+                onClick={() => {
+                  if (canReceive) {
+                    equipItem(hero.id, selectedItem);
+                    setSelectedItemId(null);
+                  } else if (equipped && !disabled) {
+                    unequipItem(hero.id, slot);
+                  }
+                }}
                 onDragOver={e => { if (!disabled) { e.preventDefault(); e.currentTarget.style.borderColor = '#f59e0b'; } }}
-                onDragLeave={e => { e.currentTarget.style.borderColor = tierDef ? tierDef.color + '80' : '#5c4a32'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = canReceive ? '#22c55e' : (tierDef ? tierDef.color + '80' : '#5c4a32'); }}
                 onDrop={e => {
                   e.preventDefault();
                   e.currentTarget.style.borderColor = tierDef ? tierDef.color + '80' : '#5c4a32';
@@ -619,7 +631,10 @@ function HeroDetailPanel({ hero, onClose }) {
                     const itemData = JSON.parse(e.dataTransfer.getData('text/plain'));
                     if (itemData.slot === slot) {
                       const item = inventory.find(i => i.id === itemData.id);
-                      if (item && canClassEquip(hero.classId, item)) equipItem(hero.id, item);
+                      if (item && canClassEquip(hero.classId, item)) {
+                        equipItem(hero.id, item);
+                        setSelectedItemId(null);
+                      }
                     }
                   } catch {}
                 }}
@@ -629,22 +644,32 @@ function HeroDetailPanel({ hero, onClose }) {
                   backgroundSize: `${size}px ${size}px`, imageRendering: 'pixelated',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexDirection: 'column',
-                  border: `2px solid ${tierDef ? tierDef.color + '80' : '#5c4a32'}`,
-                  cursor: equipped ? 'pointer' : 'default',
+                  border: `2px solid ${canReceive ? '#22c55e' : (tierDef ? tierDef.color + '80' : '#5c4a32')}`,
+                  cursor: canReceive ? 'pointer' : (equipped ? 'pointer' : 'default'),
                   position: 'relative',
                   opacity: disabled ? 0.3 : 1,
-                  transition: 'border-color 0.15s',
+                  transition: 'border-color 0.15s, box-shadow 0.15s',
+                  boxShadow: canReceive ? '0 0 8px rgba(34,197,94,0.4), inset 0 0 6px rgba(34,197,94,0.15)' : 'none',
                 }}
               >
                 {equipped ? (
                   <span style={{ fontSize: size > 48 ? '1.5rem' : '1.2rem', filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
                 ) : (
-                  <span style={{ fontSize: size > 48 ? '1.2rem' : '1rem', opacity: 0.3 }}>{SLOT_EMOJIS[slot]}</span>
+                  <span style={{ fontSize: size > 48 ? '1.2rem' : '1rem', opacity: canReceive ? 0.7 : 0.3 }}>{SLOT_EMOJIS[slot]}</span>
                 )}
                 {tierDef && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: tierDef.color, borderRadius: '0 0 4px 4px' }} />}
-                <div style={{ position: 'absolute', top: -14, fontSize: '0.5rem', color: '#a08b6d', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+                <div style={{ position: 'absolute', top: -14, fontSize: '0.5rem', color: canReceive ? '#22c55e' : '#a08b6d', textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
                   {SLOT_LABELS[slot]}
                 </div>
+                {canReceive && (
+                  <div style={{
+                    position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)',
+                    width: 0, height: 0,
+                    borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                    borderBottom: '6px solid #22c55e',
+                    filter: 'drop-shadow(0 0 3px rgba(34,197,94,0.6))',
+                  }} />
+                )}
               </div>
             );
           };
@@ -732,25 +757,35 @@ function HeroDetailPanel({ hero, onClose }) {
                   {inventory.map(item => {
                     const r = TIERS[item.tier] || TIERS[1];
                     const itemCanEquip = canClassEquip(hero.classId, item);
+                    const isSelected = selectedItemId === item.id;
                     return (
                       <div key={item.id}
                         draggable={itemCanEquip}
                         onDragStart={e => {
                           e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
                           e.dataTransfer.effectAllowed = 'move';
+                          setSelectedItemId(null);
                         }}
-                        onClick={() => itemCanEquip && equipItem(hero.id, item)}
-                        title={`${item.name} [T${item.tier} ${r.name}]\n${item.slot}${item.weaponType ? ' - ' + (WEAPON_TYPES[item.weaponType]?.name || item.weaponType) : ''}${item.armorType ? ' - ' + (ARMOR_TYPES[item.armorType]?.name || item.armorType) : ''}${item.helmetType ? ' - ' + (HELMET_TYPES[item.helmetType]?.name || item.helmetType) : ''}${item.feetType ? ' - ' + (FEET_TYPES[item.feetType]?.name || item.feetType) : ''}\n${Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}${!itemCanEquip ? '\n(Cannot equip)' : '\nClick or drag to equip'}`}
+                        onClick={() => {
+                          if (!itemCanEquip) return;
+                          if (isSelected) {
+                            setSelectedItemId(null);
+                          } else {
+                            setSelectedItemId(item.id);
+                          }
+                        }}
+                        title={`${item.name} [T${item.tier} ${r.name}]\n${item.slot}${item.weaponType ? ' - ' + (WEAPON_TYPES[item.weaponType]?.name || item.weaponType) : ''}${item.armorType ? ' - ' + (ARMOR_TYPES[item.armorType]?.name || item.armorType) : ''}${item.helmetType ? ' - ' + (HELMET_TYPES[item.helmetType]?.name || item.helmetType) : ''}${item.feetType ? ' - ' + (FEET_TYPES[item.feetType]?.name || item.feetType) : ''}\n${Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}${!itemCanEquip ? '\n(Cannot equip)' : isSelected ? '\nClick slot to equip · Click again to deselect' : '\nClick to select · Drag to equip'}`}
                         style={{
                           width: 56, height: 56,
                           backgroundImage: `url(${UI_SLOTS.empty})`,
                           backgroundSize: '56px 56px', imageRendering: 'pixelated',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: `2px solid ${r.color}80`,
-                          borderRadius: 4, cursor: itemCanEquip ? 'grab' : 'not-allowed',
+                          border: `2px solid ${isSelected ? '#22c55e' : r.color + '80'}`,
+                          borderRadius: 4, cursor: itemCanEquip ? 'pointer' : 'not-allowed',
                           position: 'relative',
                           opacity: itemCanEquip ? 1 : 0.5,
-                          transition: 'transform 0.1s',
+                          transition: 'transform 0.1s, border-color 0.15s, box-shadow 0.15s',
+                          boxShadow: isSelected ? '0 0 10px rgba(34,197,94,0.5), inset 0 0 8px rgba(34,197,94,0.15)' : 'none',
                         }}
                         onMouseEnter={e => { if (itemCanEquip) e.currentTarget.style.transform = 'scale(1.1)'; }}
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -758,8 +793,18 @@ function HeroDetailPanel({ hero, onClose }) {
                         <span style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
                         <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
-                          height: 3, background: r.color, borderRadius: '0 0 2px 2px',
+                          height: 3, background: isSelected ? '#22c55e' : r.color, borderRadius: '0 0 2px 2px',
                         }} />
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute', top: -8, right: -8,
+                            width: 0, height: 0,
+                            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                            borderBottom: '7px solid #22c55e',
+                            filter: 'drop-shadow(0 0 3px rgba(34,197,94,0.8))',
+                            transform: 'rotate(180deg)',
+                          }} />
+                        )}
                       </div>
                     );
                   })}
