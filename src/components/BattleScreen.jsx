@@ -24,6 +24,21 @@ const locationBackgrounds = {
   dreadmaw_canyon: '/backgrounds/infernal_arena.png',
 };
 
+const critEffects = {
+  spell: {
+    src: '/effects/explosion_crit.webp',
+    frames: 32, cols: 8, rows: 4,
+    width: 1024, height: 512,
+    frameW: 128, frameH: 128,
+  },
+  melee: {
+    src: '/effects/slash_crit.jpg',
+    frames: 21, cols: 7, rows: 3,
+    width: 1024, height: 439,
+    frameW: 146, frameH: 146,
+  },
+};
+
 function EffectSprite({ x, y, sprite }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
@@ -70,6 +85,60 @@ function EffectSprite({ x, y, sprite }) {
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
+      }} />
+    </div>
+  );
+}
+
+function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 }) {
+  const [frame, setFrame] = React.useState(0);
+  const totalFrames = sprite.frames;
+  const baseSize = 140;
+
+  const cols = sprite.cols || Math.round(Math.sqrt(sprite.frames));
+  const rows = sprite.rows || Math.ceil(totalFrames / cols);
+  const frameW = sprite.frameW || (sprite.width / cols);
+  const frameH = sprite.frameH || (sprite.height / rows);
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) {
+        clearInterval(interval);
+        return;
+      }
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const progress = totalFrames > 1 ? frame / (totalFrames - 1) : 1;
+  const currentScale = startScale + (endScale - startScale) * progress;
+  const displaySize = baseSize * currentScale;
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize,
+      overflow: 'hidden',
+      zIndex: 260,
+      pointerEvents: 'none',
+      opacity: progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${rows * frameH * scaleY}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
       }} />
     </div>
   );
@@ -178,7 +247,7 @@ export default function BattleScreen() {
     skipTurn, defendTurn, autoAttack,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
-    inventory, useConsumable,
+    inventory, useConsumable, useGrudge,
   } = useGameStore();
 
   const [unitAnims, setUnitAnims] = useState({});
@@ -188,6 +257,7 @@ export default function BattleScreen() {
   const [introComplete, setIntroComplete] = useState(false);
   const [activeParticles, setActiveParticles] = useState([]);
   const [hitEffects, setHitEffects] = useState([]);
+  const [critFx, setCritFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
@@ -390,7 +460,17 @@ export default function BattleScreen() {
                   const effectDur = (hfx.frames || 36) * 30 + 100;
                   setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
                 }
-                if (isCrit) playCrit(); else playHurt();
+                if (isCrit) {
+                  playCrit();
+                  if (target.position) {
+                    const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                    const critId = Date.now() + Math.random();
+                    setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                    setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                  }
+                } else {
+                  playHurt();
+                }
               } else {
                 playDodge();
               }
@@ -431,7 +511,17 @@ export default function BattleScreen() {
                 const effectDur = (hfx.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
               }
-              if (isCrit) playCrit(); else playHurt();
+              if (isCrit) {
+                playCrit();
+                if (target.position) {
+                  const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+              }
             } else {
               playDodge();
             }
@@ -458,7 +548,17 @@ export default function BattleScreen() {
                 const effectDur = (hfx.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
               }
-              if (isCrit) playCrit(); else playHurt();
+              if (isCrit) {
+                playCrit();
+                if (target.position) {
+                  const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+              }
             } else {
             playDodge();
           }
@@ -676,7 +776,7 @@ export default function BattleScreen() {
 
               {isSelected && unit.alive && (
                 <div style={{
-                  position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                  position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
                   width: 40, height: 10, borderRadius: '50%',
                   background: 'rgba(239,68,68,0.4)',
                   border: '2px solid var(--danger)',
@@ -701,7 +801,7 @@ export default function BattleScreen() {
               </div>
 
               <div style={{
-                position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: -55, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center', marginBottom: 2,
                 background: 'rgba(0,0,0,0.6)', borderRadius: 5, padding: '2px 4px',
                 backdropFilter: 'blur(2px)', minWidth: 50,
@@ -719,6 +819,24 @@ export default function BattleScreen() {
                   <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
                   <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
                 </div>
+                {unit.team === 'player' && (
+                  <div style={{ marginTop: 1 }}>
+                    <MiniBar 
+                      current={unit.grudge || 0} 
+                      max={100} 
+                      color="#dc2626" 
+                      height={3} 
+                      width={50} 
+                    />
+                    {(unit.grudge || 0) >= 100 && (
+                      <div style={{
+                        fontSize: '0.35rem', color: '#ef4444', fontWeight: 800,
+                        textAlign: 'center', animation: 'pulse 1s infinite',
+                        textShadow: '0 0 4px #ef4444',
+                      }}>GRUDGE!</div>
+                    )}
+                  </div>
+                )}
                 {(unit.buffs?.length > 0 || unit.focusStacks > 0) && (
                   <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
                     {unit.focusStacks > 0 && (
@@ -776,6 +894,10 @@ export default function BattleScreen() {
 
         {hitEffects.map(e => (
           <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} />
+        ))}
+
+        {critFx.map(c => (
+          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={critEffects[c.type]} />
         ))}
 
         {floatingDmg.map(f => (
@@ -934,6 +1056,19 @@ export default function BattleScreen() {
                     >🧪 Items ({consumables.length})</button>
                   );
                 })()}
+                {(currentUnit.grudge || 0) >= 100 && (
+                  <button onClick={useGrudge} style={{
+                    background: 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(239,68,68,0.3))',
+                    border: '2px solid #ef4444', borderRadius: 4,
+                    padding: '4px 12px', color: '#fca5a5', cursor: 'pointer',
+                    fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                    animation: 'pulse 1s infinite',
+                    textShadow: '0 0 8px #ef4444',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.7), rgba(239,68,68,0.5))'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(239,68,68,0.3))'; }}
+                  >🔥 REVENGE</button>
+                )}
               </div>
               {showItemsPanel && (() => {
                 const consumables = inventory.filter(i => i.slot === 'consumable');

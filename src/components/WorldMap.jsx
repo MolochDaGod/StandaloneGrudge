@@ -1634,58 +1634,81 @@ export default function WorldMap() {
           const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
           const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
 
+          const getHeroMapPos = (idx) => {
+            const hero = activeHeroes[idx];
+            const offset = hero ? (wanderOffsets[hero.id] || { x: 0, y: 0 }) : { x: 0, y: 0 };
+            const baseOffsetX = (idx - 1) * 1.8;
+            const baseOffsetY = -2.5 - idx * 1;
+            return {
+              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x)),
+              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y)),
+            };
+          };
+
           return (
             <>
-              {dialoguePhase >= 1 && speaker1Idx >= 0 && (
-                <div style={{
-                  position: 'absolute',
-                  left: `${Math.max(8, Math.min(82, zonePos.x + (speaker1Idx - 1) * 1.8 - 6))}%`,
-                  top: `${Math.max(4, zonePos.y - 2.5 - speaker1Idx * 1 - 8)}%`,
-                  zIndex: 12, pointerEvents: 'none', maxWidth: 180,
-                  animation: dialoguePhase >= 1 ? 'fadeIn 0.4s ease-out' : 'none',
-                  opacity: dialoguePhase === 0 ? 0 : 1,
-                  transition: 'opacity 0.5s',
-                }}>
+              {dialoguePhase >= 1 && speaker1Idx >= 0 && (() => {
+                const pos = getHeroMapPos(speaker1Idx);
+                return (
                   <div style={{
-                    background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
-                    borderRadius: 10, padding: '6px 10px',
-                    fontSize: '0.55rem', color: '#e2e8f0', lineHeight: 1.4,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    position: 'absolute',
+                    left: `${Math.max(4, Math.min(82, pos.x))}%`,
+                    top: `${Math.max(2, pos.y - 6)}%`,
+                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    animation: 'fadeIn 0.4s ease-out',
+                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, opacity 0.5s',
                   }}>
-                    {currentDialogue.line1}
+                    <div style={{
+                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
+                      borderRadius: 10, padding: '5px 8px',
+                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    }}>
+                      <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.45rem', marginBottom: 2 }}>
+                        {currentDialogue.speaker1?.name}
+                      </div>
+                      {currentDialogue.line1}
+                    </div>
+                    <div style={{
+                      width: 0, height: 0,
+                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(14,22,48,0.92)',
+                      marginLeft: 12,
+                    }} />
                   </div>
+                );
+              })()}
+              {dialoguePhase >= 2 && speaker2Idx >= 0 && (() => {
+                const pos = getHeroMapPos(speaker2Idx);
+                return (
                   <div style={{
-                    width: 0, height: 0,
-                    borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                    borderTop: '6px solid rgba(14,22,48,0.92)',
-                    margin: '0 auto',
-                  }} />
-                </div>
-              )}
-              {dialoguePhase >= 2 && speaker2Idx >= 0 && (
-                <div style={{
-                  position: 'absolute',
-                  left: `${Math.max(8, Math.min(82, zonePos.x + (speaker2Idx - 1) * 1.8 + 2))}%`,
-                  top: `${Math.max(4, zonePos.y - 2.5 - speaker2Idx * 1 - 8)}%`,
-                  zIndex: 12, pointerEvents: 'none', maxWidth: 180,
-                  animation: 'fadeIn 0.4s ease-out',
-                }}>
-                  <div style={{
-                    background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
-                    borderRadius: 10, padding: '6px 10px',
-                    fontSize: '0.55rem', color: '#e2e8f0', lineHeight: 1.4,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    position: 'absolute',
+                    left: `${Math.max(4, Math.min(82, pos.x + 3))}%`,
+                    top: `${Math.max(2, pos.y - 6)}%`,
+                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    animation: 'fadeIn 0.4s ease-out',
+                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
                   }}>
-                    {currentDialogue.line2}
+                    <div style={{
+                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
+                      borderRadius: 10, padding: '5px 8px',
+                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                    }}>
+                      <div style={{ fontWeight: 700, color: 'var(--gold)', fontSize: '0.45rem', marginBottom: 2 }}>
+                        {currentDialogue.speaker2?.name}
+                      </div>
+                      {currentDialogue.line2}
+                    </div>
+                    <div style={{
+                      width: 0, height: 0,
+                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(14,22,48,0.92)',
+                      marginLeft: 12,
+                    }} />
                   </div>
-                  <div style={{
-                    width: 0, height: 0,
-                    borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                    borderTop: '6px solid rgba(14,22,48,0.92)',
-                    margin: '0 auto',
-                  }} />
-                </div>
-              )}
+                );
+              })()}
             </>
           );
         })()}
@@ -1854,10 +1877,13 @@ export default function WorldMap() {
                   width: 36, height: 36, borderRadius: '50%', overflow: 'hidden',
                   border: '2px solid var(--accent)',
                   boxShadow: '0 0 8px rgba(110,231,183,0.4), inset 0 0 6px rgba(110,231,183,0.2)',
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: 'rgba(14,22,48,0.8)',
+                  position: 'relative',
                 }}>
-                  <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.9} speed={180} />
+                  <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)' }}>
+                    <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.42} speed={180} />
+                  </div>
                 </div>
               ))}
             </div>

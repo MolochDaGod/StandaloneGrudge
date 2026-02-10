@@ -101,6 +101,7 @@ function createHeroBattleUnit(hero) {
     level: hero.level,
     focusStacks: 0,
     guaranteedCrit: false,
+    grudge: 0,
   };
 }
 
@@ -1218,6 +1219,14 @@ const useGameStore = create(persist((set, get) => ({
         log.push(`⚔️ ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}.`);
       }
 
+      if (actualTarget.team === 'player' && result.totalDmg > 0 && !result.evaded && !result.absorbed) {
+        const grudgeGain = Math.min(30, Math.max(5, Math.floor(result.totalDmg / actualTarget.maxHealth * 100)));
+        actualTarget.grudge = Math.min(100, (actualTarget.grudge || 0) + grudgeGain);
+        if (actualTarget.grudge >= 100) {
+          log.push(`🔥 ${actualTarget.name}'s GRUDGE is full! Revenge awaits!`);
+        }
+      }
+
       if (actualTarget.health <= 0) {
         actualTarget.alive = false;
         log.push(`☠️ ${actualTarget.name} has been slain!`);
@@ -1417,6 +1426,61 @@ const useGameStore = create(persist((set, get) => ({
       battleState: { ...bs, phase: 'animating', turnCount: bs.turnCount + 1 },
       lastAction: actionResult,
     });
+  },
+
+  useGrudge: () => {
+    const state = get();
+    if (!state.battleState || state.battleState.phase !== 'player_turn') return;
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const units = [...state.battleUnits].map(u => ({ ...u, buffs: [...(u.buffs || [])], dots: [...(u.dots || [])] }));
+    const attacker = units.find(u => u.id === currentUnitId);
+    if (!attacker || !attacker.isPlayerControlled || (attacker.grudge || 0) < 100) return;
+
+    const enemies = units.filter(u => u.team === 'enemy' && u.alive);
+    if (enemies.length === 0) return;
+
+    let log = [...state.battleLog];
+    log.push(`🔥💀 ${attacker.name} unleashes GRUDGE REVENGE!`);
+
+    const baseDmg = Math.floor((attacker.physicalDamage + attacker.magicDamage) * 2.5 + attacker.level * 5);
+    enemies.forEach(enemy => {
+      const dmg = Math.max(1, Math.floor(baseDmg * (0.8 + Math.random() * 0.4)));
+      enemy.health = Math.max(0, enemy.health - dmg);
+      log.push(`💥 Revenge hits ${enemy.name} for ${dmg}!`);
+      if (enemy.health <= 0) {
+        enemy.alive = false;
+        log.push(`☠️ ${enemy.name} has been slain!`);
+      }
+    });
+
+    attacker.grudge = 0;
+
+    const allDead = units.filter(u => u.team === 'enemy').every(u => !u.alive);
+    const bs = state.battleState;
+
+    if (attacker.id === 'player') {
+      set({ playerHealth: attacker.health, playerMana: attacker.mana, playerStamina: attacker.stamina });
+    }
+
+    set({
+      battleUnits: units,
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating', turnCount: bs.turnCount + 1 },
+      lastAction: {
+        attackerId: currentUnitId,
+        targetId: enemies[0]?.id,
+        abilityId: 'grudge_revenge',
+        abilityType: 'magical',
+        abilityName: 'Grudge Revenge',
+        totalDmg: baseDmg,
+        isCrit: true,
+        isGrudge: true,
+      },
+    });
+
+    if (allDead) {
+      setTimeout(() => get().handleVictory(), 1500);
+    }
   },
 
   processAIAction: () => {
