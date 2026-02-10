@@ -13,7 +13,8 @@ export const classDefinitions = {
       { id: 'shield_bash', name: 'Shield Bash', icon: '🛡️', description: 'Stun the enemy for 1 turn', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } },
       { id: 'cleave', name: 'Cleave', icon: '🩸', description: 'Slash deep, causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.12, duration: 3 } },
       { id: 'demon_blade', name: 'Demon Blade', icon: '🗡️', description: 'Transform into a Demon Swordsman for 3 turns, gaining +40% damage and +15 defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 40, cooldown: 8, target: 'self', isDemonBlade: true, effect: { stat: 'damage', multiplier: 1.4, duration: 3 }, defenseBoost: { stat: 'defense', flat: 15, duration: 3 } },
-    ]
+    ],
+    signatureAbility: { id: 'invincible', name: 'Invincible', icon: '🛡️', description: 'Become invulnerable for 2 turns, absorbing all damage', type: 'buff', damage: 0, manaCost: 0, staminaCost: 35, cooldown: 8, target: 'self', isInvincible: true, effect: { stat: 'defense', flat: 999, duration: 2 } }
   },
   mage: {
     name: 'Mage Priest',
@@ -27,8 +28,8 @@ export const classDefinitions = {
       { id: 'fireball', name: 'Fireball', icon: '🔥', description: 'Hurls fire dealing massive damage + burn', type: 'magical', damage: 2.5, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'heal', name: 'Divine Heal', icon: '💚', description: 'Restore 30% of max HP', type: 'heal', damage: 0, manaCost: 40, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.30 },
       { id: 'ice_storm', name: 'Ice Storm', icon: '❄️', description: 'Freezes the enemy, reducing their damage', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { stat: 'damage', multiplier: 0.6, duration: 2 } },
-      { id: 'mana_shield', name: 'Mana Shield', icon: '🔰', description: 'Convert mana into a protective barrier', type: 'buff', damage: 0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 25, duration: 3 } },
-    ]
+    ],
+    signatureAbility: { id: 'mana_shield', name: 'Mana Shield', icon: '🔰', description: 'Convert mana into a protective barrier', type: 'buff', damage: 0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 25, duration: 3 } }
   },
   worge: {
     name: 'Worge',
@@ -42,8 +43,8 @@ export const classDefinitions = {
       { id: 'lightning_lash', name: 'Lightning Lash', icon: '⚡', description: 'Call down a bolt of lightning on the target', type: 'magical', damage: 1.8, manaCost: 25, staminaCost: 0, cooldown: 2, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'natures_grasp', name: "Nature's Grasp", icon: '🌿', description: 'Vines heal you over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 20, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
       { id: 'dagger_toss', name: 'Dagger Toss', icon: '🗡️', description: 'Hurl an envenomed dagger, poisoning for 3 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
-      { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
     ],
+    signatureAbility: { id: 'bear_form', name: 'Bear Form', icon: '🐻', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
     bearFormAbilities: {
       mace_strike: { id: 'maul', name: 'Maul', icon: '🐾', description: 'Savage claws rip the target, restoring resources', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 4, staminaGain: 8 },
       natures_grasp: { id: 'natures_taunt', name: "Nature's Taunt", icon: '🌲', description: 'Roar with primal fury, taunting all enemies and boosting defense for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'defense', flat: 15, duration: 2 } },
@@ -63,7 +64,8 @@ export const classDefinitions = {
       { id: 'poison_arrow', name: 'Poison Arrow', icon: '☠️', description: 'Poisons the enemy for damage over time', type: 'physical', damage: 0.7, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.2, duration: 3 } },
       { id: 'evasive_maneuver', name: 'Evasive Roll', icon: '💨', description: 'Increase evasion by 50% for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'evasion', flat: 50, duration: 2 } },
       { id: 'volley', name: 'Arrow Volley', icon: '🌧️', description: 'Rain arrows for heavy damage', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy' },
-    ]
+    ],
+    signatureAbility: { id: 'focus', name: 'Focus', icon: '🎯', description: 'Passive: +10% crit per turn (max 5 stacks). Critting spends stacks. Active: Double stacks and guarantee next crit.', type: 'focus', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', isFocus: true }
   }
 };
 

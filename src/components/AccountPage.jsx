@@ -5,7 +5,7 @@ import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
 import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
-import { getAvailableAbilities, getDefaultLoadout, isSlotLocked } from '../utils/abilityLoadout';
+import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
@@ -194,13 +194,16 @@ function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
 }
 
 function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout }) {
-  const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId);
-  const available = useMemo(() => getAvailableAbilities(hero.classId, hero.unlockedSkills || {}), [hero.classId, hero.unlockedSkills]);
-  const abilityMap = useMemo(() => {
-    const map = {};
-    for (const ab of available) map[ab.id] = ab;
-    return map;
-  }, [available]);
+  const weaponType = hero.equipment?.weapon?.weaponType || null;
+  const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId, weaponType);
+  const abilityMap = useMemo(() => getAllAbilityMap(hero.classId, weaponType, hero.unlockedSkills || {}), [hero.classId, weaponType, hero.unlockedSkills]);
+  const slotAbilities = useMemo(() => {
+    const result = {};
+    for (let i = 0; i < 5; i++) {
+      result[i] = getAbilitiesForSlot(i, hero.classId, weaponType, hero.unlockedSkills || {});
+    }
+    return result;
+  }, [hero.classId, weaponType, hero.unlockedSkills]);
 
   const isWorge = hero.classId === 'worge';
   const slotCount = 5;
@@ -218,11 +221,9 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
   };
 
   const resetLoadout = () => {
-    setHeroLoadout(hero.id, getDefaultLoadout(hero.classId));
+    setHeroLoadout(hero.id, getDefaultLoadout(hero.classId, weaponType));
     setSelectingSlot(null);
   };
-
-  const unslottable = isWorge ? ['bear_form'] : [];
 
   return (
     <div>
@@ -238,7 +239,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
       </div>
 
       <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.4 }}>
-        Tap a slot to change its ability. {isWorge && 'Slot 5 is locked to Bear Form.'}
+        Tap a slot to change its ability. Slot 5 is locked to your class signature ability.{weaponType ? ` Weapon skills from: ${weaponType}.` : ''}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
@@ -324,7 +325,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
             }}>Cancel</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {available.filter(ab => !unslottable.includes(ab.id)).map(ability => {
+            {(slotAbilities[selectingSlot] || []).map(ability => {
               const alreadySlotted = loadout.includes(ability.id);
               const isCurrentSlot = loadout[selectingSlot] === ability.id;
               return (

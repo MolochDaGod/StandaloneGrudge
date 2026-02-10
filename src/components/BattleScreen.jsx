@@ -656,9 +656,15 @@ export default function BattleScreen() {
                   <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
                   <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
                 </div>
-                {unit.buffs?.length > 0 && (
+                {(unit.buffs?.length > 0 || unit.focusStacks > 0) && (
                   <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
-                    {unit.buffs.slice(0, 3).map((b, i) => (
+                    {unit.focusStacks > 0 && (
+                      <span style={{
+                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
+                        background: 'rgba(239,68,68,0.3)', color: '#ef4444',
+                      }}>🎯{unit.focusStacks}</span>
+                    )}
+                    {(unit.buffs || []).slice(0, 3).map((b, i) => (
                       <span key={i} style={{
                         fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(110,231,183,0.3)', color: 'var(--accent)',

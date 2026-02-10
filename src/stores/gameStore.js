@@ -6,7 +6,7 @@ import { raceDefinitions } from '../data/races';
 import { locations, createEnemy } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS } from '../data/equipment';
-import { getDefaultLoadout, resolveLoadout } from '../utils/abilityLoadout';
+import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 
@@ -62,6 +62,7 @@ function createHeroBattleUnit(hero) {
   const cls = classDefinitions[hero.classId];
   if (!cls) return null;
   const stats = getHeroStatsWithBonuses(hero);
+  const heroWeaponType = hero.equipment?.weapon?.weaponType || null;
   return {
     id: hero.id,
     name: hero.name,
@@ -93,13 +94,13 @@ function createHeroBattleUnit(hero) {
     manaRegen: stats.manaRegen || 0,
     defenseBreak: stats.defenseBreak || 0,
     criticalEvasion: stats.criticalEvasion || 0,
-    abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId),
-    abilities: cls.bearFormAbilities
-      ? [...cls.abilities, ...Object.values(cls.bearFormAbilities), { id: 'revert_form', name: 'Revert Form', icon: '🔄', description: 'Revert to your normal form', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' }, ...getSkillTreeAbilities(hero)]
-      : [...cls.abilities, ...getSkillTreeAbilities(hero)],
+    abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId, heroWeaponType),
+    abilities: Object.values(getAllAbilityMap(hero.classId, heroWeaponType, hero.unlockedSkills || {})),
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
     level: hero.level,
+    focusStacks: 0,
+    guaranteedCrit: false,
   };
 }
 
@@ -108,6 +109,10 @@ function calculateAttackDamage(attacker, defender, ability) {
   (defender.buffs || []).forEach(b => {
     if (b.stat === 'evasion' && b.flat) evasionBonus += b.flat;
   });
+  const isInvincible = (defender.buffs || []).some(b => b.source === 'Invincible');
+  if (isInvincible) {
+    return { totalDmg: 0, isCrit: false, blocked: false, evaded: false, drained: 0, absorbed: true };
+  }
   const totalEvasion = (defender.evasion || 0) + evasionBonus;
   if (Math.random() * 100 < totalEvasion) {
     return { totalDmg: 0, isCrit: false, blocked: false, evaded: true, drained: 0 };
@@ -159,10 +164,17 @@ function calculateAttackDamage(attacker, defender, ability) {
     let effectiveCritChance = attacker.critChance || 5;
     const critEvasion = defender.criticalEvasion || 0;
     effectiveCritChance = Math.max(0, effectiveCritChance - critEvasion);
-    isCrit = ability.guaranteedCrit || Math.random() * 100 < effectiveCritChance;
+    if (attacker.focusStacks > 0) {
+      effectiveCritChance += attacker.focusStacks * 10;
+    }
+    isCrit = ability.guaranteedCrit || attacker.guaranteedCrit || Math.random() * 100 < effectiveCritChance;
     if (isCrit) {
       const critFactor = 1 + ((attacker.criticalDamage || 50) / 100);
       totalDmg = Math.floor(totalDmg * critFactor);
+      if (attacker.focusStacks > 0) {
+        attacker.focusStacks = 0;
+        attacker.guaranteedCrit = false;
+      }
     }
   }
 
@@ -452,7 +464,7 @@ const useGameStore = create(persist((set, get) => ({
       skillPoints: 0,
       unlockedSkills: {},
       equipment: startingEquipment,
-      abilityLoadout: getDefaultLoadout(state.playerClass),
+      abilityLoadout: getDefaultLoadout(state.playerClass, startingEquipment?.weapon?.weaponType),
     };
     set({
       screen: 'training',
@@ -473,13 +485,14 @@ const useGameStore = create(persist((set, get) => ({
   addHeroToRoster: (hero) => {
     const state = get();
     const hasEquipment = hero.equipment && Object.keys(hero.equipment).length > 0;
+    const equip = hasEquipment ? hero.equipment : getStartingEquipment(hero.classId);
     const heroWithSkills = {
       ...hero,
       skillPoints: Math.max(0, hero.level),
       unlockedSkills: hero.unlockedSkills || {},
       unspentPoints: hero.unspentPoints || 0,
-      equipment: hasEquipment ? hero.equipment : getStartingEquipment(hero.classId),
-      abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId),
+      equipment: equip,
+      abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId, equip?.weapon?.weaponType),
     };
     const newRoster = [...state.heroRoster, heroWithSkills];
     const newActiveIds = state.activeHeroIds.length < 3
@@ -1026,6 +1039,10 @@ const useGameStore = create(persist((set, get) => ({
         updated.stunned = false;
       }
 
+      if (updated.classId === 'ranger' && updated.alive && updated.team === 'player') {
+        updated.focusStacks = Math.min(5, (updated.focusStacks || 0) + 1);
+      }
+
       return updated;
     });
 
@@ -1161,7 +1178,9 @@ const useGameStore = create(persist((set, get) => ({
       const result = calculateAttackDamage(attacker, actualTarget, ability);
       actionResult = { ...actionResult, ...result };
 
-      if (result.evaded) {
+      if (result.absorbed) {
+        log.push(`🛡️ ${actualTarget.name} is INVINCIBLE! ${ability.name} is absorbed!`);
+      } else if (result.evaded) {
         log.push(`💨 ${actualTarget.name} dodges ${attacker.name}'s ${ability.name}!`);
       } else if (result.blocked) {
         actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
@@ -1225,8 +1244,18 @@ const useGameStore = create(persist((set, get) => ({
       actionResult.targetId = currentUnitId;
       log.push(`🔄 ${attacker.name} reverts to normal form!`);
 
+    } else if (ability.type === 'focus' || ability.isFocus) {
+      attacker.focusStacks = Math.min(5, (attacker.focusStacks || 0) * 2);
+      if (attacker.focusStacks === 0) attacker.focusStacks = 2;
+      attacker.guaranteedCrit = true;
+      actionResult.targetId = currentUnitId;
+      log.push(`🎯 ${attacker.name} focuses intensely! (${attacker.focusStacks} stacks, next hit guaranteed crit)`);
     } else if (ability.type === 'buff') {
-      if (ability.isBearForm) {
+      if (ability.isInvincible) {
+        attacker.buffs.push({ ...ability.effect, source: 'Invincible' });
+        actionResult.targetId = currentUnitId;
+        log.push(`🛡️ ${attacker.name} becomes INVINCIBLE!`);
+      } else if (ability.isBearForm) {
         attacker.bearForm = true;
         attacker.buffs.push({ ...ability.effect, source: ability.name });
         if (ability.defenseBoost) {
