@@ -83,6 +83,52 @@ export const WEAPON_TYPE_ICON_MAP = {
   relic: UI_ICONS.diamond,
 };
 
+export const ITEM_ICON_MAP = {
+  weapon: {
+    sword: `${BASE}/icons/item_sword.png`,
+    axe: `${BASE}/icons/item_axe.png`,
+    greatsword: `${BASE}/icons/item_sword.png`,
+    greataxe: `${BASE}/icons/item_axe.png`,
+    dagger: `${BASE}/icons/item_dagger.png`,
+    mace: `${BASE}/icons/icon_bar.png`,
+    staff: `${BASE}/icons/item_staff.png`,
+    bow: `${BASE}/icons/item_bow.png`,
+    crossbow: `${BASE}/icons/item_bow.png`,
+    gun: `${BASE}/icons/icon_star.png`,
+    lance: `${BASE}/icons/icon_lance.png`,
+    tome: `${BASE}/icons/item_book.png`,
+    _default: `${BASE}/icons/item_sword.png`,
+  },
+  offhand: {
+    shield: `${BASE}/icons/item_shield.png`,
+    relic: `${BASE}/icons/item_gem.png`,
+    _default: `${BASE}/icons/item_shield.png`,
+  },
+  helmet: `${BASE}/icons/item_helm.png`,
+  armor: `${BASE}/icons/item_armor.png`,
+  feet: `${BASE}/icons/icon_leaf.png`,
+  ring: `${BASE}/icons/item_ring.png`,
+  relic: `${BASE}/icons/item_gem.png`,
+  consumable: {
+    health: `${BASE}/icons/item_potion_red.png`,
+    mana: `${BASE}/icons/item_potion_blue.png`,
+    stamina: `${BASE}/icons/icon_potion2.png`,
+    speed: `${BASE}/icons/icon_flask.png`,
+    cure: `${BASE}/icons/icon_herb.png`,
+    resurrect: `${BASE}/icons/icon_crystal.png`,
+    _default: `${BASE}/icons/item_potion_red.png`,
+  },
+};
+
+export function getItemSpriteIcon(item) {
+  if (!item) return null;
+  const slotMap = ITEM_ICON_MAP[item.slot];
+  if (!slotMap) return null;
+  if (typeof slotMap === 'string') return slotMap;
+  const subType = item.weaponType || item.consumableType || item.armorType || item.helmetType || item.feetType;
+  return slotMap[subType] || slotMap._default || null;
+}
+
 export function SpriteIcon({ src, size = 16, scale = 2, style = {} }) {
   return (
     <div style={{

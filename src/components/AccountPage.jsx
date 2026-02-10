@@ -9,7 +9,7 @@ import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELME
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
@@ -675,9 +675,20 @@ function HeroDetailPanel({ hero, onClose }) {
                   position: 'relative',
                 }}
               >
-                {equipped ? (
-                  <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
-                ) : (
+                {equipped ? (() => {
+                  const eqSprite = getItemSpriteIcon(equipped);
+                  return eqSprite ? (
+                    <div style={{
+                      width: slotSize - 10, height: slotSize - 10,
+                      backgroundImage: `url(${eqSprite})`,
+                      backgroundSize: `${slotSize - 10}px ${slotSize - 10}px`,
+                      imageRendering: 'pixelated',
+                      filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
+                    }} />
+                  ) : (
+                    <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
+                  );
+                })() : (
                   <div style={{
                     width: slotSize - 10, height: slotSize - 10,
                     backgroundImage: `url(${slotIcon})`,
@@ -832,13 +843,15 @@ function HeroDetailPanel({ hero, onClose }) {
 
                   <div style={{
                     flex: 1,
-                    background: 'rgba(20,16,10,0.5)',
+                    backgroundImage: `url(${UI_PANELS.equipGrid})`,
+                    backgroundSize: '128px 128px', imageRendering: 'pixelated',
+                    backgroundRepeat: 'repeat',
                     border: '1px solid rgba(139,115,85,0.25)',
                     borderTop: 'none',
                     borderRadius: '0 0 6px 6px',
                     padding: 4,
                     minHeight: 200,
-                    maxHeight: 280,
+                    maxHeight: 300,
                     overflowY: 'auto',
                   }}>
                     {inventory.length === 0 ? (
@@ -847,13 +860,25 @@ function HeroDetailPanel({ hero, onClose }) {
                       </div>
                     ) : (
                       <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
+                        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2,
                       }}>
-                        {inventory.map(item => {
+                        {[...inventory]
+                          .sort((a, b) => {
+                            const aEquip = canClassEquip(hero.classId, a) ? 0 : 1;
+                            const bEquip = canClassEquip(hero.classId, b) ? 0 : 1;
+                            if (aEquip !== bEquip) return aEquip - bEquip;
+                            const slotOrder = { weapon: 0, offhand: 1, helmet: 2, armor: 3, feet: 4, ring: 5, relic: 6, consumable: 7 };
+                            const aSlot = slotOrder[a.slot] ?? 8;
+                            const bSlot = slotOrder[b.slot] ?? 8;
+                            if (aSlot !== bSlot) return aSlot - bSlot;
+                            return (b.tier || 1) - (a.tier || 1);
+                          })
+                          .map(item => {
                           const r = TIERS[item.tier] || TIERS[1];
-                          const itemCanEquip = canClassEquip(hero.classId, item);
+                          const itemCanEquip = item.slot === 'consumable' || canClassEquip(hero.classId, item);
                           const isSelected = selectedItemId === item.id;
                           const isHovered = hoveredItemId === item.id;
+                          const spriteIcon = getItemSpriteIcon(item);
                           return (
                             <div key={item.id}
                               draggable={itemCanEquip}
@@ -866,7 +891,7 @@ function HeroDetailPanel({ hero, onClose }) {
                                 if (!itemCanEquip) return;
                                 if (isSelected) {
                                   const slotKey = item.slot;
-                                  if (slotKey && !( slotKey === 'offhand' && is2H)) {
+                                  if (slotKey && slotKey !== 'consumable' && !( slotKey === 'offhand' && is2H)) {
                                     equipItem(hero.id, item);
                                   }
                                   setSelectedItemId(null);
@@ -876,6 +901,7 @@ function HeroDetailPanel({ hero, onClose }) {
                               }}
                               onMouseEnter={() => setHoveredItemId(item.id)}
                               onMouseLeave={() => setHoveredItemId(null)}
+                              title={`${item.name}${item.tier ? ` (T${item.tier})` : ''}`}
                               style={{
                                 aspectRatio: '1', 
                                 backgroundImage: `url(${isSelected ? UI_SLOTS.highlight : UI_SLOTS.empty})`,
@@ -883,15 +909,25 @@ function HeroDetailPanel({ hero, onClose }) {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: itemCanEquip ? 'pointer' : 'not-allowed',
                                 position: 'relative',
-                                opacity: itemCanEquip ? 1 : 0.4,
+                                opacity: itemCanEquip ? 1 : 0.35,
                                 transition: 'transform 0.1s',
                                 transform: isHovered && itemCanEquip ? 'scale(1.08)' : 'scale(1)',
                               }}
                             >
-                              <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                              {spriteIcon ? (
+                                <div style={{
+                                  width: 28, height: 28,
+                                  backgroundImage: `url(${spriteIcon})`,
+                                  backgroundSize: '28px 28px',
+                                  imageRendering: 'pixelated',
+                                  filter: `drop-shadow(0 0 2px rgba(0,0,0,0.8))${isHovered ? ' brightness(1.3)' : ''}`,
+                                }} />
+                              ) : (
+                                <span style={{ fontSize: '1.1rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                              )}
                               <div style={{
-                                position: 'absolute', bottom: 1, left: 1, right: 1,
-                                height: 2, background: r.color, borderRadius: 1,
+                                position: 'absolute', bottom: 1, left: 2, right: 2,
+                                height: 2, background: r?.color || 'rgba(139,115,85,0.4)', borderRadius: 1,
                               }} />
                             </div>
                           );
