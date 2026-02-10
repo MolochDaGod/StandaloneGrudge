@@ -517,6 +517,16 @@ export function generateLoot(enemyTemplateId, playerLevel, isBoss = false) {
     });
   }
 
+  const potionDropChance = isBoss ? 0.6 : 0.15;
+  if (Math.random() < potionDropChance) {
+    const potionPool = ['health_potion', 'mana_potion', 'stamina_potion'];
+    if (isBoss) potionPool.push('speed_potion', 'cure_potion');
+    if (isBoss && Math.random() < 0.3) potionPool.push('rezzy');
+    const pick = potionPool[Math.floor(Math.random() * potionPool.length)];
+    const consumable = createConsumable(pick);
+    if (consumable) drops.push(consumable);
+  }
+
   return drops;
 }
 
@@ -642,6 +652,7 @@ export function getEquipmentStatBonuses(equipment) {
 }
 
 export function getItemPrice(item) {
+  if (item.slot === 'consumable') return item.price || 20;
   const statWeights = {
     physicalDamage: 8, magicDamage: 8, defense: 6, health: 0.8, mana: 0.6, stamina: 0.5,
     criticalChance: 7, criticalDamage: 3, block: 5, evasion: 6, resistance: 5,
@@ -668,7 +679,29 @@ export function getItemPrice(item) {
 }
 
 export function getSellPrice(item) {
+  if (item.slot === 'consumable') return Math.max(1, Math.floor((item.price || 20) * 0.4));
   return Math.max(1, Math.floor(getItemPrice(item) * 0.4));
+}
+
+export const CONSUMABLE_ITEMS = [
+  { id: 'health_potion', name: 'Health Potion', icon: '❤️', slot: 'consumable', consumableType: 'health', description: 'Restores 40% HP to one ally', price: 50 },
+  { id: 'mana_potion', name: 'Mana Potion', icon: '💙', slot: 'consumable', consumableType: 'mana', description: 'Restores 40% MP to one ally', price: 45 },
+  { id: 'stamina_potion', name: 'Stamina Potion', icon: '💛', slot: 'consumable', consumableType: 'stamina', description: 'Restores 40% SP to one ally', price: 40 },
+  { id: 'speed_potion', name: 'Speed Potion', icon: '⚡', slot: 'consumable', consumableType: 'speed', description: 'Boosts speed by 50% for 3 turns', price: 60 },
+  { id: 'cure_potion', name: 'Cure Potion', icon: '✨', slot: 'consumable', consumableType: 'cure', description: 'Removes all debuffs and DoTs from one ally', price: 55 },
+  { id: 'rezzy', name: 'Rezzy', icon: '🔱', slot: 'consumable', consumableType: 'resurrect', description: 'Resurrects a fallen ally with 30% HP', price: 200 },
+];
+
+export function createConsumable(templateId) {
+  const template = CONSUMABLE_ITEMS.find(c => c.id === templateId);
+  if (!template) return null;
+  return {
+    ...template,
+    id: `${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    templateId: template.id,
+    stats: {},
+    tier: 0,
+  };
 }
 
 export function generateShopInventory(playerLevel, classId) {
@@ -712,6 +745,23 @@ export function generateShopInventory(playerLevel, classId) {
       stats: scaledStats,
     };
     shopItems.push(item);
+  }
+
+  const potionTypes = ['health_potion', 'mana_potion', 'stamina_potion'];
+  for (const pId of potionTypes) {
+    const qty = 2 + Math.floor(Math.random() * 3);
+    for (let j = 0; j < qty; j++) {
+      shopItems.push(createConsumable(pId));
+    }
+  }
+  const extraConsumables = ['speed_potion', 'cure_potion', 'rezzy'];
+  for (const cId of extraConsumables) {
+    if (Math.random() < (cId === 'rezzy' ? 0.5 : 0.7)) {
+      const qty = cId === 'rezzy' ? 1 : (1 + Math.floor(Math.random() * 2));
+      for (let j = 0; j < qty; j++) {
+        shopItems.push(createConsumable(cId));
+      }
+    }
   }
   
   return shopItems;

@@ -27,7 +27,8 @@ export default function LootPopup() {
         </h3>
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           {pendingLoot.map(item => {
-            const tierDef = TIERS[item.tier] || TIERS[1];
+            const isConsumable = item.slot === 'consumable';
+            const tierDef = isConsumable ? { color: '#4ade80', name: 'Consumable' } : (TIERS[item.tier] || TIERS[1]);
             return (
               <div key={item.id} style={{
                 background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '10px 14px',
@@ -38,17 +39,27 @@ export default function LootPopup() {
                 <div style={{ flex: 1 }}>
                   <div style={{ color: tierDef.color, fontWeight: 'bold', fontSize: '0.9rem' }}>
                     {item.name}
-                    <span style={{ fontSize: '0.7rem', marginLeft: 6, opacity: 0.7 }}>
-                      [T{item.tier || 1}]
-                    </span>
+                    {!isConsumable && (
+                      <span style={{ fontSize: '0.7rem', marginLeft: 6, opacity: 0.7 }}>
+                        [T{item.tier || 1}]
+                      </span>
+                    )}
                   </div>
-                  <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 2 }}>
-                    {item.weaponType ? (WEAPON_TYPES[item.weaponType]?.name || item.slot) : item.armorType ? (ARMOR_TYPES[item.armorType]?.name + ' Armor') : item.slot.charAt(0).toUpperCase() + item.slot.slice(1)}
-                    {item.classReq && <span> | {item.classReq.join(', ')}</span>}
-                  </div>
-                  <div style={{ color: '#22c55e', fontSize: '0.75rem', marginTop: 2 }}>
-                    {Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
-                  </div>
+                  {isConsumable ? (
+                    <div style={{ color: '#86efac', fontSize: '0.75rem', marginTop: 2 }}>
+                      {item.description}
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 2 }}>
+                        {item.weaponType ? (WEAPON_TYPES[item.weaponType]?.name || item.slot) : item.armorType ? (ARMOR_TYPES[item.armorType]?.name + ' Armor') : item.slot.charAt(0).toUpperCase() + item.slot.slice(1)}
+                        {item.classReq && <span> | {item.classReq.join(', ')}</span>}
+                      </div>
+                      <div style={{ color: '#22c55e', fontSize: '0.75rem', marginTop: 2 }}>
+                        {Object.entries(item.stats).map(([k, v]) => `+${v} ${k}`).join(', ')}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             );

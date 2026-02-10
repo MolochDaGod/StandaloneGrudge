@@ -11,16 +11,16 @@ import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
 
 const bossMapSprites = {
-  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)' },
-  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)' },
-  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)' },
-  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)' },
-  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)' },
-  grand_shaman: { filter: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)', glow: 'rgba(0,200,100,0.5)' },
-  canyon_warlord: { filter: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)', glow: 'rgba(220,100,30,0.5)' },
-  frost_wyrm: { filter: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)', glow: 'rgba(100,180,255,0.5)' },
-  shadow_beast: { filter: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)', glow: 'rgba(100,50,200,0.6)' },
-  void_sentinel: { filter: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7) drop-shadow(0 0 6px rgba(180,80,255,0.7))', glow: 'rgba(180,80,255,0.6)' },
+  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', portal: '/backgrounds/boss_green.png' },
+  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)', portal: '/backgrounds/boss_autumn.png' },
+  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)', portal: '/backgrounds/boss_blue.png' },
+  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)', portal: '/backgrounds/boss_red.png' },
+  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)', portal: '/backgrounds/boss_blue.png' },
+  grand_shaman: { filter: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)', glow: 'rgba(0,200,100,0.5)', portal: '/backgrounds/boss_green.png' },
+  canyon_warlord: { filter: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)', glow: 'rgba(220,100,30,0.5)', portal: '/backgrounds/boss_red.png' },
+  frost_wyrm: { filter: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)', glow: 'rgba(100,180,255,0.5)', portal: '/backgrounds/boss_blue.png' },
+  shadow_beast: { filter: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)', glow: 'rgba(100,50,200,0.6)', portal: '/backgrounds/boss_blue.png' },
+  void_sentinel: { filter: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7) drop-shadow(0 0 6px rgba(180,80,255,0.7))', glow: 'rgba(180,80,255,0.6)', portal: '/backgrounds/boss_blue.png' },
 };
 
 const locationPositions = {
@@ -516,6 +516,19 @@ export default function WorldMap() {
               zIndex: 4,
               pointerEvents: 'none',
             }}>
+              {bossStyle.portal && (
+                <div style={{
+                  position: 'absolute', top: '50%', left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 100, height: 100, borderRadius: '50%',
+                  backgroundImage: `url(${bossStyle.portal})`,
+                  backgroundSize: 'cover', backgroundPosition: 'center',
+                  opacity: 0.6,
+                  filter: `drop-shadow(0 0 16px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
+                  animation: 'glow 2s infinite',
+                  zIndex: -1,
+                }} />
+              )}
               <div style={{
                 position: 'relative',
                 width: 80, height: 80,
@@ -1127,10 +1140,12 @@ export default function WorldMap() {
                         {shopInventory.map(item => {
                           const price = getItemPrice(item);
                           const canAfford = gold >= price;
-                          const tierDef = TIERS[item.tier] || TIERS[1];
+                          const isConsumable = item.slot === 'consumable';
+                          const tierDef = isConsumable ? { color: '#4ade80', name: 'Consumable' } : (TIERS[item.tier] || TIERS[1]);
                           return (
                             <div key={item.id} style={{
-                              background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.15)',
+                              background: isConsumable ? 'rgba(74,222,128,0.06)' : 'rgba(217,119,6,0.06)',
+                              border: `1px solid ${isConsumable ? 'rgba(74,222,128,0.15)' : 'rgba(217,119,6,0.15)'}`,
                               borderRadius: 8, padding: '8px 10px', marginBottom: 4,
                               transition: 'all 0.15s',
                             }}>
@@ -1138,18 +1153,28 @@ export default function WorldMap() {
                                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
                                   {item.icon} {item.name}
                                 </span>
-                                <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
-                                  T{item.tier} {tierDef.name}
-                                </span>
+                                {!isConsumable && (
+                                  <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                    T{item.tier} {tierDef.name}
+                                  </span>
+                                )}
                               </div>
-                              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
-                                {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
-                              </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
-                                {item.stats && Object.entries(item.stats).map(([k, v]) => (
-                                  <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                ))}
-                              </div>
+                              {isConsumable ? (
+                                <div style={{ fontSize: '0.58rem', color: '#86efac', marginBottom: 4 }}>
+                                  {item.description}
+                                </div>
+                              ) : (
+                                <>
+                                  <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
+                                    {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                    {item.stats && Object.entries(item.stats).map(([k, v]) => (
+                                      <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
                               <button
                                 onClick={() => { if (canAfford) buyItem(item.id); }}
                                 disabled={!canAfford}
@@ -1177,7 +1202,8 @@ export default function WorldMap() {
                         )}
                         {inventory.map(item => {
                           const price = getSellPrice(item);
-                          const tierDef = TIERS[item.tier] || TIERS[1];
+                          const isConsumable = item.slot === 'consumable';
+                          const tierDef = isConsumable ? { color: '#4ade80', name: 'Consumable' } : (TIERS[item.tier] || TIERS[1]);
                           return (
                             <div key={item.id} style={{
                               background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.15)',
@@ -1188,18 +1214,28 @@ export default function WorldMap() {
                                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
                                   {item.icon} {item.name}
                                 </span>
-                                <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
-                                  T{item.tier} {tierDef.name}
-                                </span>
+                                {!isConsumable && (
+                                  <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                    T{item.tier} {tierDef.name}
+                                  </span>
+                                )}
                               </div>
-                              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
-                                {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
-                              </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
-                                {item.stats && Object.entries(item.stats).map(([k, v]) => (
-                                  <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                ))}
-                              </div>
+                              {isConsumable ? (
+                                <div style={{ fontSize: '0.58rem', color: '#86efac', marginBottom: 4 }}>
+                                  {item.description}
+                                </div>
+                              ) : (
+                                <>
+                                  <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
+                                    {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                    {item.stats && Object.entries(item.stats).map(([k, v]) => (
+                                      <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
                               <button
                                 onClick={() => sellItem(item.id)}
                                 style={{

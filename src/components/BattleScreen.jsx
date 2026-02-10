@@ -173,6 +173,7 @@ export default function BattleScreen() {
     skipTurn, defendTurn, autoAttack,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
+    inventory, useConsumable,
   } = useGameStore();
 
   const [unitAnims, setUnitAnims] = useState({});
@@ -182,12 +183,14 @@ export default function BattleScreen() {
   const [introComplete, setIntroComplete] = useState(false);
   const [activeParticles, setActiveParticles] = useState([]);
   const [hitEffects, setHitEffects] = useState([]);
+  const [showItemsPanel, setShowItemsPanel] = useState(false);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
 
   const phase = battleState?.phase;
+  useEffect(() => { if (phase !== 'player_turn') setShowItemsPanel(false); }, [phase]);
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const bgImage = locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null);
@@ -788,7 +791,10 @@ export default function BattleScreen() {
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             textAlign: 'center', animation: 'slideUp 0.5s ease', zIndex: 100,
-            background: 'rgba(11,16,32,0.9)', padding: '24px 40px', borderRadius: 16,
+            backgroundImage: isDefeat ? 'linear-gradient(135deg, rgba(11,16,32,0.85), rgba(30,0,0,0.8)), url(/backgrounds/wc_gold.png)' : undefined,
+            background: isDefeat ? undefined : 'rgba(11,16,32,0.9)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            padding: '24px 40px', borderRadius: 16,
             border: `2px solid ${isVictory ? 'var(--gold)' : 'var(--danger)'}`,
             backdropFilter: 'blur(8px)',
           }}>
@@ -906,7 +912,76 @@ export default function BattleScreen() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(80,80,100,0.3)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
                 >Skip</button>
+                {(() => {
+                  const consumables = inventory.filter(i => i.slot === 'consumable');
+                  if (consumables.length === 0) return null;
+                  return (
+                    <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
+                      background: showItemsPanel ? 'rgba(74,222,128,0.3)' : 'rgba(0,0,0,0.3)',
+                      border: `2px solid ${showItemsPanel ? '#4ade80' : '#4a7a5a'}`, borderRadius: 4,
+                      padding: '4px 12px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
+                      fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                    onMouseEnter={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(74,222,128,0.15)'; }}
+                    onMouseLeave={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
+                    >🧪 Items ({consumables.length})</button>
+                  );
+                })()}
               </div>
+              {showItemsPanel && (() => {
+                const consumables = inventory.filter(i => i.slot === 'consumable');
+                const grouped = {};
+                consumables.forEach(c => {
+                  const key = c.templateId || c.consumableType;
+                  if (!grouped[key]) grouped[key] = { ...c, count: 0, items: [] };
+                  grouped[key].count++;
+                  grouped[key].items.push(c);
+                });
+                return (
+                  <div style={{
+                    background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(74,222,128,0.3)',
+                    borderRadius: 8, padding: 6, marginBottom: 4,
+                    display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center',
+                  }}>
+                    {Object.values(grouped).map(group => {
+                      const isRezzy = group.consumableType === 'resurrect';
+                      const deadAlly = isRezzy ? battleUnits.find(u => u.team === 'player' && !u.alive) : null;
+                      const disabled = isRezzy && !deadAlly;
+                      return (
+                      <button key={group.templateId || group.consumableType} onClick={() => {
+                        if (disabled) return;
+                        const item = group.items[0];
+                        if (isRezzy) {
+                          useConsumable(item.id, deadAlly.id);
+                          setShowItemsPanel(false);
+                        } else {
+                          const allyTarget = battleUnits.find(u => u.id === selectedTargetId && u.team === 'player' && u.alive);
+                          useConsumable(item.id, allyTarget ? allyTarget.id : currentUnitId);
+                          setShowItemsPanel(false);
+                        }
+                      }}
+                      title={disabled ? 'No fallen allies to revive' : group.description}
+                      style={{
+                        background: disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.1)',
+                        border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
+                        borderRadius: 6, padding: '4px 8px', cursor: disabled ? 'not-allowed' : 'pointer',
+                        color: disabled ? 'rgba(150,150,150,0.5)' : '#86efac',
+                        fontSize: '0.65rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+                        transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
+                      }}
+                      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
+                      onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
+                      >
+                        <span>{group.icon}</span>
+                        <span>{group.name}</span>
+                        <span style={{ color: '#4ade80', fontSize: '0.55rem' }}>x{group.count}</span>
+                      </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               <div style={{
                 textAlign: 'center', marginBottom: 4, color: '#a08b6d',
                 fontSize: '0.6rem', letterSpacing: 1

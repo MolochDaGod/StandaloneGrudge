@@ -757,6 +757,23 @@ export const locations = [
   }
 ];
 
+const ZONE_TERRAIN_MAP = {
+  verdant_plains: 'green', dark_forest: 'green', eldergrove: 'green', misty_marshes: 'green',
+  haunted_graveyard: 'purple', cursed_ruins: 'purple', shadow_forest: 'purple',
+  necropolis: 'purple', dreadmaw_canyon: 'purple', abyssal_depths: 'purple',
+  void_threshold: 'purple', void_throne: 'purple', corrupted_spire: 'purple',
+  crystal_caves: 'blue', sunken_temple: 'blue', frozen_tundra: 'blue',
+  frost_haven: 'blue', stormspire_peak: 'blue',
+  ironhold_mines: 'red', blood_canyon: 'red', molten_core: 'red',
+  obsidian_wastes: 'red', ruins_of_ashenmoor: 'red', demon_gate: 'red',
+  infernal_forge: 'red', dragon_peaks: 'red',
+  silver_citadel: 'gold', blight_hollow: 'green',
+};
+
+export function getZoneTerrain(locationId) {
+  return ZONE_TERRAIN_MAP[locationId] || 'green';
+}
+
 export function createEnemy(templateId, playerLevel) {
   const template = enemyTemplates[templateId];
   if (!template) return null;

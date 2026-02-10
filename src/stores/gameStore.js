@@ -1316,6 +1316,106 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  useConsumable: (consumableItemId, targetUnitId) => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const units = state.battleUnits.map(u => ({ ...u, buffs: [...(u.buffs || [])], dots: [...(u.dots || [])], cooldowns: { ...u.cooldowns } }));
+    const attacker = units.find(u => u.id === currentUnitId);
+    if (!attacker || !attacker.alive || attacker.stunned || attacker.team !== 'player') return;
+
+    const itemIdx = state.inventory.findIndex(i => i.id === consumableItemId);
+    if (itemIdx === -1) return;
+    const item = state.inventory[itemIdx];
+    if (item.slot !== 'consumable') return;
+
+    let log = [...state.battleLog];
+    let target = targetUnitId ? units.find(u => u.id === targetUnitId) : attacker;
+    if (item.consumableType !== 'resurrect' && target && target.team !== 'player') {
+      target = attacker;
+    }
+    let actionResult = { attackerId: currentUnitId, targetId: target?.id, type: 'consumable', consumableType: item.consumableType, abilityName: item.name };
+
+    switch (item.consumableType) {
+      case 'health': {
+        if (!target || !target.alive) return;
+        const healAmt = Math.floor(target.maxHealth * 0.4);
+        target.health = Math.min(target.maxHealth, target.health + healAmt);
+        actionResult.healAmt = healAmt;
+        log.push(`❤️ ${attacker.name} uses ${item.name} on ${target.name}! +${healAmt} HP`);
+        break;
+      }
+      case 'mana': {
+        if (!target || !target.alive) return;
+        const manaAmt = Math.floor(target.maxMana * 0.4);
+        target.mana = Math.min(target.maxMana, target.mana + manaAmt);
+        actionResult.healAmt = manaAmt;
+        log.push(`💙 ${attacker.name} uses ${item.name} on ${target.name}! +${manaAmt} MP`);
+        break;
+      }
+      case 'stamina': {
+        if (!target || !target.alive) return;
+        const staminaAmt = Math.floor(target.maxStamina * 0.4);
+        target.stamina = Math.min(target.maxStamina, target.stamina + staminaAmt);
+        actionResult.healAmt = staminaAmt;
+        log.push(`💛 ${attacker.name} uses ${item.name} on ${target.name}! +${staminaAmt} SP`);
+        break;
+      }
+      case 'speed': {
+        if (!target || !target.alive) return;
+        target.buffs.push({ stat: 'speed', multiplier: 1.5, duration: 3, source: 'Speed Potion' });
+        log.push(`⚡ ${attacker.name} uses ${item.name} on ${target.name}! Speed boosted!`);
+        break;
+      }
+      case 'cure': {
+        if (!target || !target.alive) return;
+        target.dots = [];
+        target.buffs = target.buffs.filter(b => !b.multiplier || b.multiplier >= 1);
+        target.stunned = false;
+        log.push(`✨ ${attacker.name} uses ${item.name} on ${target.name}! Status cleared!`);
+        break;
+      }
+      case 'resurrect': {
+        const deadAlly = units.find(u => u.team === 'player' && !u.alive && u.id === targetUnitId);
+        if (!deadAlly) {
+          const anyDead = units.find(u => u.team === 'player' && !u.alive);
+          if (!anyDead) return;
+          target = anyDead;
+          actionResult.targetId = anyDead.id;
+        } else {
+          target = deadAlly;
+        }
+        target.alive = true;
+        target.health = Math.floor(target.maxHealth * 0.3);
+        log.push(`🔱 ${attacker.name} uses ${item.name}! ${target.name} is revived with ${target.health} HP!`);
+        break;
+      }
+      default:
+        return;
+    }
+
+    if (attacker.id === 'player') {
+      set({
+        playerHealth: attacker.health,
+        playerMana: attacker.mana,
+        playerStamina: attacker.stamina,
+      });
+    }
+
+    const newInventory = [...state.inventory];
+    newInventory.splice(itemIdx, 1);
+
+    set({
+      inventory: newInventory,
+      battleUnits: units,
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating', turnCount: bs.turnCount + 1 },
+      lastAction: actionResult,
+    });
+  },
+
   processAIAction: () => {
     const state = get();
     if (!state.battleState || state.battleState.phase !== 'ai_turn') return;

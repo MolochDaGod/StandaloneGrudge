@@ -33,7 +33,8 @@ The application is a React 19 frontend utilizing Vite for development, with stat
 **Feature Specifications:**
 - **Character Creation:** A 4-step process to define a Warlord's name, race, class, and attributes.
 - **Hero Management:** The "War Council" page provides comprehensive hero management, including stats, abilities, skill trees, attribute allocation, and equipment.
-- **Loot System:** Enemies drop loot with tier based on zone difficulty and player level. `LootPopup` displays post-battle rewards with tier colors (T1-T8). Bosses get +1 tier bonus on drops, with 5% chance for +2 tier drops.
+- **Loot System:** Enemies drop loot with tier based on zone difficulty and player level. `LootPopup` displays post-battle rewards with tier colors (T1-T8). Bosses get +1 tier bonus on drops, with 5% chance for +2 tier drops. Consumable potions can also drop (15% chance regular, 60% boss).
+- **Consumable Items:** 6 types: Health Potion (40% HP), Mana Potion (40% MP), Stamina Potion (40% SP), Speed Potion (50% speed boost 3 turns), Cure Potion (removes debuffs/DoTs/stun), Rezzy (resurrect fallen ally at 30% HP). Fixed prices (40-60g potions, 200g Rezzy). Available in shop and as battle loot drops. Usable during battle via Items button on action bar. `CONSUMABLE_ITEMS` and `createConsumable()` in equipment.js, `useConsumable()` in gameStore.js. Consumables are consumed on use (removed from inventory).
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 - **Zone Conquer System:** Each zone has a 0-100% conquer rating that increases with victories. Higher conquer % reduces XP gains (up to -70% at 100%) but boosts auto-harvest output (up to +300%). Conquered zones (100%) display an idle worker sprite. Active heroes wander near the current zone on the world map. Conquer progress shown as SVG ring around zone nodes and progress bar in location popup.
 

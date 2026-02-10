@@ -3,6 +3,7 @@ import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
+import { getZoneTerrain } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
@@ -925,12 +926,22 @@ function HeroDetailPanel({ hero, onClose }) {
   );
 }
 
+const TERRAIN_BG = {
+  green: '/backgrounds/wc_green.png',
+  red: '/backgrounds/wc_red.png',
+  gold: '/backgrounds/wc_gold.png',
+  purple: '/backgrounds/wc_purple.png',
+  blue: '/backgrounds/wc_blue.png',
+};
+
 export default function AccountPage() {
-  const { setScreen, heroRoster, activeHeroIds, maxHeroSlots, level } = useGameStore();
+  const { setScreen, heroRoster, activeHeroIds, maxHeroSlots, level, currentLocation } = useGameStore();
   const [selectedHeroId, setSelectedHeroId] = useState(heroRoster[0]?.id || null);
 
   const selectedHero = heroRoster.find(h => h.id === selectedHeroId);
   const canRecruit = heroRoster.length < maxHeroSlots;
+  const terrain = getZoneTerrain(currentLocation);
+  const bgImage = TERRAIN_BG[terrain] || TERRAIN_BG.green;
 
   return (
     <div style={{
@@ -939,7 +950,8 @@ export default function AccountPage() {
       overflow: 'hidden',
     }}>
       <header style={{
-        background: 'linear-gradient(135deg, rgba(14,22,48,0.95), rgba(20,26,43,0.8))',
+        backgroundImage: `linear-gradient(135deg, rgba(14,22,48,0.7), rgba(20,26,43,0.6)), url(${bgImage})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
         borderBottom: '2px solid var(--border)', padding: '12px 20px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         flex: '0 0 auto',
