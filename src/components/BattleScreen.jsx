@@ -17,6 +17,11 @@ const locationBackgrounds = {
   shadow_citadel: '/backgrounds/shadow_citadel.png',
   demon_gate: '/backgrounds/demon_gate.png',
   void_throne: '/backgrounds/void_throne.png',
+  molten_core: '/backgrounds/volcanic_field.png',
+  obsidian_wastes: '/backgrounds/volcanic_field.png',
+  ruins_of_ashenmoor: '/backgrounds/volcanic_field.png',
+  infernal_forge: '/backgrounds/infernal_arena.png',
+  dreadmaw_canyon: '/backgrounds/infernal_arena.png',
 };
 
 function EffectSprite({ x, y, sprite }) {
