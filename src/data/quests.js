@@ -3,10 +3,6 @@ export const QUEST_TYPES = {
   WIN_FLAWLESS: 'win_flawless',
   BOSS_KILL: 'boss_kill',
   REACH_CONQUER: 'reach_conquer',
-  GOLD_EARNED: 'gold_earned',
-  WIN_STREAK: 'win_streak',
-  USE_ABILITY: 'use_ability',
-  COLLECT_LOOT: 'collect_loot',
 };
 
 export const ZONE_QUESTS = {
