@@ -1023,35 +1023,45 @@ export default function WorldMap() {
           const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const heroScale = Math.max(0.35, 1 / camZoom);
+          const mapSpriteScale = 1.2;
+          const spriteW = 100 * mapSpriteScale;
+          const spriteH = 100 * mapSpriteScale;
+          const footCrop = 0.82;
+          const visibleH = Math.round(spriteH * footCrop);
+          const heroCount = activeHeroes.length;
+          const containerW = heroCount * (spriteW + 4);
+          const containerH = visibleH + 20;
           return (
             <div style={{
               position: 'absolute',
               left: `${zonePos.x}%`,
               top: `${zonePos.y}%`,
+              width: containerW,
+              height: containerH,
               transform: `translate(-50%, -100%) scale(${heroScale})`,
               zIndex: 5,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
-              display: 'flex', flexDirection: 'row', alignItems: 'flex-end',
-              gap: '2px',
             }}>
               {activeHeroes.map((hero, idx) => {
                 const walk = heroWalking[hero.id];
                 const isWalking = walk?.moving;
                 const flipX = walk?.flipX;
-                const mapSpriteScale = 1.2;
-                const spriteW = 100 * mapSpriteScale;
-                const spriteH = 100 * mapSpriteScale;
-                const footCrop = 0.82;
-                const visibleH = Math.round(spriteH * footCrop);
+                const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
+                const wanderX = offset.x * 8;
+                const wanderY = offset.y * 6;
+                const baseX = idx * (spriteW + 4);
                 return (
                   <div key={hero.id} style={{
+                    position: 'absolute',
+                    left: baseX + wanderX,
+                    top: wanderY,
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
                   }}>
                     <div style={{
                       width: spriteW, height: visibleH,
                       overflow: 'hidden',
-                      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))',
                     }}>
                       <SpriteAnimation
                         spriteData={getPlayerSprite(hero.classId, hero.raceId)}
@@ -1062,8 +1072,8 @@ export default function WorldMap() {
                       />
                     </div>
                     <div style={{
-                      width: 36, height: 6, borderRadius: '50%', marginTop: -2,
-                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
+                      width: 36, height: 8, borderRadius: '50%', marginTop: -4,
+                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.7), transparent)',
                     }} />
                     <div style={{
                       textAlign: 'center',
@@ -1137,13 +1147,9 @@ export default function WorldMap() {
           const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
 
           const getHeroMapPos = (idx) => {
-            const hero = activeHeroes[idx];
-            const offset = hero ? (wanderOffsets[hero.id] || { x: 0, y: 0 }) : { x: 0, y: 0 };
-            const baseOffsetX = (idx - 1) * 0.8;
-            const baseOffsetY = -1.2 - idx * 0.4;
             return {
-              x: Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.4)),
-              y: Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.4)),
+              x: zonePos.x,
+              y: zonePos.y - 2,
             };
           };
 
