@@ -20,7 +20,7 @@ The application is a React 19 frontend developed with Vite, managing global stat
 - **Sprite System:** Employs a `SpriteAnimation` component for 100x100px sprite sheet animations, dynamically scaled for visual consistency. Special handling for Worge transformations.
 - **Game Systems:**
     - **Equipment:** An 8-tier equipment upgrade system across 7 slots (weapon, offhand, helmet, armor, feet, ring, relic), with numerous items and a paper-doll gear UI supporting drag-and-drop.
-    - **Progression:** Includes a training system, an auto-harvesting system for resources, and various status effects.
+    - **Progression:** Includes a training system, an auto-harvesting system for resources, and various status effects. The War Party panel on the world map combines hero management and harvest assignment into a single UI - heroes are shown with role-based coloring (Active/Harvesting/Idle) and harvest nodes are displayed below with assign/recall controls.
     - **Abilities:** Heroes have a customizable 5-slot ability loadout with slot restrictions based on weapon type and class. Each class has unique signature abilities (e.g., Warrior's Invincible, Mage's Mana Shield).
     - **Loot:** Enemies drop tier-based loot, with bosses having increased chances for higher-tier items and consumables.
     - **Consumables:** 6 types of potions (Health, Mana, Stamina, Speed, Cure, Rezzy) available via shop and drops, usable during battle.
