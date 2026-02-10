@@ -620,30 +620,19 @@ function HeroDetailPanel({ hero, onClose }) {
         {tab === 'equipment' && (() => {
           const eq = hero.equipment || {};
           const is2H = eq.weapon?.weaponType && WEAPON_TYPES[eq.weapon.weaponType]?.hand === '2h';
-          const SLOT_LABELS = { weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
-
           const selectedItem = selectedItemId ? inventory.find(i => i.id === selectedItemId) : null;
           const hoveredItem = hoveredItemId ? (inventory.find(i => i.id === hoveredItemId) || (() => { for (const s of Object.keys(eq)) { if (eq[s]?.id === hoveredItemId) return eq[s]; } return null; })()) : null;
           const slotCanReceiveSelected = (slot) => selectedItem && selectedItem.slot === slot && canClassEquip(hero.classId, selectedItem);
 
-          const SLOT_POSITIONS = {
-            helmet:  { top: 4, left: '50%', transform: 'translateX(-50%)' },
-            offhand: { top: 44, left: 6 },
-            armor:   { top: 42, left: '50%', transform: 'translateX(-50%)' },
-            weapon:  { top: 44, right: 6 },
-            feet:    { top: 82, left: '50%', transform: 'translateX(-50%)' },
-            ring:    { top: 120, left: 16 },
-            relic:   { top: 120, right: 16 },
-          };
+          const slotSize = 44;
 
-          const slotSize = 36;
+          const SLOT_LABELS = { weapon: 'Wpn', offhand: 'Off', helmet: 'Helm', armor: 'Body', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
 
           const renderEquipSlot = (slot, disabled = false) => {
             const equipped = eq[slot];
             const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
             const canReceive = !disabled && slotCanReceiveSelected(slot);
             const slotIcon = SLOT_ICON_MAP[slot];
-            const pos = SLOT_POSITIONS[slot];
             return (
               <div
                 key={slot}
@@ -675,29 +664,34 @@ function HeroDetailPanel({ hero, onClose }) {
                   } catch {}
                 }}
                 style={{
-                  position: 'absolute', ...pos,
                   width: slotSize, height: slotSize,
                   backgroundImage: `url(${UI_SLOTS.empty})`,
                   backgroundSize: `${slotSize}px ${slotSize}px`, imageRendering: 'pixelated',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: canReceive ? 'pointer' : (equipped ? 'pointer' : 'default'),
                   opacity: disabled ? 0.3 : 1,
-                  transition: 'box-shadow 0.15s',
+                  transition: 'box-shadow 0.15s, transform 0.1s',
                   boxShadow: canReceive ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
+                  position: 'relative',
                 }}
               >
                 {equipped ? (
-                  <span style={{ fontSize: '1.1rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
+                  <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
                 ) : (
                   <div style={{
-                    width: slotSize - 8, height: slotSize - 8,
+                    width: slotSize - 10, height: slotSize - 10,
                     backgroundImage: `url(${slotIcon})`,
-                    backgroundSize: `${slotSize - 8}px ${slotSize - 8}px`,
+                    backgroundSize: `${slotSize - 10}px ${slotSize - 10}px`,
                     imageRendering: 'pixelated',
-                    opacity: 0.3,
+                    opacity: 0.25,
                   }} />
                 )}
-                {tierDef && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: tierDef.color }} />}
+                {tierDef && <div style={{ position: 'absolute', bottom: 1, left: 3, right: 3, height: 2, background: tierDef.color, borderRadius: 1 }} />}
+                <div style={{
+                  position: 'absolute', bottom: -10, left: 0, right: 0,
+                  textAlign: 'center', fontSize: '0.4rem', color: equipped ? (tierDef?.color || '#a08b6d') : 'rgba(120,110,90,0.5)',
+                  fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5,
+                }}>{SLOT_LABELS[slot]}</div>
               </div>
             );
           };
@@ -728,46 +722,74 @@ function HeroDetailPanel({ hero, onClose }) {
             </div>
           );
 
+          const FULL_SLOT_LABELS = { weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
+          const cellSize = slotSize + 4;
+
           return (
             <div>
-              <div style={{ display: 'flex', gap: 0, marginBottom: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
+                <div style={{
+                  flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+                }}>
                   <div style={{
-                    width: 192, height: 172,
-                    backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
-                    backgroundSize: '192px 256px', imageRendering: 'pixelated',
-                    backgroundPosition: 'top center',
+                    display: 'grid',
+                    gridTemplateColumns: `${cellSize}px ${cellSize}px ${cellSize}px`,
+                    gridTemplateRows: `${cellSize}px ${cellSize}px ${cellSize}px ${cellSize}px`,
+                    gap: 2,
+                    background: 'rgba(30,22,14,0.7)',
+                    border: '2px solid rgba(139,115,85,0.4)',
+                    borderRadius: 8,
+                    padding: 6,
                     position: 'relative',
                   }}>
-                    <div style={{
-                      position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)',
-                      width: 60, height: 80,
-                      backgroundImage: `url(${UI_ICONS.mannequin})`,
-                      backgroundSize: '60px 80px', imageRendering: 'pixelated',
-                      opacity: 0.5,
-                    }} />
+                    <div style={{ gridColumn: '1', gridRow: '1' }} />
+                    <div style={{ gridColumn: '2', gridRow: '1', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('helmet')}
+                    </div>
+                    <div style={{ gridColumn: '3', gridRow: '1' }} />
 
-                    {renderEquipSlot('helmet')}
-                    {renderEquipSlot('offhand', is2H)}
-                    {renderEquipSlot('armor')}
-                    {renderEquipSlot('weapon')}
-                    {renderEquipSlot('feet')}
-                    {renderEquipSlot('ring')}
-                    {renderEquipSlot('relic')}
+                    <div style={{ gridColumn: '1', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('weapon')}
+                    </div>
+                    <div style={{ gridColumn: '2', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('armor')}
+                    </div>
+                    <div style={{ gridColumn: '3', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('offhand', is2H)}
+                    </div>
+
+                    <div style={{ gridColumn: '1', gridRow: '3' }} />
+                    <div style={{ gridColumn: '2', gridRow: '3', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('feet')}
+                    </div>
+                    <div style={{ gridColumn: '3', gridRow: '3' }} />
+
+                    <div style={{ gridColumn: '1', gridRow: '4', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('ring')}
+                    </div>
+                    <div style={{ gridColumn: '2', gridRow: '4' }} />
+                    <div style={{ gridColumn: '3', gridRow: '4', display: 'flex', justifyContent: 'center' }}>
+                      {renderEquipSlot('relic')}
+                    </div>
 
                     {is2H && (
-                      <div style={{ position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center', fontSize: '0.5rem', color: '#f59e0b' }}>
-                        2H — off-hand locked
+                      <div style={{
+                        position: 'absolute', bottom: -14, left: 0, right: 0,
+                        textAlign: 'center', fontSize: '0.45rem', color: '#f59e0b', fontWeight: 600,
+                      }}>
+                        2H equipped — off-hand locked
                       </div>
                     )}
                   </div>
 
                   <div style={{
-                    width: 192, minHeight: 68,
-                    backgroundImage: `url(${UI_PANELS.equipPanelBottom})`,
-                    backgroundSize: '192px 128px', imageRendering: 'pixelated',
-                    backgroundPosition: 'top center',
-                    padding: '8px 10px',
+                    marginTop: is2H ? 18 : 8,
+                    width: cellSize * 3 + 16,
+                    background: 'rgba(20,16,10,0.6)',
+                    border: '1px solid rgba(139,115,85,0.25)',
+                    borderRadius: 6,
+                    padding: '6px 8px',
+                    minHeight: 50,
                   }}>
                     {displayItem ? (
                       <div>
@@ -778,7 +800,7 @@ function HeroDetailPanel({ hero, onClose }) {
                           </span>
                         </div>
                         <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginBottom: 3 }}>
-                          T{displayItem.tier} {displayTier.name} · {SLOT_LABELS[displayItem.slot] || displayItem.slot}
+                          T{displayItem.tier} {displayTier.name} · {FULL_SLOT_LABELS[displayItem.slot] || displayItem.slot}
                           {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
@@ -788,8 +810,8 @@ function HeroDetailPanel({ hero, onClose }) {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 8 }}>
-                        Hover over an item to see details
+                      <div style={{ fontSize: '0.5rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 4 }}>
+                        Hover item for details
                       </div>
                     )}
                   </div>
@@ -797,26 +819,30 @@ function HeroDetailPanel({ hero, onClose }) {
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                   <div style={{
-                    height: 24,
-                    backgroundImage: `url(${UI_PANELS.invHeader})`,
-                    backgroundSize: '100% 24px', imageRendering: 'pixelated',
+                    height: 22,
+                    background: 'linear-gradient(180deg, rgba(50,40,25,0.8), rgba(30,22,14,0.6))',
+                    border: '1px solid rgba(139,115,85,0.3)',
+                    borderBottom: 'none',
+                    borderRadius: '6px 6px 0 0',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span className="font-cinzel" style={{ fontSize: '0.6rem', color: '#c8e6c8', letterSpacing: 2 }}>EQUIPMENT</span>
-                    <span style={{ fontSize: '0.5rem', color: '#8aaa8a', marginLeft: 4 }}>({inventory.length})</span>
+                    <span className="font-cinzel" style={{ fontSize: '0.55rem', color: '#d4a96a', letterSpacing: 2 }}>INVENTORY</span>
+                    <span style={{ fontSize: '0.5rem', color: '#8a7a5a', marginLeft: 4 }}>({inventory.length})</span>
                   </div>
 
                   <div style={{
                     flex: 1,
-                    backgroundImage: `url(${UI_PANELS.equipGrid})`,
-                    backgroundSize: '128px 256px', imageRendering: 'pixelated',
-                    backgroundRepeat: 'repeat',
-                    padding: 6,
+                    background: 'rgba(20,16,10,0.5)',
+                    border: '1px solid rgba(139,115,85,0.25)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 6px 6px',
+                    padding: 4,
                     minHeight: 200,
+                    maxHeight: 280,
                     overflowY: 'auto',
                   }}>
                     {inventory.length === 0 ? (
-                      <div style={{ color: '#6b5c47', fontSize: '0.65rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
+                      <div style={{ color: '#6b5c47', fontSize: '0.6rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
                         No items yet. Defeat enemies to find loot!
                       </div>
                     ) : (
