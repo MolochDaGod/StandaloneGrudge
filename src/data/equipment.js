@@ -1,4 +1,4 @@
-export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'armor', 'accessory'];
+export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'helmet', 'armor', 'feet', 'ring', 'relic'];
 
 export const TIERS = {
   1: { name: 'Tier 1', color: '#9ca3af', multiplier: 1.0 },
@@ -183,26 +183,46 @@ export const ARMOR_TYPES = {
   metal: { name: 'Metal', icon: '🛡️' },
 };
 
+export const HELMET_TYPES = {
+  plate: { name: 'Plate Helm', icon: '⛑️' },
+  leather: { name: 'Leather Hood', icon: '🪖' },
+  cloth: { name: 'Cloth Crown', icon: '👑' },
+};
+
+export const FEET_TYPES = {
+  plate: { name: 'Plate Greaves', icon: '🥾' },
+  leather: { name: 'Leather Boots', icon: '👢' },
+  cloth: { name: 'Cloth Sandals', icon: '🩴' },
+};
+
 export const CLASS_EQUIPMENT_RULES = {
   warrior: {
     weaponTypes: ['sword', 'axe', 'greatsword', 'greataxe', 'hammer2h'],
     offhandTypes: ['shield'],
     armorTypes: ['metal'],
+    helmetTypes: ['plate'],
+    feetTypes: ['plate'],
   },
   worge: {
     weaponTypes: ['hammer1h', 'staff', 'dagger'],
     offhandTypes: [],
     armorTypes: ['leather', 'cloth'],
+    helmetTypes: ['leather', 'cloth'],
+    feetTypes: ['leather'],
   },
   ranger: {
     weaponTypes: ['bow', 'crossbow', 'gun', 'dagger', 'lance'],
     offhandTypes: [],
     armorTypes: ['leather', 'metal'],
+    helmetTypes: ['leather', 'plate'],
+    feetTypes: ['leather', 'plate'],
   },
   mage: {
     weaponTypes: ['staff', 'tome'],
     offhandTypes: ['relic'],
     armorTypes: ['cloth'],
+    helmetTypes: ['cloth'],
+    feetTypes: ['cloth'],
   },
 };
 
@@ -338,44 +358,89 @@ const armorTemplates = [
   { id: 'skullveil_robe', name: 'Skullveil Robe', slot: 'armor', armorType: 'cloth', icon: '👘', classReq: ['mage', 'worge'], stats: { defense: 3, mana: 30, resistance: 4, magicDamage: 3 } },
 ];
 
-const accessoryTemplates = [
-  { id: 'bloodrage_ring', name: 'Bloodrage Ring', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { physicalDamage: 3, criticalChance: 3 } },
-  { id: 'wraithfury_band', name: 'Wraithfury Band', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { physicalDamage: 3, attackSpeed: 4 } },
-  { id: 'emberflame_signet', name: 'Emberflame Signet', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { magicDamage: 3, criticalDamage: 6 } },
-  { id: 'ironwill_ring', name: 'Ironwill Ring', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { physicalDamage: 2, defense: 4 } },
-  { id: 'duskstrike_ring', name: 'Duskstrike Ring', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { criticalChance: 4, criticalDamage: 8 } },
-  { id: 'skullcrush_band', name: 'Skullcrush Band', slot: 'accessory', icon: '💍', relicType: 'ring', stats: { physicalDamage: 3, armorPenetration: 3 } },
+const helmetTemplates = [
+  { id: 'bloodforged_helm', name: 'Bloodforged Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 4, health: 20, damageReduction: 1 } },
+  { id: 'wraithsteel_helm', name: 'Wraithsteel Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 5, health: 15, resistance: 3 } },
+  { id: 'emberguard_helm', name: 'Emberguard Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 5, health: 25, block: 2 } },
+  { id: 'ironbound_helm', name: 'Ironbound Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 6, health: 30 } },
+  { id: 'duskthorn_helm', name: 'Duskthorn Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 4, health: 15, criticalChance: 2, evasion: 2 } },
+  { id: 'skullforge_helm', name: 'Skullforge Helm', slot: 'helmet', helmetType: 'plate', icon: '⛑️', classReq: ['warrior', 'ranger'], stats: { defense: 5, health: 20, armorPenetration: 2 } },
 
-  { id: 'bloodward_amulet', name: 'Bloodward Amulet', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { defense: 4, health: 25 } },
-  { id: 'wraithshield_pendant', name: 'Wraithshield Pendant', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { resistance: 5, evasion: 3 } },
-  { id: 'emberbark_talisman', name: 'Emberbark Talisman', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { defense: 3, damageReduction: 3 } },
-  { id: 'ironheart_medallion', name: 'Ironheart Medallion', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { health: 30, block: 4 } },
-  { id: 'duskguard_charm', name: 'Duskguard Charm', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { defense: 3, resistance: 4 } },
-  { id: 'skullfort_talisman', name: 'Skullfort Talisman', slot: 'accessory', icon: '📿', relicType: 'amulet', stats: { damageReduction: 3, health: 20 } },
+  { id: 'bloodhide_hood', name: 'Bloodhide Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 3, evasion: 3, criticalChance: 2 } },
+  { id: 'wraithskin_hood', name: 'Wraithskin Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 3, evasion: 4, resistance: 2 } },
+  { id: 'emberscale_hood', name: 'Emberscale Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 3, evasion: 3, attackSpeed: 3 } },
+  { id: 'ironweave_hood', name: 'Ironweave Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 4, evasion: 2, health: 15 } },
+  { id: 'duskcloak_hood', name: 'Duskcloak Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 2, evasion: 5, criticalChance: 3 } },
+  { id: 'skullthorn_hood', name: 'Skullthorn Hood', slot: 'helmet', helmetType: 'leather', icon: '🪖', classReq: ['worge', 'ranger'], stats: { defense: 3, evasion: 3, physicalDamage: 2 } },
 
-  { id: 'bloodmoon_crystal', name: 'Bloodmoon Crystal', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { magicDamage: 4, mana: 25 } },
-  { id: 'wraithsoul_gem', name: 'Wraithsoul Gem', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { magicDamage: 3, manaRegen: 2 } },
-  { id: 'embervoid_prism', name: 'Embervoid Prism', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { magicDamage: 3, cooldownReduction: 4 } },
-  { id: 'ironsoul_shard', name: 'Ironsoul Shard', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { mana: 30, resistance: 4 } },
-  { id: 'duskweaver_stone', name: 'Duskweaver Stone', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { magicDamage: 4, mana: 20 } },
-  { id: 'void_crystal', name: 'Void Crystal', slot: 'accessory', icon: '💎', relicType: 'crystal', stats: { magicDamage: 4, drainHealth: 3 } },
-
-  { id: 'lifesblood_totem', name: 'Lifesblood Totem', slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { healthRegen: 3, health: 30 } },
-  { id: 'wraithbalm_idol', name: 'Wraithbalm Idol', slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { healthRegen: 2, manaRegen: 2 } },
-  { id: 'emberheart_totem', name: 'Emberheart Totem', slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { health: 25, resistance: 4 } },
-  { id: 'ironpulse_stone', name: 'Ironpulse Stone', slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { healthRegen: 3, defense: 3 } },
-  { id: 'duskleaf_charm', name: 'Duskleaf Charm', slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { healthRegen: 2, evasion: 4 } },
-  { id: 'natures_heart', name: "Nature's Heart", slot: 'accessory', icon: '🪬', relicType: 'totem', stats: { health: 25, manaRegen: 2 } },
-
-  { id: 'swiftblade_trinket', name: 'Swiftblade Trinket', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { attackSpeed: 5, criticalChance: 3 } },
-  { id: 'shadow_step_ring', name: 'Shadow Step Ring', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { evasion: 5, attackSpeed: 4 } },
-  { id: 'ember_quickness', name: 'Ember Quickness Charm', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { attackSpeed: 5, cooldownReduction: 3 } },
-  { id: 'ironside_buckle', name: 'Ironside Buckle', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { block: 5, defense: 3 } },
-  { id: 'duskrunner_boots', name: 'Duskrunner Boots', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { evasion: 4, attackSpeed: 5 } },
-  { id: 'grudgebearer_seal', name: 'Grudgebearer Seal', slot: 'accessory', icon: '⚡', relicType: 'trinket', stats: { physicalDamage: 2, magicDamage: 2, criticalChance: 2, criticalDamage: 4 } },
+  { id: 'bloodweave_crown', name: 'Bloodweave Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 20, resistance: 3, magicDamage: 2 } },
+  { id: 'wraithshroud_crown', name: 'Wraithshroud Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 25, resistance: 4, manaRegen: 1 } },
+  { id: 'emberwoven_crown', name: 'Emberwoven Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 20, magicDamage: 3, criticalChance: 2 } },
+  { id: 'ironsoul_crown', name: 'Ironsoul Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 20, defense: 3, resistance: 4 } },
+  { id: 'duskthread_crown', name: 'Duskthread Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 20, magicDamage: 2, cooldownReduction: 3 } },
+  { id: 'skullveil_crown', name: 'Skullveil Crown', slot: 'helmet', helmetType: 'cloth', icon: '👑', classReq: ['mage', 'worge'], stats: { mana: 25, magicDamage: 3, drainHealth: 1 } },
 ];
 
-export const allEquipmentTemplates = [...weaponTemplates, ...offhandTemplates, ...armorTemplates, ...accessoryTemplates];
+const feetTemplates = [
+  { id: 'bloodforged_greaves', name: 'Bloodforged Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 3, health: 15, block: 2 } },
+  { id: 'wraithsteel_greaves', name: 'Wraithsteel Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 4, health: 10, resistance: 2 } },
+  { id: 'emberguard_greaves', name: 'Emberguard Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 4, health: 20, damageReduction: 1 } },
+  { id: 'ironbound_greaves', name: 'Ironbound Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 5, health: 20, block: 3 } },
+  { id: 'duskthorn_greaves', name: 'Duskthorn Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 3, attackSpeed: 3, evasion: 2 } },
+  { id: 'skullforge_greaves', name: 'Skullforge Greaves', slot: 'feet', feetType: 'plate', icon: '🥾', classReq: ['warrior', 'ranger'], stats: { defense: 4, health: 15, armorPenetration: 2 } },
+
+  { id: 'bloodhide_boots', name: 'Bloodhide Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { evasion: 4, attackSpeed: 3 } },
+  { id: 'wraithskin_boots', name: 'Wraithskin Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { evasion: 5, resistance: 2 } },
+  { id: 'emberscale_boots', name: 'Emberscale Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { evasion: 3, attackSpeed: 4, criticalChance: 2 } },
+  { id: 'ironweave_boots', name: 'Ironweave Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { defense: 3, evasion: 3, health: 10 } },
+  { id: 'duskcloak_boots', name: 'Duskcloak Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { evasion: 6, attackSpeed: 4 } },
+  { id: 'skullthorn_boots', name: 'Skullthorn Boots', slot: 'feet', feetType: 'leather', icon: '👢', classReq: ['worge', 'ranger'], stats: { evasion: 3, criticalChance: 3, physicalDamage: 1 } },
+
+  { id: 'bloodweave_sandals', name: 'Bloodweave Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 15, resistance: 2, manaRegen: 1 } },
+  { id: 'wraithshroud_sandals', name: 'Wraithshroud Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 20, resistance: 3 } },
+  { id: 'emberwoven_sandals', name: 'Emberwoven Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 15, magicDamage: 2, cooldownReduction: 2 } },
+  { id: 'ironsoul_sandals', name: 'Ironsoul Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 15, defense: 2, resistance: 3 } },
+  { id: 'duskthread_sandals', name: 'Duskthread Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 15, evasion: 3, attackSpeed: 2 } },
+  { id: 'skullveil_sandals', name: 'Skullveil Sandals', slot: 'feet', feetType: 'cloth', icon: '🩴', classReq: ['mage', 'worge'], stats: { mana: 20, magicDamage: 2, drainHealth: 1 } },
+];
+
+const ringTemplates = [
+  { id: 'bloodrage_ring', name: 'Bloodrage Ring', slot: 'ring', icon: '💍', stats: { physicalDamage: 3, criticalChance: 3 } },
+  { id: 'wraithfury_band', name: 'Wraithfury Band', slot: 'ring', icon: '💍', stats: { physicalDamage: 3, attackSpeed: 4 } },
+  { id: 'emberflame_signet', name: 'Emberflame Signet', slot: 'ring', icon: '💍', stats: { magicDamage: 3, criticalDamage: 6 } },
+  { id: 'ironwill_ring', name: 'Ironwill Ring', slot: 'ring', icon: '💍', stats: { physicalDamage: 2, defense: 4 } },
+  { id: 'duskstrike_ring', name: 'Duskstrike Ring', slot: 'ring', icon: '💍', stats: { criticalChance: 4, criticalDamage: 8 } },
+  { id: 'skullcrush_band', name: 'Skullcrush Band', slot: 'ring', icon: '💍', stats: { physicalDamage: 3, armorPenetration: 3 } },
+  { id: 'swiftblade_trinket', name: 'Swiftblade Trinket', slot: 'ring', icon: '⚡', stats: { attackSpeed: 5, criticalChance: 3 } },
+  { id: 'shadow_step_ring', name: 'Shadow Step Ring', slot: 'ring', icon: '⚡', stats: { evasion: 5, attackSpeed: 4 } },
+  { id: 'ember_quickness', name: 'Ember Quickness Charm', slot: 'ring', icon: '⚡', stats: { attackSpeed: 5, cooldownReduction: 3 } },
+  { id: 'ironside_buckle', name: 'Ironside Buckle', slot: 'ring', icon: '⚡', stats: { block: 5, defense: 3 } },
+  { id: 'duskrunner_boots', name: 'Duskrunner Boots', slot: 'ring', icon: '⚡', stats: { evasion: 4, attackSpeed: 5 } },
+  { id: 'grudgebearer_seal', name: 'Grudgebearer Seal', slot: 'ring', icon: '⚡', stats: { physicalDamage: 2, magicDamage: 2, criticalChance: 2, criticalDamage: 4 } },
+];
+
+const relicTemplates = [
+  { id: 'bloodward_amulet', name: 'Bloodward Amulet', slot: 'relic', icon: '📿', stats: { defense: 4, health: 25 } },
+  { id: 'wraithshield_pendant', name: 'Wraithshield Pendant', slot: 'relic', icon: '📿', stats: { resistance: 5, evasion: 3 } },
+  { id: 'emberbark_talisman', name: 'Emberbark Talisman', slot: 'relic', icon: '📿', stats: { defense: 3, damageReduction: 3 } },
+  { id: 'ironheart_medallion', name: 'Ironheart Medallion', slot: 'relic', icon: '📿', stats: { health: 30, block: 4 } },
+  { id: 'duskguard_charm', name: 'Duskguard Charm', slot: 'relic', icon: '📿', stats: { defense: 3, resistance: 4 } },
+  { id: 'skullfort_talisman', name: 'Skullfort Talisman', slot: 'relic', icon: '📿', stats: { damageReduction: 3, health: 20 } },
+  { id: 'bloodmoon_crystal', name: 'Bloodmoon Crystal', slot: 'relic', icon: '💎', stats: { magicDamage: 4, mana: 25 } },
+  { id: 'wraithsoul_gem', name: 'Wraithsoul Gem', slot: 'relic', icon: '💎', stats: { magicDamage: 3, manaRegen: 2 } },
+  { id: 'embervoid_prism', name: 'Embervoid Prism', slot: 'relic', icon: '💎', stats: { magicDamage: 3, cooldownReduction: 4 } },
+  { id: 'ironsoul_shard', name: 'Ironsoul Shard', slot: 'relic', icon: '💎', stats: { mana: 30, resistance: 4 } },
+  { id: 'duskweaver_stone', name: 'Duskweaver Stone', slot: 'relic', icon: '💎', stats: { magicDamage: 4, mana: 20 } },
+  { id: 'void_crystal', name: 'Void Crystal', slot: 'relic', icon: '💎', stats: { magicDamage: 4, drainHealth: 3 } },
+  { id: 'lifesblood_totem', name: 'Lifesblood Totem', slot: 'relic', icon: '🪬', stats: { healthRegen: 3, health: 30 } },
+  { id: 'wraithbalm_idol', name: 'Wraithbalm Idol', slot: 'relic', icon: '🪬', stats: { healthRegen: 2, manaRegen: 2 } },
+  { id: 'emberheart_totem', name: 'Emberheart Totem', slot: 'relic', icon: '🪬', stats: { health: 25, resistance: 4 } },
+  { id: 'ironpulse_stone', name: 'Ironpulse Stone', slot: 'relic', icon: '🪬', stats: { healthRegen: 3, defense: 3 } },
+  { id: 'duskleaf_charm', name: 'Duskleaf Charm', slot: 'relic', icon: '🪬', stats: { healthRegen: 2, evasion: 4 } },
+  { id: 'natures_heart', name: "Nature's Heart", slot: 'relic', icon: '🪬', stats: { health: 25, manaRegen: 2 } },
+];
+
+export const allEquipmentTemplates = [...weaponTemplates, ...offhandTemplates, ...armorTemplates, ...helmetTemplates, ...feetTemplates, ...ringTemplates, ...relicTemplates];
 
 export function canClassEquip(classId, item) {
   if (!classId || !item) return false;
@@ -390,6 +455,15 @@ export function canClassEquip(classId, item) {
   }
   if (item.slot === 'armor' && item.armorType) {
     return rules.armorTypes.includes(item.armorType);
+  }
+  if (item.slot === 'helmet' && item.helmetType) {
+    return rules.helmetTypes ? rules.helmetTypes.includes(item.helmetType) : true;
+  }
+  if (item.slot === 'feet' && item.feetType) {
+    return rules.feetTypes ? rules.feetTypes.includes(item.feetType) : true;
+  }
+  if (item.slot === 'ring' || item.slot === 'relic') {
+    return true;
   }
   return true;
 }
@@ -434,6 +508,8 @@ export function generateLoot(enemyTemplateId, playerLevel, isBoss = false) {
       icon: template.icon,
       weaponType: template.weaponType || null,
       armorType: template.armorType || null,
+      helmetType: template.helmetType || null,
+      feetType: template.feetType || null,
       relicType: template.relicType || null,
       tier,
       classReq: template.classReq || null,
@@ -475,6 +551,8 @@ function createStarterItem(template) {
     icon: template.icon,
     weaponType: template.weaponType || null,
     armorType: template.armorType || null,
+    helmetType: template.helmetType || null,
+    feetType: template.feetType || null,
     relicType: template.relicType || null,
     tier: 1,
     classReq: template.classReq || null,
@@ -519,8 +597,33 @@ export function getStartingEquipment(classId) {
     if (tmpl) equipment.armor = createStarterItem(tmpl);
   }
 
-  const accessoryTmpl = accessoryTemplates.find(t => t.id === 'bloodrage_ring');
-  if (accessoryTmpl) equipment.accessory = createStarterItem(accessoryTmpl);
+  const classHelmets = {
+    warrior: 'bloodforged_helm',
+    worge: 'bloodhide_hood',
+    mage: 'bloodweave_crown',
+    ranger: 'bloodhide_hood',
+  };
+  const classBoots = {
+    warrior: 'bloodforged_greaves',
+    worge: 'bloodhide_boots',
+    mage: 'bloodweave_sandals',
+    ranger: 'bloodhide_boots',
+  };
+
+  const helmetId = classHelmets[classId];
+  if (helmetId) {
+    const tmpl = helmetTemplates.find(t => t.id === helmetId);
+    if (tmpl) equipment.helmet = createStarterItem(tmpl);
+  }
+
+  const bootsId = classBoots[classId];
+  if (bootsId) {
+    const tmpl = feetTemplates.find(t => t.id === bootsId);
+    if (tmpl) equipment.feet = createStarterItem(tmpl);
+  }
+
+  const ringTmpl = ringTemplates.find(t => t.id === 'bloodrage_ring');
+  if (ringTmpl) equipment.ring = createStarterItem(ringTmpl);
 
   return equipment;
 }
@@ -554,7 +657,7 @@ export function getItemPrice(item) {
     });
   }
   
-  const slotMult = { weapon: 1.2, offhand: 1.0, armor: 1.1, accessory: 0.9 };
+  const slotMult = { weapon: 1.2, offhand: 1.0, helmet: 0.95, armor: 1.1, feet: 0.9, ring: 0.85, relic: 0.85 };
   const mult = slotMult[item.slot] || 1.0;
   
   const tierPremium = { 1: 1, 2: 1.5, 3: 2.2, 4: 3.2, 5: 4.5, 6: 6, 7: 8, 8: 11 };
@@ -601,6 +704,8 @@ export function generateShopInventory(playerLevel, classId) {
       icon: template.icon,
       weaponType: template.weaponType || null,
       armorType: template.armorType || null,
+      helmetType: template.helmetType || null,
+      feetType: template.feetType || null,
       relicType: template.relicType || null,
       tier,
       classReq: template.classReq || null,

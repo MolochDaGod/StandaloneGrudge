@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory, WEAPON_TYPES } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
@@ -1757,12 +1757,27 @@ const useGameStore = create(persist((set, get) => ({
     if (!hero) return;
     if (!canClassEquip(hero.classId, item)) return;
 
-    const currentEquip = (hero.equipment || {})[item.slot];
+    const eq = hero.equipment || {};
+    if (item.slot === 'offhand' && eq.weapon?.weaponType) {
+      const wt = WEAPON_TYPES[eq.weapon.weaponType];
+      if (wt?.hand === '2h') return;
+    }
+
+    const currentEquip = eq[item.slot];
     let newInventory = state.inventory.filter(i => i.id !== item.id);
     if (currentEquip) newInventory.push(currentEquip);
 
+    let newEquipment = { ...eq, [item.slot]: item };
+    if (item.slot === 'weapon' && item.weaponType) {
+      const wt = WEAPON_TYPES[item.weaponType];
+      if (wt?.hand === '2h' && eq.offhand) {
+        newInventory.push(eq.offhand);
+        delete newEquipment.offhand;
+      }
+    }
+
     const updatedRoster = state.heroRoster.map(h =>
-      h.id === heroId ? { ...h, equipment: { ...(h.equipment || {}), [item.slot]: item } } : h
+      h.id === heroId ? { ...h, equipment: newEquipment } : h
     );
     set({ heroRoster: updatedRoster, inventory: newInventory });
   },
@@ -2178,7 +2193,7 @@ const useGameStore = create(persist((set, get) => ({
   },
 }), {
   name: 'grudge-warlords-save',
-  version: 2,
+  version: 3,
   migrate: (persistedState, version) => {
     if (version < 2) {
       const rarityToTier = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
@@ -2205,6 +2220,42 @@ const useGameStore = create(persist((set, get) => ({
       }
       if (persistedState.pendingLoot) {
         persistedState.pendingLoot = persistedState.pendingLoot.map(migrateItem);
+      }
+    }
+    if (version < 3) {
+      const migrateAccessorySlot = (item) => {
+        if (!item || item.slot !== 'accessory') return item;
+        const rt = item.relicType;
+        if (rt === 'amulet' || rt === 'crystal' || rt === 'totem') {
+          return { ...item, slot: 'relic' };
+        }
+        return { ...item, slot: 'ring' };
+      };
+      if (persistedState.heroRoster) {
+        persistedState.heroRoster = persistedState.heroRoster.map(hero => {
+          if (hero.equipment) {
+            const newEquip = {};
+            Object.entries(hero.equipment).forEach(([slot, item]) => {
+              if (slot === 'accessory') {
+                const migrated = migrateAccessorySlot(item);
+                newEquip[migrated.slot] = migrated;
+              } else {
+                newEquip[slot] = item;
+              }
+            });
+            hero = { ...hero, equipment: newEquip };
+          }
+          return hero;
+        });
+      }
+      if (persistedState.inventory) {
+        persistedState.inventory = persistedState.inventory.map(migrateAccessorySlot);
+      }
+      if (persistedState.pendingLoot) {
+        persistedState.pendingLoot = persistedState.pendingLoot.map(migrateAccessorySlot);
+      }
+      if (persistedState.shopInventory) {
+        persistedState.shopInventory = persistedState.shopInventory.map(migrateAccessorySlot);
       }
     }
     return persistedState;

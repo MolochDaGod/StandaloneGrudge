@@ -59,8 +59,11 @@ export const UI_ICONS = {
 export const SLOT_ICON_MAP = {
   weapon: UI_ICONS.eqWeapon,
   offhand: UI_ICONS.eqShield,
+  helmet: UI_ICONS.buckler,
   armor: UI_ICONS.eqArmor,
-  accessory: UI_ICONS.eqRing,
+  feet: UI_ICONS.leaf,
+  ring: UI_ICONS.eqRing,
+  relic: UI_ICONS.diamond,
 };
 
 export const WEAPON_TYPE_ICON_MAP = {
