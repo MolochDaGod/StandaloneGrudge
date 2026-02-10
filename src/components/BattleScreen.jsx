@@ -69,7 +69,7 @@ const critEffects = {
   },
 };
 
-function EffectSprite({ x, y, sprite }) {
+function EffectSprite({ x, y, sprite, filter: filterProp }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
   const displaySize = 120;
@@ -115,6 +115,7 @@ function EffectSprite({ x, y, sprite }) {
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
+        ...(filterProp ? { filter: filterProp } : {}),
       }} />
     </div>
   );
@@ -555,15 +556,15 @@ function getHitEffectByColor(color) {
   return effectSprites.hitEffect1;
 }
 
-function getHitEffect(unit, abilityName, isRanged) {
+function getHitEffect(unit, abilityName, isRanged, abilityId) {
   const classId = unit.classId || '';
-  const fx = getAbilityEffect(classId, abilityName || '');
-  if (fx.effect) return effectSprites[fx.effect];
+  const fx = getAbilityEffect(classId, abilityName || '', abilityId);
+  if (fx.effect) return { sprite: effectSprites[fx.effect], filter: fx.effectFilter || null, postHeal: fx.postHealEffect ? effectSprites[fx.postHealEffect] : null };
   if (isRanged) {
     const color = getProjectileColor(unit, abilityName);
-    return getHitEffectByColor(color);
+    return { sprite: getHitEffectByColor(color), filter: null, postHeal: null };
   }
-  return effectSprites.hitEffect1;
+  return { sprite: effectSprites.hitEffect1, filter: null, postHeal: null };
 }
 
 export default function BattleScreen() {
@@ -593,6 +594,7 @@ export default function BattleScreen() {
   const [weaponContactFx, setWeaponContactFx] = useState([]);
   const [fireballFx, setFireballFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
+  const [healTargetMode, setHealTargetMode] = useState(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
@@ -600,7 +602,7 @@ export default function BattleScreen() {
 
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
-  useEffect(() => { if (phase !== 'player_turn') setShowItemsPanel(false); }, [phase]);
+  useEffect(() => { if (phase !== 'player_turn') { setShowItemsPanel(false); setHealTargetMode(null); } }, [phase]);
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const isArena = battleState?.isArena;
@@ -808,10 +810,10 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             addParticle('hit', target.position.x, target.position.y, '#94a3b8');
-            const hfx = getHitEffect(attacker, abilityName, false);
-            if (hfx && target.position) {
+            const hfxR = getHitEffect(attacker, abilityName, false);
+            if (hfxR.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR.sprite, filter: hfxR.filter }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
             }
             if (isCrit) { playCrit(); } else { playHurt(); }
@@ -873,11 +875,11 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             addParticle('hit', target.position.x, target.position.y, '#f97316');
-            const hfx = getHitEffect(attacker, abilityName, true);
-            if (hfx && target.position) {
+            const hfxR2 = getHitEffect(attacker, abilityName, true);
+            if (hfxR2.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-              const effectDur = (hfx.frames || 36) * 30 + 100;
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR2.sprite, filter: hfxR2.filter }]);
+              const effectDur = (hfxR2.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
             }
             if (isCrit) {
@@ -931,11 +933,11 @@ export default function BattleScreen() {
               if (!evaded) {
                 setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
                 addParticle('hit', target.position.x, target.position.y, '#ef4444');
-                const hfx = getHitEffect(attacker, abilityName, true);
-                if (hfx && target.position) {
+                const hfxR3 = getHitEffect(attacker, abilityName, true);
+                if (hfxR3.sprite && target.position) {
                   const hid = Date.now() + Math.random();
-                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-                  const effectDur = (hfx.frames || 36) * 30 + 100;
+                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR3.sprite, filter: hfxR3.filter }]);
+                  const effectDur = (hfxR3.sprite.frames || 36) * 30 + 100;
                   setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
                 }
                 if (isCrit) {
@@ -983,11 +985,11 @@ export default function BattleScreen() {
             if (!evaded) {
               setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
               if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
-              const hfx = getHitEffect(attacker, abilityName, false);
-              if (hfx && target.position) {
+              const hfxR4 = getHitEffect(attacker, abilityName, false);
+              if (hfxR4.sprite && target.position) {
                 const hid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-                const effectDur = (hfx.frames || 36) * 30 + 100;
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR4.sprite, filter: hfxR4.filter }]);
+                const effectDur = (hfxR4.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
               }
               if (isCrit) {
@@ -1022,11 +1024,11 @@ export default function BattleScreen() {
             if (!evaded) {
               setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
               if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
-              const hfx = getHitEffect(attacker, abilityName, false);
-              if (hfx && target.position) {
+              const hfxR5 = getHitEffect(attacker, abilityName, false);
+              if (hfxR5.sprite && target.position) {
                 const hid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-                const effectDur = (hfx.frames || 36) * 30 + 100;
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR5.sprite, filter: hfxR5.filter }]);
+                const effectDur = (hfxR5.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
               }
               if (isCrit) {
@@ -1056,34 +1058,48 @@ export default function BattleScreen() {
       }
     } else {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
-      const hfx = getHitEffect(attacker, abilityName, false);
+      const hfxR6 = getHitEffect(attacker, abilityName, false);
       if (healAmt && target) {
         showHealFloat(target, healAmt);
         if (target.position) addParticle('heal', target.position.x, target.position.y);
-        if (hfx && target.position) {
+        if (hfxR6.sprite && target.position) {
           const hid = Date.now() + Math.random();
-          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfx }]);
-          setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+          setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+          if (hfxR6.postHeal && target.position) {
+            setTimeout(() => {
+              const phid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: phid, x: target.position.x, y: target.position.y, sprite: hfxR6.postHeal }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
+            }, 400);
+          }
         }
         playHeal();
       } else if (abilityType === 'heal_over_time') {
         playHeal();
         if (attacker.position) {
           addParticle('heal', attacker.position.x, attacker.position.y);
-          if (hfx) {
+          if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfx }]);
-            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+            if (hfxR6.postHeal && attacker.position) {
+              setTimeout(() => {
+                const phid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: phid, x: attacker.position.x, y: attacker.position.y, sprite: hfxR6.postHeal }]);
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
+              }, 400);
+            }
           }
         }
       } else {
         playBuff();
         if (attacker.position) {
           addParticle('cast', attacker.position.x, attacker.position.y, '#6ee7b7');
-          if (hfx) {
+          if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfx }]);
-            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfx.frames || 16) * 35 + 100);
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
           }
         }
       }
@@ -1113,15 +1129,35 @@ export default function BattleScreen() {
 
   const handleAbility = useCallback((abilityId) => {
     if (phase !== 'player_turn') return;
+    const allAbilities = currentUnit?.abilities || (currentUnit?.classId ? classDefinitions[currentUnit.classId]?.abilities : []) || [];
+    const ability = allAbilities.find(a => a.id === abilityId);
+    if (ability && ability.type === 'heal' && playerTeam.filter(u => u.alive).length > 1) {
+      setHealTargetMode(abilityId);
+      return;
+    }
     useAbility(abilityId);
-  }, [phase, useAbility]);
+  }, [phase, useAbility, currentUnit, playerTeam]);
+
+  const handleHealTarget = useCallback((targetId) => {
+    if (!healTargetMode) return;
+    useAbility(healTargetMode, targetId);
+    setHealTargetMode(null);
+  }, [healTargetMode, useAbility]);
 
   useEffect(() => {
     if (phase !== 'player_turn') return;
-    if (!displayedAbilities.length) return;
     const handleKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const num = parseInt(e.key);
+      if (healTargetMode) {
+        const aliveAllies = playerTeam.filter(u => u.alive);
+        if (num >= 1 && num <= aliveAllies.length) {
+          handleHealTarget(aliveAllies[num - 1].id);
+        }
+        if (e.key === 'Escape') setHealTargetMode(null);
+        return;
+      }
+      if (!displayedAbilities.length) return;
       if (num >= 1 && num <= displayedAbilities.length) {
         const ability = displayedAbilities[num - 1];
         if (!currentUnit) return;
@@ -1133,7 +1169,7 @@ export default function BattleScreen() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, displayedAbilities, currentUnit, handleAbility]);
+  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam]);
 
   if (!battleState || battleUnits.length === 0) return null;
 
@@ -1305,17 +1341,27 @@ export default function BattleScreen() {
 
               {unit.alive && unit.stunned && (
                 <LoopingEffectSprite
-                  sprite={effectSprites.magic8}
-                  displaySize={32}
-                  offsetY={-20}
+                  sprite={effectSprites.nebula}
+                  displaySize={36}
+                  offsetY={-18}
                   opacity={0.75}
-                  filter="drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #a855f7)"
+                  filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
                 />
               )}
 
-              {unit.alive && (unit.dots || []).some(d => !d.heal) && (
+              {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
                 <LoopingEffectSprite
-                  sprite={effectSprites.fireSpin}
+                  sprite={effectSprites.magicBubbles}
+                  displaySize={34}
+                  offsetY={-16}
+                  opacity={0.7}
+                  filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
+                />
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
+                <LoopingEffectSprite
+                  sprite={effectSprites.fire}
                   displaySize={36}
                   offsetY={-16}
                   opacity={0.7}
@@ -1466,7 +1512,7 @@ export default function BattleScreen() {
         ))}
 
         {hitEffects.map(e => (
-          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} />
+          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} />
         ))}
 
         {critFx.map(c => (
@@ -1735,7 +1781,71 @@ export default function BattleScreen() {
                   </div>
                 );
               })()}
-              <div style={{
+              {healTargetMode && (
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{
+                    textAlign: 'center', marginBottom: 6, color: '#22c55e',
+                    fontSize: '0.65rem', letterSpacing: 1, fontWeight: 700,
+                  }}>
+                    💚 Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(Press 1-{playerTeam.filter(u => u.alive).length} or Esc to cancel)</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {playerTeam.filter(u => u.alive).map((ally, idx) => {
+                      const hpPct = Math.round((ally.health / ally.maxHealth) * 100);
+                      const hpColor = hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
+                      const spriteData = getPlayerSprite(ally.classId, ally.raceId);
+                      const idleAnim = spriteData?.idle;
+                      return (
+                        <button key={ally.id} onClick={() => handleHealTarget(ally.id)}
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,95,70,0.25))',
+                            border: '2px solid #22c55e', borderRadius: 8, padding: '6px 14px',
+                            cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center',
+                            minWidth: 100, position: 'relative',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.3), rgba(6,95,70,0.4))'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,95,70,0.25))'; e.currentTarget.style.transform = 'none'; }}
+                        >
+                          <div style={{
+                            position: 'absolute', top: -6, left: -6,
+                            background: '#22c55e', borderRadius: '50%',
+                            width: 18, height: 18, display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800,
+                            color: '#052e16', border: '1px solid rgba(0,0,0,0.3)',
+                          }}>{idx + 1}</div>
+                          <div style={{ width: 48, height: 48, margin: '0 auto 4px', overflow: 'hidden', position: 'relative' }}>
+                            {idleAnim && (
+                              <div style={{
+                                width: 48, height: 48,
+                                backgroundImage: `url(${idleAnim.src})`,
+                                backgroundSize: `${(idleAnim.frames || 6) * 48}px 48px`,
+                                backgroundPosition: '0 0',
+                                imageRendering: 'pixelated',
+                                ...(spriteData.filter ? { filter: spriteData.filter } : {}),
+                              }} />
+                            )}
+                          </div>
+                          <div style={{ color: '#e8dcc8', fontSize: '0.65rem', fontWeight: 700, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>{ally.name}</div>
+                          <div style={{
+                            background: 'rgba(0,0,0,0.5)', borderRadius: 3, height: 8, width: '100%', overflow: 'hidden',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                          }}>
+                            <div style={{
+                              height: '100%', width: `${hpPct}%`,
+                              background: `linear-gradient(90deg, ${hpColor}, ${hpColor}cc)`,
+                              borderRadius: 2, transition: 'width 0.3s',
+                            }} />
+                          </div>
+                          <div style={{ color: hpColor, fontSize: '0.55rem', fontWeight: 600, marginTop: 2 }}>
+                            {ally.health}/{ally.maxHealth} HP
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {!healTargetMode && (<div style={{
                 textAlign: 'center', marginBottom: 4, color: '#a08b6d',
                 fontSize: '0.6rem', letterSpacing: 1
               }}>
@@ -1746,8 +1856,8 @@ export default function BattleScreen() {
                     Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
                   </span>
                 )}
-              </div>
-              <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+              </div>)}
+              {!healTargetMode && (<div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
                 {displayedAbilities.map((ability, idx) => {
                   const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
                   const noMana = (ability.manaCost || 0) > currentUnit.mana;
@@ -1798,7 +1908,7 @@ export default function BattleScreen() {
                     </button>
                   );
                 })}
-              </div>
+              </div>)}
             </>
           ) : (
             <div style={{

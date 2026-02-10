@@ -1265,12 +1265,12 @@ const useGameStore = create(persist((set, get) => ({
       }
 
     } else if (ability.type === 'heal') {
-      let healTargetId = currentUnitId;
-      if (attacker.team === 'player') {
+      let healTargetId = targetIdOverride || currentUnitId;
+      if (!targetIdOverride && attacker.team === 'player') {
         const lowAlly = units.filter(u => u.team === 'player' && u.alive).sort((a, b) => (a.health / a.maxHealth) - (b.health / b.maxHealth))[0];
         if (lowAlly) healTargetId = lowAlly.id;
       }
-      const healTarget = units.find(u => u.id === healTargetId) || attacker;
+      const healTarget = units.find(u => u.id === healTargetId && u.alive) || attacker;
       const healAmt = Math.floor(healTarget.maxHealth * ability.healPercent);
       healTarget.health = Math.min(healTarget.maxHealth, healTarget.health + healAmt);
       actionResult.targetId = healTarget.id;
