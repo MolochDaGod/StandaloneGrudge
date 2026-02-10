@@ -1016,10 +1016,10 @@ export default function WorldMap() {
         {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero, idx) => {
           const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
           const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
-          const baseOffsetX = (idx - 1) * 0.8;
-          const baseOffsetY = -1.2 - idx * 0.4;
-          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.4));
-          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.4));
+          const baseOffsetX = (idx - 1) * 0.4;
+          const baseOffsetY = -0.6 - idx * 0.2;
+          const clampedX = Math.max(4, Math.min(96, zonePos.x + baseOffsetX + offset.x * 0.2));
+          const clampedY = Math.max(8, Math.min(92, zonePos.y + baseOffsetY + offset.y * 0.2));
           const walk = heroWalking[hero.id];
           const isWalking = walk?.moving;
           const flipX = walk?.flipX;
