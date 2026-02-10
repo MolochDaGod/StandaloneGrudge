@@ -9,6 +9,8 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
+import { generateDialogue } from '../data/dialogue';
+import { generateRandomEvent, getRewardDescription } from '../data/randomEvents';
 
 const bossMapSprites = {
   nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', portal: '/backgrounds/boss_green.png' },
@@ -147,6 +149,7 @@ export default function WorldMap() {
     startMissionBattle, startArenaBattle, completedMissions,
     upgradeEquipment,
     shopInventory, inventory, buyItem, sellItem, refreshShop,
+    randomEvents, addRandomEvent, cleanExpiredEvents, startEventBattle, lastEventSpawn,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -172,6 +175,11 @@ export default function WorldMap() {
   const menuRef = useRef(null);
 
   const [heroWalking, setHeroWalking] = useState({});
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [currentDialogue, setCurrentDialogue] = useState(null);
+  const [dialoguePhase, setDialoguePhase] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventCountdown, setEventCountdown] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -204,11 +212,59 @@ export default function WorldMap() {
   }, [tickHarvests]);
 
   useEffect(() => {
+    const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+    if (activeHeroes.length < 2) return;
+    const delay = 12000 + Math.random() * 3000;
+    const timeout = setTimeout(() => {
+      const gameState = { gold, level, currentZone, zoneConquer, bossesDefeated, locationsCleared, victories, locations };
+      const dialogue = generateDialogue(activeHeroes, gameState);
+      if (dialogue) {
+        setCurrentDialogue(dialogue);
+        setDialoguePhase(1);
+        setTimeout(() => setDialoguePhase(2), 4000);
+        setTimeout(() => {
+          setDialoguePhase(0);
+          setTimeout(() => setCurrentDialogue(null), 600);
+        }, 8000);
+      }
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [currentDialogue, heroRoster, activeHeroIds, gold, level, currentZone, zoneConquer, bossesDefeated, locationsCleared, victories]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (cleanExpiredEvents) cleanExpiredEvents();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [cleanExpiredEvents]);
+
+  useEffect(() => {
+    const spawnDelay = 20000 + Math.random() * 20000;
+    const timeout = setTimeout(() => {
+      const currentEvents = randomEvents || [];
+      if (currentEvents.length < 3) {
+        const unlockedIds = (getUnlockedLocations() || []).map(l => l.id);
+        const newEvent = generateRandomEvent(level, unlockedIds, currentEvents);
+        if (newEvent && addRandomEvent) addRandomEvent(newEvent);
+      }
+    }, spawnDelay);
+    return () => clearTimeout(timeout);
+  }, [randomEvents, level, addRandomEvent, getUnlockedLocations]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEventCountdown(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setSelectedLocation(null);
         setSelectedCity(null);
         setCitySubmenu(null);
+        setSelectedEvent(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -225,18 +281,31 @@ export default function WorldMap() {
     if (!rect) return;
 
     const pos = locationPositions[loc.id];
-    let menuX = (pos.x / 100) * rect.width + rect.left;
-    let menuY = (pos.y / 100) * rect.height + rect.top - 10;
+    const nodeXPx = (pos.x / 100) * rect.width;
+    const nodeYPx = (pos.y / 100) * rect.height;
+    const menuWidth = 240;
+    const menuHeight = 350;
+    const viewportFraction = nodeYPx / rect.height;
 
-    if (menuX + 220 > window.innerWidth) menuX = window.innerWidth - 230;
-    if (menuY + 300 > window.innerHeight) menuY -= 200;
+    let menuX = nodeXPx + 35;
+    let menuY;
+
+    if (viewportFraction > 0.4) {
+      menuY = nodeYPx - menuHeight - 10;
+    } else {
+      menuY = nodeYPx + 35;
+    }
+
+    if (menuX + menuWidth > rect.width) menuX = nodeXPx - menuWidth - 10;
     if (menuX < 10) menuX = 10;
-    if (menuY < 10) menuY = 60;
+    if (menuY < 10) menuY = 10;
+    if (menuY + menuHeight > rect.height) menuY = rect.height - menuHeight - 60;
 
-    setMenuPos({ x: menuX - rect.left, y: menuY - rect.top });
+    setMenuPos({ x: menuX, y: menuY });
     setSelectedLocation(loc.id);
     setSelectedCity(null);
     setCitySubmenu(null);
+    setSelectedEvent(null);
 
     const target = locationPositions[loc.id];
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
@@ -257,18 +326,31 @@ export default function WorldMap() {
     if (!rect) return;
 
     const pos = cityPositions[city.id];
-    let menuX = (pos.x / 100) * rect.width + rect.left;
-    let menuY = (pos.y / 100) * rect.height + rect.top - 10;
+    const nodeXPx = (pos.x / 100) * rect.width;
+    const nodeYPx = (pos.y / 100) * rect.height;
+    const menuWidth = 300;
+    const menuHeight = 420;
+    const viewportFraction = nodeYPx / rect.height;
 
-    if (menuX + 280 > window.innerWidth) menuX = window.innerWidth - 290;
-    if (menuY + 400 > window.innerHeight) menuY -= 250;
+    let menuX = nodeXPx + 35;
+    let menuY;
+
+    if (viewportFraction > 0.4) {
+      menuY = nodeYPx - menuHeight - 10;
+    } else {
+      menuY = nodeYPx + 35;
+    }
+
+    if (menuX + menuWidth > rect.width) menuX = nodeXPx - menuWidth - 10;
     if (menuX < 10) menuX = 10;
-    if (menuY < 10) menuY = 60;
+    if (menuY < 10) menuY = 10;
+    if (menuY + menuHeight > rect.height) menuY = rect.height - menuHeight - 60;
 
-    setMenuPos({ x: menuX - rect.left, y: menuY - rect.top });
+    setMenuPos({ x: menuX, y: menuY });
     setSelectedCity(city.id);
     setSelectedLocation(null);
     setCitySubmenu(null);
+    setSelectedEvent(null);
 
     const target = cityPositions[city.id];
     if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
@@ -388,6 +470,8 @@ export default function WorldMap() {
             <div key={loc.id}
               onClick={(e) => handleLocationClick(e, loc)}
               onContextMenu={(e) => handleLocationClick(e, loc)}
+              onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'location', id: loc.id, x: pos.x, y: pos.y }); }}
+              onMouseLeave={() => setHoveredNode(null)}
               style={{
                 position: 'absolute',
                 left: `${pos.x}%`, top: `${pos.y}%`,
@@ -571,6 +655,8 @@ export default function WorldMap() {
           return (
             <div key={city.id}
               onClick={(e) => handleCityClick(e, city)}
+              onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'city', id: city.id, x: pos.x, y: pos.y, name: city.name }); }}
+              onMouseLeave={() => setHoveredNode(null)}
               style={{
                 position: 'absolute',
                 left: `${pos.x}%`, top: `${pos.y}%`,
@@ -682,9 +768,9 @@ export default function WorldMap() {
             borderRadius: 14,
             padding: 0,
             minWidth: 220,
+            maxHeight: '60vh', overflowY: 'auto',
             boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${locationIcons[selectedLoc.id]?.glow || 'rgba(110,231,183,0.2)'}`,
             animation: 'fadeIn 0.15s ease-out',
-            overflow: 'hidden',
           }}>
             <div style={{
               padding: '14px 16px 10px',
@@ -810,10 +896,9 @@ export default function WorldMap() {
               borderRadius: 14,
               padding: 0,
               minWidth: 260, maxWidth: 320,
-              maxHeight: '70vh', overflowY: 'auto',
+              maxHeight: '60vh', overflowY: 'auto',
               boxShadow: '0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(74,222,128,0.3)',
               animation: 'fadeIn 0.15s ease-out',
-              overflow: 'hidden',
             }}>
               <div style={{
                 padding: '14px 16px 10px',
@@ -1483,17 +1568,355 @@ export default function WorldMap() {
           </div>
         )}
 
+        {hoveredNode && (() => {
+          if (hoveredNode.type === 'location') {
+            const loc = locations.find(l => l.id === hoveredNode.id);
+            if (!loc) return null;
+            const conquer = (zoneConquer || {})[loc.id] || 0;
+            const hasBoss = loc.boss && !bossesDefeated.includes(loc.boss);
+            const bossDown = loc.boss && bossesDefeated.includes(loc.boss);
+            return (
+              <div style={{
+                position: 'absolute',
+                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
+                transform: 'translate(-50%, -120%)',
+                marginTop: -40,
+                zIndex: 25, pointerEvents: 'none',
+                background: 'rgba(8,12,28,0.95)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 8, padding: '8px 12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+                whiteSpace: 'nowrap',
+                animation: 'fadeIn 0.1s ease-out',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
+                  Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {conquer}% conquered
+                </div>
+                {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
+                {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
+              </div>
+            );
+          }
+          if (hoveredNode.type === 'city') {
+            return (
+              <div style={{
+                position: 'absolute',
+                left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
+                transform: 'translate(-50%, -120%)',
+                marginTop: -40,
+                zIndex: 25, pointerEvents: 'none',
+                background: 'rgba(8,12,28,0.95)',
+                border: '1px solid rgba(74,222,128,0.3)',
+                borderRadius: 8, padding: '8px 12px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.7)',
+                whiteSpace: 'nowrap',
+                animation: 'fadeIn 0.1s ease-out',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4ade80' }}>{hoveredNode.name}</div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        {currentDialogue && dialoguePhase > 0 && (() => {
+          const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+          const speaker1Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker1?.id);
+          const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
+          const zonePos = cityPositions[currentZone] || locationPositions[currentZone] || locationPositions.verdant_plains;
+
+          return (
+            <>
+              {dialoguePhase >= 1 && speaker1Idx >= 0 && (
+                <div style={{
+                  position: 'absolute',
+                  left: `${Math.max(8, Math.min(82, zonePos.x + (speaker1Idx - 1) * 1.8 - 6))}%`,
+                  top: `${Math.max(4, zonePos.y - 2.5 - speaker1Idx * 1 - 8)}%`,
+                  zIndex: 12, pointerEvents: 'none', maxWidth: 180,
+                  animation: dialoguePhase >= 1 ? 'fadeIn 0.4s ease-out' : 'none',
+                  opacity: dialoguePhase === 0 ? 0 : 1,
+                  transition: 'opacity 0.5s',
+                }}>
+                  <div style={{
+                    background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
+                    borderRadius: 10, padding: '6px 10px',
+                    fontSize: '0.55rem', color: '#e2e8f0', lineHeight: 1.4,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                  }}>
+                    {currentDialogue.line1}
+                  </div>
+                  <div style={{
+                    width: 0, height: 0,
+                    borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                    borderTop: '6px solid rgba(14,22,48,0.92)',
+                    margin: '0 auto',
+                  }} />
+                </div>
+              )}
+              {dialoguePhase >= 2 && speaker2Idx >= 0 && (
+                <div style={{
+                  position: 'absolute',
+                  left: `${Math.max(8, Math.min(82, zonePos.x + (speaker2Idx - 1) * 1.8 + 2))}%`,
+                  top: `${Math.max(4, zonePos.y - 2.5 - speaker2Idx * 1 - 8)}%`,
+                  zIndex: 12, pointerEvents: 'none', maxWidth: 180,
+                  animation: 'fadeIn 0.4s ease-out',
+                }}>
+                  <div style={{
+                    background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
+                    borderRadius: 10, padding: '6px 10px',
+                    fontSize: '0.55rem', color: '#e2e8f0', lineHeight: 1.4,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                  }}>
+                    {currentDialogue.line2}
+                  </div>
+                  <div style={{
+                    width: 0, height: 0,
+                    borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                    borderTop: '6px solid rgba(14,22,48,0.92)',
+                    margin: '0 auto',
+                  }} />
+                </div>
+              )}
+            </>
+          );
+        })()}
+
+        {(randomEvents || []).map(event => {
+          const pos = locationPositions[event.locationId];
+          if (!pos) return null;
+          const timeLeft = Math.max(0, Math.floor((event.expiresAt - Date.now()) / 1000));
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          const spriteData = getEnemySprite('skeleton');
+
+          return (
+            <div key={event.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                const rect = mapRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const nodeXPx = (pos.x / 100) * rect.width;
+                const nodeYPx = (pos.y / 100) * rect.height;
+                let mx = nodeXPx + 40;
+                let my = pos.y > 40 ? nodeYPx - 280 : nodeYPx + 40;
+                if (mx + 260 > rect.width) mx = nodeXPx - 270;
+                if (mx < 10) mx = 10;
+                if (my < 10) my = 10;
+                setMenuPos({ x: mx, y: my });
+                setSelectedEvent(event);
+                setSelectedLocation(null);
+                setSelectedCity(null);
+                setCitySubmenu(null);
+              }}
+              style={{
+                position: 'absolute',
+                left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 6, cursor: 'pointer',
+              }}
+            >
+              <div style={{
+                position: 'relative', width: 56, height: 56,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{
+                  position: 'absolute', inset: -6,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${event.color}40, transparent 70%)`,
+                  animation: 'eventPulse 1.5s ease-in-out infinite',
+                }} />
+                <div style={{
+                  width: 46, height: 46, borderRadius: '50%',
+                  background: `radial-gradient(circle, ${event.color}30, rgba(20,20,40,0.9))`,
+                  border: `2px solid ${event.color}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.4rem',
+                  boxShadow: `0 0 12px ${event.color}60, 0 0 24px ${event.color}30`,
+                  animation: 'eventPulse 1.5s ease-in-out infinite',
+                }}>
+                  {event.icon}
+                </div>
+                <div style={{
+                  position: 'absolute', right: -16, bottom: -4,
+                  width: 32, height: 32, overflow: 'hidden',
+                  imageRendering: 'pixelated',
+                  filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
+                }}>
+                  <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.4} speed={180} />
+                </div>
+              </div>
+              <div style={{
+                textAlign: 'center', marginTop: 2, whiteSpace: 'nowrap',
+              }}>
+                <div style={{
+                  fontSize: '0.5rem', fontWeight: 800, color: event.color,
+                  textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
+                  letterSpacing: '0.1em',
+                }}>
+                  EVENT
+                </div>
+                <div style={{
+                  fontSize: '0.48rem', color: 'rgba(255,255,255,0.7)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {minutes}:{seconds.toString().padStart(2, '0')}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {selectedEvent && (
+          <div ref={menuRef} style={{
+            position: 'absolute',
+            left: menuPos.x, top: menuPos.y,
+            zIndex: 20,
+            background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
+            border: `2px solid ${selectedEvent.color}`,
+            borderRadius: 14, padding: 0,
+            minWidth: 240, maxHeight: '60vh', overflowY: 'auto',
+            boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${selectedEvent.color}40`,
+            animation: 'fadeIn 0.15s ease-out',
+          }}>
+            <div style={{
+              padding: '14px 16px 10px',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              background: `linear-gradient(135deg, ${selectedEvent.color}20, transparent)`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: '1.4rem' }}>{selectedEvent.icon}</span>
+                <div>
+                  <div className="font-cinzel" style={{ color: selectedEvent.color, fontSize: '0.95rem', fontWeight: 700 }}>
+                    {selectedEvent.name}
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
+                    Level {selectedEvent.level} Event
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+                {selectedEvent.description}
+              </div>
+              <div style={{
+                marginTop: 8, fontSize: '0.65rem', color: '#a5b4fc',
+                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '6px 10px',
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--gold)' }}>Rewards:</div>
+                {getRewardDescription(selectedEvent)}
+              </div>
+              <div style={{ marginTop: 6, fontSize: '0.55rem', color: 'var(--muted)' }}>
+                ⚔ {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
+              </div>
+            </div>
+            <div style={{ padding: 8 }}>
+              <MenuButton
+                icon="⚔️" label="Challenge" sublabel={`Fight Lv.${selectedEvent.level} event`}
+                color={selectedEvent.color}
+                onClick={() => { startEventBattle(selectedEvent.id); setSelectedEvent(null); }}
+                glow
+              />
+            </div>
+            <div style={{
+              padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
+              textAlign: 'center',
+            }}>
+              <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
+                Click anywhere to close
+              </span>
+            </div>
+          </div>
+        )}
+
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(0deg, rgba(10,14,30,0.9) 0%, rgba(10,14,30,0.5) 70%, transparent 100%)',
-          padding: '20px 16px 10px',
-          display: 'flex', justifyContent: 'center', gap: 24, zIndex: 15,
+          background: 'linear-gradient(0deg, rgba(8,10,24,0.95) 0%, rgba(8,10,24,0.85) 60%, rgba(8,10,24,0.4) 85%, transparent 100%)',
+          backdropFilter: 'blur(4px)',
+          padding: '16px 20px 10px',
+          borderTop: '1px solid rgba(255,215,0,0.15)',
+          zIndex: 15,
         }}>
-          <Stat label="Victories" value={victories} color="var(--accent)" />
-          <Stat label="Level" value={level} color="var(--gold)" />
-          <Stat label="Gold" value={gold} color="var(--gold)" />
-          <Stat label="Heroes" value={`${heroRoster.length}/${maxHeroSlots}`} color="var(--accent)" />
+          <div style={{
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {heroRoster.filter(h => activeHeroIds.includes(h.id)).map((hero) => (
+                <div key={hero.id} style={{
+                  width: 36, height: 36, borderRadius: '50%', overflow: 'hidden',
+                  border: '2px solid var(--accent)',
+                  boxShadow: '0 0 8px rgba(110,231,183,0.4), inset 0 0 6px rgba(110,231,183,0.2)',
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                  background: 'rgba(14,22,48,0.8)',
+                }}>
+                  <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.9} speed={180} />
+                </div>
+              ))}
+            </div>
+
+            <div style={{ width: 1, height: 28, background: 'rgba(255,215,0,0.2)' }} />
+
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(255,215,0,0.08)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(255,215,0,0.2)',
+            }}>
+              <span style={{ fontSize: '0.85rem' }}>🏆</span>
+              <div>
+                <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem' }}>{victories}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>VICTORIES</div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(251,191,36,0.08)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(251,191,36,0.2)',
+            }}>
+              <span style={{ fontSize: '0.85rem' }}>⭐</span>
+              <div>
+                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>{level}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>LEVEL</div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(251,191,36,0.08)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(251,191,36,0.2)',
+            }}>
+              <span style={{ fontSize: '0.85rem' }}>💰</span>
+              <div>
+                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>{gold}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>GOLD</div>
+              </div>
+            </div>
+
+            <div style={{ width: 1, height: 28, background: 'rgba(255,215,0,0.2)' }} />
+
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(110,231,183,0.15)',
+            }}>
+              <span style={{ fontSize: '0.7rem' }}>📍</span>
+              <div>
+                <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.65rem' }}>
+                  {locations.find(l => l.id === currentZone)?.name || cities.find(c => c.id === currentZone)?.name || 'Unknown'}
+                </div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>ZONE</div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <style>{`
+          @keyframes eventPulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.15); opacity: 1; }
+          }
+        `}</style>
       </div>
     </div>
   );

@@ -340,6 +340,9 @@ const useGameStore = create(persist((set, get) => ({
   activeHarvests: {},
   harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
   lastHarvestTick: Date.now(),
+  randomEvents: [],
+  lastEventSpawn: Date.now(),
+  eventBonusRewards: null,
   trainingPhase: null,
   activeMission: null,
   completedMissions: [],
@@ -1612,9 +1615,13 @@ const useGameStore = create(persist((set, get) => ({
     const xpReduction = currentConquer / 100 * 0.7;
     const rawXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
     const totalXp = Math.max(1, Math.floor(rawXp * (1 - xpReduction)));
-    const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
+    const eventBonus = state.eventBonusRewards || null;
+    const bonusGold = eventBonus?.gold || 0;
+    const bonusXp = eventBonus?.xp || 0;
+    const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0) + bonusGold;
+    const adjustedTotalXp = totalXp + bonusXp;
 
-    let newXp = state.xp + totalXp;
+    let newXp = state.xp + adjustedTotalXp;
     let newLevel = state.level;
     let newXpToNext = state.xpToNext;
     let newUnspent = state.unspentPoints;
@@ -1645,7 +1652,7 @@ const useGameStore = create(persist((set, get) => ({
     }
 
     const newConquer = zoneConquer[locId] || 0;
-    log.push(`✨ Victory! Gained ${totalXp} XP and ${totalGold} Gold.`);
+    log.push(`✨ Victory! Gained ${adjustedTotalXp} XP and ${totalGold} Gold.${eventBonus ? ' (Event Bonus!)' : ''}`);
     if (locId) log.push(`📊 Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
 
     const lootDrops = [];
@@ -1725,6 +1732,7 @@ const useGameStore = create(persist((set, get) => ({
       playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
       playerMana: playerUnit ? playerUnit.mana : state.playerMana,
       playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
+      eventBonusRewards: null,
     });
 
     if (leveledUp) {
@@ -2039,6 +2047,34 @@ const useGameStore = create(persist((set, get) => ({
     set(updates);
   },
 
+  addRandomEvent: (event) => {
+    const state = get();
+    const now = Date.now();
+    const filtered = (state.randomEvents || []).filter(e => e.expiresAt > now);
+    if (filtered.length < 3) {
+      set({ randomEvents: [...filtered, event], lastEventSpawn: now });
+    }
+  },
+
+  cleanExpiredEvents: () => {
+    const state = get();
+    const now = Date.now();
+    const filtered = (state.randomEvents || []).filter(e => e.expiresAt > now);
+    if (filtered.length !== (state.randomEvents || []).length) {
+      set({ randomEvents: filtered });
+    }
+  },
+
+  startEventBattle: (eventId) => {
+    const state = get();
+    const event = (state.randomEvents || []).find(e => e.id === eventId);
+    if (!event) return;
+    const remaining = state.randomEvents.filter(e => e.id !== eventId);
+    set({ randomEvents: remaining, eventBonusRewards: event.rewards || null });
+    useGameStore.setState({ currentLocation: event.locationId });
+    state.startBattle(event.locationId);
+  },
+
   setTrainingPhase: (phase) => set({ trainingPhase: phase }),
 
   startTrainingBattle: (round) => {
@@ -2288,6 +2324,8 @@ const useGameStore = create(persist((set, get) => ({
       activeHarvests: {},
       harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
       lastHarvestTick: Date.now(),
+      randomEvents: [],
+      lastEventSpawn: Date.now(),
       trainingPhase: null,
     });
   },
@@ -2393,6 +2431,8 @@ const useGameStore = create(persist((set, get) => ({
     shopLastRefresh: state.shopLastRefresh,
     harvestResources: state.harvestResources,
     activeHarvests: state.activeHarvests,
+    randomEvents: state.randomEvents,
+    lastEventSpawn: state.lastEventSpawn,
     trainingPhase: state.trainingPhase,
   }),
 }));
