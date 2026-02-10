@@ -187,6 +187,70 @@ const steamPositions = [
   { x: 40, y: 77, delay: 1.8 },
 ];
 
+const MAP_GRID = { cols: 100, rows: 100 };
+
+const buildSmoothPath = (points) => {
+  if (points.length < 2) return '';
+  let d = `M ${points[0][0]},${points[0][1]}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const cx = (prev[0] + curr[0]) / 2;
+    const cy = (prev[1] + curr[1]) / 2;
+    if (i === 1) {
+      d += ` Q ${cx},${cy} ${curr[0]},${curr[1]}`;
+    } else {
+      d += ` T ${curr[0]},${curr[1]}`;
+    }
+  }
+  return d;
+};
+
+const mapLandmarks = [
+  { type: 'river', points: [[14,72],[16,68],[14,64],[16,60],[18,56],[20,52]], color: 'rgba(56,189,248,0.25)', width: 1.2 },
+  { type: 'river', points: [[32,90],[34,86],[36,82],[38,78],[40,75]], color: 'rgba(56,189,248,0.2)', width: 1 },
+  { type: 'river', points: [[40,75],[44,72],[48,70],[50,68]], color: 'rgba(56,189,248,0.15)', width: 0.8 },
+  { type: 'river', points: [[44,40],[42,44],[40,48],[38,52],[36,56]], color: 'rgba(125,211,252,0.2)', width: 0.9 },
+
+  { type: 'lava', points: [[70,62],[72,58],[74,55],[76,52]], color: 'rgba(251,146,60,0.35)', width: 1.1 },
+  { type: 'lava', points: [[78,70],[80,66],[82,62],[84,58],[86,54]], color: 'rgba(239,68,68,0.3)', width: 1.0 },
+  { type: 'lava', points: [[86,54],[88,50],[90,48]], color: 'rgba(251,146,60,0.25)', width: 0.8 },
+
+  { type: 'tower', x: 27, y: 33, label: 'Watchtower' },
+  { type: 'tower', x: 63, y: 26, label: 'Dark Spire' },
+  { type: 'tower', x: 49, y: 13, label: 'Storm Tower' },
+  { type: 'tower', x: 90, y: 20, label: 'Void Beacon' },
+
+  { type: 'gate', x: 65, y: 30, label: 'Shadow Gate' },
+  { type: 'gate', x: 80, y: 44, label: 'Demon Gate' },
+  { type: 'gate', x: 82, y: 10, label: 'Void Gate' },
+
+  { type: 'monument', x: 15, y: 86, label: 'Waystone' },
+  { type: 'monument', x: 56, y: 40, label: 'Ashenmoor Obelisk' },
+  { type: 'monument', x: 37, y: 63, label: 'Cursed Pillar' },
+  { type: 'monument', x: 73, y: 16, label: 'Void Marker' },
+
+  { type: 'bridge', x: 16, y: 66, rot: 25 },
+  { type: 'bridge', x: 37, y: 80, rot: -15 },
+  { type: 'bridge', x: 42, y: 42, rot: 35 },
+
+  { type: 'ruins', x: 33, y: 67, label: 'Broken Wall' },
+  { type: 'ruins', x: 57, y: 36, label: 'Old Foundation' },
+  { type: 'ruins', x: 85, y: 36, label: 'Shattered Arch' },
+
+  { type: 'tree_cluster', x: 8, y: 75, count: 3 },
+  { type: 'tree_cluster', x: 18, y: 82, count: 2 },
+  { type: 'tree_cluster', x: 24, y: 72, count: 4 },
+  { type: 'tree_cluster', x: 46, y: 74, count: 2 },
+  { type: 'tree_cluster', x: 14, y: 62, count: 3 },
+
+  { type: 'crystal', x: 21, y: 53, color: '#67e8f9' },
+  { type: 'crystal', x: 18, y: 57, color: '#67e8f9' },
+
+  { type: 'skull', x: 36, y: 20, color: '#a3e635' },
+  { type: 'skull', x: 66, y: 72, color: '#a8a29e' },
+];
+
 export default function WorldMap() {
   const {
     level, xp, xpToNext, gold, playerName, playerClass, playerRace,
@@ -231,6 +295,7 @@ export default function WorldMap() {
   const [dialoguePhase, setDialoguePhase] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
+  const [showDebugGrid, setShowDebugGrid] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -473,6 +538,22 @@ export default function WorldMap() {
           animation: 'dayNightCycle 120s linear infinite',
         }} />
 
+        {showDebugGrid && (
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 999 }}>
+            {Array.from({ length: 11 }).map((_, i) => (
+              <g key={`gridline_${i}`}>
+                <line x1={i * 10} y1={0} x2={i * 10} y2={100} stroke="rgba(255,255,255,0.1)" strokeWidth="0.15" />
+                <line x1={0} y1={i * 10} x2={100} y2={i * 10} stroke="rgba(255,255,255,0.1)" strokeWidth="0.15" />
+                <text x={i * 10 + 0.5} y={2} fill="rgba(255,255,255,0.4)" fontSize="1.5">{i * 10}</text>
+                <text x={0.5} y={i * 10 + 1.5} fill="rgba(255,255,255,0.4)" fontSize="1.5">{i * 10}</text>
+              </g>
+            ))}
+            {Object.entries(locationPositions).map(([id, pos]) => (
+              <circle key={`dbg_${id}`} cx={pos.x} cy={pos.y} r="0.8" fill="none" stroke="rgba(255,0,0,0.5)" strokeWidth="0.2" />
+            ))}
+          </svg>
+        )}
+
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {terrainRegions.map((region, idx) => (
             <polygon key={idx}
@@ -502,46 +583,195 @@ export default function WorldMap() {
           </div>
         ))}
 
-        {[
-          { x: 70, y: 58, w: 6, h: 16, rot: 5 },
-          { x: 76, y: 56, w: 5, h: 14, rot: -8 },
-          { x: 85, y: 52, w: 5, h: 15, rot: 12 },
-        ].map((lava, idx) => (
-          <div key={`lava_${idx}`} style={{
-            position: 'absolute',
-            left: `${lava.x}%`, top: `${lava.y}%`,
-            width: `${lava.w}%`, height: `${lava.h}%`,
-            transform: `rotate(${lava.rot}deg)`,
-            pointerEvents: 'none', zIndex: 1,
-            borderRadius: '40%',
-            overflow: 'hidden',
-            opacity: 0.6,
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+          {mapLandmarks.filter(l => l.type === 'river').map((river, idx) => {
+            const d = buildSmoothPath(river.points);
+            return (
+              <g key={`river_${idx}`}>
+                <path d={d} fill="none" stroke="rgba(200,230,255,0.08)" strokeWidth={river.width + 0.8} strokeLinecap="round" strokeLinejoin="round" />
+                <path d={d} fill="none" stroke={river.color} strokeWidth={river.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 3px ${river.color})` }} />
+              </g>
+            );
+          })}
+          {mapLandmarks.filter(l => l.type === 'lava').map((lava, idx) => {
+            const d = buildSmoothPath(lava.points);
+            return (
+              <g key={`lava_${idx}`}>
+                <path d={d} fill="none" stroke="rgba(50,10,0,0.4)" strokeWidth={lava.width + 1.5} strokeLinecap="round" strokeLinejoin="round" />
+                <path d={d} fill="none" stroke={lava.color} strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 4px rgba(255,100,0,0.6))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                <path d={d} fill="none" stroke="rgba(255,200,50,0.2)" strokeWidth={lava.width * 0.4} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+              </g>
+            );
+          })}
+        </svg>
+
+        {mapLandmarks.filter(l => l.type === 'tower').map((t, idx) => (
+          <div key={`tower_${idx}`} title={t.label} style={{
+            position: 'absolute', left: `${t.x}%`, top: `${t.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
           }}>
             <div style={{
-              position: 'absolute', inset: 0,
-              background: `
-                radial-gradient(ellipse at 30% 20%, rgba(251,146,60,0.4) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 60%, rgba(239,68,68,0.3) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.25) 0%, transparent 40%)
-              `,
-              animation: `lavaShader ${3 + idx * 0.7}s ease-in-out infinite alternate`,
-              filter: 'blur(2px)',
-            }} />
+              width: 8, height: 16, position: 'relative',
+              background: 'linear-gradient(180deg, #3a3a4a, #1e1e28)',
+              border: '1px solid rgba(150,150,170,0.3)', borderRadius: '2px 2px 0 0',
+              boxShadow: '0 0 6px rgba(100,100,150,0.2)',
+            }}>
+              <div style={{
+                position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
+                width: 0, height: 0,
+                borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+                borderBottom: '5px solid #4a4a5a',
+              }} />
+              <div style={{
+                position: 'absolute', top: 2, left: '50%', transform: 'translateX(-50%)',
+                width: 3, height: 3, borderRadius: '50%',
+                background: 'rgba(251,191,36,0.6)',
+                boxShadow: '0 0 4px rgba(251,191,36,0.4)',
+                animation: 'lavaPulse 3s ease-in-out infinite',
+              }} />
+            </div>
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'gate').map((g, idx) => (
+          <div key={`gate_${idx}`} title={g.label} style={{
+            position: 'absolute', left: `${g.x}%`, top: `${g.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
+          }}>
             <div style={{
-              position: 'absolute', inset: 0,
-              background: `
-                radial-gradient(ellipse at 60% 40%, rgba(255,100,0,0.35) 0%, transparent 45%),
-                radial-gradient(ellipse at 40% 70%, rgba(200,50,20,0.25) 0%, transparent 50%)
-              `,
-              animation: `lavaShader2 ${4 + idx * 0.5}s ease-in-out infinite alternate-reverse`,
-              filter: 'blur(3px)',
-            }} />
+              width: 14, height: 18, position: 'relative',
+              display: 'flex', justifyContent: 'center',
+            }}>
+              <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #4a3a2a, #2a1e14)', borderRadius: '1px 1px 0 0', position: 'absolute', left: 0, bottom: 0 }} />
+              <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #4a3a2a, #2a1e14)', borderRadius: '1px 1px 0 0', position: 'absolute', right: 0, bottom: 0 }} />
+              <div style={{
+                position: 'absolute', top: 0, width: 14, height: 6,
+                borderRadius: '7px 7px 0 0',
+                background: 'linear-gradient(180deg, #5a4a3a, #3a2e20)',
+                border: '1px solid rgba(180,140,100,0.3)', borderBottom: 'none',
+              }} />
+              <div style={{
+                position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)',
+                width: 6, height: 10, borderRadius: '3px 3px 0 0',
+                background: 'rgba(0,0,0,0.6)',
+                boxShadow: 'inset 0 0 3px rgba(200,100,255,0.3)',
+              }} />
+            </div>
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'monument').map((m, idx) => (
+          <div key={`mon_${idx}`} title={m.label} style={{
+            position: 'absolute', left: `${m.x}%`, top: `${m.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
+          }}>
             <div style={{
-              position: 'absolute', inset: 0,
-              background: 'radial-gradient(ellipse at 50% 50%, rgba(255,200,50,0.15) 0%, transparent 60%)',
-              animation: `lavaPulse ${2 + idx * 0.3}s ease-in-out infinite`,
+              width: 4, height: 14,
+              background: 'linear-gradient(180deg, #8a8a9a, #4a4a5a)',
+              borderRadius: '1px',
+              boxShadow: '0 0 4px rgba(150,150,200,0.15)',
+              position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+                width: 6, height: 3,
+                background: 'linear-gradient(180deg, #a0a0b0, #6a6a7a)',
+                borderRadius: '1px',
+              }} />
+            </div>
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'bridge').map((b, idx) => (
+          <div key={`bridge_${idx}`} style={{
+            position: 'absolute', left: `${b.x}%`, top: `${b.y}%`,
+            transform: `translate(-50%, -50%) rotate(${b.rot}deg)`,
+            pointerEvents: 'none', zIndex: 3,
+          }}>
+            <div style={{
+              width: 18, height: 6,
+              background: 'linear-gradient(180deg, #5a4a30, #3a2e1a)',
+              border: '1px solid rgba(140,110,70,0.3)',
+              borderRadius: 1,
+              position: 'relative',
+            }}>
+              <div style={{ position: 'absolute', left: 2, top: -2, width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
+              <div style={{ position: 'absolute', right: 2, top: -2, width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
+              <div style={{ position: 'absolute', left: '50%', top: -2, transform: 'translateX(-50%)', width: 2, height: 2, background: '#6a5a3a', borderRadius: 1 }} />
+            </div>
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'ruins').map((r, idx) => (
+          <div key={`ruins_${idx}`} title={r.label} style={{
+            position: 'absolute', left: `${r.x}%`, top: `${r.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
+          }}>
+            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
+              <div style={{ width: 3, height: 8, background: 'linear-gradient(180deg, #6a6a6a, #3a3a3a)', borderRadius: '1px 1px 0 0', transform: 'rotate(-5deg)' }} />
+              <div style={{ width: 3, height: 5, background: 'linear-gradient(180deg, #5a5a5a, #2a2a2a)', borderRadius: '1px 1px 0 0', transform: 'rotate(3deg)' }} />
+              <div style={{ width: 3, height: 10, background: 'linear-gradient(180deg, #7a7a7a, #4a4a4a)', borderRadius: '1px 1px 0 0', transform: 'rotate(-2deg)' }} />
+            </div>
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'tree_cluster').map((tc, idx) => (
+          <div key={`trees_${idx}`} style={{
+            position: 'absolute', left: `${tc.x}%`, top: `${tc.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 1,
+            display: 'flex', gap: 2,
+          }}>
+            {Array.from({ length: tc.count }).map((_, i) => (
+              <div key={i} style={{
+                width: 6, height: 8,
+                position: 'relative', marginTop: i % 2 === 0 ? 0 : 2,
+              }}>
+                <div style={{
+                  width: 0, height: 0,
+                  borderLeft: '3px solid transparent', borderRight: '3px solid transparent',
+                  borderBottom: `6px solid rgba(34,${140 + i * 20},70,0.35)`,
+                  position: 'absolute', top: 0,
+                }} />
+                <div style={{
+                  width: 1, height: 3,
+                  background: 'rgba(90,60,30,0.4)',
+                  position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+                }} />
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'crystal').map((c, idx) => (
+          <div key={`crystal_${idx}`} style={{
+            position: 'absolute', left: `${c.x}%`, top: `${c.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
+          }}>
+            <div style={{
+              width: 0, height: 0,
+              borderLeft: '3px solid transparent', borderRight: '3px solid transparent',
+              borderBottom: `8px solid ${c.color}`,
+              opacity: 0.5,
+              filter: `drop-shadow(0 0 3px ${c.color})`,
+              animation: 'lavaPulse 4s ease-in-out infinite',
             }} />
           </div>
+        ))}
+
+        {mapLandmarks.filter(l => l.type === 'skull').map((s, idx) => (
+          <div key={`skull_${idx}`} style={{
+            position: 'absolute', left: `${s.x}%`, top: `${s.y}%`,
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none', zIndex: 2,
+            fontSize: '0.5rem', opacity: 0.4,
+            filter: `drop-shadow(0 0 2px ${s.color})`,
+          }}>💀</div>
         ))}
 
         {steamPositions.map((sp, idx) => (
@@ -1620,6 +1850,12 @@ export default function WorldMap() {
               borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             }}>💀 Gruda</button>
+            <button onClick={() => setShowDebugGrid(!showDebugGrid)} style={{
+              background: showDebugGrid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${showDebugGrid ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: 8, padding: '4px 6px', color: showDebugGrid ? '#fff' : 'rgba(255,255,255,0.3)',
+              cursor: 'pointer', fontSize: '0.55rem', fontWeight: 600,
+            }}>#</button>
           </div>
         </div>
 
@@ -2282,20 +2518,9 @@ export default function WorldMap() {
             0%, 100% { transform: scale(1); opacity: 0.7; }
             50% { transform: scale(1.15); opacity: 1; }
           }
-          @keyframes lavaShader {
-            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
-            33% { transform: scale(1.1) translate(2%, -3%); opacity: 0.7; }
-            66% { transform: scale(0.95) translate(-1%, 2%); opacity: 0.6; }
-            100% { transform: scale(1.05) translate(1%, -1%); opacity: 0.8; }
-          }
-          @keyframes lavaShader2 {
-            0% { transform: scale(1.05) translate(-2%, 1%); opacity: 0.4; }
-            50% { transform: scale(0.9) translate(3%, -2%); opacity: 0.7; }
-            100% { transform: scale(1.1) translate(-1%, 3%); opacity: 0.5; }
-          }
           @keyframes lavaPulse {
-            0%, 100% { opacity: 0.1; transform: scale(0.9); }
-            50% { opacity: 0.4; transform: scale(1.1); }
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
           }
           @keyframes steamRise {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
