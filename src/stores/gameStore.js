@@ -1968,7 +1968,13 @@ const useGameStore = create(persist((set, get) => ({
 
   getUnlockedLocations: () => {
     const state = get();
-    return locations.filter(l => l.unlocked || (l.unlockLevel && state.level >= l.unlockLevel));
+    return locations.filter(l => {
+      if (l.unlocked) return true;
+      if (!l.unlockLevel || state.level < l.unlockLevel) return false;
+      if (l.unlockBoss && !state.bossesDefeated.includes(l.unlockBoss)) return false;
+      if (l.unlockRequiredBosses && !l.unlockRequiredBosses.every(b => state.bossesDefeated.includes(b))) return false;
+      return true;
+    });
   },
 
   equipItem: (heroId, item) => {

@@ -14,16 +14,19 @@ import { generateRandomEvent, getRewardDescription } from '../data/randomEvents'
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 
 const bossMapSprites = {
-  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', portal: '/backgrounds/boss_green.png' },
-  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)', portal: '/backgrounds/boss_autumn.png' },
-  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)', portal: '/backgrounds/boss_blue.png' },
-  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)', portal: '/backgrounds/boss_red.png' },
-  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)', portal: '/backgrounds/boss_blue.png' },
-  grand_shaman: { filter: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)', glow: 'rgba(0,200,100,0.5)', portal: '/backgrounds/boss_green.png' },
-  canyon_warlord: { filter: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)', glow: 'rgba(220,100,30,0.5)', portal: '/backgrounds/boss_red.png' },
-  frost_wyrm: { filter: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)', glow: 'rgba(100,180,255,0.5)', portal: '/backgrounds/boss_blue.png' },
-  shadow_beast: { filter: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)', glow: 'rgba(100,50,200,0.6)', portal: '/backgrounds/boss_blue.png' },
-  void_sentinel: { filter: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7) drop-shadow(0 0 6px rgba(180,80,255,0.7))', glow: 'rgba(180,80,255,0.6)', portal: '/backgrounds/boss_blue.png' },
+  nature_elemental: { filter: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)', glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png' },
+  water_elemental: { filter: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)', glow: 'rgba(60,100,255,0.5)', terrain: '/backgrounds/storm_ruins.png' },
+  lich: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)', glow: 'rgba(130,50,255,0.6)', terrain: '/backgrounds/shadow_citadel.png' },
+  demon_lord: { filter: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)', glow: 'rgba(255,30,30,0.6)', terrain: '/backgrounds/demon_gate.png' },
+  void_king: { filter: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8) drop-shadow(0 0 8px rgba(200,100,255,0.8))', glow: 'rgba(200,100,255,0.7)', terrain: '/backgrounds/void_throne.png' },
+  grand_shaman: { filter: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)', glow: 'rgba(0,200,100,0.5)', terrain: '/backgrounds/dark_forest.png' },
+  canyon_warlord: { filter: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)', glow: 'rgba(220,100,30,0.5)', terrain: '/backgrounds/blood_canyon.png' },
+  frost_wyrm: { filter: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)', glow: 'rgba(100,180,255,0.5)', terrain: '/backgrounds/winter_arena.png' },
+  shadow_beast: { filter: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)', glow: 'rgba(100,50,200,0.6)', terrain: '/backgrounds/cursed_ruins.png' },
+  void_sentinel: { filter: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7) drop-shadow(0 0 6px rgba(180,80,255,0.7))', glow: 'rgba(180,80,255,0.6)', terrain: '/backgrounds/volcanic_field.png' },
+  god_odin: { filter: 'hue-rotate(40deg) saturate(3.0) brightness(0.6) contrast(1.5) drop-shadow(0 0 10px rgba(251,191,36,0.8))', glow: 'rgba(251,191,36,0.8)', terrain: '/backgrounds/boss_mountain.png' },
+  god_madra: { filter: 'hue-rotate(350deg) saturate(3.0) brightness(0.5) contrast(1.6) drop-shadow(0 0 10px rgba(220,38,38,0.8))', glow: 'rgba(220,38,38,0.8)', terrain: '/backgrounds/demon_gate.png' },
+  god_omni: { filter: 'hue-rotate(270deg) saturate(2.5) brightness(0.6) contrast(1.4) drop-shadow(0 0 10px rgba(167,139,250,0.8))', glow: 'rgba(167,139,250,0.8)', terrain: '/backgrounds/boss_blue.png' },
 };
 
 const locationPositions = {
@@ -56,55 +59,64 @@ const locationPositions = {
   void_threshold:     { x: 72, y: 18 },
   corrupted_spire:    { x: 88, y: 22 },
   void_throne:        { x: 82, y: 8 },
+  hall_of_odin:       { x: 65, y: 5 },
+  maw_of_madra:       { x: 92, y: 5 },
+  sanctum_of_omni:    { x: 78, y: 2 },
 };
 
 const pathConnections = [
+  // === EARLY GAME: Starter Zones (Lv 1-6) ===
   ['verdant_plains', 'dark_forest'],
   ['verdant_plains', 'whispering_caverns'],
   ['dark_forest', 'mystic_grove'],
   ['dark_forest', 'haunted_marsh'],
-  ['dark_forest', 'cursed_ruins'],
-  ['mystic_grove', 'crystal_caves'],
   ['whispering_caverns', 'haunted_marsh'],
-  ['whispering_caverns', 'sunken_temple'],
+
+  // === MID GAME BRANCH: Crusade Arc (Lv 5-9) ===
+  ['mystic_grove', 'crystal_caves'],
   ['haunted_marsh', 'cursed_ruins'],
   ['haunted_marsh', 'thornwood_pass'],
-  ['cursed_ruins', 'crystal_caves'],
-  ['cursed_ruins', 'thornwood_pass'],
+  ['cursed_ruins', 'sunken_temple'],          // boss: grand_shaman
   ['crystal_caves', 'iron_peaks'],
-  ['thornwood_pass', 'blood_canyon'],
   ['thornwood_pass', 'sunken_temple'],
-  ['sunken_temple', 'ashen_battlefield'],
-  ['iron_peaks', 'frozen_tundra'],
-  ['iron_peaks', 'shadow_forest'],
-  ['blood_canyon', 'dragon_peaks'],
+
+  // === MID GAME BRANCH: Legion Arc (Lv 8-13) ===
+  ['iron_peaks', 'frozen_tundra'],            // boss: frost_wyrm
+  ['iron_peaks', 'blood_canyon'],             // boss: canyon_warlord
+  ['frozen_tundra', 'windswept_ridge'],
   ['blood_canyon', 'ashen_battlefield'],
   ['blood_canyon', 'molten_core'],
-  ['frozen_tundra', 'windswept_ridge'],
-  ['frozen_tundra', 'dragon_peaks'],
+
+  // === MID GAME BRANCH: Fabled Arc (Lv 10-14) ===
+  ['windswept_ridge', 'dragon_peaks'],        // boss: water_elemental
+  ['ashen_battlefield', 'dragon_peaks'],
   ['dragon_peaks', 'ruins_of_ashenmoor'],
-  ['dragon_peaks', 'molten_core'],
-  ['ashen_battlefield', 'obsidian_wastes'],
-  ['windswept_ridge', 'blight_hollow'],
-  ['windswept_ridge', 'shadow_citadel'],
   ['molten_core', 'obsidian_wastes'],
-  ['molten_core', 'demon_gate'],
+
+  // === LATE GAME: Shadow & Corruption (Lv 11-16) ===
+  ['iron_peaks', 'shadow_forest'],            // boss: shadow_beast
   ['shadow_forest', 'blight_hollow'],
-  ['obsidian_wastes', 'demon_gate'],
-  ['ruins_of_ashenmoor', 'shadow_citadel'],
+  ['windswept_ridge', 'stormspire_peak'],
+  ['ruins_of_ashenmoor', 'shadow_citadel'],   // boss: lich
+  ['obsidian_wastes', 'demon_gate'],          // boss: demon_lord
   ['blight_hollow', 'stormspire_peak'],
+
+  // === ENDGAME: Convergence (Lv 15-18) ===
   ['shadow_citadel', 'abyssal_depths'],
-  ['shadow_citadel', 'void_threshold'],
-  ['stormspire_peak', 'void_threshold'],
   ['demon_gate', 'infernal_forge'],
-  ['demon_gate', 'dreadmaw_canyon'],
+  ['stormspire_peak', 'void_threshold'],      // boss: void_sentinel
   ['abyssal_depths', 'dreadmaw_canyon'],
-  ['abyssal_depths', 'void_threshold'],
   ['infernal_forge', 'dreadmaw_canyon'],
   ['dreadmaw_canyon', 'corrupted_spire'],
   ['void_threshold', 'corrupted_spire'],
-  ['void_threshold', 'void_throne'],
-  ['corrupted_spire', 'void_throne'],
+
+  // === FINAL: The Void Throne (Lv 18-20) ===
+  ['corrupted_spire', 'void_throne'],         // boss: void_king
+
+  // === GOD FIGHTS: Endgame (Lv 20) ===
+  ['void_throne', 'hall_of_odin'],            // boss: god_odin (Crusade)
+  ['void_throne', 'maw_of_madra'],            // boss: god_madra (Legion)
+  ['void_throne', 'sanctum_of_omni'],         // boss: god_omni (Fabled)
 ];
 
 const locationIcons = {
@@ -137,6 +149,9 @@ const locationIcons = {
   void_threshold:     { color: '#c084fc', glow: 'rgba(192,132,252,0.5)', img: '/map_nodes/void_threshold.png' },
   corrupted_spire:    { color: '#e879f9', glow: 'rgba(232,121,249,0.4)', img: '/map_nodes/corrupted_spire.png' },
   void_throne:        { color: '#fbbf24', glow: 'rgba(251,191,36,0.5)', img: '/map_nodes/void_throne.png' },
+  hall_of_odin:       { color: '#fbbf24', glow: 'rgba(251,191,36,0.6)', img: '/map_nodes/void_throne.png' },
+  maw_of_madra:       { color: '#dc2626', glow: 'rgba(220,38,38,0.6)', img: '/map_nodes/void_throne.png' },
+  sanctum_of_omni:    { color: '#a78bfa', glow: 'rgba(167,139,250,0.6)', img: '/map_nodes/void_throne.png' },
 };
 
 const terrainRegions = [
@@ -510,7 +525,8 @@ export default function WorldMap() {
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
     e.stopPropagation();
-    const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
+    const bossOk = !city.unlockBoss || bossesDefeated.includes(city.unlockBoss);
+    const isCityUnlocked = city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
     if (!isCityUnlocked) return;
 
     const rect = mapRef.current?.getBoundingClientRect();
@@ -714,7 +730,8 @@ export default function WorldMap() {
             const locPos = getNodePos(locId);
             if (!cityPos || !locPos) return null;
             const city = cities.find(c => c.id === cityId);
-            const isCityUnlocked = city && (city.unlocked || (city.unlockLevel && level >= city.unlockLevel));
+            const bossOk = !city?.unlockBoss || bossesDefeated.includes(city.unlockBoss);
+            const isCityUnlocked = city && (city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel));
             const isLocUnlocked = unlockedLocs.some(l => l.id === locId);
             const bothOk = isCityUnlocked && isLocUnlocked;
             return (
@@ -883,13 +900,18 @@ export default function WorldMap() {
         {locations.filter(loc => loc.boss && !bossesDefeated.includes(loc.boss)).map(loc => {
           const pos = getNodePos(loc.id);
           if (!pos) return null;
-          const isLocUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
+          const locBossOk = !loc.unlockBoss || bossesDefeated.includes(loc.unlockBoss);
+          const locReqOk = !loc.unlockRequiredBosses || loc.unlockRequiredBosses.every(b => bossesDefeated.includes(b));
+          const isLocUnlocked = loc.unlocked || (locBossOk && locReqOk && loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
           if (!isLocUnlocked) return null;
           const bossStyle = bossMapSprites[loc.boss] || {};
           const spriteData = getEnemySprite(loc.boss);
           const corruptedSprite = { ...spriteData, filter: bossStyle.filter || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
           const bossX = pos.x + 3.5;
           const bossY = pos.y - 4.5;
+          const isGodBoss = loc.isGodFight;
+          const portalSize = isGodBoss ? 120 : 100;
+          const spriteSize = isGodBoss ? 90 : 80;
 
           const bossScale = Math.max(0.3, 1 / camZoom);
           return (
@@ -898,51 +920,52 @@ export default function WorldMap() {
               left: `${Math.max(4, Math.min(96, bossX))}%`,
               top: `${Math.max(4, Math.min(96, bossY))}%`,
               transform: `translate(-50%, -50%) scale(${bossScale})`,
-              zIndex: 4,
+              zIndex: isGodBoss ? 5 : 4,
               pointerEvents: 'none',
               transition: 'transform 0.3s',
             }}>
-              {bossStyle.portal && (
+              {bossStyle.terrain && (
                 <div style={{
                   position: 'absolute', top: '50%', left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  width: 100, height: 100, borderRadius: '50%',
-                  backgroundImage: `url(${bossStyle.portal})`,
+                  width: portalSize, height: portalSize, borderRadius: '50%',
+                  backgroundImage: `url(${bossStyle.terrain})`,
                   backgroundSize: 'cover', backgroundPosition: 'center',
-                  opacity: 0.6,
-                  filter: `drop-shadow(0 0 16px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
+                  opacity: isGodBoss ? 0.75 : 0.6,
+                  border: `${isGodBoss ? 3 : 2}px solid ${bossStyle.glow || 'rgba(255,0,0,0.5)'}`,
+                  boxShadow: `0 0 ${isGodBoss ? 30 : 20}px ${bossStyle.glow || 'rgba(255,0,0,0.5)'}, inset 0 0 20px rgba(0,0,0,0.5)`,
                   animation: 'glow 2s infinite',
                   zIndex: -1,
                 }} />
               )}
               <div style={{
                 position: 'relative',
-                width: 80, height: 80,
+                width: spriteSize, height: spriteSize,
                 overflow: 'hidden',
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                filter: `drop-shadow(0 0 12px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
+                filter: `drop-shadow(0 0 ${isGodBoss ? 16 : 12}px ${bossStyle.glow || 'rgba(255,0,0,0.5)'})`,
                 animation: 'glow 2s infinite',
               }}>
                 <SpriteAnimation
                   spriteData={corruptedSprite}
                   animation="idle"
-                  scale={2.0}
+                  scale={isGodBoss ? 2.4 : 2.0}
                   flip={true}
                   speed={180}
                 />
               </div>
               <div style={{
-                width: 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
+                width: isGodBoss ? 40 : 30, height: 6, borderRadius: '50%', margin: '-2px auto 0',
                 background: `radial-gradient(ellipse, ${bossStyle.glow || 'rgba(255,0,0,0.4)'}, transparent)`,
               }} />
               <div className="font-cinzel" style={{
                 textAlign: 'center',
-                fontSize: '0.5rem', fontWeight: 700,
-                color: bossStyle.glow ? bossStyle.glow.replace('0.5', '1').replace('0.6', '1').replace('0.7', '1') : '#ff4444',
+                fontSize: isGodBoss ? '0.6rem' : '0.5rem', fontWeight: 700,
+                color: bossStyle.glow ? bossStyle.glow.replace('0.5', '1').replace('0.6', '1').replace('0.7', '1').replace('0.8', '1') : '#ff4444',
                 textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
                 whiteSpace: 'nowrap', marginTop: 2,
               }}>
-                BOSS
+                {isGodBoss ? 'GOD' : 'BOSS'}
               </div>
             </div>
           );
@@ -951,7 +974,8 @@ export default function WorldMap() {
         {cities.map((city) => {
           const pos = getNodePos(city.id);
           if (!pos) return null;
-          const isCityUnlocked = city.unlocked || (city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
+          const bossOk = !city.unlockBoss || bossesDefeated.includes(city.unlockBoss);
+          const isCityUnlocked = city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
           const isSelected = selectedCity === city.id;
           const cityScale = Math.max(0.3, 1 / camZoom);
           const isCityDragging = devDragging === city.id;
@@ -1009,9 +1033,9 @@ export default function WorldMap() {
                     City
                   </div>
                 )}
-                {!isCityUnlocked && city.unlockLevel && (
-                  <div style={{ fontSize: '0.5rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-                    Lv.{city.unlockLevel}
+                {!isCityUnlocked && (city.unlockLevel || city.unlockBoss) && (
+                  <div style={{ fontSize: '0.45rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                    {city.unlockBoss ? '🔒 Boss' : `Lv.${city.unlockLevel}`}
                   </div>
                 )}
               </div>
