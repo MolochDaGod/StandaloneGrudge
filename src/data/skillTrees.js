@@ -8,7 +8,8 @@ export const skillTrees = {
         requiredLevel: 1,
         skills: [
           { id: 'w_taunt', name: 'Taunt', icon: '📢', description: 'Force enemies to target you', effect: '+15% Threat', maxPoints: 3, bonuses: { defense: 5 } },
-          { id: 'w_quick_strike', name: 'Quick Strike', icon: '⚔️', description: 'Fast attack with speed bonus', effect: '+15% Attack Speed', maxPoints: 3, bonuses: { attackSpeed: 5 } }
+          { id: 'w_quick_strike', name: 'Quick Strike', icon: '⚔️', description: 'Fast attack with speed bonus', effect: '+15% Attack Speed', maxPoints: 3, bonuses: { attackSpeed: 5 } },
+          { id: 'w_rending_strikes', name: 'Rending Strikes', icon: '🩸', description: 'Attacks have a chance to cause bleeding', effect: '+10% Bleed Proc', maxPoints: 3, bonuses: { procChance: 3 }, passive: true, procEffect: { type: 'bleed', damage: 0.08, duration: 3 } }
         ]
       },
       {
@@ -18,6 +19,9 @@ export const skillTrees = {
           { id: 'w_damage_surge', name: 'Damage Surge', icon: '💥', description: 'Temporary damage boost', effect: '+25% Damage for 3 turns', maxPoints: 3, requires: 'w_quick_strike', bonuses: { damage: 3 } },
           { id: 'w_guardian_aura', name: "Guardian's Aura", icon: '🔰', description: 'Defense buff', effect: '+15% Party Defense', maxPoints: 3, requires: 'w_taunt', bonuses: { defense: 8 },
             grantedAbility: { id: 'guardian_aura', name: "Guardian's Aura", icon: '🔰', description: 'Raise your defenses, gaining +20 defense for 3 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 20, duration: 3 } }
+          },
+          { id: 'w_demoralizing_shout', name: 'Demoralizing Shout', icon: '📣', description: 'A fearsome shout that weakens enemy attacks', effect: '-20% Enemy Attack', maxPoints: 3, requires: 'w_taunt', bonuses: { defense: 3 },
+            grantedAbility: { id: 'demoralizing_shout', name: 'Demoralizing Shout', icon: '📣', description: 'Shout with fury, reducing enemy attack by 20% for 3 turns', type: 'debuff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 5, target: 'enemy', effect: { type: 'lower_attack', percent: 0.20, duration: 3 } }
           }
         ]
       },
@@ -29,6 +33,12 @@ export const skillTrees = {
           { id: 'w_shield_spec', name: 'Shield Specialist', icon: '🛡️', description: 'Block chance and defense', effect: '+20% Block Chance', maxPoints: 3, requires: 'w_guardian_aura', bonuses: { block: 7 } },
           { id: 'w_life_drain', name: 'Life Drain', icon: '❤️', description: 'Damage that heals you', effect: 'Heal 10% of Damage', maxPoints: 2, requires: 'w_quick_strike', bonuses: { drainHealth: 5 },
             grantedAbility: { id: 'life_drain_strike', name: 'Life Drain', icon: '❤️', description: 'A draining strike that heals you for 20% of damage dealt', type: 'physical', damage: 1.4, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy', drainPercent: 0.2 }
+          },
+          { id: 'w_concussive_blow', name: 'Concussive Blow', icon: '💫', description: 'A stunning strike that dazes the target', effect: 'Stun 1 Turn', maxPoints: 2, requires: 'w_damage_surge', bonuses: { damage: 4 },
+            grantedAbility: { id: 'concussive_blow', name: 'Concussive Blow', icon: '💫', description: 'A heavy blow that stuns the enemy for 1 turn', type: 'physical', damage: 1.2, manaCost: 0, staminaCost: 22, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } }
+          },
+          { id: 'w_sunder_armor', name: 'Sunder Armor', icon: '🔨', description: 'Shatter enemy defenses', effect: '-25% Enemy Defense', maxPoints: 2, requires: 'w_rending_strikes', bonuses: { damage: 3 },
+            grantedAbility: { id: 'sunder_armor', name: 'Sunder Armor', icon: '🔨', description: 'Smash through armor, lowering enemy defense by 25% for 3 turns', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 18, cooldown: 4, target: 'enemy', effect: { type: 'lower_defense', percent: 0.25, duration: 3 } }
           }
         ]
       },
@@ -39,7 +49,9 @@ export const skillTrees = {
           { id: 'w_execute', name: 'Execute', icon: '💀', description: 'Bonus damage vs low health', effect: '+50% Damage below 30% HP', maxPoints: 1, requires: 'w_dual_wield', bonuses: { damage: 10 },
             grantedAbility: { id: 'execute', name: 'Execute', icon: '💀', description: 'Deal 3x damage to targets below 30% health', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 30, cooldown: 4, target: 'enemy', executeDamage: 3.0, executeThreshold: 0.3 }
           },
-          { id: 'w_double_strike', name: 'Double Strike', icon: '⚡', description: 'Two consecutive attacks', effect: 'Double Hit Combo', maxPoints: 2, requires: 'w_life_drain', bonuses: { criticalChance: 5 } }
+          { id: 'w_double_strike', name: 'Double Strike', icon: '⚡', description: 'Two consecutive attacks', effect: 'Double Hit Combo', maxPoints: 2, requires: 'w_life_drain', bonuses: { criticalChance: 5 } },
+          { id: 'w_ignite_weapon', name: 'Ignite Weapon', icon: '🔥', description: 'Enflame your weapon, burning enemies on hit', effect: 'Burn on Hit', maxPoints: 2, requires: 'w_concussive_blow', bonuses: { damage: 5 }, passive: true, procEffect: { type: 'burn', damage: 0.12, duration: 3 } },
+          { id: 'w_bloodlust', name: 'Bloodlust', icon: '🩸', description: 'Each bleed on target increases your damage', effect: '+8% Damage per Bleed', maxPoints: 2, requires: 'w_rending_strikes', bonuses: { damage: 4, attackSpeed: 5 }, passive: true }
         ]
       },
       {
@@ -48,7 +60,8 @@ export const skillTrees = {
         skills: [
           { id: 'w_avatar', name: 'Avatar Form', icon: '⭐', description: 'All stats boost', effect: 'Ultimate Transformation', maxPoints: 1, requires: 'w_execute', bonuses: { damage: 15, defense: 15, health: 50 },
             grantedAbility: { id: 'avatar_form', name: 'Avatar Form', icon: '⭐', description: 'Transform into an avatar of war, boosting all stats for 4 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 50, cooldown: 10, target: 'self', effect: { stat: 'damage', multiplier: 1.5, duration: 4 }, defenseBoost: { stat: 'defense', flat: 25, duration: 4 } }
-          }
+          },
+          { id: 'w_relentless', name: 'Relentless', icon: '♻️', description: 'Killing blows restore stamina and reset cooldowns', effect: 'Kill Reset', maxPoints: 1, requires: 'w_double_strike', bonuses: { staminaRegen: 10, attackSpeed: 8 }, passive: true }
         ]
       }
     ]
@@ -62,7 +75,8 @@ export const skillTrees = {
         requiredLevel: 1,
         skills: [
           { id: 'm_mana_flow', name: 'Mana Flow', icon: '💧', description: 'Faster mana regeneration', effect: '+20% Mana Regen', maxPoints: 3, bonuses: { manaRegen: 0.5 } },
-          { id: 'm_arcane_focus', name: 'Arcane Focus', icon: '🔮', description: 'Increased spell damage', effect: '+10% Spell Damage', maxPoints: 3, bonuses: { damage: 3 } }
+          { id: 'm_arcane_focus', name: 'Arcane Focus', icon: '🔮', description: 'Increased spell damage', effect: '+10% Spell Damage', maxPoints: 3, bonuses: { damage: 3 } },
+          { id: 'm_enfeeble', name: 'Enfeeble', icon: '😵', description: 'Spells sap enemy strength', effect: '-8% Enemy Attack on Hit', maxPoints: 3, bonuses: { defense: 2 }, passive: true, procEffect: { type: 'lower_attack', percent: 0.08, duration: 2 } }
         ]
       },
       {
@@ -70,7 +84,13 @@ export const skillTrees = {
         requiredLevel: 5,
         skills: [
           { id: 'm_fire_mastery', name: 'Fire Mastery', icon: '🔥', description: 'Fire spell bonus', effect: '+25% Fire Damage', maxPoints: 3, requires: 'm_arcane_focus', bonuses: { damage: 5 } },
-          { id: 'm_ice_mastery', name: 'Ice Mastery', icon: '❄️', description: 'Ice spell bonus', effect: '+15% Slow Effect', maxPoints: 3, requires: 'm_mana_flow', bonuses: { defense: 4 } }
+          { id: 'm_ice_mastery', name: 'Ice Mastery', icon: '❄️', description: 'Ice spell bonus', effect: '+15% Slow Effect', maxPoints: 3, requires: 'm_mana_flow', bonuses: { defense: 4 } },
+          { id: 'm_flame_brand', name: 'Flame Brand', icon: '🔥', description: 'Ignite the target in searing flames', effect: 'Burn DOT', maxPoints: 3, requires: 'm_arcane_focus', bonuses: { damage: 3 },
+            grantedAbility: { id: 'flame_brand', name: 'Flame Brand', icon: '🔥', description: 'Set the target ablaze, burning for 15% spell damage over 4 turns', type: 'magical', damage: 0.6, manaCost: 20, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { type: 'burn', damage: 0.15, duration: 4 } }
+          },
+          { id: 'm_blessing', name: 'Blessing', icon: '✨', description: 'Divine light heals over time', effect: 'Heal Over Time', maxPoints: 3, requires: 'm_mana_flow', bonuses: { health: 10 },
+            grantedAbility: { id: 'blessing', name: 'Blessing', icon: '✨', description: 'Bless yourself with divine light, healing 8% HP per turn for 4 turns', type: 'heal_over_time', damage: 0, manaCost: 22, staminaCost: 0, cooldown: 5, target: 'self', healPercent: 0.08, duration: 4 }
+          }
         ]
       },
       {
@@ -78,11 +98,17 @@ export const skillTrees = {
         requiredLevel: 10,
         skills: [
           { id: 'm_meteor', name: 'Meteor Strike', icon: '☄️', description: 'Call down a meteor', effect: 'Massive AoE', maxPoints: 1, requires: 'm_fire_mastery', bonuses: { damage: 12 },
-            grantedAbility: { id: 'meteor_strike', name: 'Meteor Strike', icon: '☄️', description: 'Call down a devastating meteor dealing massive damage', type: 'magical', damage: 3.0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 2 } }
+            grantedAbility: { id: 'meteor_strike', name: 'Meteor Strike', icon: '☄️', description: 'Call down a devastating meteor dealing massive damage', type: 'magical', damage: 3.0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'enemy', effect: { type: 'burn', damage: 0.15, duration: 2 } }
           },
           { id: 'm_divine_shield', name: 'Divine Shield', icon: '✝️', description: 'Holy protection', effect: 'Absorb Damage', maxPoints: 3, requires: 'm_ice_mastery', bonuses: { defense: 6, resistance: 3 } },
           { id: 'm_chain_lightning', name: 'Chain Lightning', icon: '⚡', description: 'Lightning bounces between foes', effect: 'Hit 5 Targets', maxPoints: 2, requires: 'm_arcane_focus', bonuses: { damage: 6, criticalChance: 3 },
             grantedAbility: { id: 'chain_lightning', name: 'Chain Lightning', icon: '⚡', description: 'Launch a bolt of lightning that deals heavy damage', type: 'magical', damage: 2.2, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.08, duration: 2 } }
+          },
+          { id: 'm_sleep', name: 'Slumber', icon: '😴', description: 'Put the target into a magical sleep', effect: 'Sleep 2 Turns', maxPoints: 2, requires: 'm_ice_mastery', bonuses: { mana: 15 },
+            grantedAbility: { id: 'slumber', name: 'Slumber', icon: '😴', description: 'Lull the enemy into a deep sleep for 2 turns. Damage wakes them.', type: 'magical', damage: 0, manaCost: 30, staminaCost: 0, cooldown: 6, target: 'enemy', effect: { type: 'sleep', duration: 2 } }
+          },
+          { id: 'm_mind_break', name: 'Mind Break', icon: '🧠', description: 'Shatter mental defenses, lowering magic resistance', effect: '-20% Enemy Defense', maxPoints: 2, requires: 'm_enfeeble', bonuses: { damage: 4 },
+            grantedAbility: { id: 'mind_break', name: 'Mind Break', icon: '🧠', description: 'Shatter the enemy mind, lowering defense by 20% for 3 turns', type: 'magical', damage: 0.5, manaCost: 25, staminaCost: 0, cooldown: 4, target: 'enemy', effect: { type: 'lower_defense', percent: 0.20, duration: 3 } }
           }
         ]
       },
@@ -93,6 +119,12 @@ export const skillTrees = {
           { id: 'm_spell_echo', name: 'Spell Echo', icon: '🔄', description: 'Chance to double cast', effect: '20% Echo Chance', maxPoints: 2, requires: 'm_meteor', bonuses: { damage: 8, mana: 20 } },
           { id: 'm_holy_nova', name: 'Holy Nova', icon: '💫', description: 'AoE heal and damage', effect: 'Burst Heal + Damage', maxPoints: 2, requires: 'm_divine_shield', bonuses: { health: 30, damage: 5 },
             grantedAbility: { id: 'holy_nova', name: 'Holy Nova', icon: '💫', description: 'Release a burst of holy energy, healing yourself for 25% HP', type: 'heal', damage: 0, manaCost: 45, staminaCost: 0, cooldown: 5, target: 'self', healPercent: 0.25 }
+          },
+          { id: 'm_confuse', name: 'Bewilderment', icon: '🌀', description: 'Confuse the target, making them attack randomly', effect: 'Confuse 2 Turns', maxPoints: 2, requires: 'm_sleep', bonuses: { mana: 15 },
+            grantedAbility: { id: 'bewilderment', name: 'Bewilderment', icon: '🌀', description: 'Bewitch the enemy mind, confusing them for 2 turns. They may attack allies.', type: 'magical', damage: 0, manaCost: 35, staminaCost: 0, cooldown: 6, target: 'enemy', effect: { type: 'confuse', duration: 2 } }
+          },
+          { id: 'm_purify', name: 'Purify', icon: '🕊️', description: 'Cleanse all debuffs and heal', effect: 'Remove Debuffs', maxPoints: 1, requires: 'm_blessing', bonuses: { health: 20 },
+            grantedAbility: { id: 'purify', name: 'Purify', icon: '🕊️', description: 'Cleanse all debuffs from yourself and heal 15% HP', type: 'heal', damage: 0, manaCost: 30, staminaCost: 0, cooldown: 6, target: 'self', healPercent: 0.15, cleanse: true }
           }
         ]
       },
@@ -102,7 +134,8 @@ export const skillTrees = {
         skills: [
           { id: 'm_arcane_cataclysm', name: 'Arcane Cataclysm', icon: '🌟', description: 'Devastating magic storm', effect: 'Ultimate: Pure Magic', maxPoints: 1, requires: 'm_spell_echo', bonuses: { damage: 20, mana: 50, criticalChance: 10 },
             grantedAbility: { id: 'arcane_cataclysm', name: 'Arcane Cataclysm', icon: '🌟', description: 'Unleash a devastating storm of pure arcane energy', type: 'magical', damage: 4.0, manaCost: 70, staminaCost: 0, cooldown: 8, target: 'enemy' }
-          }
+          },
+          { id: 'm_spellweave', name: 'Spellweave', icon: '🌐', description: 'Spells have a chance to apply a random debuff (burn, sleep, confuse, lower defense)', effect: 'Random Debuff Proc', maxPoints: 1, requires: 'm_confuse', bonuses: { damage: 10, mana: 25 }, passive: true, procEffect: { type: 'random_debuff', options: ['burn', 'sleep', 'confuse', 'lower_defense'], chance: 0.20 } }
         ]
       }
     ]
@@ -116,7 +149,8 @@ export const skillTrees = {
         requiredLevel: 1,
         skills: [
           { id: 'wr_storm_touch', name: 'Storm Touch', icon: '⚡', description: 'Lightning spells hit harder', effect: '+15% Storm Damage', maxPoints: 3, bonuses: { damage: 3 } },
-          { id: 'wr_bark_skin', name: 'Bark Skin', icon: '🌿', description: 'Nature hardens your skin', effect: '+10% Defense', maxPoints: 3, bonuses: { defense: 4, health: 10 } }
+          { id: 'wr_bark_skin', name: 'Bark Skin', icon: '🌿', description: 'Nature hardens your skin', effect: '+10% Defense', maxPoints: 3, bonuses: { defense: 4, health: 10 } },
+          { id: 'wr_feral_instinct', name: 'Feral Instinct', icon: '🐾', description: 'Chance for a bonus follow-up attack on hit', effect: '+8% Proc Chance', maxPoints: 3, bonuses: { procChance: 3, attackSpeed: 2 }, passive: true, procEffect: { type: 'extra_attack', damage: 0.5 } }
         ]
       },
       {
@@ -124,7 +158,13 @@ export const skillTrees = {
         requiredLevel: 5,
         skills: [
           { id: 'wr_weapon_mastery', name: 'Weapon Mastery', icon: '🔨', description: 'Mace and dagger expertise', effect: '+20% Weapon Damage', maxPoints: 3, requires: 'wr_storm_touch', bonuses: { damage: 4, criticalChance: 3 } },
-          { id: 'wr_wild_growth', name: 'Wild Growth', icon: '🌱', description: 'Nature heals strengthen', effect: '+25% Heal Power', maxPoints: 3, requires: 'wr_bark_skin', bonuses: { health: 15 } }
+          { id: 'wr_wild_growth', name: 'Wild Growth', icon: '🌱', description: 'Nature heals strengthen', effect: '+25% Heal Power', maxPoints: 3, requires: 'wr_bark_skin', bonuses: { health: 15 } },
+          { id: 'wr_lacerate', name: 'Lacerate', icon: '🩸', description: 'Claw attack that causes deep bleeding', effect: 'Bleed DOT', maxPoints: 3, requires: 'wr_feral_instinct', bonuses: { damage: 3 },
+            grantedAbility: { id: 'lacerate', name: 'Lacerate', icon: '🩸', description: 'Rip into the target with claws, causing bleed for 10% damage over 4 turns', type: 'physical', damage: 1.0, manaCost: 0, staminaCost: 14, cooldown: 3, target: 'enemy', effect: { type: 'bleed', damage: 0.10, duration: 4 } }
+          },
+          { id: 'wr_soothing_rain', name: 'Soothing Rain', icon: '🌧️', description: 'Call rain that heals over time', effect: 'Heal Over Time', maxPoints: 3, requires: 'wr_bark_skin', bonuses: { health: 10 },
+            grantedAbility: { id: 'soothing_rain', name: 'Soothing Rain', icon: '🌧️', description: 'Call a gentle rain that heals 6% HP per turn for 5 turns', type: 'heal_over_time', damage: 0, manaCost: 18, staminaCost: 0, cooldown: 5, target: 'self', healPercent: 0.06, duration: 5 }
+          }
         ]
       },
       {
@@ -136,7 +176,10 @@ export const skillTrees = {
           },
           { id: 'wr_iron_hide', name: 'Iron Hide', icon: '🛡️', description: 'Bear form is tougher', effect: '+30% Bear Defense', maxPoints: 3, requires: 'wr_wild_growth', bonuses: { defense: 6, health: 15 } },
           { id: 'wr_venom_edge', name: 'Venom Edge', icon: '🗡️', description: 'Dagger poison is deadlier', effect: '+20% Poison Damage', maxPoints: 2, requires: 'wr_storm_touch', bonuses: { damage: 5 },
-            grantedAbility: { id: 'venom_strike', name: 'Venom Strike', icon: '🗡️', description: 'A venomous dagger strike that poisons for 4 turns', type: 'physical', damage: 1.1, manaCost: 0, staminaCost: 18, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.18, duration: 4 } }
+            grantedAbility: { id: 'venom_strike', name: 'Venom Strike', icon: '🗡️', description: 'A venomous dagger strike that poisons for 4 turns', type: 'physical', damage: 1.1, manaCost: 0, staminaCost: 18, cooldown: 3, target: 'enemy', effect: { type: 'poison', damage: 0.18, duration: 4 } }
+          },
+          { id: 'wr_entangle', name: 'Entangle', icon: '🌿', description: 'Vines root and damage the target', effect: 'Root + DOT', maxPoints: 2, requires: 'wr_wild_growth', bonuses: { defense: 4 },
+            grantedAbility: { id: 'entangle', name: 'Entangle', icon: '🌿', description: 'Summon vines that stun for 1 turn and deal nature damage over 3 turns', type: 'magical', damage: 0.5, manaCost: 22, staminaCost: 0, cooldown: 5, target: 'enemy', effect: { type: 'stun', duration: 1 }, secondaryEffect: { type: 'dot', damage: 0.10, duration: 3 } }
           }
         ]
       },
@@ -145,9 +188,13 @@ export const skillTrees = {
         requiredLevel: 15,
         skills: [
           { id: 'wr_tempest', name: 'Tempest', icon: '🌪️', description: 'Storm mastery unleashed', effect: '+40% Storm Power', maxPoints: 1, requires: 'wr_thunderclap', bonuses: { damage: 8, attackSpeed: 10 },
-            grantedAbility: { id: 'tempest', name: 'Tempest', icon: '🌪️', description: 'Summon a raging tempest dealing heavy storm damage', type: 'magical', damage: 2.5, manaCost: 40, staminaCost: 0, cooldown: 4, target: 'enemy', effect: { stat: 'damage', multiplier: 0.7, duration: 2 } }
+            grantedAbility: { id: 'tempest', name: 'Tempest', icon: '🌪️', description: 'Summon a raging tempest dealing heavy storm damage', type: 'magical', damage: 2.5, manaCost: 40, staminaCost: 0, cooldown: 4, target: 'enemy', effect: { type: 'lower_attack', percent: 0.15, duration: 2 } }
           },
-          { id: 'wr_rejuvenate', name: 'Rejuvenate', icon: '💚', description: 'Nature mends all wounds', effect: 'Passive Regen', maxPoints: 2, requires: 'wr_iron_hide', bonuses: { drainHealth: 5, health: 20 } }
+          { id: 'wr_rejuvenate', name: 'Rejuvenate', icon: '💚', description: 'Nature mends all wounds', effect: 'Passive Regen', maxPoints: 2, requires: 'wr_iron_hide', bonuses: { drainHealth: 5, health: 20 } },
+          { id: 'wr_primal_roar', name: 'Primal Roar', icon: '🦁', description: 'A terrifying roar that confuses and weakens', effect: 'Confuse + Lower Attack', maxPoints: 2, requires: 'wr_iron_hide', bonuses: { defense: 5 },
+            grantedAbility: { id: 'primal_roar', name: 'Primal Roar', icon: '🦁', description: 'Unleash a primal roar that confuses the enemy for 2 turns and lowers attack by 15%', type: 'debuff', damage: 0, manaCost: 0, staminaCost: 25, cooldown: 6, target: 'enemy', effect: { type: 'confuse', duration: 2 }, secondaryEffect: { type: 'lower_attack', percent: 0.15, duration: 2 } }
+          },
+          { id: 'wr_savage_bleed', name: 'Savage Rend', icon: '💢', description: 'Bear form attacks cause deep wounds', effect: 'Bear Bleed Proc', maxPoints: 2, requires: 'wr_lacerate', bonuses: { damage: 6 }, passive: true, procEffect: { type: 'bleed', damage: 0.12, duration: 3 } }
         ]
       },
       {
@@ -156,7 +203,8 @@ export const skillTrees = {
         skills: [
           { id: 'wr_natures_wrath', name: "Nature's Wrath", icon: '🌟', description: 'Command storm and wild as one', effect: 'Ultimate: Primal Storm', maxPoints: 1, requires: 'wr_tempest', bonuses: { damage: 15, attackSpeed: 15, health: 40 },
             grantedAbility: { id: 'natures_wrath', name: "Nature's Wrath", icon: '🌟', description: 'Unleash primal storm and nature as one devastating force', type: 'magical', damage: 3.5, manaCost: 50, staminaCost: 20, cooldown: 8, target: 'enemy', effect: { type: 'dot', damage: 0.2, duration: 3 } }
-          }
+          },
+          { id: 'wr_alpha_predator', name: 'Alpha Predator', icon: '🐺', description: 'Each kill in bear form extends duration and heals', effect: 'Kill Sustain', maxPoints: 1, requires: 'wr_primal_roar', bonuses: { damage: 10, health: 30, drainHealth: 8 }, passive: true }
         ]
       }
     ]
@@ -170,7 +218,8 @@ export const skillTrees = {
         requiredLevel: 1,
         skills: [
           { id: 'r_precision', name: 'Precision', icon: '🎯', description: 'Better accuracy', effect: '+15% Accuracy', maxPoints: 3, bonuses: { accuracy: 5, criticalChance: 2 } },
-          { id: 'r_swift_draw', name: 'Swift Draw', icon: '💨', description: 'Faster arrow nocking', effect: '+10% Attack Speed', maxPoints: 3, bonuses: { attackSpeed: 4 } }
+          { id: 'r_swift_draw', name: 'Swift Draw', icon: '💨', description: 'Faster arrow nocking', effect: '+10% Attack Speed', maxPoints: 3, bonuses: { attackSpeed: 4 } },
+          { id: 'r_crippling_shot', name: 'Crippling Shot', icon: '🦵', description: 'Arrows weaken enemy defenses', effect: '-8% Enemy Defense on Hit', maxPoints: 3, bonuses: { damage: 2 }, passive: true, procEffect: { type: 'lower_defense', percent: 0.08, duration: 2 } }
         ]
       },
       {
@@ -178,7 +227,13 @@ export const skillTrees = {
         requiredLevel: 5,
         skills: [
           { id: 'r_headshot', name: 'Headshot', icon: '💀', description: 'Critical damage bonus', effect: '+50% Crit Damage', maxPoints: 3, requires: 'r_precision', bonuses: { criticalDamage: 15 } },
-          { id: 'r_evasion', name: 'Nature\'s Grace', icon: '🌿', description: 'Dodge chance up', effect: '+15% Evasion', maxPoints: 3, requires: 'r_swift_draw', bonuses: { evasion: 5 } }
+          { id: 'r_evasion', name: 'Nature\'s Grace', icon: '🌿', description: 'Dodge chance up', effect: '+15% Evasion', maxPoints: 3, requires: 'r_swift_draw', bonuses: { evasion: 5 } },
+          { id: 'r_venom_arrow', name: 'Venom Arrow', icon: '☠️', description: 'Tip arrows with deadly poison', effect: 'Poison DOT', maxPoints: 3, requires: 'r_precision', bonuses: { damage: 3 },
+            grantedAbility: { id: 'venom_arrow', name: 'Venom Arrow', icon: '☠️', description: 'Fire a poison-tipped arrow that deals poison damage over 4 turns', type: 'physical', damage: 0.7, manaCost: 0, staminaCost: 14, cooldown: 3, target: 'enemy', effect: { type: 'poison', damage: 0.12, duration: 4 } }
+          },
+          { id: 'r_hunters_mark', name: "Hunter's Mark", icon: '🔴', description: 'Mark the target, lowering its defense', effect: '-15% Enemy Defense', maxPoints: 3, requires: 'r_crippling_shot', bonuses: { damage: 2, criticalChance: 2 },
+            grantedAbility: { id: 'hunters_mark', name: "Hunter's Mark", icon: '🔴', description: 'Mark the enemy, reducing their defense by 20% for 4 turns', type: 'debuff', damage: 0, manaCost: 0, staminaCost: 12, cooldown: 5, target: 'enemy', effect: { type: 'lower_defense', percent: 0.20, duration: 4 } }
+          }
         ]
       },
       {
@@ -193,6 +248,9 @@ export const skillTrees = {
           },
           { id: 'r_trap', name: 'Bear Trap', icon: '🪤', description: 'Place traps that root', effect: '1 Turn Stun', maxPoints: 2, requires: 'r_evasion', bonuses: { defense: 5 },
             grantedAbility: { id: 'bear_trap', name: 'Bear Trap', icon: '🪤', description: 'Set a trap that stuns the enemy for 1 turn', type: 'physical', damage: 0.6, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } }
+          },
+          { id: 'r_bleed_arrow', name: 'Barbed Arrow', icon: '🩸', description: 'Barbed tips cause heavy bleeding', effect: 'Bleed DOT', maxPoints: 2, requires: 'r_venom_arrow', bonuses: { damage: 4 },
+            grantedAbility: { id: 'barbed_arrow', name: 'Barbed Arrow', icon: '🩸', description: 'Fire a barbed arrow that causes bleeding for 12% damage over 4 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 16, cooldown: 3, target: 'enemy', effect: { type: 'bleed', damage: 0.12, duration: 4 } }
           }
         ]
       },
@@ -205,7 +263,11 @@ export const skillTrees = {
           },
           { id: 'r_wind_walk', name: 'Wind Walk', icon: '🌬️', description: 'Become invisible briefly', effect: 'Stealth + Speed', maxPoints: 2, requires: 'r_trap', bonuses: { evasion: 8, movementSpeed: 5 },
             grantedAbility: { id: 'wind_walk', name: 'Wind Walk', icon: '🌬️', description: 'Vanish into the wind, boosting evasion by 60% for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 18, cooldown: 5, target: 'self', effect: { stat: 'evasion', flat: 60, duration: 2 } }
-          }
+          },
+          { id: 'r_sleep_dart', name: 'Sleep Dart', icon: '😴', description: 'A tranquilizer dart that puts the enemy to sleep', effect: 'Sleep 2 Turns', maxPoints: 2, requires: 'r_venom_arrow', bonuses: { damage: 3 },
+            grantedAbility: { id: 'sleep_dart', name: 'Sleep Dart', icon: '😴', description: 'Fire a tranquilizer dart, putting the enemy to sleep for 2 turns. Damage wakes them.', type: 'physical', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 6, target: 'enemy', effect: { type: 'sleep', duration: 2 } }
+          },
+          { id: 'r_expose_weakness', name: 'Expose Weakness', icon: '🎯', description: 'Crits reduce enemy attack power', effect: 'Crit Debuff', maxPoints: 2, requires: 'r_hunters_mark', bonuses: { criticalChance: 5, damage: 3 }, passive: true, procEffect: { type: 'lower_attack', percent: 0.12, duration: 2, onCrit: true } }
         ]
       },
       {
@@ -214,7 +276,8 @@ export const skillTrees = {
         skills: [
           { id: 'r_arrow_storm', name: 'Arrow Storm', icon: '🌟', description: 'Rain arrows from the sky', effect: 'Ultimate: Arrow Rain', maxPoints: 1, requires: 'r_sniper', bonuses: { damage: 18, criticalChance: 10, attackSpeed: 10 },
             grantedAbility: { id: 'arrow_storm', name: 'Arrow Storm', icon: '🌟', description: 'Rain a devastating storm of arrows from the sky', type: 'physical', damage: 3.5, manaCost: 0, staminaCost: 40, cooldown: 7, target: 'enemy' }
-          }
+          },
+          { id: 'r_death_blossom', name: 'Death Blossom', icon: '🌸', description: 'Attacks apply all DOTs at once (poison, bleed, lower defense)', effect: 'Multi-DOT Proc', maxPoints: 1, requires: 'r_bleed_arrow', bonuses: { damage: 12, criticalChance: 8 }, passive: true, procEffect: { type: 'multi_dot', effects: ['poison', 'bleed', 'lower_defense'], chance: 0.25 } }
         ]
       }
     ]
