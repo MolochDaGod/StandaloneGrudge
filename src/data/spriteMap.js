@@ -529,6 +529,21 @@ export const effectSprites = {
   resurrect: { src: '/effects/resurrect_sprite.png', cols: 6, rows: 4, frameW: 256, frameH: 256, frames: 24 },
   loading: { src: '/effects/pixel/15_loading_spritesheet.png', size: 1100, frames: 121 },
   slashRanged: { src: '/sprites/effects/slash_ranged.png', cols: 11, rows: 1, frameW: 100, frameH: 100, frames: 11 },
+  slashRedSm: { src: '/effects/slash/slash_red_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  slashRedMd: { src: '/effects/slash/slash_red_md.png', cols: 8, rows: 1, frameW: 64, frameH: 64, frames: 8 },
+  slashRedLg: { src: '/effects/slash/slash_red_lg.png', cols: 8, rows: 1, frameW: 96, frameH: 96, frames: 8 },
+  slashBlueSm: { src: '/effects/slash/slash_blue_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  slashBlueMd: { src: '/effects/slash/slash_blue_md.png', cols: 8, rows: 1, frameW: 64, frameH: 64, frames: 8 },
+  slashBlueLg: { src: '/effects/slash/slash_blue_lg.png', cols: 8, rows: 1, frameW: 96, frameH: 96, frames: 8 },
+  slashGreenSm: { src: '/effects/slash/slash_green_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  slashGreenMd: { src: '/effects/slash/slash_green_md.png', cols: 8, rows: 1, frameW: 64, frameH: 64, frames: 8 },
+  slashGreenLg: { src: '/effects/slash/slash_green_lg.png', cols: 8, rows: 1, frameW: 96, frameH: 96, frames: 8 },
+  slashPurpleSm: { src: '/effects/slash/slash_purple_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  slashPurpleMd: { src: '/effects/slash/slash_purple_md.png', cols: 8, rows: 1, frameW: 64, frameH: 64, frames: 8 },
+  slashPurpleLg: { src: '/effects/slash/slash_purple_lg.png', cols: 8, rows: 1, frameW: 96, frameH: 96, frames: 8 },
+  slashOrangeSm: { src: '/effects/slash/slash_orange_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
+  slashOrangeMd: { src: '/effects/slash/slash_orange_md.png', cols: 8, rows: 1, frameW: 64, frameH: 64, frames: 8 },
+  slashOrangeLg: { src: '/effects/slash/slash_orange_lg.png', cols: 8, rows: 1, frameW: 96, frameH: 96, frames: 8 },
 };
 
 export const projectileSprites = {

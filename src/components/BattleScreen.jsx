@@ -99,6 +99,83 @@ function getRandomCritEffect(type) {
   return { sprite: effectSprites[pick.key], filter: pick.filter };
 }
 
+const SLASH_COLORS = {
+  red: { sm: 'slashRedSm', md: 'slashRedMd', lg: 'slashRedLg' },
+  blue: { sm: 'slashBlueSm', md: 'slashBlueMd', lg: 'slashBlueLg' },
+  green: { sm: 'slashGreenSm', md: 'slashGreenMd', lg: 'slashGreenLg' },
+  purple: { sm: 'slashPurpleSm', md: 'slashPurpleMd', lg: 'slashPurpleLg' },
+  orange: { sm: 'slashOrangeSm', md: 'slashOrangeMd', lg: 'slashOrangeLg' },
+};
+
+function getSlashColor(abilityType, abilityName, classId) {
+  const n = (abilityName || '').toLowerCase();
+  if (n.includes('fire') || n.includes('hellfire') || n.includes('ignite') || n.includes('flame')) return 'orange';
+  if (n.includes('ice') || n.includes('frost') || n.includes('arcane') || n.includes('mana')) return 'blue';
+  if (n.includes('lightning') || n.includes('thunder') || n.includes('storm') || n.includes('chain')) return 'blue';
+  if (n.includes('poison') || n.includes('venom') || n.includes('nature') || n.includes('heal') || n.includes('rejuv')) return 'green';
+  if (n.includes('shadow') || n.includes('dark') || n.includes('void') || n.includes('demon') || n.includes('chaos') || n.includes('curse') || n.includes('soul')) return 'purple';
+  if (abilityType === 'magical') {
+    if (classId === 'mage') return 'purple';
+    if (classId === 'worge') return 'green';
+    return 'blue';
+  }
+  if (classId === 'ranger') return 'green';
+  return 'red';
+}
+
+function StackedSlashImpact({ x, y, level, color = 'red' }) {
+  const [frame, setFrame] = React.useState(0);
+  const rotRef = React.useRef(45 + Math.random() * 30);
+  const colorSet = SLASH_COLORS[color] || SLASH_COLORS.red;
+  const layers = level === 'large'
+    ? [{ key: colorSet.lg, size: 140 }, { key: colorSet.md, size: 90 }]
+    : [{ key: colorSet.md, size: 100 }, { key: colorSet.sm, size: 55 }];
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= 8) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: 260, pointerEvents: 'none' }}>
+      {layers.map((layer, i) => {
+        const sprite = effectSprites[layer.key];
+        if (!sprite) return null;
+        const sz = layer.size;
+        const scale = sz / sprite.frameW;
+        const sheetW = sprite.cols * sprite.frameW * scale;
+        const sheetH = sprite.frameH * scale;
+        const rot = i === 0 ? 0 : rotRef.current;
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            transform: `translate(-50%, -50%) rotate(${rot}deg)`,
+            width: sz, height: sz,
+            overflow: 'hidden',
+            mixBlendMode: 'screen',
+            opacity: i === 0 ? 1 : 0.85,
+          }}>
+            <div style={{
+              width: sz, height: sz,
+              backgroundImage: `url(${sprite.src})`,
+              backgroundSize: `${sheetW}px ${sheetH}px`,
+              backgroundPosition: `-${frame * sprite.frameW * scale}px 0px`,
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated',
+            }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function EffectSprite({ x, y, sprite, filter: filterProp }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
@@ -1028,6 +1105,7 @@ export default function BattleScreen() {
   const [activeParticles, setActiveParticles] = useState([]);
   const [hitEffects, setHitEffects] = useState([]);
   const [critFx, setCritFx] = useState([]);
+  const [slashImpactFx, setSlashImpactFx] = useState([]);
   const [dodgeFlashes, setDodgeFlashes] = useState([]);
   const [castingFx, setCastingFx] = useState([]);
   const [weaponContactFx, setWeaponContactFx] = useState([]);
@@ -1234,6 +1312,13 @@ export default function BattleScreen() {
     setTimeout(() => setWeaponContactFx(prev => prev.filter(w => w.id !== id)), playCount * 900 + 200);
   }, []);
 
+  const spawnSlashImpact = useCallback((x, y, level, color) => {
+    if (x == null || y == null) return;
+    const id = Date.now() + Math.random();
+    setSlashImpactFx(prev => [...prev, { id, x, y, level, color }]);
+    setTimeout(() => setSlashImpactFx(prev => prev.filter(s => s.id !== id)), 500);
+  }, []);
+
   useEffect(() => {
     if (!lastAction || lastAction === actionProcessed.current) return;
     actionProcessed.current = lastAction;
@@ -1330,7 +1415,7 @@ export default function BattleScreen() {
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR.sprite, filter: hfxR.filter }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
             }
-            if (isCrit) { playCrit(); } else { playHurt(); }
+            if (isCrit) { playCrit(); spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId)); } else { playHurt(); spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId)); }
             spawnWeaponContact(target.position.x, target.position.y, 1);
           } else {
             playDodge();
@@ -1406,6 +1491,7 @@ export default function BattleScreen() {
             }
             if (isCrit) {
               playCrit();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
               if (target.position) {
                 const critId = Date.now() + Math.random();
                 setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
@@ -1413,6 +1499,7 @@ export default function BattleScreen() {
               }
             } else {
               playHurt();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
             }
           } else {
             playDodge();
@@ -1451,6 +1538,7 @@ export default function BattleScreen() {
             }
             if (isCrit) {
               playCrit();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
               if (target.position) {
                 const critId = Date.now() + Math.random();
                 setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
@@ -1458,6 +1546,7 @@ export default function BattleScreen() {
               }
             } else {
               playHurt();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
             }
           } else {
             playDodge();
@@ -1499,6 +1588,7 @@ export default function BattleScreen() {
             }
             if (isCrit) {
               playCrit();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
               if (target.position) {
                 const critId = Date.now() + Math.random();
                 setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
@@ -1506,6 +1596,7 @@ export default function BattleScreen() {
               }
             } else {
               playHurt();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
             }
           } else {
             playDodge();
@@ -1539,6 +1630,7 @@ export default function BattleScreen() {
             }
             if (isCrit) {
               playCrit();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
               if (target.position) {
                 const critId = Date.now() + Math.random();
                 setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
@@ -1546,6 +1638,7 @@ export default function BattleScreen() {
               }
             } else {
               playHurt();
+              spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
             }
           } else {
             playDodge();
@@ -1597,6 +1690,7 @@ export default function BattleScreen() {
                 }
                 if (isCrit) {
                   playCrit();
+                  spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
                   if (target.position) {
                     const critType = abilityType === 'magical' ? 'spell' : 'melee';
                     const critId = Date.now() + Math.random();
@@ -1605,6 +1699,7 @@ export default function BattleScreen() {
                   }
                 } else {
                   playHurt();
+                  spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
                 }
               } else {
                 playDodge();
@@ -1656,6 +1751,7 @@ export default function BattleScreen() {
               }
               if (isCrit) {
                 playCrit();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
                 if (target.position) {
                   const critId = Date.now() + Math.random();
                   setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('melee') }]);
@@ -1663,6 +1759,7 @@ export default function BattleScreen() {
                 }
               } else {
                 playHurt();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
               }
               if (target.position) spawnWeaponContact(target.position.x, target.position.y, 2);
             } else {
@@ -1712,6 +1809,7 @@ export default function BattleScreen() {
               }
               if (isCrit) {
                 playCrit();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
                 if (target.position) {
                   const critType = abilityType === 'magical' ? 'spell' : 'melee';
                   const critId = Date.now() + Math.random();
@@ -1720,6 +1818,7 @@ export default function BattleScreen() {
                 }
               } else {
                 playHurt();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
               }
               if (target.position) spawnWeaponContact(target.position.x, target.position.y, combo.length);
             } else {
@@ -1751,6 +1850,7 @@ export default function BattleScreen() {
               }
               if (isCrit) {
                 playCrit();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId));
                 if (target.position) {
                   const critType = abilityType === 'magical' ? 'spell' : 'melee';
                   const critId = Date.now() + Math.random();
@@ -1759,6 +1859,7 @@ export default function BattleScreen() {
                 }
               } else {
                 playHurt();
+                spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId));
               }
               if (target.position) spawnWeaponContact(target.position.x, target.position.y, 1);
             } else {
@@ -2333,6 +2434,10 @@ export default function BattleScreen() {
 
         {critFx.map(c => (
           <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={c.sprite} filter={c.filter} />
+        ))}
+
+        {slashImpactFx.map(s => (
+          <StackedSlashImpact key={s.id} x={s.x} y={s.y} level={s.level} color={s.color} />
         ))}
 
         {dodgeFlashes.map(d => (
