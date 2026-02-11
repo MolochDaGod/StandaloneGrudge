@@ -2029,8 +2029,9 @@ export default function WorldMap() {
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const heroScale = calcNodeScale(camZoom, 0.35);
           const mapSpriteScale = 1.2;
-          const spriteW = 100 * mapSpriteScale;
-          const spriteH = 100 * mapSpriteScale;
+          const baseFrame = 100;
+          const spriteW = baseFrame * mapSpriteScale;
+          const spriteH = baseFrame * mapSpriteScale;
           const footCrop = 0.82;
           const visibleH = Math.round(spriteH * footCrop);
           const heroCount = activeHeroes.length;
@@ -2060,17 +2061,21 @@ export default function WorldMap() {
                 const wanderX = offset.x * 3;
                 const wanderY = offset.y * 2;
                 const baseX = idx * (spriteW * 0.4);
+                const heroSpriteData = getPlayerSprite(hero.classId, hero.raceId);
+                const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale;
+                const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale;
+                const heroVisH = Math.round(heroFrameH * footCrop);
                 return (
                   <div key={hero.id} style={{
                     position: 'absolute',
                     left: baseX + wanderX,
-                    top: wanderY,
+                    top: wanderY + (visibleH - heroVisH),
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
                     transition: isPathing ? 'none' : 'left 1.5s ease-in-out, top 1.5s ease-in-out',
                   }}>
                     <div style={{
                       position: 'relative',
-                      width: spriteW, height: visibleH,
+                      width: heroFrameW, height: heroVisH,
                     }}>
                       <div style={{
                         position: 'absolute',
@@ -2079,9 +2084,9 @@ export default function WorldMap() {
                         background: 'radial-gradient(ellipse, rgba(0,0,0,0.55), transparent)',
                         zIndex: 1,
                       }} />
-                      <div style={{ position: 'relative', zIndex: 2, width: spriteW, height: visibleH, overflow: 'hidden' }}>
+                      <div style={{ position: 'relative', zIndex: 2, width: heroFrameW, height: heroVisH, overflow: 'hidden' }}>
                         <SpriteAnimation
-                          spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                          spriteData={heroSpriteData}
                           animation={isWalking ? 'walk' : 'idle'}
                           flip={isWalking && flipX}
                           scale={mapSpriteScale}
@@ -2208,8 +2213,10 @@ export default function WorldMap() {
           const spriteData = getEnemySprite(event.mapSprite || 'skeleton');
           const count = event.enemyCount || 1;
           const eventScale = Math.max(0.3, 1 / camZoom);
-          const spriteW = 80;
-          const spriteVisH = Math.round(spriteW * 0.82);
+          const evSpriteScale = 0.8;
+          const evFrameW = (spriteData?.frameWidth || 100) * evSpriteScale;
+          const evFrameH = (spriteData?.frameHeight || 100) * evSpriteScale;
+          const spriteVisH = Math.round(evFrameH * 0.82);
           const spriteOffsets = count === 1
             ? [{ x: 0, y: 0 }]
             : count === 2
@@ -2235,7 +2242,7 @@ export default function WorldMap() {
             >
               <div style={{
                 position: 'relative',
-                width: count === 1 ? spriteW : (count === 2 ? spriteW + 28 : spriteW + 40),
+                width: count === 1 ? evFrameW : (count === 2 ? evFrameW + 28 : evFrameW + 40),
                 height: spriteVisH + 10,
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
               }}>
@@ -2251,14 +2258,14 @@ export default function WorldMap() {
                     position: 'absolute',
                     left: '50%', bottom: 0,
                     transform: `translateX(calc(-50% + ${off.x}px)) translateY(${off.y}px)`,
-                    width: spriteW, height: spriteVisH,
+                    width: evFrameW, height: spriteVisH,
                     overflow: 'hidden',
                     imageRendering: 'pixelated',
                     filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.8)) hue-rotate(340deg) saturate(2) brightness(0.7)`,
                     zIndex: i,
                     pointerEvents: 'none',
                   }}>
-                    <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.8} speed={180 + i * 40} />
+                    <SpriteAnimation spriteData={spriteData} animation="idle" scale={evSpriteScale} speed={180 + i * 40} />
                   </div>
                 ))}
               </div>
