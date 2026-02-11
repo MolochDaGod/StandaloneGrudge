@@ -745,7 +745,7 @@ export default function BattleScreen() {
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const isArena = battleState?.isArena;
-  const bgImage = isArena ? '/backgrounds/arena_battle.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
+  const bgImage = isArena ? '/backgrounds/arena.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
   const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];
