@@ -76,18 +76,16 @@ export const enemyTemplates = {
     ]
   },
   demon_lord: {
-    name: 'Demon Lord', icon: 'fire', color: '#b91c1c',
+    name: 'Infernal Fire Worm', icon: 'fire', color: '#f97316',
     baseHealth: 900, baseDamage: 52, baseDefense: 35, baseMana: 250,
     xpReward: 160, goldReward: 120, speed: 13,
     isBoss: true,
+    bossScale: 2.5,
     abilities: [
-      { id: 'hellfire', name: 'Hellfire', icon: 'fire', type: 'magical', damage: 1.6, description: 'Infernal flames scorch everything' },
-      { id: 'doom_strike', name: 'Doom Strike', icon: 'lightning', type: 'physical', damage: 3.0, cooldown: 4, description: 'A strike of pure doom' },
-      { id: 'dark_ritual', name: 'Dark Ritual', icon: 'skull', type: 'buff', damage: 0, cooldown: 6, description: 'Dark power surge doubles attack', effect: { stat: 'damage', multiplier: 1.7, duration: 3 } },
-      { id: 'meteor', name: 'Meteor', icon: 'fire', type: 'magical', damage: 3.8, cooldown: 5, description: 'Calls down a meteor from the abyss' },
-      { id: 'demonic_heal', name: 'Demonic Regeneration', icon: 'heart', type: 'heal', damage: 0, cooldown: 5, description: 'Feeds on suffering to restore health', healPercent: 0.15 },
-      { id: 'infernal_chains', name: 'Infernal Chains', icon: 'shield', type: 'magical', damage: 1.2, cooldown: 4, description: 'Chains bind a hero, stunning them', effect: { type: 'stun', duration: 1 } },
-      { id: 'hellfire_aura', name: 'Hellfire Aura', icon: 'fire', type: 'magical', damage: 1.0, cooldown: 3, description: 'Burns all heroes with infernal fire', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'lava_spit', name: 'Lava Spit', icon: 'fire', type: 'magical', damage: 1.6, description: 'Spits molten lava' },
+      { id: 'worm_bite', name: 'Savage Bite', icon: 'sword', type: 'physical', damage: 3.0, cooldown: 4, description: 'A crushing bite' },
+      { id: 'heat_wave', name: 'Heat Wave', icon: 'fire', type: 'magical', damage: 2.2, cooldown: 3, description: 'Radiates intense heat', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'volcanic_slam', name: 'Volcanic Slam', icon: 'shield', type: 'physical', damage: 3.5, cooldown: 6, description: 'Slams the ground with infernal force' },
     ]
   },
   evil_wizard: {

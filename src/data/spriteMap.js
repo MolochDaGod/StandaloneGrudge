@@ -470,6 +470,16 @@ const monsterSprites = {
     hurt: { src: '/sprites/monsters/stone_guardian/hurt.png', frames: 3 },
     walk: { src: '/sprites/monsters/stone_guardian/walk.png', frames: 6 },
   },
+  'fire-worm': {
+    folder: 'monsters/fire_worm/Fire Worm/Sprites/Worm',
+    frameWidth: 90,
+    frameHeight: 90,
+    idle: { src: '/sprites/monsters/fire_worm/Fire Worm/Sprites/Worm/Idle.png', frames: 9 },
+    attack1: { src: '/sprites/monsters/fire_worm/Fire Worm/Sprites/Worm/Attack.png', frames: 16 },
+    hurt: { src: '/sprites/monsters/fire_worm/Fire Worm/Sprites/Worm/Get Hit.png', frames: 3 },
+    death: { src: '/sprites/monsters/fire_worm/Fire Worm/Sprites/Worm/Death.png', frames: 8 },
+    walk: { src: '/sprites/monsters/fire_worm/Fire Worm/Sprites/Worm/Walk.png', frames: 9 },
+  },
 };
 
 export const enemySpriteMap = {
@@ -480,7 +490,7 @@ export const enemySpriteMap = {
   orc: spriteSheets['armored-orc'],
   dragon_whelp: spriteSheets.werebear,
   lich: spriteSheets['armored-skeleton'],
-  demon_lord: spriteSheets['knight-templar'],
+  demon_lord: monsterSprites['fire-worm'],
   evil_wizard: spriteSheets['evil-wizard'],
   void_king: spriteSheets.swordsman,
   water_elemental: spriteSheets['water-elemental'],
