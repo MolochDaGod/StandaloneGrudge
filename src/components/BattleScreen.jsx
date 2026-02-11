@@ -138,6 +138,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
+        mixBlendMode: 'screen',
         ...(filterProp ? { filter: filterProp } : {}),
       }} />
     </div>
@@ -194,6 +195,7 @@ function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 })
         backgroundSize: `${cols * frameW * scaleX}px ${rows * frameH * scaleY}px`,
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -218,7 +220,7 @@ function ThunderProjectileSprite() {
 
   const col = frame % cols;
   return (
-    <div style={{ width: displaySize, height: displaySize, overflow: 'hidden' }}>
+    <div style={{ width: displaySize, height: displaySize, overflow: 'hidden', mixBlendMode: 'screen' }}>
       <div style={{
         width: displaySize,
         height: displaySize,
@@ -228,6 +230,7 @@ function ThunderProjectileSprite() {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 8px #facc15) drop-shadow(0 0 16px #f59e0b)',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -259,7 +262,7 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
       position: 'absolute', top: offsetY, left: '50%',
       transform: 'translateX(-50%)', pointerEvents: 'none',
       width: displaySize, height: displaySize, overflow: 'hidden', opacity,
-      zIndex: 10,
+      zIndex: 10, mixBlendMode: 'screen',
     }}>
       <div style={{
         width: displaySize,
@@ -272,6 +275,7 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: filter || 'none',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -302,6 +306,7 @@ function DodgeFlashSprite({ x, y }) {
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 210, opacity: 0.9,
+      mixBlendMode: 'screen',
     }}>
       <div style={{
         width: displaySize,
@@ -312,6 +317,7 @@ function DodgeFlashSprite({ x, y }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'hue-rotate(180deg) brightness(2) drop-shadow(0 0 8px #38bdf8) drop-shadow(0 0 16px #6ee7b7)',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -343,6 +349,7 @@ function CastingSpriteEffect({ x, y }) {
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.8,
+      mixBlendMode: 'screen',
     }}>
       <div style={{
         width: displaySize,
@@ -353,6 +360,7 @@ function CastingSpriteEffect({ x, y }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #8b5cf6)',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -393,6 +401,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.9,
+      mixBlendMode: 'screen',
     }}>
       <div style={{
         width: displaySize,
@@ -403,6 +412,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 8px #f59e0b)',
+        mixBlendMode: 'screen',
       }} />
     </div>
   );
