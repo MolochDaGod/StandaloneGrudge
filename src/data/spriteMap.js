@@ -56,6 +56,24 @@ const spriteSheets = {
     walk: { src: '/sprites/orc-rider/walk.png', frames: 8 },
   },
   archer: classSpriteMap.ranger,
+  'human-ranger': {
+    folder: 'human-ranger',
+    idle: { src: '/sprites/human-ranger/idle.png', frames: 8 },
+    attack1: { src: '/sprites/human-ranger/attack1.png', frames: 20 },
+    attack2: { src: '/sprites/human-ranger/attack2.png', frames: 28 },
+    hurt: { src: '/sprites/human-ranger/hurt.png', frames: 14 },
+    death: { src: '/sprites/human-ranger/death.png', frames: 24 },
+    walk: { src: '/sprites/human-ranger/walk.png', frames: 8 },
+  },
+  'barbarian-warrior': {
+    folder: 'barbarian-warrior',
+    idle: { src: '/sprites/barbarian-warrior/idle.png', frames: 28 },
+    attack1: { src: '/sprites/barbarian-warrior/attack1.png', frames: 53 },
+    attack2: { src: '/sprites/barbarian-warrior/attack2.png', frames: 53 },
+    hurt: { src: '/sprites/barbarian-warrior/hurt.png', frames: 14 },
+    death: { src: '/sprites/barbarian-warrior/death.png', frames: 71 },
+    walk: { src: '/sprites/barbarian-warrior/walk.png', frames: 14 },
+  },
   orc: {
     folder: 'orc',
     idle: { src: '/sprites/orc/idle.png', frames: 6 },
@@ -298,7 +316,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets.knight,
     mage: spriteSheets.wizard,
     worge: spriteSheets.priest,
-    ranger: spriteSheets.archer,
+    ranger: spriteSheets['human-ranger'],
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
@@ -319,7 +337,7 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets['skeleton-archer'],
   },
   barbarian: {
-    warrior: spriteSheets['knight-templar'],
+    warrior: spriteSheets['barbarian-warrior'],
     mage: spriteSheets.priest,
     worge: spriteSheets.soldier,
     ranger: spriteSheets['barbarian-ranger'],
