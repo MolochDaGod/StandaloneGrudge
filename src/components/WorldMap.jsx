@@ -595,7 +595,7 @@ export default function WorldMap() {
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
         backgroundImage: 'url(/backgrounds/world_map.png)',
-        backgroundSize: 'cover', backgroundPosition: 'center',
+        backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
         transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
         transformOrigin: '50% 50%',
         transition: isDragging ? 'none' : 'transform 0.3s ease-out',
