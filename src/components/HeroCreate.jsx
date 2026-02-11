@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
@@ -13,12 +13,17 @@ export default function HeroCreate() {
   const { addHeroToRoster, setScreen, level, heroRoster } = useGameStore();
 
   const [step, setStep] = useState(1);
+  const [showCinematic, setShowCinematic] = useState(false);
+  const [cinematicFading, setCinematicFading] = useState(false);
+  const videoRef = useRef(null);
   const [name, setName] = useState('');
   const [selectedRace, setSelectedRace] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
   const [attrPoints, setAttrPoints] = useState(
     ATTRIBUTES.reduce((acc, a) => ({ ...acc, [a]: 0 }), {})
   );
+  const pendingHeroRef = useRef(null);
+  const cinematicFinishing = useRef(false);
 
   const heroLevel = Math.max(1, level - 2);
 
@@ -49,11 +54,26 @@ export default function HeroCreate() {
     return calculateStats(finalAttributes, heroLevel);
   }, [finalAttributes, heroLevel, selectedClass]);
 
+  const finishCinematic = useCallback(() => {
+    if (cinematicFinishing.current) return;
+    cinematicFinishing.current = true;
+    setCinematicFading(true);
+    setTimeout(() => {
+      if (pendingHeroRef.current) {
+        addHeroToRoster(pendingHeroRef.current);
+        pendingHeroRef.current = null;
+      }
+      setShowCinematic(false);
+      setCinematicFading(false);
+      cinematicFinishing.current = false;
+    }, 800);
+  }, [addHeroToRoster]);
+
   const handleCreate = () => {
     if (!name.trim() || !selectedRace || !selectedClass) return;
     const heroId = `hero_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const stats = calculateStats(finalAttributes, heroLevel);
-    addHeroToRoster({
+    pendingHeroRef.current = {
       id: heroId,
       name: name.trim(),
       raceId: selectedRace,
@@ -63,7 +83,8 @@ export default function HeroCreate() {
       currentHealth: Math.floor(stats.health),
       currentMana: Math.floor(stats.mana),
       currentStamina: Math.floor(stats.stamina),
-    });
+    };
+    setShowCinematic(true);
   };
 
   const incAttr = (attr) => {
@@ -75,11 +96,61 @@ export default function HeroCreate() {
     setAttrPoints(prev => ({ ...prev, [attr]: prev[attr] - 1 }));
   };
 
+  if (showCinematic) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: '#000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: cinematicFading ? 0 : 1,
+        transition: 'opacity 0.8s ease-out',
+      }}>
+        <video
+          ref={videoRef}
+          src="/videos/hero_creation_cinematic.mp4"
+          autoPlay
+          muted
+          playsInline
+          onEnded={finishCinematic}
+          onError={finishCinematic}
+          style={{
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+        <button
+          onClick={finishCinematic}
+          style={{
+            position: 'absolute', bottom: 32, right: 32,
+            background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,215,0,0.4)',
+            borderRadius: 8, padding: '8px 20px',
+            color: 'var(--gold)', cursor: 'pointer',
+            fontSize: '0.85rem', fontFamily: 'Cinzel, serif',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => e.target.style.background = 'rgba(255,215,0,0.15)'}
+          onMouseLeave={e => e.target.style.background = 'rgba(0,0,0,0.6)'}
+        >
+          Skip
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width: '100%', height: '100%', overflow: 'auto',
-      background: 'radial-gradient(circle at 50% 30%, rgba(255,215,0,0.06), transparent 50%), rgba(11,16,32,0.85)',
+      backgroundImage: 'url(/backgrounds/hero_creation_bg.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
     }}>
+      <div style={{
+        width: '100%', height: '100%', overflow: 'auto',
+        background: 'rgba(11,16,32,0.72)',
+        backdropFilter: 'blur(2px)',
+      }}>
       <header style={{
         background: 'rgba(14,22,48,0.9)', borderBottom: '2px solid var(--gold)',
         padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -347,6 +418,7 @@ export default function HeroCreate() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
