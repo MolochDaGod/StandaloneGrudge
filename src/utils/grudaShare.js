@@ -115,7 +115,7 @@ export function decodeGrudaShare(token) {
 }
 
 export function generateShareUrl(token) {
-  return `${window.location.origin}/api/play/gruda.html?s=${token}`;
+  return `https://grudgewarlords.com/arena?wk=${token}`;
 }
 
 export function generateShareCode(token) {
