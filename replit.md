@@ -13,6 +13,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Typography & Visuals:** Uses Cinzel (headings) and Jost (body) fonts. Visuals include pixel art sprites, particle and beam effects, a 2D world map with clickable nodes, and animated hero movement. War Council tabs feature unique fantasy backgrounds, and hero card sprites are scaled for visual impact.
 - **Screen Flow:** The user journey progresses through Title Screen (Grudge Studio branding, Guest/Discord login) → Game Lobby (War Room with continue/new game, Characters, Account, Discord, Credits tabs) → Character Creation → World Map → Location Views → Battle Screens, with dedicated UIs for character management.
 - **Game Frame & Layout:** The application is wrapped in a `.game-frame` class for a decorative border and scaling. A fixed-height action bar is consistent during battle.
+- **Map Bottom Bar (MapBottomBar.jsx):** Custom RPG bottom bar using `/ui/bottom-bar-bg.png` graphic as background. Three sections: left (Party Log chat with input), center (8 icon buttons: Camp, Points, Council, Party, Gruda, Settings, Music Toggle, Quests), right (War Party compact display with 3 popup trigger buttons above for Harvesting, Gear, and Character Spider Graph/Power). Replaces old floating War Party panel and old HUD button row. Height: 130px fixed.
 
 **Technical Implementations:**
 - **Character System:** Supports 24 unique Warlord combinations across 6 races and 4 classes, with 8 attributes and a 0-20 level progression.

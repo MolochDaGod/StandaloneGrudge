@@ -8,6 +8,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
+import MapBottomBar from './MapBottomBar';
 import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
 import { generateDialogue } from '../data/dialogue';
@@ -3201,13 +3202,14 @@ export default function WorldMap() {
               <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>XP: {xp}/{xpToNext}</span>
             </div>
 
-            <button onClick={() => enterScene('camp', 'world')} style={{
-              background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)',
-              borderRadius: 8, padding: '4px 10px', color: '#4ade80',
-              cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(110,231,183,0.15)',
             }}>
-              <InlineIcon name="camp" size={12} /> Camp
-            </button>
+              <InlineIcon name="trophy" size={12} />
+              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{victories}</span>
+            </div>
 
             {level >= 15 && (
               <button onClick={() => enterScene('portal', 'world')} style={{
@@ -3219,43 +3221,6 @@ export default function WorldMap() {
               </button>
             )}
 
-            {(unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0)) && (
-              <button onClick={() => setScreen('account')} style={{
-                background: 'rgba(239,68,68,0.2)', border: '1px solid var(--danger)',
-                borderRadius: 8, padding: '4px 10px', color: 'var(--danger)',
-                cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, animation: 'glow 2s infinite'
-              }}>
-                Points!
-              </button>
-            )}
-
-            <button onClick={() => setScreen('account')} style={{
-              background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))',
-              border: '1px solid var(--gold)', borderRadius: 8,
-              padding: '4px 10px', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}><InlineIcon name="battle" size={12} /> Council</button>
-
-            <button onClick={() => { setShowWarParty(!showWarParty); setShowGruda(false); }} style={{
-              background: showWarParty ? 'rgba(110,231,183,0.2)' : 'rgba(110,231,183,0.08)',
-              border: `1px solid ${showWarParty ? 'var(--accent)' : 'rgba(110,231,183,0.3)'}`,
-              borderRadius: 8, padding: '4px 10px', color: 'var(--accent)',
-              cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              <InlineIcon name="shield" size={12} /> Party
-              {Object.keys(activeHarvests).length > 0 && (
-                <span style={{ background: 'rgba(251,191,36,0.3)', color: 'var(--gold)', borderRadius: 4, padding: '0 4px', fontSize: '0.5rem' }}>
-                  <InlineIcon name="pickaxe" size={12} />{Object.keys(activeHarvests).length}
-                </span>
-              )}
-            </button>
-
-            <button onClick={() => { setShowGruda(!showGruda); setShowWarParty(false); setGrudaCopied(null); }} style={{
-              background: showGruda ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.08)',
-              border: `1px solid ${showGruda ? 'var(--danger)' : 'rgba(239,68,68,0.3)'}`,
-              borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
-              cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}><InlineIcon name="skull" size={12} /> Gruda</button>
             <button onClick={() => {
               setMarkerMode(m => !m);
               setDevSubMode('marker');
@@ -3276,42 +3241,6 @@ export default function WorldMap() {
           </div>
         </div>
 
-        <div style={{
-          position: 'absolute', top: 80, left: 12, zIndex: MAP_LAYERS.HUD_PANELS,
-          background: 'rgba(8,12,28,0.85)',
-          border: '1px solid rgba(110,231,183,0.15)',
-          borderRadius: 10, padding: '10px 12px',
-          backdropFilter: 'blur(4px)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-          minWidth: 160,
-        }}>
-          <div className="font-cinzel" style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.05em' }}>
-            WAR PARTY
-          </div>
-          {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map((hero) => {
-            const heroCls = classDefinitions[hero.classId];
-            const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
-            const hpPercent = heroStats ? Math.round((hero.currentHealth / heroStats.health) * 100) : 100;
-            return (
-              <div key={`panel_${hero.id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 40, height: 40, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.56} speed={180} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.6rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {hero.name}
-                  </div>
-                  <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>
-                    Lv.{hero.level} {heroCls?.name}
-                  </div>
-                  <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 3, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${hpPercent}%`, background: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444', borderRadius: 2, transition: 'width 0.3s' }} />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
         {showWarParty && (() => {
           const harvestingHeroIds = Object.values(activeHarvests);
@@ -3637,190 +3566,19 @@ export default function WorldMap() {
           </div>
         )}
 
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(0deg, rgba(8,10,24,0.98) 0%, rgba(8,10,24,0.92) 60%, rgba(8,10,24,0.6) 85%, transparent 100%)',
-          backdropFilter: 'blur(6px)',
-          padding: '12px 16px 10px',
-          borderTop: '1px solid rgba(255,215,0,0.12)',
-          zIndex: MAP_LAYERS.HUD_BUTTONS,
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'stretch', gap: 12,
-          }}>
-            <div style={{
-              flex: '0 0 340px', minWidth: 0,
-              background: 'rgba(10,14,32,0.85)',
-              borderRadius: 10,
-              border: '1px solid rgba(255,215,0,0.15)',
-              display: 'flex', flexDirection: 'column',
-              overflow: 'hidden',
-            }}>
-              <div style={{
-                padding: '5px 12px 4px',
-                background: 'rgba(255,215,0,0.06)',
-                borderBottom: '1px solid rgba(255,215,0,0.1)',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>💬</span>
-                <span className="font-cinzel" style={{ fontSize: '0.7rem', color: 'rgba(255,215,0,0.55)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
-              </div>
-              <div ref={chatLogRef} style={{
-                flex: 1, overflowY: 'auto', padding: '6px 12px 6px',
-                maxHeight: 96, minHeight: 60,
-                fontSize: '0.85rem', lineHeight: 1.6,
-                scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
-              }}>
-                {chatLog.length > 0 ? chatLog.map(entry => (
-                  <div key={entry.id} style={{
-                    marginBottom: 4, padding: '2px 0',
-                    animation: 'fadeIn 0.3s ease-out',
-                  }}>
-                    <span style={{
-                      fontWeight: 700, color: entry.color, marginRight: 6,
-                      fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.03em',
-                    }}>{entry.speaker}</span>
-                    <span style={{ color: 'rgba(226,232,240,0.85)', fontWeight: 400 }}>{entry.line}</span>
-                  </div>
-                )) : (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    height: '100%', minHeight: 50,
-                    fontSize: '0.8rem', color: 'rgba(148,163,184,0.35)', fontStyle: 'italic',
-                  }}>Your party is quiet...</div>
-                )}
-              </div>
-              <div style={{
-                padding: '4px 8px 6px',
-                borderTop: '1px solid rgba(255,215,0,0.08)',
-                display: 'flex', gap: 6, alignItems: 'center',
-              }}>
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && chatInput.trim()) {
-                      const leader = heroRoster.find(h => activeHeroIds.includes(h.id));
-                      const name = leader?.name || 'You';
-                      setChatLog(prev => [...prev.slice(-49), {
-                        id: Date.now(),
-                        speaker: name,
-                        line: chatInput.trim(),
-                        color: '#a78bfa',
-                      }]);
-                      setChatInput('');
-                    }
-                  }}
-                  placeholder="Say something..."
-                  style={{
-                    flex: 1, background: 'rgba(20,24,48,0.9)',
-                    border: '1px solid rgba(255,215,0,0.12)',
-                    borderRadius: 6, padding: '5px 10px',
-                    color: 'rgba(226,232,240,0.9)', fontSize: '0.75rem',
-                    fontFamily: "'Jost', sans-serif",
-                    outline: 'none',
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.35)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.12)'}
-                />
-                <button
-                  onClick={() => {
-                    if (chatInput.trim()) {
-                      const leader = heroRoster.find(h => activeHeroIds.includes(h.id));
-                      const name = leader?.name || 'You';
-                      setChatLog(prev => [...prev.slice(-49), {
-                        id: Date.now(),
-                        speaker: name,
-                        line: chatInput.trim(),
-                        color: '#a78bfa',
-                      }]);
-                      setChatInput('');
-                    }
-                  }}
-                  style={{
-                    background: 'rgba(255,215,0,0.12)',
-                    border: '1px solid rgba(255,215,0,0.2)',
-                    borderRadius: 6, padding: '4px 10px',
-                    color: 'var(--gold)', fontSize: '0.7rem',
-                    fontFamily: "'Cinzel', serif", fontWeight: 700,
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => { e.target.style.background = 'rgba(255,215,0,0.22)'; e.target.style.borderColor = 'rgba(255,215,0,0.4)'; }}
-                  onMouseLeave={(e) => { e.target.style.background = 'rgba(255,215,0,0.12)'; e.target.style.borderColor = 'rgba(255,215,0,0.2)'; }}
-                >Send</button>
-              </div>
-            </div>
-
-            <div style={{
-              flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 0,
-            }}>
-              {selectedLoc ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ color: locationIcons[selectedLoc.id]?.color || 'var(--accent)', fontWeight: 700, fontSize: '0.75rem' }}>{selectedLoc.name}</div>
-                    <div style={{ color: 'var(--muted)', fontSize: '0.5rem' }}>Lv.{selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}</div>
-                  </div>
-                  <button onClick={() => handleBattle(selectedLoc.id)} style={{
-                    background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8,
-                    color: '#f87171', fontWeight: 700, fontSize: '0.6rem', padding: '5px 12px', cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
-                  ><InlineIcon name="battle" size={12} /> Battle</button>
-                  <button onClick={() => enterLocation(selectedLoc.id)} style={{
-                    background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.25)', borderRadius: 8,
-                    color: '#6ee7b7', fontWeight: 700, fontSize: '0.6rem', padding: '5px 12px', cursor: 'pointer',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.1)'; }}
-                  ><InlineIcon name="world" size={12} /> Travel</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ fontSize: '0.7rem' }}>📍</span>
-                  <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.65rem' }}>
-                    {locations.find(l => l.id === currentZone)?.name || cities.find(c => c.id === currentZone)?.name || 'Unknown'}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{
-              flex: '0 0 auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
-                  border: '1px solid rgba(110,231,183,0.15)',
-                }}>
-                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="trophy" size={12} /></span>
-                  <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{victories}</div>
-                </div>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
-                  border: '1px solid rgba(255,215,0,0.15)',
-                }}>
-                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="star" size={12} /></span>
-                  <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{level}</div>
-                </div>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
-                  border: '1px solid rgba(255,215,0,0.15)',
-                }}>
-                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="gold" size={12} /></span>
-                  <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{gold}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MapBottomBar
+          chatLog={chatLog}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          setChatLog={setChatLog}
+          chatLogRef={chatLogRef}
+          enterScene={enterScene}
+          setScreen={setScreen}
+          onToggleWarParty={() => { setShowWarParty(!showWarParty); setShowGruda(false); }}
+          onToggleGruda={() => { setShowGruda(!showGruda); setShowWarParty(false); setGrudaCopied(null); }}
+          showWarParty={showWarParty}
+          showGruda={showGruda}
+        />
 
         <style>{`
           @keyframes eventPulse {
