@@ -249,6 +249,7 @@ const spriteSheets = {
     folder: 'forest-guardian',
     frameWidth: 256,
     frameHeight: 128,
+    facesLeft: true,
     idle: { src: '/sprites/forest-guardian/idle.png', frames: 3 },
     walk: { src: '/sprites/forest-guardian/walk.png', frames: 3 },
     attack1: { src: '/sprites/forest-guardian/attack1.png', frames: 3 },
