@@ -574,6 +574,7 @@ function getUnitSprite(unit) {
         frost_wyrm: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)',
         shadow_beast: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)',
         void_sentinel: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7)',
+        corrupted_grove_keeper: 'hue-rotate(90deg) saturate(2.5) brightness(0.6) contrast(1.4)',
       };
       return { ...sprite, filter: bossFilters[unit.templateId] || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
     }
@@ -586,6 +587,7 @@ function isRangedUnit(unit) {
   if (unit.classId === 'ranger' || unit.classId === 'mage') return true;
   if (unit.templateId === 'dark_mage' || unit.templateId === 'lich') return true;
   if (unit.templateId === 'water_elemental' || unit.templateId === 'nature_elemental') return true;
+  if (unit.templateId === 'corrupted_grove_keeper') return true;
   return false;
 }
 
@@ -1542,7 +1544,8 @@ export default function BattleScreen() {
           const targetDisplaySize = 200;
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
-          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * (isBossUnit ? 1.6 : 1);
+          const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * bossScaleVal;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const footCrop = 0.82;

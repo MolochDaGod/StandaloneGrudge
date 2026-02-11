@@ -245,6 +245,16 @@ const spriteSheets = {
     hurt: { src: '/sprites/nature-elemental/hurt.png', frames: 1 },
     death: { src: '/sprites/nature-elemental/death.png', frames: 1 },
   },
+  'forest-guardian': {
+    folder: 'forest-guardian',
+    frameWidth: 256,
+    frameHeight: 128,
+    idle: { src: '/sprites/forest-guardian/idle.png', frames: 3 },
+    walk: { src: '/sprites/forest-guardian/walk.png', frames: 3 },
+    attack1: { src: '/sprites/forest-guardian/attack1.png', frames: 3 },
+    hurt: { src: '/sprites/forest-guardian/hurt.png', frames: 1 },
+    death: { src: '/sprites/forest-guardian/death.png', frames: 1 },
+  },
 };
 
 export const raceClassSpriteMap = {
@@ -310,6 +320,8 @@ export const enemySpriteMap = {
   water_elemental: spriteSheets['water-elemental'],
   nature_elemental: spriteSheets['nature-elemental'],
   elite_orc: spriteSheets['elite-orc'],
+  forest_guardian: spriteSheets['forest-guardian'],
+  corrupted_grove_keeper: spriteSheets.wizard,
 };
 
 export const effectSprites = {
@@ -397,6 +409,14 @@ export const enemyAbilityEffects = {
   'Oblivion Pulse': { effect: 'sunburn', beam: 'purple' },
   'Time Stop': { effect: 'freezing', beam: 'purple' },
   'Void Enrage': { effect: 'felSpell', beam: 'red' },
+  'Nature Strike': { effect: 'windHit', beam: 'green' },
+  'Forest Heal': { effect: 'healEffect', beam: 'green' },
+  'Poison Spore': { effect: 'windBreath', beam: 'green' },
+  'Corrupted Bolt': { effect: 'midnight', beam: 'purple' },
+  'Verdant Stun': { effect: 'freezing', beam: 'green' },
+  'Grove Fireball': { effect: 'fireExplosion', beam: 'green' },
+  'Resurrect Guardian': { effect: 'healEffect', beam: 'green' },
+  'Dark Bloom': { effect: 'felSpell', beam: 'purple' },
 };
 
 export const abilityEffectMap = {

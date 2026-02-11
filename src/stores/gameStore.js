@@ -230,12 +230,27 @@ function chooseAIAction(unit, allUnits) {
     return { abilityId: buffAbilities[0].id, targetId: unit.id };
   }
 
+  const resAbilities = availableAbilities.filter(a => a.type === 'resurrect' || a.isResurrect);
+  if (resAbilities.length > 0) {
+    const allBattleUnits = [...allies, ...enemies];
+    const deadAlly = allBattleUnits.find(a => a.team === unit.team && !a.alive && a.id !== unit.id);
+    if (deadAlly && Math.random() < 0.7) {
+      return { abilityId: resAbilities[0].id, targetId: deadAlly.id };
+    }
+  }
+
   if (healAbilities.length > 0) {
     if (unit.team === 'player') {
       const lowAlly = allies.find(a => a.health / a.maxHealth < 0.45);
       if (lowAlly) return { abilityId: healAbilities[0].id, targetId: lowAlly.id };
-    } else if (unit.health / unit.maxHealth < 0.5 && Math.random() < 0.6) {
-      return { abilityId: healAbilities[0].id, targetId: unit.id };
+    } else {
+      const lowAlly = allies.filter(a => a.alive && a.id !== unit.id).sort((a, b) => (a.health / a.maxHealth) - (b.health / b.maxHealth))[0];
+      if (lowAlly && lowAlly.health / lowAlly.maxHealth < 0.5 && Math.random() < 0.6) {
+        return { abilityId: healAbilities[0].id, targetId: lowAlly.id };
+      }
+      if (unit.health / unit.maxHealth < 0.5 && Math.random() < 0.6) {
+        return { abilityId: healAbilities[0].id, targetId: unit.id };
+      }
     }
   }
 
@@ -772,7 +787,12 @@ const useGameStore = create(persist((set, get) => ({
     boss.speed += 5;
 
     const addEnemies = [];
-    if (loc) {
+    if (loc && loc.bossAdds && loc.bossAdds.length > 0) {
+      for (const addTemplateId of loc.bossAdds) {
+        const add = createEnemy(addTemplateId, state.level);
+        if (add) addEnemies.push(add);
+      }
+    } else if (loc) {
       const addCount = 1 + Math.floor(Math.random() * 2);
       const zonePresets = getZoneEnemyPresets(state.currentLocation);
       for (let i = 0; i < addCount; i++) {
@@ -1281,6 +1301,32 @@ const useGameStore = create(persist((set, get) => ({
       attacker.dots.push({ heal: true, healPercent: ability.healPercent, duration: ability.duration, source: ability.name });
       actionResult.targetId = currentUnitId;
       log.push(`💚 ${attacker.name} uses ${ability.name}!`);
+
+    } else if (ability.type === 'resurrect' || ability.isResurrect) {
+      const deadAlly = units.find(u => u.team === attacker.team && !u.alive && u.id !== attacker.id);
+      if (deadAlly) {
+        deadAlly.alive = true;
+        deadAlly.health = Math.floor(deadAlly.maxHealth * 0.4);
+        deadAlly.stunned = false;
+        deadAlly.dots = [];
+        deadAlly.buffs = [];
+        actionResult.targetId = deadAlly.id;
+        actionResult.healAmt = deadAlly.health;
+        log.push(`💚 ${attacker.name} resurrects ${deadAlly.name} with ${deadAlly.health} HP!`);
+        const turnOrder = get().battleTurnOrder;
+        if (!turnOrder.includes(deadAlly.id)) {
+          const newOrder = [...turnOrder, deadAlly.id];
+          set({ battleTurnOrder: newOrder });
+        }
+      } else {
+        const fallbackTarget = enemies.length > 0 ? enemies[0] : null;
+        if (fallbackTarget) {
+          const result = applyDamage(attacker, fallbackTarget, 1.0, ability, units);
+          actionResult.targetId = fallbackTarget.id;
+          actionResult.damage = result.totalDmg;
+          log.push(`${attacker.name} has no allies to resurrect, attacks instead for ${result.totalDmg}!`);
+        }
+      }
 
     } else if (ability.type === 'revert_form') {
       attacker.bearForm = false;

@@ -242,6 +242,30 @@ export const enemyTemplates = {
       { id: 'shadow_mend', name: 'Shadow Mend', icon: '🖤', type: 'heal', damage: 0, cooldown: 5, description: 'Feeds on darkness to heal', healPercent: 0.14 },
     ]
   },
+  forest_guardian: {
+    name: 'Guardian of the Forest', icon: '🦌', color: '#22c55e',
+    baseHealth: 280, baseDamage: 28, baseDefense: 18, baseMana: 120,
+    xpReward: 50, goldReward: 35, speed: 11,
+    abilities: [
+      { id: 'nature_strike', name: 'Nature Strike', icon: '🌿', type: 'physical', damage: 1.1, description: 'A vine-lashed charge attack' },
+      { id: 'forest_heal', name: 'Forest Heal', icon: '💚', type: 'heal', damage: 0, cooldown: 4, description: 'Channels the forest to heal wounds', healPercent: 0.15 },
+      { id: 'poison_spore', name: 'Poison Spore', icon: '☠️', type: 'magical', damage: 0.8, cooldown: 3, description: 'Releases toxic spores that poison the target', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+    ]
+  },
+  corrupted_grove_keeper: {
+    name: 'Corrupted Grove Keeper', icon: '🧙', color: '#16a34a',
+    baseHealth: 600, baseDamage: 35, baseDefense: 20, baseMana: 300,
+    xpReward: 100, goldReward: 70, speed: 12,
+    isBoss: true,
+    bossScale: 3.0,
+    abilities: [
+      { id: 'corrupted_bolt', name: 'Corrupted Bolt', icon: '🌑', type: 'magical', damage: 1.3, description: 'A bolt of corrupted nature magic' },
+      { id: 'verdant_stun', name: 'Verdant Stun', icon: '🌳', type: 'magical', damage: 0.8, cooldown: 4, description: 'Entangling roots stun a hero in place', effect: { type: 'stun', duration: 1 } },
+      { id: 'grove_fireball', name: 'Grove Fireball', icon: '🟢', type: 'magical', damage: 2.4, cooldown: 3, description: 'Hurls a massive green fireball of corrupted energy' },
+      { id: 'resurrect_guardian', name: 'Resurrect Guardian', icon: '💚', type: 'resurrect', damage: 0, cooldown: 6, description: 'Channels dark nature magic to resurrect a fallen Guardian', isResurrect: true },
+      { id: 'dark_bloom', name: 'Dark Bloom', icon: '🌸', type: 'magical', damage: 1.8, cooldown: 4, description: 'Dark flowers bloom dealing damage and reducing defense', effect: { stat: 'defense', flat: -15, duration: 3 } },
+    ]
+  },
   void_sentinel: {
     name: 'Void Sentinel', icon: '🔮', color: '#a855f7',
     baseHealth: 1000, baseDamage: 55, baseDefense: 42, baseMana: 400,
@@ -572,7 +596,8 @@ export const locations = [
     icon: '🌑',
     unlocked: false,
     unlockLevel: 11,
-    boss: 'shadow_beast',
+    boss: 'corrupted_grove_keeper',
+    bossAdds: ['forest_guardian', 'forest_guardian'],
     enemyCount: [3, 3],
     allyCount: 2,
     raceClassEnemies: [
@@ -931,6 +956,7 @@ export function createEnemy(templateId, playerLevel) {
     stunned: false,
     alive: true,
     isBoss: !!template.isBoss,
+    bossScale: template.bossScale || null,
     level: playerLevel,
     critChance: 5,
     criticalDamage: 50,
