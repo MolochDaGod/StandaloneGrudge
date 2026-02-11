@@ -12,6 +12,7 @@ import CharacterSheet from './components/CharacterSheet';
 import SkillTreeView from './components/SkillTreeView';
 import HeroCreate from './components/HeroCreate';
 import AccountPage from './components/AccountPage';
+import LobbyScreen from './components/LobbyScreen';
 import TrainingScreen from './components/TrainingScreen';
 import LootPopup from './components/LootPopup';
 import SettingsMenu from './components/SettingsMenu';
@@ -49,8 +50,11 @@ function GameApp() {
     const prev = prevScreenRef.current;
     if (screen !== prev) {
       const needsTransition = (
+        (prev === 'title' && screen === 'lobby') ||
+        (prev === 'lobby' && screen === 'create') ||
         (prev === 'title' && screen === 'create') ||
         (prev === 'create' && screen === 'world') ||
+        (prev === 'lobby' && screen === 'world') ||
         (screen === 'battle') ||
         (prev === 'battle' && (screen === 'world' || screen === 'location'))
       );
@@ -76,11 +80,12 @@ function GameApp() {
 
   const screensWithOwnBackground = ['world', 'battle', 'location', 'scene'];
   const bgVisible = !screensWithOwnBackground.includes(screen);
-  const bgBlurred = screen !== 'title';
+  const bgBlurred = screen !== 'title' && screen !== 'lobby';
 
   const renderScreen = () => {
     switch (screen) {
       case 'title': return <TitleScreen />;
+      case 'lobby': return <LobbyScreen />;
       case 'create': return <CharacterCreate />;
       case 'world': return <WorldMap />;
       case 'location': return <LocationView />;

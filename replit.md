@@ -11,7 +11,7 @@ The application is a React 19 frontend developed with Vite, managing global stat
 
 **UI/UX Decisions:**
 - **Typography & Visuals:** Uses Cinzel (headings) and Jost (body) fonts. Visuals include pixel art sprites, particle and beam effects, a 2D world map with clickable nodes, and animated hero movement. War Council tabs feature unique fantasy backgrounds, and hero card sprites are scaled for visual impact.
-- **Screen Flow:** The user journey progresses through Title Screen, Character Creation, World Map, Location Views, and Battle Screens, with dedicated UIs for character management.
+- **Screen Flow:** The user journey progresses through Title Screen (Grudge Studio branding, Guest/Discord login) → Game Lobby (War Room with continue/new game, Characters, Account, Discord, Credits tabs) → Character Creation → World Map → Location Views → Battle Screens, with dedicated UIs for character management.
 - **Game Frame & Layout:** The application is wrapped in a `.game-frame` class for a decorative border and scaling. A fixed-height action bar is consistent during battle.
 
 **Technical Implementations:**

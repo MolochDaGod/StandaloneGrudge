@@ -264,6 +264,33 @@ const spriteSheets = {
     hurt: { src: '/sprites/forest-guardian/hurt.png', frames: 1 },
     death: { src: '/sprites/forest-guardian/death.png', frames: 1 },
   },
+  'barbarian-ranger': {
+    folder: 'barbarian-ranger',
+    idle: { src: '/sprites/barbarian-ranger/idle.png', frames: 6 },
+    attack1: { src: '/sprites/barbarian-ranger/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/barbarian-ranger/attack2.png', frames: 9 },
+    hurt: { src: '/sprites/barbarian-ranger/hurt.png', frames: 4 },
+    death: { src: '/sprites/barbarian-ranger/death.png', frames: 4 },
+    walk: { src: '/sprites/barbarian-ranger/walk.png', frames: 6 },
+  },
+  'dwarf-ranger': {
+    folder: 'dwarf-ranger',
+    idle: { src: '/sprites/dwarf-ranger/idle.png', frames: 6 },
+    attack1: { src: '/sprites/dwarf-ranger/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/dwarf-ranger/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/dwarf-ranger/hurt.png', frames: 4 },
+    death: { src: '/sprites/dwarf-ranger/death.png', frames: 4 },
+    walk: { src: '/sprites/dwarf-ranger/walk.png', frames: 8 },
+  },
+  'elf-ranger': {
+    folder: 'elf-ranger',
+    idle: { src: '/sprites/elf-ranger/idle.png', frames: 6 },
+    attack1: { src: '/sprites/elf-ranger/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/elf-ranger/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/elf-ranger/hurt.png', frames: 4 },
+    death: { src: '/sprites/elf-ranger/death.png', frames: 4 },
+    walk: { src: '/sprites/elf-ranger/walk.png', frames: 8 },
+  },
 };
 
 export const raceClassSpriteMap = {
@@ -283,7 +310,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets.swordsman,
     mage: spriteSheets.wizard,
     worge: { ...spriteSheets.priest, filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.1)' },
-    ranger: spriteSheets.archer,
+    ranger: spriteSheets['elf-ranger'],
   },
   undead: {
     warrior: spriteSheets['greatsword-skeleton'],
@@ -295,13 +322,13 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['knight-templar'],
     mage: spriteSheets.priest,
     worge: spriteSheets.soldier,
-    ranger: spriteSheets.soldier,
+    ranger: spriteSheets['barbarian-ranger'],
   },
   dwarf: {
     warrior: spriteSheets['armored-axeman'],
     mage: spriteSheets.priest,
     worge: { ...spriteSheets.soldier, filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)' },
-    ranger: spriteSheets.lancer,
+    ranger: spriteSheets['dwarf-ranger'],
   },
 };
 
