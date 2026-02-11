@@ -1349,7 +1349,7 @@ export default function WorldMap() {
         transform: `scale(${camZoom}) translate(${camPos.x}%, ${camPos.y}%)`,
         transformOrigin: '50% 50%',
         transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-        boxShadow: 'inset 0 0 0 4px rgba(45,35,18,0.85), inset 0 0 0 5px rgba(139,109,56,0.5), inset 0 0 0 6px rgba(30,22,10,0.9), inset 0 0 20px rgba(0,0,0,0.6), inset 0 0 4px rgba(180,140,60,0.15)',
+        boxShadow: 'none',
       }}>
         <div style={fullCoverStyle(MAP_LAYERS.TERRAIN_FILL, {
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
