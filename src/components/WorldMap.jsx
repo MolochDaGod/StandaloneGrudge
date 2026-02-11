@@ -270,6 +270,8 @@ export default function WorldMap() {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [currentDialogue, setCurrentDialogue] = useState(null);
   const [dialoguePhase, setDialoguePhase] = useState(0);
+  const [chatLog, setChatLog] = useState([]);
+  const chatLogRef = useRef(null);
   const [bossWalkUp, setBossWalkUp] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
@@ -375,12 +377,19 @@ export default function WorldMap() {
     return () => el.removeEventListener('wheel', handler);
   }, []);
 
+  const wanderTimersRef = useRef({});
+  const wanderOffsetsRef = useRef(wanderOffsets);
+  wanderOffsetsRef.current = wanderOffsets;
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-      const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
-      const area = movementAreas[currentZone];
-      let groupX, groupY;
+    const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+    const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
+    const area = movementAreas[currentZone];
+
+    Object.values(wanderTimersRef.current).forEach(t => clearTimeout(t));
+    wanderTimersRef.current = {};
+
+    const getRandomPoint = () => {
       if (area && area.length >= 3) {
         const el = mapRef.current;
         const mapW = el ? el.offsetWidth : 1000;
@@ -407,34 +416,76 @@ export default function WorldMap() {
           pctX = relPts.reduce((s, p) => s + p.x, 0) / relPts.length;
           pctY = relPts.reduce((s, p) => s + p.y, 0) / relPts.length;
         }
-        groupX = (pctX * mapW) / (100 * 3);
-        groupY = (pctY * mapH) / (100 * 2);
-      } else {
-        groupX = (Math.random() - 0.5) * 3;
-        groupY = (Math.random() - 0.5) * 1.5;
+        return { x: (pctX * mapW) / (100 * 3), y: (pctY * mapH) / (100 * 2) };
       }
-      const prevGroupX = wanderOffsets[activeHeroes[0]?.id]?.x || 0;
-      const newOffsets = {};
-      const newWalking = {};
-      activeHeroes.forEach((h, i) => {
+      return { x: (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 1.5 };
+    };
+
+    const clearHeroTimers = (heroId) => {
+      [heroId, `${heroId}_stop`, `${heroId}_init`].forEach(key => {
+        if (wanderTimersRef.current[key]) {
+          clearTimeout(wanderTimersRef.current[key]);
+          delete wanderTimersRef.current[key];
+        }
+      });
+    };
+
+    const scheduleHero = (hero) => {
+      clearHeroTimers(hero.id);
+      const idleTime = 1500 + Math.random() * 3500;
+      const moveTime = 1200 + Math.random() * 1600;
+
+      wanderTimersRef.current[hero.id] = setTimeout(() => {
+        const target = getRandomPoint();
         const jitterX = (Math.random() - 0.5) * 0.6;
         const jitterY = (Math.random() - 0.5) * 0.4;
-        newOffsets[h.id] = {
-          x: groupX + jitterX,
-          y: groupY + jitterY,
-        };
-        newWalking[h.id] = { moving: true, flipX: groupX < prevGroupX };
-      });
-      setWanderOffsets(newOffsets);
-      setHeroWalking(newWalking);
-      setTimeout(() => {
-        setHeroWalking({});
-      }, 1800);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [heroRoster, activeHeroIds, wanderOffsets, currentZone, movementAreas]);
+        const newX = target.x + jitterX;
+
+        setWanderOffsets(prev => {
+          const prevX = prev[hero.id]?.x || 0;
+          setHeroWalking(w => ({
+            ...w,
+            [hero.id]: { moving: true, flipX: newX < prevX },
+          }));
+          return { ...prev, [hero.id]: { x: newX, y: target.y + jitterY } };
+        });
+
+        wanderTimersRef.current[`${hero.id}_stop`] = setTimeout(() => {
+          setHeroWalking(prev => {
+            const next = { ...prev };
+            delete next[hero.id];
+            return next;
+          });
+          scheduleHero(hero);
+        }, moveTime);
+      }, idleTime);
+    };
+
+    activeHeroes.forEach((hero, idx) => {
+      const startDelay = idx * 800 + Math.random() * 1200;
+      const initPoint = getRandomPoint();
+      setWanderOffsets(prev => ({
+        ...prev,
+        [hero.id]: { x: initPoint.x + (Math.random() - 0.5) * 0.5, y: initPoint.y + (Math.random() - 0.5) * 0.3 },
+      }));
+      wanderTimersRef.current[`${hero.id}_init`] = setTimeout(() => {
+        scheduleHero(hero);
+      }, startDelay);
+    });
+
+    return () => {
+      Object.values(wanderTimersRef.current).forEach(t => clearTimeout(t));
+      wanderTimersRef.current = {};
+    };
+  }, [heroRoster, activeHeroIds, currentZone, movementAreas]);
 
   useEffect(() => { setBgm('ambient'); }, []);
+
+  useEffect(() => {
+    if (chatLogRef.current) {
+      chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
+    }
+  }, [chatLog]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -465,7 +516,17 @@ export default function WorldMap() {
       if (dialogue) {
         setCurrentDialogue(dialogue);
         setDialoguePhase(1);
-        setTimeout(() => setDialoguePhase(2), 2500);
+        setChatLog(prev => {
+          const entry = { id: Date.now(), speaker: dialogue.speaker1.name, line: dialogue.line1, color: 'var(--accent)' };
+          return [...prev.slice(-49), entry];
+        });
+        setTimeout(() => {
+          setDialoguePhase(2);
+          setChatLog(prev => {
+            const entry = { id: Date.now() + 1, speaker: dialogue.speaker2.name, line: dialogue.line2, color: 'var(--gold)' };
+            return [...prev.slice(-49), entry];
+          });
+        }, 2500);
         setTimeout(() => {
           setDialoguePhase(0);
           setTimeout(() => setCurrentDialogue(null), 600);
@@ -2513,25 +2574,21 @@ export default function WorldMap() {
               flex: '1 1 0', minWidth: 0, maxWidth: 280,
               background: 'rgba(14,22,48,0.7)', borderRadius: 10, padding: '6px 10px',
               border: '1px solid rgba(110,231,183,0.15)',
+              display: 'flex', flexDirection: 'column', maxHeight: 72,
             }}>
-              {currentDialogue && dialoguePhase > 0 ? (
-                <div style={{ fontSize: '0.55rem', lineHeight: 1.5 }}>
-                  {dialoguePhase >= 1 && currentDialogue.speaker1 && (
-                    <div style={{ marginBottom: 3 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--accent)', marginRight: 4 }}>{currentDialogue.speaker1.name}:</span>
-                      <span style={{ color: '#e2e8f0' }}>{currentDialogue.line1}</span>
-                    </div>
-                  )}
-                  {dialoguePhase >= 2 && currentDialogue.speaker2 && (
-                    <div>
-                      <span style={{ fontWeight: 700, color: 'var(--gold)', marginRight: 4 }}>{currentDialogue.speaker2.name}:</span>
-                      <span style={{ color: '#e2e8f0' }}>{currentDialogue.line2}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ fontSize: '0.5rem', color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>Your party is quiet...</div>
-              )}
+              <div ref={chatLogRef} style={{
+                flex: 1, overflowY: 'auto', fontSize: '0.5rem', lineHeight: 1.5,
+                scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.3) transparent',
+              }}>
+                {chatLog.length > 0 ? chatLog.map(entry => (
+                  <div key={entry.id} style={{ marginBottom: 2, animation: 'fadeIn 0.3s ease-out' }}>
+                    <span style={{ fontWeight: 700, color: entry.color, marginRight: 4 }}>{entry.speaker}:</span>
+                    <span style={{ color: '#e2e8f0' }}>{entry.line}</span>
+                  </div>
+                )) : (
+                  <div style={{ fontSize: '0.5rem', color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>Your party is quiet...</div>
+                )}
+              </div>
             </div>
 
             <div style={{
