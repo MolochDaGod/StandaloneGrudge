@@ -821,6 +821,37 @@ const useGameStore = create(persist((set, get) => ({
       playerMaxStamina: mainUnit.maxStamina,
       cooldowns: {},
       floatingTexts: [],
+      hasMovedThisTurn: false,
+    });
+  },
+
+  moveUnitRow: (unitId, targetRow) => {
+    const state = get();
+    if (state.hasMovedThisTurn) return;
+
+    const unit = state.battleUnits.find(u => u.id === unitId);
+    if (!unit || unit.row === targetRow) return;
+
+    const updatedUnits = state.battleUnits.map(u => {
+      if (u.id === unitId) return { ...u, row: targetRow };
+      return u;
+    });
+
+    const playerUnits = updatedUnits.filter(u => u.team === 'player');
+    const enemyUnits = updatedUnits.filter(u => u.team === 'enemy');
+    
+    const pPos = getRowPositions(playerUnits, 'player');
+    const ePos = getRowPositions(enemyUnits, 'enemy');
+    
+    const finalUnits = updatedUnits.map(u => ({
+      ...u,
+      position: pPos[u.id] || ePos[u.id] || u.position
+    }));
+
+    set({ 
+      battleUnits: finalUnits,
+      hasMovedThisTurn: true,
+      battleLog: [`${unit.name} shifted to ${getRowName(targetRow)} row.`, ...state.battleLog]
     });
   },
 
