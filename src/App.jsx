@@ -22,6 +22,7 @@ import AdminSprite from './components/AdminSprite';
 import SceneView from './components/SceneView';
 import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
+import AdminGizmo from './components/AdminGizmo';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -114,6 +115,7 @@ function GameApp() {
           {renderScreen()}
         </div>
         <SettingsMenu />
+        <AdminGizmo />
         {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
         {gameMessage && (
           <div style={{
