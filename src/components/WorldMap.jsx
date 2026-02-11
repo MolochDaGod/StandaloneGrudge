@@ -2304,14 +2304,35 @@ export default function WorldMap() {
           flexWrap: 'wrap', gap: 8, zIndex: 15,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 60, height: 60, overflow: 'hidden' }}>
-              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.8} speed={150} />
+            <div
+              onClick={() => setScreen('account')}
+              title="War Council"
+              style={{
+                width: 44, height: 44, borderRadius: 10, cursor: 'pointer',
+                background: 'rgba(0,0,0,0.4)',
+                border: '2px solid rgba(255,215,0,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0,
+                transition: 'all 0.2s',
+                boxShadow: '0 0 12px rgba(255,215,0,0.1)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 18px rgba(255,215,0,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,215,0,0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.1)'; }}
+            >
+              <img src="/images/logo.png" alt="Grudge Warlords" style={{
+                width: 36, height: 36, objectFit: 'contain',
+                imageRendering: 'pixelated',
+                filter: 'drop-shadow(0 0 4px rgba(255,215,0,0.3))',
+              }} />
+            </div>
+            <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0 }}>
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.5} speed={150} />
             </div>
             <div>
-              <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', fontWeight: 700 }}>{playerName}</div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.65rem' }}>Lv.{level} {raceDef?.name} {cls?.name}</div>
+              <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700 }}>{playerName}</div>
+              <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>Lv.{level} {raceDef?.name} {cls?.name}</div>
             </div>
-            <div style={{ minWidth: 100, marginLeft: 8 }}>
+            <div style={{ minWidth: 100, marginLeft: 4 }}>
               <HealthBar current={playerHealth} max={playerMaxHealth} color="#22c55e" label="HP" />
               <HealthBar current={playerMana} max={playerMaxMana} color="#3b82f6" label="MP" />
             </div>
@@ -2732,59 +2753,89 @@ export default function WorldMap() {
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(0deg, rgba(8,10,24,0.97) 0%, rgba(8,10,24,0.9) 70%, rgba(8,10,24,0.5) 90%, transparent 100%)',
-          backdropFilter: 'blur(4px)',
-          padding: '10px 16px 8px',
-          borderTop: '1px solid rgba(255,215,0,0.15)',
+          background: 'linear-gradient(0deg, rgba(8,10,24,0.98) 0%, rgba(8,10,24,0.92) 60%, rgba(8,10,24,0.6) 85%, transparent 100%)',
+          backdropFilter: 'blur(6px)',
+          padding: '12px 16px 10px',
+          borderTop: '1px solid rgba(255,215,0,0.12)',
           zIndex: 15,
-          minHeight: 80,
         }}>
           <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'stretch', gap: 12,
           }}>
             <div style={{
-              flex: '1 1 0', minWidth: 0, maxWidth: 280,
-              background: 'rgba(14,22,48,0.7)', borderRadius: 10, padding: '6px 10px',
-              border: '1px solid rgba(110,231,183,0.15)',
-              display: 'flex', flexDirection: 'column', maxHeight: 72,
+              flex: '0 0 260px', minWidth: 0,
+              background: 'rgba(10,14,32,0.8)',
+              borderRadius: 10,
+              border: '1px solid rgba(255,215,0,0.1)',
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden',
             }}>
+              <div style={{
+                padding: '4px 10px 3px',
+                background: 'rgba(255,215,0,0.06)',
+                borderBottom: '1px solid rgba(255,215,0,0.08)',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <span style={{ fontSize: '0.55rem', opacity: 0.6 }}>💬</span>
+                <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+              </div>
               <div ref={chatLogRef} style={{
-                flex: 1, overflowY: 'auto', fontSize: '0.5rem', lineHeight: 1.5,
-                scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.3) transparent',
+                flex: 1, overflowY: 'auto', padding: '5px 10px 5px',
+                maxHeight: 64, minHeight: 40,
+                fontSize: '0.55rem', lineHeight: 1.6,
+                scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
               }}>
                 {chatLog.length > 0 ? chatLog.map(entry => (
-                  <div key={entry.id} style={{ marginBottom: 2, animation: 'fadeIn 0.3s ease-out' }}>
-                    <span style={{ fontWeight: 700, color: entry.color, marginRight: 4 }}>{entry.speaker}:</span>
-                    <span style={{ color: '#e2e8f0' }}>{entry.line}</span>
+                  <div key={entry.id} style={{
+                    marginBottom: 3, padding: '1px 0',
+                    animation: 'fadeIn 0.3s ease-out',
+                  }}>
+                    <span style={{
+                      fontWeight: 700, color: entry.color, marginRight: 5,
+                      fontSize: '0.52rem', textTransform: 'uppercase', letterSpacing: '0.03em',
+                    }}>{entry.speaker}</span>
+                    <span style={{ color: 'rgba(226,232,240,0.85)', fontWeight: 400 }}>{entry.line}</span>
                   </div>
                 )) : (
-                  <div style={{ fontSize: '0.5rem', color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>Your party is quiet...</div>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    height: '100%', minHeight: 36,
+                    fontSize: '0.5rem', color: 'rgba(148,163,184,0.35)', fontStyle: 'italic',
+                  }}>Your party is quiet...</div>
                 )}
               </div>
             </div>
 
             <div style={{
-              flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0,
+              flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 0,
             }}>
               {selectedLoc ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ color: locationIcons[selectedLoc.id]?.color || 'var(--accent)', fontWeight: 700, fontSize: '0.7rem' }}>{selectedLoc.name}</div>
-                    <div style={{ color: 'var(--muted)', fontSize: '0.45rem' }}>Lv.{selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}</div>
+                    <div style={{ color: locationIcons[selectedLoc.id]?.color || 'var(--accent)', fontWeight: 700, fontSize: '0.75rem' }}>{selectedLoc.name}</div>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.5rem' }}>Lv.{selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}</div>
                   </div>
                   <button onClick={() => handleBattle(selectedLoc.id)} style={{
-                    background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6,
-                    color: '#f87171', fontWeight: 700, fontSize: '0.55rem', padding: '4px 10px', cursor: 'pointer',
-                  }}>⚔️ Battle</button>
+                    background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 8,
+                    color: '#f87171', fontWeight: 700, fontSize: '0.6rem', padding: '5px 12px', cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
+                  >⚔️ Battle</button>
                   <button onClick={() => enterLocation(selectedLoc.id)} style={{
-                    background: 'rgba(110,231,183,0.15)', border: '1px solid rgba(110,231,183,0.3)', borderRadius: 6,
-                    color: '#6ee7b7', fontWeight: 700, fontSize: '0.55rem', padding: '4px 10px', cursor: 'pointer',
-                  }}>🗺️ Travel</button>
+                    background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.25)', borderRadius: 8,
+                    color: '#6ee7b7', fontWeight: 700, fontSize: '0.6rem', padding: '5px 12px', cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.2)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.1)'; }}
+                  >🗺️ Travel</button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: '0.65rem' }}>📍</span>
-                  <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.6rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ fontSize: '0.7rem' }}>📍</span>
+                  <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.65rem' }}>
                     {locations.find(l => l.id === currentZone)?.name || cities.find(c => c.id === currentZone)?.name || 'Unknown'}
                   </div>
                 </div>
@@ -2792,31 +2843,33 @@ export default function WorldMap() {
             </div>
 
             <div style={{
-              flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8,
+              flex: '0 0 auto', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4,
             }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 3,
-                background: 'rgba(255,215,0,0.08)', borderRadius: 6, padding: '3px 8px',
-                border: '1px solid rgba(255,215,0,0.2)',
-              }}>
-                <span style={{ fontSize: '0.7rem' }}>🏆</span>
-                <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem' }}>{victories}</div>
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 3,
-                background: 'rgba(251,191,36,0.08)', borderRadius: 6, padding: '3px 8px',
-                border: '1px solid rgba(251,191,36,0.2)',
-              }}>
-                <span style={{ fontSize: '0.7rem' }}>⭐</span>
-                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem' }}>{level}</div>
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 3,
-                background: 'rgba(251,191,36,0.08)', borderRadius: 6, padding: '3px 8px',
-                border: '1px solid rgba(251,191,36,0.2)',
-              }}>
-                <span style={{ fontSize: '0.7rem' }}>💰</span>
-                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem' }}>{gold}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
+                  border: '1px solid rgba(110,231,183,0.15)',
+                }}>
+                  <span style={{ fontSize: '0.65rem' }}>🏆</span>
+                  <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{victories}</div>
+                </div>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
+                  border: '1px solid rgba(255,215,0,0.15)',
+                }}>
+                  <span style={{ fontSize: '0.65rem' }}>⭐</span>
+                  <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{level}</div>
+                </div>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
+                  border: '1px solid rgba(255,215,0,0.15)',
+                }}>
+                  <span style={{ fontSize: '0.65rem' }}>💰</span>
+                  <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{gold}</div>
+                </div>
               </div>
             </div>
           </div>
