@@ -125,6 +125,7 @@ const spriteSheets = {
     folder: 'evil-wizard',
     idle: { src: '/sprites/evil-wizard/idle.png', frames: 8 },
     attack1: { src: '/sprites/evil-wizard/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/evil-wizard/attack2.png', frames: 8 },
     hurt: { src: '/sprites/evil-wizard/hurt.png', frames: 4 },
     death: { src: '/sprites/evil-wizard/death.png', frames: 5 },
     walk: { src: '/sprites/evil-wizard/walk.png', frames: 8 },
