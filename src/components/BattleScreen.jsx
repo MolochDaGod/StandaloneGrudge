@@ -2328,10 +2328,13 @@ export default function BattleScreen() {
               <div
                 onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
                 style={{
-                position: 'absolute', top: footY + 2, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', top: footY + 4, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
-                background: 'rgba(0,0,0,0.65)', borderRadius: 4, padding: '2px 5px',
+                background: isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.35)', 
+                borderRadius: 4, padding: '2px 5px',
                 minWidth: 55, zIndex: 20,
+                border: isSelected ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                transition: 'all 0.3s ease',
               }}>
                 <div style={{
                   fontSize: '0.5rem', fontWeight: 600,
