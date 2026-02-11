@@ -1049,6 +1049,25 @@ export default function WorldMap() {
         })}
 
         <svg {...svgOverlayProps(MAP_LAYERS.LANDMARKS)}>
+          <defs>
+            <pattern id="lavaTexture" patternUnits="userSpaceOnUse" width="8" height="8">
+              <image href="/backgrounds/lava_texture.png" x="0" y="0" width="8" height="8" preserveAspectRatio="xMidYMid slice">
+                <animate attributeName="x" from="0" to="-8" dur="12s" repeatCount="indefinite" />
+              </image>
+            </pattern>
+            <filter id="lavaGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="blur" />
+              <feColorMatrix in="blur" type="matrix" values="1.2 0 0 0 0.1  0 0.3 0 0 0  0 0 0.1 0 0  0 0 0 0.9 0" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="lavaSoft" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="0.15" result="softEdge" />
+              <feComposite in="SourceGraphic" in2="softEdge" operator="in" />
+            </filter>
+          </defs>
           {mapLandmarks.filter(l => l.type === 'river').map((river, idx) => {
             const d = buildSmoothPath(river.points);
             return (
@@ -1069,11 +1088,9 @@ export default function WorldMap() {
           {mapLandmarks.filter(l => l.type === 'lava').map((lava, idx) => {
             const d = buildSmoothPath(lava.points);
             return (
-              <g key={`lava_${idx}`}>
-                <path d={d} fill="none" stroke="rgba(80,20,0,0.5)" strokeWidth={lava.width + 1.2} strokeLinecap="round" strokeLinejoin="round" />
-                <path d={d} fill="none" stroke={lava.color} strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(255,100,0,0.8))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                <path d={d} fill="none" stroke="rgba(255,200,50,0.4)" strokeWidth={lava.width * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
-                <path d={d} fill="none" stroke="rgba(255,255,200,0.25)" strokeWidth={lava.width * 0.2} strokeLinecap="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
+              <g key={`lava_${idx}`} filter="url(#lavaGlow)">
+                <path d={d} fill="none" stroke="url(#lavaTexture)" strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" filter="url(#lavaSoft)" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                <path d={d} fill="none" stroke="rgba(255,200,50,0.15)" strokeWidth={lava.width * 0.3} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
               </g>
             );
           })}
@@ -1185,33 +1202,34 @@ export default function WorldMap() {
 
         {(editRoutes.length > 0 || editLandmarks.length > 0 || routePoints.length > 0 || landmarkPoints.length > 0) && (
           <svg {...svgOverlayProps(MAP_LAYERS.ROADS)}>
+            <defs>
+              <pattern id="lavaTextureEdit" patternUnits="userSpaceOnUse" width="8" height="8">
+                <image href="/backgrounds/lava_texture.png" x="0" y="0" width="8" height="8" preserveAspectRatio="xMidYMid slice">
+                  <animate attributeName="x" from="0" to="-8" dur="12s" repeatCount="indefinite" />
+                </image>
+              </pattern>
+              <filter id="lavaGlowEdit" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="blur" />
+                <feColorMatrix in="blur" type="matrix" values="1.2 0 0 0 0.1  0 0.3 0 0 0  0 0 0.1 0 0  0 0 0 0.9 0" result="glow" />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="lavaSoftEdit" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="0.15" result="softEdge" />
+                <feComposite in="SourceGraphic" in2="softEdge" operator="in" />
+              </filter>
+            </defs>
             {editLandmarks.map((lm, idx) => {
               if (!lm.points || lm.points.length < 2) return null;
               const d = lm.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
               if (lm.type === 'lava') {
                 const w = lm.width || 1;
-                const pts = lm.points || [];
                 return (
-                  <g key={`elm_${idx}`}>
-                    <path d={d} fill="none" stroke="rgba(80,20,0,0.5)" strokeWidth={w + 1.2} strokeLinecap="round" strokeLinejoin="round" />
-                    <path d={d} fill="none" stroke={lm.color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(255,100,0,0.8))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                    <path d={d} fill="none" stroke="rgba(255,200,50,0.4)" strokeWidth={w * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
-                    <path d={d} fill="none" stroke="rgba(255,255,200,0.25)" strokeWidth={w * 0.2} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
-                    {pts.filter((_, i) => i % 3 === 0).map((p, pi) => {
-                      const px = Array.isArray(p) ? p[0] : p.x;
-                      const py = Array.isArray(p) ? p[1] : p.y;
-                      return Array.from({ length: 2 }, (_, ei) => (
-                        <circle key={`ember_${idx}_${pi}_${ei}`}
-                          cx={px + (Math.random() - 0.5) * 0.8}
-                          cy={py}
-                          r={0.15 + Math.random() * 0.1}
-                          fill={ei === 0 ? 'rgba(255,180,50,0.9)' : 'rgba(255,100,0,0.7)'}
-                          style={{
-                            animation: `emberRise ${1.5 + Math.random() * 2}s ease-out infinite ${Math.random() * 2}s`,
-                          }}
-                        />
-                      ));
-                    })}
+                  <g key={`elm_${idx}`} filter="url(#lavaGlowEdit)">
+                    <path d={d} fill="none" stroke="url(#lavaTextureEdit)" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" filter="url(#lavaSoftEdit)" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                    <path d={d} fill="none" stroke="rgba(255,200,50,0.15)" strokeWidth={w * 0.3} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
                   </g>
                 );
               }
