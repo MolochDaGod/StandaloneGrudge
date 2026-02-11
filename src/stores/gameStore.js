@@ -403,6 +403,9 @@ const useGameStore = create(persist((set, get) => ({
   completedMissions: [],
   arenaLastRotation: 0,
   currentArenaPool: [],
+  currentScene: null,
+  sceneReturnTo: null,
+  dungeonProgress: null,
 
   setScreen: (screen) => set({ screen }),
 
@@ -2043,8 +2046,10 @@ const useGameStore = create(persist((set, get) => ({
       }
     }
 
-    set({
-      screen: 'world',
+    const returnScreen = state.dungeonProgress ? 'scene' : 'world';
+
+    const updates = {
+      screen: returnScreen,
       battleState: null,
       battleUnits: [],
       battleTurnOrder: [],
@@ -2059,7 +2064,24 @@ const useGameStore = create(persist((set, get) => ({
       gameMessage: msg,
       floatingTexts: [],
       heroRoster: updatedRoster,
-    });
+    };
+
+    if (state.dungeonProgress && !wasDefeat) {
+      const dp = state.dungeonProgress;
+      const next = dp.currentNode + 1;
+      if (next >= dp.totalNodes) {
+        updates.dungeonProgress = { ...dp, currentNode: next, completed: [...dp.completed, dp.currentNode] };
+      } else {
+        updates.dungeonProgress = { ...dp, currentNode: next, completed: [...dp.completed, dp.currentNode] };
+      }
+    }
+    if (state.dungeonProgress && wasDefeat) {
+      updates.dungeonProgress = null;
+      updates.currentScene = null;
+      updates.screen = 'world';
+    }
+
+    set(updates);
   },
 
   restAtInn: (customCost) => {
@@ -2302,6 +2324,47 @@ const useGameStore = create(persist((set, get) => ({
     const updates = { lastHarvestTick: now, harvestResources: newResources };
     if (goldGained > 0) updates.gold = state.gold + goldGained;
     set(updates);
+  },
+
+  enterScene: (sceneType, returnTo) => {
+    set({ currentScene: sceneType, sceneReturnTo: returnTo || 'world', screen: 'scene' });
+  },
+
+  exitScene: () => {
+    set({ currentScene: null, sceneReturnTo: null, dungeonProgress: null, screen: 'world' });
+  },
+
+  startDungeon: (locationId) => {
+    set({
+      currentScene: 'dungeon',
+      sceneReturnTo: 'world',
+      dungeonProgress: { locationId, currentNode: 0, totalNodes: 5, completed: [] },
+      screen: 'scene',
+    });
+  },
+
+  advanceDungeon: () => {
+    const state = get();
+    if (!state.dungeonProgress) return;
+    const next = state.dungeonProgress.currentNode + 1;
+    const completed = [...state.dungeonProgress.completed, state.dungeonProgress.currentNode];
+    set({
+      dungeonProgress: { ...state.dungeonProgress, currentNode: next, completed },
+      screen: 'scene',
+    });
+  },
+
+  sellResource: (resource, amount) => {
+    const state = get();
+    const prices = { herbs: 2, wood: 2, ore: 4, crystals: 8 };
+    const available = Math.floor(state.harvestResources[resource] || 0);
+    const toSell = Math.min(amount, available);
+    if (toSell <= 0) return;
+    const goldGain = toSell * (prices[resource] || 1);
+    set({
+      harvestResources: { ...state.harvestResources, [resource]: (state.harvestResources[resource] || 0) - toSell },
+      gold: state.gold + goldGain,
+    });
   },
 
   addRandomEvent: (event) => {
@@ -2696,6 +2759,7 @@ const useGameStore = create(persist((set, get) => ({
     randomEvents: state.randomEvents,
     lastEventSpawn: state.lastEventSpawn,
     trainingPhase: state.trainingPhase,
+    dungeonProgress: state.dungeonProgress,
   }),
 }));
 

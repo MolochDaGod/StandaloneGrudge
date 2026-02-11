@@ -468,6 +468,7 @@ export default function WorldMap() {
     upgradeEquipment,
     shopInventory, inventory, buyItem, sellItem, refreshShop,
     randomEvents, addRandomEvent, cleanExpiredEvents, startEventBattle, lastEventSpawn,
+    enterScene,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -2307,10 +2308,25 @@ export default function WorldMap() {
                   color: '#c084fc', onClick: () => { enterLocation(selectedLoc.id); setSelectedLocation(null); },
                 }});
 
-                menuItems.push({ key: idx++, props: {
-                  icon: '\u{1F6D2}', label: 'Trade', sublabel: 'Buy supplies & sell loot',
-                  color: 'var(--gold)', onClick: () => { setSelectedLocation(null); }, disabled: true,
-                }});
+                if (selectedLoc.levelRange && selectedLoc.levelRange[0] >= 8) {
+                  menuItems.push({ key: idx++, props: {
+                    icon: '🏰', label: 'Enter Dungeon', sublabel: 'Multi-fight challenge',
+                    color: '#f97316', onClick: () => {
+                      setSelectedLocation(null);
+                      useGameStore.getState().startDungeon(selectedLoc.id);
+                    },
+                  }});
+                }
+
+                if (!selectedLoc.isCity) {
+                  menuItems.push({ key: idx++, props: {
+                    icon: '🌾', label: 'Explore Field', sublabel: 'Roam the open terrain',
+                    color: '#6ee7b3', onClick: () => {
+                      setSelectedLocation(null);
+                      enterScene('field', selectedLoc.id);
+                    },
+                  }});
+                }
 
                 return (
                   <>
@@ -2514,11 +2530,11 @@ export default function WorldMap() {
                     disabled={cityMissions.length === 0}
                   />
                   <MenuButton
-                    icon="🛒" label="Trade" sublabel="Buy supplies & sell loot"
+                    icon="🛒" label="Trading Post" sublabel="Visit the marketplace"
                     color="var(--gold)" onClick={() => {
-                      setCitySubmenu('trade');
-                      setTradeTab('buy');
-                      if (shopInventory.length === 0) refreshShop();
+                      setSelectedCity(null);
+                      setCitySubmenu(null);
+                      enterScene('trading', 'world');
                     }}
                   />
                   <MenuButton
@@ -3062,6 +3078,14 @@ export default function WorldMap() {
               <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.8rem' }}>💰 {gold}</span>
               <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>XP: {xp}/{xpToNext}</span>
             </div>
+
+            <button onClick={() => enterScene('camp', 'world')} style={{
+              background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)',
+              borderRadius: 8, padding: '4px 10px', color: '#4ade80',
+              cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>
+              ⛺ Camp
+            </button>
 
             {(unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0)) && (
               <button onClick={() => setScreen('account')} style={{

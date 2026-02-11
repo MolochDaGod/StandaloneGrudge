@@ -1032,7 +1032,11 @@ export default function BattleScreen() {
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const isArena = battleState?.isArena;
-  const bgImage = isArena ? '/backgrounds/arena.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
+  const isDungeon = useGameStore(s => s.dungeonProgress) !== null;
+  const dungeonNode = useGameStore(s => s.dungeonProgress?.currentNode);
+  const dungeonTotal = useGameStore(s => s.dungeonProgress?.totalNodes);
+  const isDungeonBoss = isDungeon && dungeonNode === (dungeonTotal || 5) - 1;
+  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeonBoss ? '/backgrounds/scene_field.png' : isDungeon ? '/backgrounds/scene_dungeon.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
   const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];

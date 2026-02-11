@@ -18,6 +18,7 @@ import SettingsMenu from './components/SettingsMenu';
 import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
+import SceneView from './components/SceneView';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -72,7 +73,7 @@ function GameApp() {
     );
   }
 
-  const screensWithOwnBackground = ['world', 'battle', 'location'];
+  const screensWithOwnBackground = ['world', 'battle', 'location', 'scene'];
   const bgVisible = !screensWithOwnBackground.includes(screen);
   const bgBlurred = screen !== 'title';
 
@@ -88,6 +89,7 @@ function GameApp() {
       case 'heroCreate': return <HeroCreate />;
       case 'account': return <AccountPage />;
       case 'training': return <TrainingScreen />;
+      case 'scene': return <SceneView />;
       default: return <TitleScreen />;
     }
   };
