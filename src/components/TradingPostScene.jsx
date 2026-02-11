@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -12,6 +12,8 @@ const TRADER_NODES = [
   { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable' },
   { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory' },
 ];
+
+const SPAWN_POS = { x: 50, y: 82 };
 
 export default function TradingPostScene() {
   useEffect(() => { setBgm('scene'); }, []);
@@ -27,21 +29,35 @@ export default function TradingPostScene() {
   const sceneReturnTo = useGameStore(s => s.sceneReturnTo);
 
   const [selectedTrader, setSelectedTrader] = useState(null);
-  const [heroTarget, setHeroTarget] = useState(null);
+  const [heroX, setHeroX] = useState(SPAWN_POS.x);
+  const [heroY, setHeroY] = useState(SPAWN_POS.y);
+  const [walking, setWalking] = useState(false);
+  const [facingLeft, setFacingLeft] = useState(false);
   const [tab, setTab] = useState('buy');
+  const walkTimeout = useRef(null);
 
   useEffect(() => {
     if (shopInventory.length === 0) refreshShop();
   }, []);
 
+  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
-  const heroX = heroTarget ? TRADER_NODES.find(t => t.id === heroTarget)?.x || 50 : 50;
-  const heroY = heroTarget ? TRADER_NODES.find(t => t.id === heroTarget)?.y || 80 : 80;
-
   const handleTraderClick = (traderId) => {
-    setHeroTarget(traderId);
-    setTimeout(() => setSelectedTrader(traderId), 400);
+    if (walkTimeout.current) clearTimeout(walkTimeout.current);
+    const trader = TRADER_NODES.find(t => t.id === traderId);
+    if (!trader) return;
+    const targetX = trader.x - 6;
+    const targetY = trader.y + 6;
+    setFacingLeft(targetX < heroX);
+    setWalking(true);
+    setHeroX(targetX);
+    setHeroY(targetY);
+    walkTimeout.current = setTimeout(() => {
+      setWalking(false);
+      setSelectedTrader(traderId);
+    }, 500);
   };
 
   const getFilteredShop = () => {
@@ -114,17 +130,15 @@ export default function TradingPostScene() {
       {primarySprite && (
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 10,
+          transform: `translate(-50%, -50%)`,
+          zIndex: 10,
           transition: 'left 0.5s ease, top 0.5s ease',
         }}>
           <SpriteAnimation
-            src={primarySprite.src}
-            frameWidth={primarySprite.frameWidth || 100}
-            frameHeight={primarySprite.frameHeight || 100}
-            totalFrames={primarySprite.idle?.frames || 4}
-            row={primarySprite.idle?.row || 0}
-            fps={6}
-            scale={2}
+            spriteData={primarySprite}
+            animation={walking ? 'walk' : 'idle'}
+            scale={3}
+            flip={facingLeft}
           />
         </div>
       )}
@@ -141,7 +155,7 @@ export default function TradingPostScene() {
             <div className="font-cinzel" style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '0.75rem' }}>
               {TRADER_NODES.find(t => t.id === selectedTrader)?.name} Trader
             </div>
-            <button onClick={() => { setSelectedTrader(null); setHeroTarget(null); }} style={{
+            <button onClick={() => { setSelectedTrader(null); setHeroX(SPAWN_POS.x); setHeroY(SPAWN_POS.y); }} style={{
               background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem',
             }}>✕</button>
           </div>

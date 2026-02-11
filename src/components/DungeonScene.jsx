@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -57,7 +57,9 @@ export default function DungeonScene() {
   const playerRace = useGameStore(s => s.playerRace);
   const playerClass = useGameStore(s => s.playerClass);
 
-  const [heroPos, setHeroPos] = useState(null);
+  const [heroY, setHeroY] = useState(null);
+  const [walking, setWalking] = useState(false);
+  const walkTimeout = useRef(null);
 
   const dungeonTheme = dungeonProgress?.theme || 'default';
   const config = DUNGEON_CONFIGS[dungeonTheme] || DUNGEON_CONFIGS.default;
@@ -67,23 +69,46 @@ export default function DungeonScene() {
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
+  const allCleared = currentNode >= config.nodes.length;
+  const currentNodeY = allCleared ? 6 : (config.nodes[Math.min(currentNode, config.nodes.length - 1)]?.y || 82);
+
+  useEffect(() => {
+    if (heroY === null) {
+      setHeroY(currentNodeY + 10);
+      const entryTimer = setTimeout(() => {
+        setWalking(true);
+        setHeroY(currentNodeY);
+        const arriveTimer = setTimeout(() => setWalking(false), 600);
+        walkTimeout.current = arriveTimer;
+      }, 100);
+      return () => clearTimeout(entryTimer);
+    }
+  }, []);
+
+  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+
   const handleNodeClick = (nodeIdx) => {
     if (nodeIdx !== currentNode) return;
     if (completed.includes(nodeIdx)) return;
+    if (walkTimeout.current) clearTimeout(walkTimeout.current);
 
     const node = config.nodes[nodeIdx];
-    useGameStore.setState({ currentLocation: locationId });
+    const targetY = node.y;
+    setWalking(true);
+    setHeroY(targetY);
 
-    if (node.bossId === 'evil_wizard' || (node.type === 'boss' && dungeonTheme === 'lava')) {
-      useGameStore.setState({ currentScene: 'boss_walkup', screen: 'scene' });
-      return;
-    }
+    walkTimeout.current = setTimeout(() => {
+      setWalking(false);
+      useGameStore.setState({ currentLocation: locationId });
 
-    startBattle(locationId);
+      if (node.bossId === 'evil_wizard' || (node.type === 'boss' && dungeonTheme === 'lava')) {
+        useGameStore.setState({ currentScene: 'boss_walkup', screen: 'scene' });
+        return;
+      }
+
+      startBattle(locationId);
+    }, 600);
   };
-
-  const allCleared = currentNode >= config.nodes.length;
-  const heroY = allCleared ? 6 : (config.nodes[Math.min(currentNode, config.nodes.length - 1)]?.y || 82);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -166,19 +191,15 @@ export default function DungeonScene() {
 
       {primarySprite && (
         <div style={{
-          position: 'absolute', left: '38%', top: `${heroY}%`,
+          position: 'absolute', left: '38%', top: `${heroY ?? currentNodeY}%`,
           transform: 'translate(-50%, -50%)', zIndex: 12,
           transition: 'top 0.6s ease',
         }}>
           <SpriteAnimation
-            src={primarySprite.src || primarySprite.idle?.src}
-            frameWidth={primarySprite.frameWidth || 150}
-            frameHeight={primarySprite.frameHeight || 150}
-            totalFrames={primarySprite.idle?.frames || 4}
-            row={primarySprite.idle?.row != null ? primarySprite.idle.row : 0}
-            animationSrc={primarySprite.idle?.src}
-            fps={6}
-            scale={2}
+            spriteData={primarySprite}
+            animation={walking ? 'walk' : 'idle'}
+            scale={3}
+            flip={false}
           />
         </div>
       )}

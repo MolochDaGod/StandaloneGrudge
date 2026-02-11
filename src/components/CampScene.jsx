@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -14,6 +14,8 @@ const RESOURCE_NODES = [
 ];
 
 const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
+
+const SPAWN_POS = { x: 45, y: 75 };
 
 export default function CampScene() {
   useEffect(() => { setBgm('scene'); }, []);
@@ -34,11 +36,18 @@ export default function CampScene() {
 
   const [selectedNode, setSelectedNode] = useState(null);
   const [showSellPanel, setShowSellPanel] = useState(false);
+  const [heroX, setHeroX] = useState(SPAWN_POS.x);
+  const [heroY, setHeroY] = useState(SPAWN_POS.y);
+  const [walking, setWalking] = useState(false);
+  const [facingLeft, setFacingLeft] = useState(false);
+  const walkTimeout = useRef(null);
 
   React.useEffect(() => {
     const interval = setInterval(() => tickHarvests(), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
 
   const availableHeroes = heroRoster.filter(h => {
     const isHarvesting = Object.values(activeHarvests).includes(h.id);
@@ -46,6 +55,28 @@ export default function CampScene() {
   });
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
+
+  const walkToNode = (node) => {
+    if (walkTimeout.current) clearTimeout(walkTimeout.current);
+    const targetX = node.x - 6;
+    const targetY = node.y + 8;
+    setFacingLeft(targetX < heroX);
+    setWalking(true);
+    setHeroX(targetX);
+    setHeroY(targetY);
+    walkTimeout.current = setTimeout(() => {
+      setWalking(false);
+      setSelectedNode(node.id);
+    }, 600);
+  };
+
+  const handleNodeClick = (node) => {
+    if (selectedNode === node.id) {
+      setSelectedNode(null);
+      return;
+    }
+    walkToNode(node);
+  };
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -77,15 +108,17 @@ export default function CampScene() {
       </div>
 
       {primarySprite && (
-        <div style={{ position: 'absolute', left: '45%', top: '68%', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+        <div style={{
+          position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
+          transform: `translate(-50%, -50%)`,
+          zIndex: 10,
+          transition: 'left 0.6s ease, top 0.6s ease',
+        }}>
           <SpriteAnimation
-            src={primarySprite.src}
-            frameWidth={primarySprite.frameWidth || 100}
-            frameHeight={primarySprite.frameHeight || 100}
-            totalFrames={primarySprite.idle?.frames || 4}
-            row={primarySprite.idle?.row || 0}
-            fps={6}
-            scale={2.5}
+            spriteData={primarySprite}
+            animation={walking ? 'walk' : 'idle'}
+            scale={3}
+            flip={facingLeft}
           />
         </div>
       )}
@@ -98,7 +131,7 @@ export default function CampScene() {
         const resourceAmount = Math.floor(harvestResources[node.resource] || 0);
 
         return (
-          <div key={node.id} onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)} style={{
+          <div key={node.id} onClick={() => handleNodeClick(node)} style={{
             position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
             transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: 15,
             textAlign: 'center',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -23,6 +23,8 @@ const ENCHANT_RECIPES = [
   { id: 'quicken', name: 'Quicken', stat: 'speed', bonus: 3, cost: { crystals: 5, herbs: 3 }, icon: 'lightning' },
 ];
 
+const SPAWN_POS = { x: 50, y: 82 };
+
 export default function PortalScene() {
   useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
@@ -38,16 +40,19 @@ export default function PortalScene() {
   const addGold = useGameStore(s => s.addGold);
 
   const [activePanel, setActivePanel] = useState(null);
-  const [heroX, setHeroX] = useState(50);
-  const [heroY, setHeroY] = useState(80);
+  const [heroX, setHeroX] = useState(SPAWN_POS.x);
+  const [heroY, setHeroY] = useState(SPAWN_POS.y);
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
   const [selectedHero, setSelectedHero] = useState(null);
   const [message, setMessage] = useState(null);
   const [shopItems, setShopItems] = useState(null);
+  const walkTimeout = useRef(null);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
   const activeHeroes = heroRoster.filter(h => h.isActive);
+
+  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
 
   const showMsg = (text) => {
     setMessage(text);
@@ -55,12 +60,16 @@ export default function PortalScene() {
   };
 
   const handleNodeClick = (node) => {
-    setFacingLeft(node.x < heroX);
+    if (activePanel) return;
+    if (walkTimeout.current) clearTimeout(walkTimeout.current);
+    const targetX = node.x - 4;
+    const targetY = node.y + 8;
+    setFacingLeft(targetX < heroX);
     setWalking(true);
-    setHeroX(node.x - 4);
-    setHeroY(node.y);
+    setHeroX(targetX);
+    setHeroY(targetY);
 
-    setTimeout(() => {
+    walkTimeout.current = setTimeout(() => {
       setWalking(false);
 
       if (node.id === 'void_dungeon') {
@@ -371,18 +380,14 @@ export default function PortalScene() {
       {primarySprite && !activePanel && (
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
-          transform: `translate(-50%, -50%) scaleX(${facingLeft ? -1 : 1})`,
+          transform: `translate(-50%, -50%)`,
           zIndex: 12, transition: 'left 0.5s ease, top 0.5s ease',
         }}>
           <SpriteAnimation
-            src={primarySprite.src || primarySprite.idle?.src}
-            frameWidth={primarySprite.frameWidth || 150}
-            frameHeight={primarySprite.frameHeight || 150}
-            totalFrames={walking ? (primarySprite.walk?.frames || 6) : (primarySprite.idle?.frames || 4)}
-            row={primarySprite.walk ? undefined : (walking ? 1 : 0)}
-            animationSrc={walking ? primarySprite.walk?.src : primarySprite.idle?.src}
-            fps={walking ? 10 : 6}
-            scale={2}
+            spriteData={primarySprite}
+            animation={walking ? 'walk' : 'idle'}
+            scale={3}
+            flip={facingLeft}
           />
         </div>
       )}

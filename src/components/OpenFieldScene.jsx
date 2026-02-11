@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
@@ -11,6 +11,8 @@ const FIELD_EVENTS = [
   { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3' },
   { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316' },
 ];
+
+const SPAWN_POS = { x: 50, y: 82 };
 
 export default function OpenFieldScene() {
   useEffect(() => { setBgm('scene'); }, []);
@@ -27,24 +29,30 @@ export default function OpenFieldScene() {
   const addGold = useGameStore(s => s.addGold);
   const sceneReturnTo = useGameStore(s => s.sceneReturnTo);
 
-  const [heroX, setHeroX] = useState(50);
-  const [heroY, setHeroY] = useState(80);
+  const [heroX, setHeroX] = useState(SPAWN_POS.x);
+  const [heroY, setHeroY] = useState(SPAWN_POS.y);
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
   const [interacted, setInteracted] = useState([]);
   const [message, setMessage] = useState(null);
+  const walkTimeout = useRef(null);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
+  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+
   const handleEventClick = (evt) => {
     if (interacted.includes(evt.id)) return;
+    if (walkTimeout.current) clearTimeout(walkTimeout.current);
 
-    setFacingLeft(evt.x < heroX);
+    const targetX = evt.x - 6;
+    const targetY = evt.y;
+    setFacingLeft(targetX < heroX);
     setWalking(true);
-    setHeroX(evt.x - 6);
-    setHeroY(evt.y);
+    setHeroX(targetX);
+    setHeroY(targetY);
 
-    setTimeout(() => {
+    walkTimeout.current = setTimeout(() => {
       setWalking(false);
 
       if (evt.type === 'battle') {
@@ -141,17 +149,14 @@ export default function OpenFieldScene() {
       {primarySprite && (
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
-          transform: `translate(-50%, -50%) scaleX(${facingLeft ? -1 : 1})`,
+          transform: `translate(-50%, -50%)`,
           zIndex: 12, transition: 'left 0.6s ease, top 0.6s ease',
         }}>
           <SpriteAnimation
-            src={primarySprite.src}
-            frameWidth={primarySprite.frameWidth || 100}
-            frameHeight={primarySprite.frameHeight || 100}
-            totalFrames={walking ? (primarySprite.walk?.frames || 6) : (primarySprite.idle?.frames || 4)}
-            row={walking ? (primarySprite.walk?.row || 1) : (primarySprite.idle?.row || 0)}
-            fps={walking ? 10 : 6}
-            scale={2.2}
+            spriteData={primarySprite}
+            animation={walking ? 'walk' : 'idle'}
+            scale={3}
+            flip={facingLeft}
           />
         </div>
       )}
