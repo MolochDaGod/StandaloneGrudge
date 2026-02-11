@@ -9,6 +9,7 @@ import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_
 import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
+import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
 
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
@@ -63,7 +64,7 @@ function createHeroBattleUnit(hero) {
   if (!cls) return null;
   const stats = getHeroStatsWithBonuses(hero);
   const heroWeaponType = hero.equipment?.weapon?.weaponType || null;
-  return {
+  const unit = {
     id: hero.id,
     name: hero.name,
     team: 'player',
@@ -71,6 +72,7 @@ function createHeroBattleUnit(hero) {
     classId: hero.classId,
     raceId: hero.raceId,
     templateId: null,
+    weaponType: heroWeaponType,
     bearForm: false,
     demonBlade: false,
     health: Math.min(hero.currentHealth, Math.floor(stats.health)),
@@ -103,6 +105,8 @@ function createHeroBattleUnit(hero) {
     guaranteedCrit: false,
     grudge: 0,
   };
+  unit.row = getDefaultRow(unit);
+  return unit;
 }
 
 function calculateAttackDamage(attacker, defender, ability) {
@@ -186,7 +190,9 @@ function calculateAttackDamage(attacker, defender, ability) {
     drained = Math.floor(totalDmg * (attacker.drainHealth / 100));
   }
 
-  return { totalDmg, isCrit, blocked, evaded: false, drained };
+  let result = { totalDmg, isCrit, blocked, evaded: false, drained };
+  result = applyRowCombatModifiers(attacker, defender, ability, result);
+  return result;
 }
 
 function chooseAIAction(unit, allUnits) {
@@ -270,6 +276,11 @@ function chooseAIAction(unit, allUnits) {
 
   if (!ability) return null;
 
+  const preferredRow = getAIRowPreference(unit, allUnits);
+  if (preferredRow && preferredRow !== unit.row && Math.random() < 0.4) {
+    return { type: 'move_row', targetRow: preferredRow };
+  }
+
   let target;
   if (Math.random() < 0.6) {
     target = enemies.reduce((low, e) => e.health < low.health ? e : low, enemies[0]);
@@ -296,6 +307,32 @@ function getFormationPositions(count, side) {
   };
   const maxCount = side === 'player' ? 3 : 4;
   return p[side][Math.min(count, maxCount)] || p[side][1];
+}
+
+function assignRowsAndPositions(playerTeam, enemyUnits) {
+  playerTeam.forEach(u => {
+    if (!u.row) u.row = getDefaultRow(u);
+  });
+  enemyUnits.forEach(u => {
+    if (!u.row) u.row = getDefaultRow(u);
+  });
+
+  const pPos = getRowPositions(playerTeam, 'player');
+  const ePos = getRowPositions(enemyUnits, 'enemy');
+  playerTeam.forEach(u => { if (pPos[u.id]) u.position = pPos[u.id]; });
+  enemyUnits.forEach(u => { if (ePos[u.id]) u.position = ePos[u.id]; });
+}
+
+function recalcRowPositions(units) {
+  const playerUnits = units.filter(u => u.team === 'player' && u.alive);
+  const enemyUnits = units.filter(u => u.team === 'enemy' && u.alive);
+  const pPos = getRowPositions(playerUnits, 'player');
+  const ePos = getRowPositions(enemyUnits, 'enemy');
+  return units.map(u => {
+    const newPos = pPos[u.id] || ePos[u.id];
+    if (newPos) return { ...u, position: newPos };
+    return u;
+  });
 }
 
 const useGameStore = create(persist((set, get) => ({
@@ -720,10 +757,7 @@ const useGameStore = create(persist((set, get) => ({
 
     const allUnits = [...playerTeam, ...enemyUnits];
 
-    const pPositions = getFormationPositions(playerTeam.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerTeam, enemyUnits);
 
     const turnOrder = [...allUnits]
       .sort((a, b) => b.speed - a.speed)
@@ -817,10 +851,7 @@ const useGameStore = create(persist((set, get) => ({
     const enemyUnits = [boss, ...addEnemies];
     const allUnits = [...playerTeam, ...enemyUnits];
 
-    const pPositions = getFormationPositions(playerTeam.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerTeam, enemyUnits);
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
 
@@ -891,10 +922,7 @@ const useGameStore = create(persist((set, get) => ({
     const enemyUnits = round.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
 
     const allUnits = [...playerTeam, ...enemyUnits];
-    const pPositions = getFormationPositions(playerTeam.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerTeam, enemyUnits);
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
     const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
@@ -938,10 +966,7 @@ const useGameStore = create(persist((set, get) => ({
     const enemyUnits = round.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
 
     const allUnits = [...playerUnits, ...enemyUnits];
-    const pPositions = getFormationPositions(playerUnits.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerUnits.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerUnits, enemyUnits);
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
 
@@ -986,10 +1011,7 @@ const useGameStore = create(persist((set, get) => ({
     const enemyUnits = arena.enemies.map(templateId => createEnemy(templateId, state.level)).filter(Boolean);
 
     const allUnits = [...playerTeam, ...enemyUnits];
-    const pPositions = getFormationPositions(playerTeam.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerTeam, enemyUnits);
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
     const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
@@ -1151,6 +1173,41 @@ const useGameStore = create(persist((set, get) => ({
       battleLog: log.slice(-12),
       battleState: { ...bs, phase: 'animating' },
       lastAction: { attackerId: currentUnitId, type: 'defend' },
+    });
+  },
+
+  moveRow: (direction) => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const units = state.battleUnits.map(u => ({ ...u, buffs: [...(u.buffs || [])], cooldowns: { ...u.cooldowns } }));
+    const unit = units.find(u => u.id === currentUnitId);
+    if (!unit || !unit.alive) return;
+
+    const adjacent = getAdjacentRows(unit);
+    const rows = ['protection', 'battle', 'back'];
+    const currentIdx = rows.indexOf(unit.row);
+    let targetRow = null;
+
+    if (direction === 'forward' && currentIdx > 0) {
+      targetRow = rows[currentIdx - 1];
+    } else if (direction === 'back' && currentIdx < rows.length - 1) {
+      targetRow = rows[currentIdx + 1];
+    }
+
+    if (!targetRow || !adjacent.includes(targetRow)) return;
+
+    unit.row = targetRow;
+    const updatedUnits = recalcRowPositions(units);
+    const rowCfg = PLAYER_ROWS[targetRow];
+    const log = [...state.battleLog, `${rowCfg?.icon || '➡️'} ${unit.name} moves to ${rowCfg?.name || targetRow}!`];
+
+    set({
+      battleUnits: updatedUnits,
+      battleLog: log.slice(-12),
+      battleState: { ...bs, phase: 'animating' },
+      lastAction: { attackerId: currentUnitId, type: 'move_row', targetRow },
     });
   },
 
@@ -1563,6 +1620,25 @@ const useGameStore = create(persist((set, get) => ({
     const action = chooseAIAction(unit, state.battleUnits);
     if (!action) {
       get().advanceTurn();
+      return;
+    }
+
+    if (action.type === 'move_row') {
+      const units = state.battleUnits.map(u => ({ ...u, buffs: [...(u.buffs || [])], cooldowns: { ...u.cooldowns } }));
+      const aiUnit = units.find(u => u.id === currentUnitId);
+      if (aiUnit) {
+        const oldRow = aiUnit.row;
+        aiUnit.row = action.targetRow;
+        const updatedUnits = recalcRowPositions(units);
+        const rowCfg = ENEMY_ROWS[action.targetRow];
+        const log = [...state.battleLog, `${rowCfg?.icon || '➡️'} ${aiUnit.name} shifts to ${rowCfg?.name || action.targetRow}!`];
+        set({
+          battleUnits: updatedUnits,
+          battleLog: log.slice(-12),
+          battleState: { ...state.battleState, phase: 'animating' },
+          lastAction: { attackerId: currentUnitId, type: 'move_row', targetRow: action.targetRow },
+        });
+      }
       return;
     }
 
@@ -2299,10 +2375,7 @@ const useGameStore = create(persist((set, get) => ({
     }
 
     const allUnits = [...playerTeam, ...enemyUnits];
-    const pPositions = getFormationPositions(playerTeam.length, 'player');
-    const ePositions = getFormationPositions(enemyUnits.length, 'enemy');
-    playerTeam.forEach((u, i) => { u.position = pPositions[i]; });
-    enemyUnits.forEach((u, i) => { u.position = ePositions[i]; });
+    assignRowsAndPositions(playerTeam, enemyUnits);
 
     const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
     const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
