@@ -287,6 +287,13 @@ export default function WorldMap() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const camInitRef = useRef(false);
+  const [markerMode, setMarkerMode] = useState(false);
+  const [markerMenuNode, setMarkerMenuNode] = useState(null);
+  const [drawingArea, setDrawingArea] = useState(null);
+  const [drawingPoints, setDrawingPoints] = useState([]);
+  const [movementAreas, setMovementAreas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mapMovementAreas') || '{}'); } catch { return {}; }
+  });
 
   useEffect(() => {
     if (camInitRef.current) return;
@@ -320,11 +327,19 @@ export default function WorldMap() {
   }, [clampCam]);
 
   const handleMapMouseDown = useCallback((e) => {
+    if (drawingArea && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pt = screenToMapPercent(e.clientX, e.clientY);
+      if (pt) setDrawingPoints(prev => [...prev, pt]);
+      return;
+    }
+    if (markerMode && e.button === 0) return;
     if (e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-node]')) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, []);
+  }, [drawingArea, screenToMapPercent, markerMode]);
 
   const handleMapMouseMove = useCallback((e) => {
     if (!isDragging) return;
@@ -357,8 +372,41 @@ export default function WorldMap() {
   useEffect(() => {
     const interval = setInterval(() => {
       const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-      const groupX = (Math.random() - 0.5) * 3;
-      const groupY = (Math.random() - 0.5) * 1.5;
+      const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
+      const area = movementAreas[currentZone];
+      let groupX, groupY;
+      if (area && area.length >= 3) {
+        const el = mapRef.current;
+        const mapW = el ? el.offsetWidth : 1000;
+        const mapH = el ? el.offsetHeight : 700;
+        const relPts = area.map(p => ({ x: p.x - zonePos.x, y: p.y - zonePos.y }));
+        const minX = Math.min(...relPts.map(p => p.x));
+        const maxX = Math.max(...relPts.map(p => p.x));
+        const minY = Math.min(...relPts.map(p => p.y));
+        const maxY = Math.max(...relPts.map(p => p.y));
+        let pctX = 0, pctY = 0;
+        for (let tries = 0; tries < 20; tries++) {
+          const tx = minX + Math.random() * (maxX - minX);
+          const ty = minY + Math.random() * (maxY - minY);
+          let inside = false;
+          for (let i = 0, j = relPts.length - 1; i < relPts.length; j = i++) {
+            if ((relPts[i].y > ty) !== (relPts[j].y > ty) &&
+              tx < (relPts[j].x - relPts[i].x) * (ty - relPts[i].y) / (relPts[j].y - relPts[i].y) + relPts[i].x) {
+              inside = !inside;
+            }
+          }
+          if (inside) { pctX = tx; pctY = ty; break; }
+        }
+        if (pctX === 0 && pctY === 0) {
+          pctX = relPts.reduce((s, p) => s + p.x, 0) / relPts.length;
+          pctY = relPts.reduce((s, p) => s + p.y, 0) / relPts.length;
+        }
+        groupX = (pctX * mapW) / (100 * 3);
+        groupY = (pctY * mapH) / (100 * 2);
+      } else {
+        groupX = (Math.random() - 0.5) * 3;
+        groupY = (Math.random() - 0.5) * 1.5;
+      }
       const prevGroupX = wanderOffsets[activeHeroes[0]?.id]?.x || 0;
       const newOffsets = {};
       const newWalking = {};
@@ -378,9 +426,23 @@ export default function WorldMap() {
       }, 1800);
     }, 3000);
     return () => clearInterval(interval);
-  }, [heroRoster, activeHeroIds, wanderOffsets]);
+  }, [heroRoster, activeHeroIds, wanderOffsets, currentZone, movementAreas]);
 
   useEffect(() => { setBgm('ambient'); }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.key === '#') || (e.code === 'Digit3' && e.shiftKey)) {
+        e.preventDefault();
+        setMarkerMode(m => !m);
+        setMarkerMenuNode(null);
+        setDrawingArea(null);
+        setDrawingPoints([]);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => { tickHarvests(); }, 2000);
@@ -489,9 +551,26 @@ export default function WorldMap() {
     };
   }, [devDragging]);
 
+  const screenToMapPercent = useCallback((clientX, clientY) => {
+    const el = mapRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
+  }, []);
+
   const handleLocationClick = useCallback((e, loc) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (markerMode) {
+      setMarkerMenuNode(loc.id);
+      setDrawingArea(null);
+      setDrawingPoints([]);
+      return;
+    }
+
     const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
     if (!isUnlocked) return;
 
@@ -507,7 +586,7 @@ export default function WorldMap() {
       setCurrentZone(loc.id);
       setTimeout(() => setIsMoving(false), 600);
     }
-  }, [level, heroPos, getNodePos, devUnlocked]);
+  }, [level, heroPos, getNodePos, devUnlocked, markerMode]);
 
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
@@ -759,6 +838,38 @@ export default function WorldMap() {
             );
           })}
         </svg>
+
+        {markerMode && (
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+            {Object.entries(movementAreas).map(([nodeId, pts]) => {
+              if (!pts || pts.length < 3) return null;
+              const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') + ' Z';
+              return (
+                <g key={`ma_${nodeId}`}>
+                  <path d={d} fill="rgba(251,191,36,0.08)" stroke="rgba(251,191,36,0.5)" strokeWidth={0.3} strokeDasharray="1,0.5" />
+                  <text x={pts[0].x} y={pts[0].y - 0.8} fill="rgba(251,191,36,0.7)" fontSize="1.2" textAnchor="middle">{nodeId}</text>
+                </g>
+              );
+            })}
+            {drawingPoints.length > 0 && (
+              <g>
+                <polyline
+                  points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                  fill="none" stroke="rgba(74,222,128,0.7)" strokeWidth={0.3}
+                />
+                {drawingPoints.length >= 3 && (
+                  <polygon
+                    points={drawingPoints.map(p => `${p.x},${p.y}`).join(' ')}
+                    fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.5)" strokeWidth={0.25} strokeDasharray="0.8,0.4"
+                  />
+                )}
+                {drawingPoints.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={0.5} fill="rgba(74,222,128,0.8)" stroke="#fff" strokeWidth={0.15} />
+                ))}
+              </g>
+            )}
+          </svg>
+        )}
 
         {locations.map((loc) => {
           const pos = getNodePos(loc.id);
@@ -1213,25 +1324,30 @@ export default function WorldMap() {
                     transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
                   }}>
                     <div style={{
+                      position: 'relative',
                       width: spriteW, height: visibleH,
-                      overflow: 'hidden',
                     }}>
-                      <SpriteAnimation
-                        spriteData={getPlayerSprite(hero.classId, hero.raceId)}
-                        animation={isWalking ? 'walk' : 'idle'}
-                        flip={isWalking && flipX}
-                        scale={mapSpriteScale}
-                        speed={isWalking ? 100 : (150 + idx * 30)}
-                      />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: -1, left: '50%', transform: 'translateX(-50%)',
+                        width: 30, height: 5, borderRadius: '50%',
+                        background: 'radial-gradient(ellipse, rgba(0,0,0,0.55), transparent)',
+                        zIndex: 1,
+                      }} />
+                      <div style={{ position: 'relative', zIndex: 2, width: spriteW, height: visibleH, overflow: 'hidden' }}>
+                        <SpriteAnimation
+                          spriteData={getPlayerSprite(hero.classId, hero.raceId)}
+                          animation={isWalking ? 'walk' : 'idle'}
+                          flip={isWalking && flipX}
+                          scale={mapSpriteScale}
+                          speed={isWalking ? 100 : (150 + idx * 30)}
+                        />
+                      </div>
                     </div>
-                    <div style={{
-                      width: 32, height: 6, borderRadius: '50%', marginTop: -10,
-                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
-                    }} />
                     <div style={{
                       textAlign: 'center',
                       fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
-                      textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: 0,
+                      textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: -2,
                     }}>{hero.name}</div>
                   </div>
                 );
@@ -2202,10 +2318,15 @@ export default function WorldMap() {
               borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             }}>💀 Gruda</button>
-            <button onClick={() => setShowDebugGrid(!showDebugGrid)} style={{
-              background: showDebugGrid ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${showDebugGrid ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
-              borderRadius: 8, padding: '4px 6px', color: showDebugGrid ? '#fff' : 'rgba(255,255,255,0.3)',
+            <button onClick={() => {
+              setMarkerMode(m => !m);
+              setMarkerMenuNode(null);
+              setDrawingArea(null);
+              setDrawingPoints([]);
+            }} style={{
+              background: markerMode ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${markerMode ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: 8, padding: '4px 6px', color: markerMode ? 'var(--gold)' : 'rgba(255,255,255,0.3)',
               cursor: 'pointer', fontSize: '0.55rem', fontWeight: 600,
             }}>#</button>
           </div>
@@ -2879,6 +3000,97 @@ export default function WorldMap() {
               zIndex: 4,
             }} />
           )}
+        </div>
+      )}
+
+      {markerMode && (
+        <div style={{
+          position: 'absolute', top: 75, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 40, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.5)',
+          borderRadius: 8, padding: '4px 14px', color: 'var(--gold)',
+          fontSize: '0.65rem', fontWeight: 700, backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span>MARKER MODE</span>
+          <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '0.55rem' }}>
+            {drawingArea ? 'Click map to place points, then Save' : 'Click a node to set movement area'}
+          </span>
+        </div>
+      )}
+
+      {markerMode && markerMenuNode && !drawingArea && (
+        <div data-marker-menu style={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
+          borderRadius: 12, padding: 16, minWidth: 220, backdropFilter: 'blur(8px)',
+        }}>
+          <div style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>
+            {markerMenuNode}
+          </div>
+          <button onClick={() => {
+            setDrawingArea(markerMenuNode);
+            setDrawingPoints([]);
+            setMarkerMenuNode(null);
+          }} style={{
+            width: '100%', padding: '8px 12px', background: 'rgba(251,191,36,0.15)',
+            border: '1px solid rgba(251,191,36,0.4)', borderRadius: 8,
+            color: 'var(--gold)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            marginBottom: 6,
+          }}>Create Movement Area</button>
+          {movementAreas[markerMenuNode] && (
+            <button onClick={() => {
+              const next = { ...movementAreas };
+              delete next[markerMenuNode];
+              setMovementAreas(next);
+              localStorage.setItem('mapMovementAreas', JSON.stringify(next));
+              setMarkerMenuNode(null);
+            }} style={{
+              width: '100%', padding: '8px 12px', background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+              marginBottom: 6,
+            }}>Clear Movement Area</button>
+          )}
+          <button onClick={() => setMarkerMenuNode(null)} style={{
+            width: '100%', padding: '6px 12px', background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8,
+            color: 'var(--muted)', cursor: 'pointer', fontSize: '0.65rem',
+          }}>Cancel</button>
+        </div>
+      )}
+
+      {markerMode && drawingArea && (
+        <div data-marker-menu style={{
+          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <span style={{ color: 'var(--gold)', fontSize: '0.65rem', fontWeight: 700 }}>
+            Drawing: {drawingArea} ({drawingPoints.length} pts)
+          </span>
+          <button onClick={() => setDrawingPoints(prev => prev.slice(0, -1))} disabled={drawingPoints.length === 0} style={{
+            padding: '4px 10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 6, color: '#ccc', cursor: 'pointer', fontSize: '0.6rem',
+            opacity: drawingPoints.length === 0 ? 0.4 : 1,
+          }}>Undo</button>
+          <button onClick={() => {
+            if (drawingPoints.length >= 3) {
+              const next = { ...movementAreas, [drawingArea]: drawingPoints };
+              setMovementAreas(next);
+              localStorage.setItem('mapMovementAreas', JSON.stringify(next));
+            }
+            setDrawingArea(null);
+            setDrawingPoints([]);
+          }} disabled={drawingPoints.length < 3} style={{
+            padding: '4px 10px', background: drawingPoints.length >= 3 ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${drawingPoints.length >= 3 ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 6, color: drawingPoints.length >= 3 ? '#4ade80' : '#666', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Save</button>
+          <button onClick={() => { setDrawingArea(null); setDrawingPoints([]); }} style={{
+            padding: '4px 10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 6, color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Cancel</button>
         </div>
       )}
 
