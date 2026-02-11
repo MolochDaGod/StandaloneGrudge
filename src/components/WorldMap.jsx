@@ -203,6 +203,26 @@ const portalLocations = ['shadow_citadel', 'demon_gate', 'void_throne'];
 
 const MAP_GRID = { cols: 100, rows: 100 };
 
+const samplePointsAlongPath = (points, spacing = 2.5) => {
+  if (!points || points.length < 2) return [];
+  const norm = points.map(p => Array.isArray(p) ? { x: p[0], y: p[1] } : p);
+  const sampled = [];
+  let dist = 0;
+  let nextDist = spacing * 0.5;
+  for (let i = 1; i < norm.length; i++) {
+    const ax = norm[i - 1].x, ay = norm[i - 1].y;
+    const bx = norm[i].x, by = norm[i].y;
+    const segLen = Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
+    while (nextDist <= dist + segLen) {
+      const t = (nextDist - dist) / segLen;
+      sampled.push({ x: ax + (bx - ax) * t, y: ay + (by - ay) * t });
+      nextDist += spacing;
+    }
+    dist += segLen;
+  }
+  return sampled;
+};
+
 const buildSmoothPath = (points) => {
   if (points.length < 2) return '';
   let d = `M ${points[0][0]},${points[0][1]}`;
@@ -1108,14 +1128,6 @@ export default function WorldMap() {
               <g key={`river_${idx}`}>
                 <path d={d} fill="none" stroke="rgba(200,230,255,0.06)" strokeWidth={river.width + 1.2} strokeLinecap="round" strokeLinejoin="round" />
                 <path d={d} fill="none" stroke={river.color} strokeWidth={river.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px ${river.color})` }} />
-                <path d={d} fill="none" stroke="rgba(150,210,255,0.35)" strokeWidth={river.width * 0.4}
-                  strokeLinecap="round" strokeDasharray="0.8 1.2"
-                  style={{ animation: `waterFlow ${4 + idx}s linear infinite` }}
-                />
-                <path d={d} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={river.width * 0.15}
-                  strokeLinecap="round" strokeDasharray="0.3 2"
-                  style={{ animation: `waterFlow ${3 + idx * 0.7}s linear infinite` }}
-                />
               </g>
             );
           })}
@@ -1130,7 +1142,33 @@ export default function WorldMap() {
           })}
         </svg>
 
-        {/* Decorative landmarks removed for cleaner map */}
+        {/* Water sprite animations along rivers */}
+        {[...mapLandmarks.filter(l => l.type === 'river'), ...editLandmarks.filter(l => l.type === 'river')].map((river, rIdx) => {
+          const pts = river.points || [];
+          const sampled = samplePointsAlongPath(pts, 2.0);
+          const spriteScale = Math.max(0.06, 0.1 / camZoom);
+          return sampled.map((sp, si) => {
+            const delay = ((rIdx * 7 + si * 3) % 16) * 0.12;
+            return (
+              <div key={`wsp_${rIdx}_${si}`} style={{
+                position: 'absolute',
+                left: `${sp.x}%`, top: `${sp.y}%`,
+                width: 192, height: 192,
+                transform: `translate(-50%, -50%) scale(${spriteScale})`,
+                transformOrigin: 'center center',
+                pointerEvents: 'none',
+                zIndex: MAP_LAYERS.LANDMARKS + 1,
+                backgroundImage: 'url(/sprites/water_sprite.png)',
+                backgroundSize: '3072px 192px',
+                backgroundRepeat: 'no-repeat',
+                imageRendering: 'pixelated',
+                opacity: 0.7,
+                filter: 'drop-shadow(0 0 3px rgba(100,200,255,0.4))',
+                animation: `waterSpriteAnim 1.6s steps(16) infinite ${delay}s`,
+              }} />
+            );
+          });
+        })}
 
         {walkFootprints.map(fp => {
           const dotScale = Math.max(0.4, 0.8 / camZoom);
@@ -1224,28 +1262,6 @@ export default function WorldMap() {
                 <g key={`elm_${idx}`}>
                   <path d={d} fill="none" stroke="rgba(200,230,255,0.06)" strokeWidth={w + 1.2} strokeLinecap="round" strokeLinejoin="round" />
                   <path d={d} fill="none" stroke={lm.color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px ${lm.color})` }} />
-                  <path d={d} fill="none" stroke="rgba(150,210,255,0.35)" strokeWidth={w * 0.4}
-                    strokeLinecap="round" strokeLinejoin="round"
-                    strokeDasharray="0.8 1.2"
-                    style={{ animation: `waterFlow ${4 + idx}s linear infinite` }}
-                  />
-                  <path d={d} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={w * 0.15}
-                    strokeLinecap="round" strokeDasharray="0.3 2"
-                    style={{ animation: `waterFlow ${3 + idx * 0.7}s linear infinite ${idx * 0.3}s` }}
-                  />
-                  {pts.filter((_, i) => i % 4 === 0).map((p, si) => {
-                    const px = Array.isArray(p) ? p[0] : p.x;
-                    const py = Array.isArray(p) ? p[1] : p.y;
-                    return (
-                      <circle key={`sparkle_${idx}_${si}`}
-                        cx={px + (Math.random() - 0.5) * 0.5}
-                        cy={py + (Math.random() - 0.5) * 0.3}
-                        r={0.12}
-                        fill="rgba(255,255,255,0.8)"
-                        style={{ animation: `waterSparkle ${2 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 3}s` }}
-                      />
-                    );
-                  })}
                 </g>
               );
             })}
@@ -3273,13 +3289,9 @@ export default function WorldMap() {
             50% { opacity: 0.6; }
             100% { opacity: 0; transform: translateY(-2px) scale(0.3); }
           }
-          @keyframes waterFlow {
-            0% { stroke-dashoffset: 0; }
-            100% { stroke-dashoffset: -4; }
-          }
-          @keyframes waterSparkle {
-            0%, 100% { opacity: 0; r: 0.08; }
-            50% { opacity: 0.9; r: 0.18; }
+          @keyframes waterSpriteAnim {
+            from { background-position: 0 0; }
+            to { background-position: -3072px 0; }
           }
           @keyframes portalPulseGlow {
             0%, 100% { opacity: 0.4; box-shadow: 0 0 6px currentColor; }
