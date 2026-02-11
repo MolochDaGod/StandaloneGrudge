@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
+import { BOSS_WALKUP } from '../constants/layers';
 
 export default function BossWalkupScene() {
   const startBossBattle = useGameStore(s => s.startBossBattle);
@@ -58,7 +59,7 @@ export default function BossWalkupScene() {
 
       {phase === 'charging' && (
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none',
+          position: 'absolute', inset: 0, zIndex: BOSS_WALKUP.AMBIENT, pointerEvents: 'none',
           background: 'radial-gradient(circle at 50% 25%, rgba(192,38,211,0.4), transparent 60%)',
           animation: 'pulse 0.5s infinite',
         }} />
@@ -66,7 +67,7 @@ export default function BossWalkupScene() {
 
       <div style={{
         position: 'absolute', top: '15%', left: '50%',
-        transform: 'translate(-50%, -50%) scaleX(-1)', zIndex: 10,
+        transform: 'translate(-50%, -50%) scaleX(-1)', zIndex: BOSS_WALKUP.HERO,
       }}>
         {bossSprite && (
           <SpriteAnimation
@@ -101,7 +102,7 @@ export default function BossWalkupScene() {
 
       <div style={{
         position: 'absolute', left: '50%', top: `${heroY}%`,
-        transform: 'translate(-50%, -50%)', zIndex: 12,
+        transform: 'translate(-50%, -50%)', zIndex: BOSS_WALKUP.BOSS,
         transition: 'top 1.2s ease-in-out',
       }}>
         {primarySprite && (
@@ -122,7 +123,7 @@ export default function BossWalkupScene() {
         <>
           <div style={{
             position: 'absolute', top: '35%', left: '50%', transform: 'translateX(-50%)',
-            zIndex: 30, textAlign: 'center',
+            zIndex: BOSS_WALKUP.TEXT, textAlign: 'center',
           }}>
             <div style={{
               background: 'rgba(10,10,25,0.9)', border: '2px solid #c026d3',
@@ -151,7 +152,7 @@ export default function BossWalkupScene() {
           </div>
 
           <div style={{
-            position: 'absolute', bottom: 12, right: 12, zIndex: 30,
+            position: 'absolute', bottom: 12, right: 12, zIndex: BOSS_WALKUP.SKIP_BUTTON,
           }}>
             <button onClick={() => {
               useGameStore.setState({ currentScene: 'dungeon', screen: 'scene' });
@@ -169,7 +170,7 @@ export default function BossWalkupScene() {
       {phase !== 'confront' && phase !== 'charging' && (
         <div style={{
           position: 'absolute', top: '40%', left: '50%', transform: 'translateX(-50%)',
-          zIndex: 20, color: '#e2e8f0', fontSize: '0.55rem',
+          zIndex: BOSS_WALKUP.DIALOGUE, color: '#e2e8f0', fontSize: '0.55rem',
           textShadow: '0 1px 6px rgba(0,0,0,0.8)',
           animation: 'pulse 1.5s infinite',
         }}>

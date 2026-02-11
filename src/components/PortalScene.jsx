@@ -6,6 +6,7 @@ import { getItemPrice, getSellPrice, generateShopInventory } from '../data/equip
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
+import { SCENE } from '../constants/layers';
 
 const PORTAL_NODES = [
   { id: 'forge', name: 'Void Forge', icon: 'hammer', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
@@ -160,7 +161,7 @@ export default function PortalScene() {
     const panelStyle = {
       position: 'absolute', top: '8%', left: '5%', right: '5%', bottom: '18%',
       background: 'rgba(10,10,25,0.95)', border: '2px solid #c026d3',
-      borderRadius: 12, padding: '8px', zIndex: 40, overflow: 'auto',
+      borderRadius: 12, padding: '8px', zIndex: SCENE.TOOLTIP, overflow: 'auto',
       backdropFilter: 'blur(8px)',
     };
 
@@ -333,7 +334,7 @@ export default function PortalScene() {
 
       <div style={{
         position: 'absolute', top: 6, left: 12, right: 12,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
         <div className="font-cinzel" style={{ color: '#c026d3', fontSize: '0.85rem', textShadow: '0 2px 8px rgba(192,38,211,0.6)' }}>
           Void Nexus
@@ -350,7 +351,7 @@ export default function PortalScene() {
         <div key={node.id} onClick={() => handleNodeClick(node)} style={{
           position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
           transform: 'translate(-50%, -50%)', cursor: 'pointer',
-          zIndex: 15, textAlign: 'center',
+          zIndex: SCENE.NODES, textAlign: 'center',
         }}>
           <div style={{
             width: 72, height: 72, borderRadius: 10,
@@ -382,7 +383,7 @@ export default function PortalScene() {
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: 12, transition: 'left 0.5s ease, top 0.5s ease',
+          zIndex: SCENE.HERO, transition: 'left 0.5s ease, top 0.5s ease',
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -399,7 +400,7 @@ export default function PortalScene() {
         <div style={{
           position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(10,15,30,0.9)', border: '1px solid #c026d3',
-          borderRadius: 8, padding: '6px 14px', zIndex: 50,
+          borderRadius: 8, padding: '6px 14px', zIndex: SCENE.POPUP,
           color: '#c026d3', fontSize: '0.6rem', fontWeight: 600,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
         }}>
@@ -410,7 +411,7 @@ export default function PortalScene() {
       {(SCENE_NPCS.portal || []).map(npc => (
         <div key={npc.id} style={{
           position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
         }}>
           <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
         </div>
@@ -418,7 +419,7 @@ export default function PortalScene() {
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 30, cursor: 'pointer', textAlign: 'center',
+        zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{
           width: 46, height: 46, borderRadius: '50%',

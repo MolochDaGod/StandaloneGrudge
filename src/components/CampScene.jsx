@@ -5,6 +5,7 @@ import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
+import { SCENE } from '../constants/layers';
 
 const RESOURCE_NODES = [
   { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24', img: '/images/buildings/gold_mine.png' },
@@ -91,7 +92,7 @@ export default function CampScene() {
       <div style={{
         position: 'absolute', top: 8, left: 16, right: 16,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        zIndex: 20,
+        zIndex: SCENE.HEADER,
       }}>
         <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Camp
@@ -112,7 +113,7 @@ export default function CampScene() {
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: 10,
+          zIndex: SCENE.LABELS,
           transition: 'left 0.6s ease, top 0.6s ease',
         }}>
           <SpriteAnimation
@@ -134,7 +135,7 @@ export default function CampScene() {
         return (
           <div key={node.id} onClick={() => handleNodeClick(node)} style={{
             position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
-            transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: 15,
+            transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: SCENE.NODES,
             textAlign: 'center',
           }}>
             <div style={{
@@ -178,7 +179,7 @@ export default function CampScene() {
                 position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
                 background: 'rgba(10,15,30,0.95)', border: `1px solid ${node.color}`,
                 borderRadius: 8, padding: 8, minWidth: 120, marginTop: 4,
-                backdropFilter: 'blur(8px)', zIndex: 30,
+                backdropFilter: 'blur(8px)', zIndex: SCENE.BACK_BUTTON,
               }} onClick={e => e.stopPropagation()}>
                 {assignedHero ? (
                   <div>
@@ -219,7 +220,7 @@ export default function CampScene() {
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           background: 'rgba(10,15,30,0.95)', border: '2px solid #fbbf24',
-          borderRadius: 12, padding: 16, minWidth: 220, zIndex: 50,
+          borderRadius: 12, padding: 16, minWidth: 220, zIndex: SCENE.POPUP,
           backdropFilter: 'blur(8px)',
         }}>
           <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '0.8rem', marginBottom: 8, textAlign: 'center' }}>
@@ -265,7 +266,7 @@ export default function CampScene() {
       {(SCENE_NPCS.camp || []).map(npc => (
         <div key={npc.id} style={{
           position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
         }}>
           <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
         </div>
@@ -273,7 +274,7 @@ export default function CampScene() {
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 30, cursor: 'pointer', textAlign: 'center',
+        zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{
           width: 50, height: 50, borderRadius: '50%',

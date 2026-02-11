@@ -1,29 +1,6 @@
-export const MAP_LAYERS = {
-  TERRAIN_FILL:     0,
-  DAY_NIGHT:        1,
-  TERRAIN_SVG:      1,
-  CONNECTION_LINES: 1,
-  REGION_LABELS:    2,
-  ROADS:            2,
-  LANDMARKS:        3,
-  EFFECTS:          4,
-  NODES:            5,
-  CITIES:           5,
-  HERO:             6,
-  EVENTS:           7,
-  SELECTED:        10,
-  TOOLTIPS:        12,
-  HUD_PANELS:      14,
-  HUD_BUTTONS:     15,
-  HUD_SIDE:        16,
-  DEV_TOOLBAR:     30,
-  DEV_MENUS:       40,
-  POPUPS:          50,
-  HOVER_INFO:      60,
-  BATTLE_OVERLAY: 100,
-  DEBUG_GRID:     999,
-  DEV_DRAGGING:   999,
-};
+import { MAP_LAYERS } from '../constants/layers';
+
+export { MAP_LAYERS };
 
 export const SVG_OVERLAY_STYLE = {
   position: 'absolute',

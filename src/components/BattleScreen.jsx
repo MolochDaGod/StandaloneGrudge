@@ -11,6 +11,7 @@ import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
+import { BATTLE } from '../constants/layers';
 
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -144,7 +145,7 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
   }, []);
 
   return (
-    <div style={{ position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`, transform: 'translate(-50%, -50%)', zIndex: 260, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`, transform: 'translate(-50%, -50%)', zIndex: BATTLE.EFFECT_FLASH, pointerEvents: 'none' }}>
       {layers.map((layer, i) => {
         const sprite = effectSprites[layer.key];
         if (!sprite) return null;
@@ -216,7 +217,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
-      zIndex: 250,
+      zIndex: BATTLE.EFFECT_SPRITES,
       pointerEvents: 'none',
       ...EFFECT_BLEND,
     }}>
@@ -273,7 +274,7 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
-      zIndex: 260,
+      zIndex: BATTLE.EFFECT_FLASH,
       pointerEvents: 'none',
       opacity: progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1,
       ...EFFECT_BLEND,
@@ -398,7 +399,7 @@ function DodgeFlashSprite({ x, y }) {
       position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
-      pointerEvents: 'none', zIndex: 210, opacity: 0.9,
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS, opacity: 0.9,
       ...EFFECT_BLEND,
     }}>
       <div style={{
@@ -440,7 +441,7 @@ function CastingSpriteEffect({ x, y }) {
       position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
-      pointerEvents: 'none', zIndex: 205, opacity: 0.8,
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.8,
       ...EFFECT_BLEND,
     }}>
       <div style={{
@@ -491,7 +492,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
       position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
       width: displaySize, height: displaySize, overflow: 'hidden',
-      pointerEvents: 'none', zIndex: 205, opacity: 0.9,
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.9,
       ...EFFECT_BLEND,
     }}>
       <div style={{
@@ -569,7 +570,7 @@ function FireballProjectile({ startX, startY, endX, endY, phase }) {
           ? 'left 0.5s ease-in, top 0.5s ease-in'
           : 'none',
       transform: 'translate(-50%, -50%)',
-      zIndex: 210, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
         width: displaySize, height: displaySize,
@@ -636,7 +637,7 @@ function FireScatterSprite({ x, y, angle, delay }) {
       top: `${scattered ? targetY : y}%`,
       transform: 'translate(-50%, -50%)',
       transition: 'left 0.4s ease-out, top 0.4s ease-out, opacity 0.3s',
-      zIndex: 215, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS + 5, pointerEvents: 'none',
       opacity: frame > totalFrames * 0.7 ? 0 : 1,
     }}>
       <div style={{
@@ -695,7 +696,7 @@ function ResurrectEffect({ x, y, onComplete }) {
       left: `${x}%`,
       top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -70%)',
-      zIndex: 220, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS + 10, pointerEvents: 'none',
       animation: 'resurrectGlow 1.1s ease-out forwards',
     }}>
       <div style={{
@@ -751,7 +752,7 @@ function WaterArrowProjectile({ startX, startY, endX, endY, phase }) {
           ? 'left 0.45s ease-in, top 0.45s ease-in'
           : 'none',
       transform: 'translate(-50%, -50%)',
-      zIndex: 210, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
         width: displaySize, height: displaySize,
@@ -803,7 +804,7 @@ function WaterSplashSprite({ x, y, angle, delay }) {
       top: `${scattered ? targetY : y}%`,
       transform: 'translate(-50%, -50%)',
       transition: 'left 0.5s ease-out, top 0.5s ease-out, opacity 0.4s',
-      zIndex: 215, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS + 5, pointerEvents: 'none',
       opacity,
     }}>
       <div style={{
@@ -863,7 +864,7 @@ function IceStormProjectile({ startX, startY, endX, endY, phase }) {
           ? 'left 0.5s ease-in, top 0.5s ease-in'
           : 'none',
       transform: 'translate(-50%, -50%)',
-      zIndex: 210, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
@@ -923,7 +924,7 @@ function PoisonGustProjectile({ startX, startY, endX, endY, phase }) {
         ? 'left 0.55s ease-in, top 0.55s ease-in'
         : 'none',
       transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-      zIndex: 210, pointerEvents: 'none',
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
@@ -2153,7 +2154,7 @@ export default function BattleScreen() {
 
       <div style={{
         flex: '0 0 auto', background: 'rgba(0,0,0,0.6)',
-        borderBottom: '1px solid var(--border)', zIndex: 10, backdropFilter: 'blur(4px)',
+        borderBottom: '1px solid var(--border)', zIndex: BATTLE.HEADER, backdropFilter: 'blur(4px)',
       }}>
         <div style={{ padding: '4px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -2506,7 +2507,7 @@ export default function BattleScreen() {
             top: `${p.phase === 'fly' ? p.endY : p.startY}%`,
             transition: 'left 0.45s ease-in, top 0.45s ease-in',
             transform: `translate(-50%, -50%) rotate(${p.angle || 0}deg)`,
-            zIndex: 200,
+            zIndex: BATTLE.ACTION_BAR,
             pointerEvents: 'none',
           }}>
             {p.isDagger ? (
@@ -2626,7 +2627,7 @@ export default function BattleScreen() {
             color: f.color, fontWeight: 800, fontSize: '1rem',
             textShadow: `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
             animation: 'floatUp 1.5s ease forwards',
-            pointerEvents: 'none', zIndex: 300,
+            pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
             fontFamily: "'Cinzel', serif",
           }}>
             {f.text}
@@ -2636,7 +2637,7 @@ export default function BattleScreen() {
         {(isVictory || isDefeat) && (
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            textAlign: 'center', animation: 'slideUp 0.5s ease', zIndex: 100,
+            textAlign: 'center', animation: 'slideUp 0.5s ease', zIndex: BATTLE.DAMAGE_NUMBERS,
             backgroundImage: isDefeat ? 'linear-gradient(135deg, rgba(11,16,32,0.85), rgba(30,0,0,0.8)), url(/backgrounds/wc_gold.png)' : undefined,
             background: isDefeat ? undefined : 'rgba(11,16,32,0.9)',
             backgroundSize: 'cover', backgroundPosition: 'center',
@@ -2715,7 +2716,7 @@ export default function BattleScreen() {
 
       {adminMode && (
         <div style={{
-          position: 'absolute', top: 8, right: 8, zIndex: 500,
+          position: 'absolute', top: 8, right: 8, zIndex: BATTLE.ADMIN_CONTROLS,
           background: 'rgba(0,0,0,0.92)', border: '2px solid #f59e0b',
           borderRadius: 10, padding: '10px 14px', width: 220,
           backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
@@ -2783,7 +2784,7 @@ export default function BattleScreen() {
       <div style={{
           flex: '0 0 140px', height: 140, minHeight: 140, maxHeight: 140,
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
-          zIndex: 10,
+          zIndex: BATTLE.HEADER,
           display: 'flex', flexDirection: 'row',
           transition: 'border-color 0.3s',
           position: 'relative',

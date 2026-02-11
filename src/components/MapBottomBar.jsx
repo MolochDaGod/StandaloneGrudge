@@ -8,6 +8,7 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
+import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 
 const BAR_HEIGHT = '26.2%';
 const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
@@ -26,7 +27,7 @@ function HarvestingPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(251,191,36,0.3)',
       borderRadius: 12, padding: 16, width: 360, maxHeight: 400, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -119,7 +120,7 @@ function GearPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(110,231,183,0.3)',
       borderRadius: 12, padding: 16, width: 380, maxHeight: 450, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -204,7 +205,7 @@ function CharacterPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(168,85,247,0.3)',
       borderRadius: 12, padding: 16, width: 400, maxHeight: 500, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -352,7 +353,7 @@ export default function MapBottomBar({
   return (
     <div style={{
       position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
-      zIndex: 10000,
+      zIndex: BOTTOM_BAR,
       pointerEvents: 'none',
     }}>
       {showHarvesting && <div style={{ pointerEvents: 'auto' }}><HarvestingPopup onClose={() => setShowHarvesting(false)} /></div>}

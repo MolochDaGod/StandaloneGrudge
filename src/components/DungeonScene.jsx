@@ -4,6 +4,7 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
+import { SCENE } from '../constants/layers';
 
 const DUNGEON_CONFIGS = {
   default: {
@@ -121,7 +122,7 @@ export default function DungeonScene() {
 
       <div style={{
         position: 'absolute', top: 8, left: 16, right: 16,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
         <div className="font-cinzel" style={{ color: config.color, fontSize: '0.9rem', textShadow: `0 2px 8px ${config.color}60` }}>
           {config.name}
@@ -131,7 +132,7 @@ export default function DungeonScene() {
         </div>
       </div>
 
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 5, pointerEvents: 'none' }}>
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: SCENE.PATHS, pointerEvents: 'none' }}>
         {config.nodes.map((node, idx) => {
           if (idx === config.nodes.length - 1) return null;
           const nextNode = config.nodes[idx + 1];
@@ -156,7 +157,7 @@ export default function DungeonScene() {
           <div key={idx} onClick={() => handleNodeClick(idx)} style={{
             position: 'absolute', left: '50%', top: `${node.y}%`,
             transform: 'translate(-50%, -50%)', cursor: isCurrent ? 'pointer' : 'default',
-            zIndex: 15, textAlign: 'center', opacity: isLocked ? 0.4 : 1,
+            zIndex: SCENE.NODES, textAlign: 'center', opacity: isLocked ? 0.4 : 1,
           }}>
             <div style={{
               width: node.type === 'boss' ? 80 : 68, height: node.type === 'boss' ? 80 : 68,
@@ -193,7 +194,7 @@ export default function DungeonScene() {
       {primarySprite && (
         <div style={{
           position: 'absolute', left: '38%', top: `${heroY ?? currentNodeY}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 12,
+          transform: 'translate(-50%, -50%)', zIndex: SCENE.HERO,
           transition: 'top 0.6s ease',
         }}>
           <SpriteAnimation
@@ -209,7 +210,7 @@ export default function DungeonScene() {
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           background: 'rgba(10,15,30,0.95)', border: `2px solid ${config.color}`,
-          borderRadius: 12, padding: 20, textAlign: 'center', zIndex: 50,
+          borderRadius: 12, padding: 20, textAlign: 'center', zIndex: SCENE.POPUP,
           backdropFilter: 'blur(8px)',
         }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}><InlineIcon name="trophy" size={16} /></div>
@@ -227,7 +228,7 @@ export default function DungeonScene() {
       {!allCleared && (
         <div onClick={exitScene} style={{
           position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 30, cursor: 'pointer', textAlign: 'center',
+          zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
         }}>
           <div style={{
             width: 50, height: 50, borderRadius: '50%',

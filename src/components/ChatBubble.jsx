@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { CHAT_BUBBLES } from '../constants/layers';
 
 function SpriteFace({ spriteData, size = 32 }) {
   const [frame, setFrame] = useState(0);
@@ -61,7 +62,7 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
       left: anchorX,
       bottom: -anchorY,
       transform: `translateX(-50%)`,
-      zIndex: 9500 + index,
+      zIndex: CHAT_BUBBLES + index,
       pointerEvents: 'none',
     }}>
       <div style={{

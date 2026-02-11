@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { EssentialIcon } from '../data/uiSprites';
+import { SETTINGS_BUTTON, SETTINGS_PANEL } from '../constants/layers';
 import {
   setMusicMuted, setSfxMuted, setMusicVolume, setSfxVolume,
   getMusicMuted, getSfxMuted, getMusicVolume, getSfxVolume,
@@ -98,7 +99,7 @@ export default function SettingsMenu() {
       <button
         onClick={() => { setOpen(!open); setConfirmReset(false); }}
         style={{
-          position: 'fixed', bottom: 16, left: 16, zIndex: 9990,
+          position: 'fixed', bottom: 16, left: 16, zIndex: SETTINGS_BUTTON,
           width: 40, height: 40, borderRadius: '50%',
           background: open ? 'rgba(110,231,183,0.2)' : 'rgba(14,22,48,0.7)',
           border: `1px solid ${open ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
@@ -115,7 +116,7 @@ export default function SettingsMenu() {
 
       {open && (
         <div ref={panelRef} style={{
-          position: 'fixed', bottom: 64, left: 16, zIndex: 9991,
+          position: 'fixed', bottom: 64, left: 16, zIndex: SETTINGS_PANEL,
           width: 280,
           background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
           border: '1px solid rgba(110,231,183,0.25)',

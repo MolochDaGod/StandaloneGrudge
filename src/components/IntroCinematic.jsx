@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
+import { INTRO_CINEMATIC } from '../constants/layers';
 
 export default function IntroCinematic() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -48,7 +49,7 @@ export default function IntroCinematic() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, background: '#000', zIndex: 100,
+      position: 'absolute', inset: 0, background: '#000', zIndex: INTRO_CINEMATIC,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       opacity: fadeOut ? 0 : 1,
       transition: 'opacity 0.8s ease',

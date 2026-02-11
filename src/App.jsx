@@ -26,6 +26,7 @@ import { InlineIcon } from './data/uiSprites';
 import AdminGizmo from './components/AdminGizmo';
 import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
+import { HERO_CREATE_MODAL } from './constants/layers';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -129,7 +130,7 @@ function GameApp() {
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 9999, animation: 'fadeIn 0.3s ease'
+            zIndex: HERO_CREATE_MODAL, animation: 'fadeIn 0.3s ease'
           }} onClick={clearMessage}>
             <div style={{
               background: 'linear-gradient(135deg, #141a2b, #1e293b)',

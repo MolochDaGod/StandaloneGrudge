@@ -5,6 +5,7 @@ import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
+import { SCENE } from '../constants/layers';
 
 const FIELD_EVENTS = [
   { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/buildings/enemy_patrol.png' },
@@ -94,7 +95,7 @@ export default function OpenFieldScene() {
 
       <div style={{
         position: 'absolute', top: 8, left: 16, right: 16,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
         <div className="font-cinzel" style={{ color: '#e2e8f0', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Open Field
@@ -120,7 +121,7 @@ export default function OpenFieldScene() {
           <div key={evt.id} onClick={() => handleEventClick(evt)} style={{
             position: 'absolute', left: `${evt.x}%`, top: `${evt.y}%`,
             transform: 'translate(-50%, -50%)', cursor: done ? 'default' : 'pointer',
-            zIndex: 15, textAlign: 'center', opacity: done ? 0.3 : 1,
+            zIndex: SCENE.NODES, textAlign: 'center', opacity: done ? 0.3 : 1,
             transition: 'opacity 0.3s',
           }}>
             <div style={{
@@ -152,7 +153,7 @@ export default function OpenFieldScene() {
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: 12, transition: 'left 0.6s ease, top 0.6s ease',
+          zIndex: SCENE.HERO, transition: 'left 0.6s ease, top 0.6s ease',
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -167,7 +168,7 @@ export default function OpenFieldScene() {
         <div style={{
           position: 'absolute', top: '18%', left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(10,15,30,0.9)', border: '1px solid #fbbf24',
-          borderRadius: 8, padding: '6px 14px', zIndex: 40,
+          borderRadius: 8, padding: '6px 14px', zIndex: SCENE.TOOLTIP,
           color: '#fbbf24', fontSize: '0.6rem', fontWeight: 600,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.3s ease',
@@ -179,7 +180,7 @@ export default function OpenFieldScene() {
       {(SCENE_NPCS.field || []).map(npc => (
         <div key={npc.id} style={{
           position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
         }}>
           <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
         </div>
@@ -187,7 +188,7 @@ export default function OpenFieldScene() {
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 30, cursor: 'pointer', textAlign: 'center',
+        zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{
           width: 50, height: 50, borderRadius: '50%',

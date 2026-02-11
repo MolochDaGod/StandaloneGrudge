@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { FRAME_MASK, FRAME_EDITOR, UI_FRAME } from '../constants/layers';
 
 const STORAGE_KEY = 'grudge_frame_settings';
 
@@ -128,7 +129,7 @@ export function FrameMaskLayer() {
           left: `${region.x}%`, top: `${region.y}%`,
           width: `${region.w}%`, height: `${region.h}%`,
           background: '#050810',
-          zIndex: 10501,
+          zIndex: FRAME_MASK,
           pointerEvents: 'none',
         }} />
       ))}
@@ -136,7 +137,7 @@ export function FrameMaskLayer() {
   );
 }
 
-const Z = 99995;
+const Z = FRAME_EDITOR;
 
 export default function FrameEditor({ onClose }) {
   const { settings, update, reset, addMaskRegion, updateMaskRegion, removeMaskRegion } = useFrameSettings();
@@ -260,7 +261,7 @@ export default function FrameEditor({ onClose }) {
           width: (region.w / 100) * frameRect.width,
           height: (region.h / 100) * frameRect.height,
           border: '1px dashed rgba(239,68,68,0.5)',
-          zIndex: 10502,
+          zIndex: FRAME_EDITOR,
           pointerEvents: 'none',
         }}>
           <div style={{

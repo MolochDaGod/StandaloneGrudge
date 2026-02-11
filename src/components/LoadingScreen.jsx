@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { createVideoElement } from '../utils/assetManager';
+import { LOADING_SCREEN } from '../constants/layers';
 
 export default function LoadingScreen({ progress = 0, total = 1, message = 'Loading...' }) {
   const holderRef = useRef(null);
@@ -36,7 +37,7 @@ export default function LoadingScreen({ progress = 0, total = 1, message = 'Load
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      zIndex: 9998, display: 'flex', flexDirection: 'column',
+      zIndex: LOADING_SCREEN, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       background: '#050a15', overflow: 'hidden'
     }}>

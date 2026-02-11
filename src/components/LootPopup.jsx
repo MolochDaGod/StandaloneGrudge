@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import { TIERS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
+import { LOOT_POPUP } from '../constants/layers';
 
 export default function LootPopup() {
   const pendingLoot = useGameStore(s => s.pendingLoot);
@@ -26,7 +27,7 @@ export default function LootPopup() {
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9998, animation: 'fadeIn 0.3s ease',
+      zIndex: LOOT_POPUP, animation: 'fadeIn 0.3s ease',
     }}>
       <div style={{
         background: 'linear-gradient(135deg, #141a2b, #1e293b)',

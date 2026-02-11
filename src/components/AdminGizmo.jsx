@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FrameEditor, { applyFrameSettings } from './FrameEditor';
+import { ADMIN_GIZMO, ADMIN_GIZMO_PANEL, ADMIN_GIZMO_BUTTON } from '../constants/layers';
 
-const GIZMO_Z = 99990;
+const GIZMO_Z = ADMIN_GIZMO;
 
 function AdminGizmo() {
   const [enabled, setEnabled] = useState(false);

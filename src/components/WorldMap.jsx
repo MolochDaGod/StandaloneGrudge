@@ -18,6 +18,7 @@ import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/
 import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverStyle, nodeScale as calcNodeScale } from './mapConstants';
 import { InlineIcon, getIconSrc } from '../data/uiSprites';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
+import { CHAT_BUBBLES } from '../constants/layers';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -2151,7 +2152,7 @@ export default function WorldMap() {
               width: containerW2,
               height: 0,
               transform: `translate(-${hitAnchorX2}px, -${hitAnchorY2}px) scale(${heroScale2})`,
-              zIndex: 9999,
+              zIndex: CHAT_BUBBLES,
               pointerEvents: 'none',
             }}>
               <ChatBubbleSystem

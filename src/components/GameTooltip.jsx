@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { TOOLTIP } from '../constants/layers';
 
 let tooltipState = {
   content: null,
@@ -133,7 +134,7 @@ export default function GameTooltipRenderer() {
         maxHeight: pos.maxHeight || 500,
         overflowY: 'auto',
         overflowX: 'hidden',
-        zIndex: 99999,
+        zIndex: TOOLTIP,
         pointerEvents: 'none',
         transition: 'opacity 0.1s ease',
         background: 'linear-gradient(135deg, rgba(14,12,10,0.97), rgba(22,18,14,0.97))',

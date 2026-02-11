@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { BATTLE } from '../constants/layers';
 
 function Particle({ x, y, color, size, duration, type, delay = 0 }) {
   const [active, setActive] = useState(false);
@@ -23,7 +24,7 @@ function Particle({ x, y, color, size, duration, type, delay = 0 }) {
     boxShadow: `0 0 ${size * 2}px ${color}88`,
     pointerEvents: 'none',
     animation: `particleFade ${duration}s ease-out forwards`,
-    zIndex: 150,
+    zIndex: BATTLE.VFX_LAYER,
     transform: 'translate(-50%, -50%)',
   };
 
@@ -95,7 +96,7 @@ export function HealParticles({ x, y, count = 10 }) {
           boxShadow: '0 0 6px #22c55e88',
           pointerEvents: 'none',
           animation: `healRise 1s ease-out ${i * 80}ms forwards`,
-          zIndex: 150,
+          zIndex: BATTLE.VFX_LAYER,
           opacity: 0,
         }}
       />
@@ -140,7 +141,7 @@ export default function AmbientParticles() {
             boxShadow: '0 0 4px rgba(255,255,255,0.15)',
             pointerEvents: 'none',
             animation: 'ambientFloat 6s ease-in-out forwards',
-            zIndex: 50,
+            zIndex: BATTLE.PARTICLES,
           }}
         />
       ))}

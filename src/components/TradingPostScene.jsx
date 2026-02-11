@@ -6,6 +6,7 @@ import { getItemPrice, getSellPrice } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
+import { SCENE } from '../constants/layers';
 
 const TRADER_NODES = [
   { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/images/buildings/weapons_shop.png' },
@@ -96,7 +97,7 @@ export default function TradingPostScene() {
 
       <div style={{
         position: 'absolute', top: 8, left: 16, right: 16,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 20,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
         <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Trading Post
@@ -109,7 +110,7 @@ export default function TradingPostScene() {
       {TRADER_NODES.map(trader => (
         <div key={trader.id} onClick={() => handleTraderClick(trader.id)} style={{
           position: 'absolute', left: `${trader.x}%`, top: `${trader.y}%`,
-          transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: 15, textAlign: 'center',
+          transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: SCENE.NODES, textAlign: 'center',
         }}>
           <div style={{
             width: 76, height: 76, borderRadius: 10,
@@ -133,7 +134,7 @@ export default function TradingPostScene() {
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: 10,
+          zIndex: SCENE.LABELS,
           transition: 'left 0.5s ease, top 0.5s ease',
         }}>
           <SpriteAnimation
@@ -150,7 +151,7 @@ export default function TradingPostScene() {
           position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
           width: '80%', maxWidth: 340, maxHeight: '70%',
           background: 'rgba(10,15,30,0.95)', border: '2px solid #fbbf24',
-          borderRadius: 12, zIndex: 50, backdropFilter: 'blur(8px)',
+          borderRadius: 12, zIndex: SCENE.POPUP, backdropFilter: 'blur(8px)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
           <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -243,7 +244,7 @@ export default function TradingPostScene() {
       {(SCENE_NPCS.trading || []).map(npc => (
         <div key={npc.id} style={{
           position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
         }}>
           <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
         </div>
@@ -251,7 +252,7 @@ export default function TradingPostScene() {
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 30, cursor: 'pointer', textAlign: 'center',
+        zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{
           width: 50, height: 50, borderRadius: '50%',

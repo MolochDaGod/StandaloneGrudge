@@ -6,6 +6,7 @@ import { attributeDefinitions, STARTING_POINTS, calculateStats } from '../data/a
 import SpriteAnimation from './SpriteAnimation';
 import WorgeMorphPreview from './WorgeMorphPreview';
 import { getPlayerSprite } from '../data/spriteMap';
+import { HERO_CREATE_MODAL } from '../constants/layers';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
@@ -108,7 +109,7 @@ export default function HeroCreate() {
   if (showCinematic) {
     return (
       <div style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
+        position: 'fixed', inset: 0, zIndex: HERO_CREATE_MODAL,
         background: '#000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: cinematicFading ? 0 : 1,
