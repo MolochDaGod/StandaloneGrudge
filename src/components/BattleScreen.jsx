@@ -621,6 +621,7 @@ function getProjectileColor(unit, abilityName) {
 
 function getBeamTrail(unit, abilityName) {
   const classId = unit.classId || '';
+  if (unit.demonBlade && classId === 'warrior') return beamTrails.blue;
   const fx = getAbilityEffect(classId, abilityName || '');
   if (fx.beam) return beamTrails[fx.beam];
   const n = (abilityName || '').toLowerCase();
@@ -644,6 +645,11 @@ function getHitEffectByColor(color) {
 function getHitEffect(unit, abilityName, isRanged, abilityId) {
   const classId = unit.classId || '';
   const fx = getAbilityEffect(classId, abilityName || '', abilityId);
+  if (unit.demonBlade && classId === 'warrior') {
+    const demonSlashes = ['demonSlash1', 'demonSlash2', 'demonSlash3'];
+    const demonFx = fx.effect && fx.effect.startsWith('demonSlash') ? fx.effect : demonSlashes[Math.floor(Math.random() * demonSlashes.length)];
+    return { sprite: effectSprites[demonFx], filter: null, postHeal: null };
+  }
   if (fx.effect) return { sprite: effectSprites[fx.effect], filter: fx.effectFilter || null, postHeal: fx.postHealEffect ? effectSprites[fx.postHealEffect] : null };
   if (isRanged) {
     const color = getProjectileColor(unit, abilityName);

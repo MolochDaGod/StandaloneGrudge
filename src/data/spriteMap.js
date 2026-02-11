@@ -334,6 +334,9 @@ export const effectSprites = {
   magicBubbles: { src: '/effects/pixel/20_magicbubbles_spritesheet.png', size: 800, frames: 64 },
   slash: { src: '/effects/slash_spritesheet.png', cols: 1, rows: 8, frameW: 64, frameH: 64, frames: 8 },
   healEffect: { src: '/effects/heal_spritesheet.png', cols: 4, rows: 4, frameW: 128, frameH: 128, frames: 16 },
+  demonSlash1: { src: '/effects/demon_slash_1.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
+  demonSlash2: { src: '/effects/demon_slash_2.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
+  demonSlash3: { src: '/effects/demon_slash_3.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
   hitEffect1: { src: '/effects/hit_effect_1.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
   hitEffect2: { src: '/effects/hit_effect_2.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
   hitEffect3: { src: '/effects/hit_effect_3.png', cols: 7, rows: 1, frameW: 48, frameH: 48, frames: 7 },
@@ -355,6 +358,7 @@ export const beamTrails = {
   orange: '/effects/beams/beam_orange.png',
   purple: '/effects/beams/beam_purple.png',
   red: '/effects/beams/beam_red.png',
+  blue: '/effects/beams/beam_blue.png',
 };
 
 export const enemyAbilityEffects = {
@@ -402,7 +406,7 @@ export const abilityEffectMap = {
     'War Cry': { effect: 'holyVfx', beam: null, anim: 'block' },
     'Shield Bash': { effect: 'hitEffect2', beam: null, anim: 'block' },
     'Cleave': { effect: 'fireExplosion2', beam: null, anim: 'attack2', comboAnims: ['attack1', 'attack2', 'attack3'] },
-    'Demon Blade': { effect: 'fireExplosion', beam: 'red', anim: 'attack3' },
+    'Demon Blade': { effect: 'demonSlash3', beam: 'blue', anim: 'attack3' },
     'Invincible': { effect: 'protectionCircle', beam: null, anim: 'block' },
   },
   mage: {
