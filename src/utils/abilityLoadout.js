@@ -57,6 +57,23 @@ export function getAbilitiesForSlot(slotIndex, classId, weaponType, unlockedSkil
     return all;
   }
   if (slotIndex === 4) {
+    if (classId === 'worge') {
+      const cls = classDefinitions[classId];
+      const weaponSlot1 = getWeaponSkillsForSlot(weaponType, 'slot1');
+      const weaponSlot23 = getWeaponSkillsForSlot(weaponType, 'slot23');
+      const classAbilities = getClassActiveAbilities(classId);
+      const treeAbilities = getSkillTreeAbilities(classId, unlockedSkills);
+      const seen = new Set();
+      const all = [];
+      if (cls?.signatureAbility) {
+        seen.add(cls.signatureAbility.id);
+        all.push(cls.signatureAbility);
+      }
+      for (const ab of [...classAbilities, ...treeAbilities, ...weaponSlot1, ...weaponSlot23]) {
+        if (!seen.has(ab.id)) { seen.add(ab.id); all.push(ab); }
+      }
+      return all;
+    }
     return [];
   }
   return [];
@@ -152,5 +169,6 @@ export function resolveLoadout(loadoutIds, classId, unlockedSkills = {}, weaponT
 }
 
 export function isSlotLocked(classId, slotIndex) {
+  if (classId === 'worge') return false;
   return slotIndex === 4;
 }
