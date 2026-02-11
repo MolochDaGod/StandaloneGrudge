@@ -1588,6 +1588,8 @@ export default function WorldMap() {
           });
         })}
 
+        {/* Footprints hidden for players */}
+        {/*
         {walkFootprints.map(fp => {
           const dotScale = Math.max(0.4, 0.8 / camZoom);
           return (
@@ -1608,6 +1610,7 @@ export default function WorldMap() {
             </div>
           );
         })}
+        */}
 
         {markerMode && (
           <svg {...svgOverlayProps(MAP_LAYERS.LANDMARKS)}>
@@ -2201,7 +2204,7 @@ export default function WorldMap() {
           const timeLeft = Math.max(0, Math.floor((event.expiresAt - Date.now()) / 1000));
           const minutes = Math.floor(timeLeft / 60);
           const seconds = timeLeft % 60;
-          const spriteData = getEnemySprite('skeleton');
+          const spriteData = getEnemySprite(event.mapSprite || 'skeleton');
           const count = event.enemyCount || 1;
           const eventScale = Math.max(0.3, 1 / camZoom);
           const spriteW = 80;
