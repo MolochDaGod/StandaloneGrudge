@@ -78,47 +78,50 @@ const pathConnections = [
   ['mystic_grove', 'crystal_caves'],
   ['haunted_marsh', 'cursed_ruins'],
   ['haunted_marsh', 'thornwood_pass'],
-  ['cursed_ruins', 'sunken_temple'],          // boss: grand_shaman
+  ['cursed_ruins', 'sunken_temple'],
+  ['cursed_ruins', 'thornwood_pass'],
   ['crystal_caves', 'iron_peaks'],
   ['thornwood_pass', 'sunken_temple'],
 
   // === MID GAME BRANCH: Legion Arc (Lv 8-13) ===
-  ['iron_peaks', 'frozen_tundra'],            // boss: frost_wyrm
-  ['iron_peaks', 'blood_canyon'],             // boss: canyon_warlord
+  ['iron_peaks', 'frozen_tundra'],
+  ['iron_peaks', 'blood_canyon'],
   ['frozen_tundra', 'windswept_ridge'],
   ['blood_canyon', 'ashen_battlefield'],
   ['blood_canyon', 'molten_core'],
+  ['blood_canyon', 'dragon_peaks'],
 
   // === MID GAME BRANCH: Fabled Arc (Lv 10-14) ===
-  ['windswept_ridge', 'dragon_peaks'],        // boss: water_elemental
-  ['ashen_battlefield', 'dragon_peaks'],
+  ['windswept_ridge', 'dragon_peaks'],
   ['dragon_peaks', 'ruins_of_ashenmoor'],
   ['molten_core', 'obsidian_wastes'],
+  ['molten_core', 'ashen_battlefield'],
 
   // === LATE GAME: Shadow & Corruption (Lv 11-16) ===
-  ['iron_peaks', 'shadow_forest'],            // boss: shadow_beast
+  ['iron_peaks', 'shadow_forest'],
   ['shadow_forest', 'blight_hollow'],
   ['windswept_ridge', 'stormspire_peak'],
-  ['ruins_of_ashenmoor', 'shadow_citadel'],   // boss: lich
-  ['obsidian_wastes', 'demon_gate'],          // boss: demon_lord
+  ['ruins_of_ashenmoor', 'shadow_citadel'],
+  ['obsidian_wastes', 'demon_gate'],
   ['blight_hollow', 'stormspire_peak'],
 
   // === ENDGAME: Convergence (Lv 15-18) ===
   ['shadow_citadel', 'abyssal_depths'],
   ['demon_gate', 'infernal_forge'],
-  ['stormspire_peak', 'void_threshold'],      // boss: void_sentinel
+  ['demon_gate', 'dreadmaw_canyon'],
+  ['stormspire_peak', 'void_threshold'],
   ['abyssal_depths', 'dreadmaw_canyon'],
   ['infernal_forge', 'dreadmaw_canyon'],
   ['dreadmaw_canyon', 'corrupted_spire'],
   ['void_threshold', 'corrupted_spire'],
 
   // === FINAL: The Void Throne (Lv 18-20) ===
-  ['corrupted_spire', 'void_throne'],         // boss: void_king
+  ['corrupted_spire', 'void_throne'],
 
   // === GOD FIGHTS: Endgame (Lv 20) ===
-  ['void_throne', 'hall_of_odin'],            // boss: god_odin (Crusade)
-  ['void_throne', 'maw_of_madra'],            // boss: god_madra (Legion)
-  ['void_throne', 'sanctum_of_omni'],         // boss: god_omni (Fabled)
+  ['void_throne', 'hall_of_odin'],
+  ['void_throne', 'maw_of_madra'],
+  ['void_throne', 'sanctum_of_omni'],
 ];
 
 const locationIcons = {
@@ -758,80 +761,62 @@ export default function WorldMap() {
 
         {/* Decorative landmarks removed for cleaner map */}
 
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <filter id="dotGlowGold" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="0.3" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="dotGlowGray" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="0.2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="dotGlowGreen" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="0.3" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            {pathConnections.map(([from, to], idx) => {
+        {(() => {
+          const allConns = [
+            ...pathConnections.map(([from, to]) => {
               const a = getNodePos(from);
               const b = getNodePos(to);
-              return <path key={`pd_${idx}`} id={`path_${idx}`} d={`M${a.x} ${a.y} L${b.x} ${b.y}`} fill="none" />;
-            })}
-            {cityConnections.map(([cityId, locId], idx) => {
-              const cityPos = getNodePos(cityId);
-              const locPos = getNodePos(locId);
-              if (!cityPos || !locPos) return null;
-              return <path key={`cpd_${idx}`} id={`cpath_${idx}`} d={`M${cityPos.x} ${cityPos.y} L${locPos.x} ${locPos.y}`} fill="none" />;
-            })}
-          </defs>
-          {pathConnections.map(([from, to], idx) => {
-            const a = getNodePos(from);
-            const b = getNodePos(to);
-            const fromUnlocked = unlockedLocs.some(l => l.id === from);
-            const toUnlocked = unlockedLocs.some(l => l.id === to);
-            const bothUnlocked = fromUnlocked && toUnlocked;
-            const dotColor = bothUnlocked ? 'rgba(255,215,0,0.6)' : 'rgba(100,100,120,0.3)';
-            const dotFilter = bothUnlocked ? 'url(#dotGlowGold)' : 'url(#dotGlowGray)';
-            const dotR = bothUnlocked ? 0.5 : 0.35;
+              const fromOk = unlockedLocs.some(l => l.id === from);
+              const toOk = unlockedLocs.some(l => l.id === to);
+              return { a, b, active: fromOk && toOk, type: 'path', key: `${from}_${to}` };
+            }),
+            ...cityConnections.map(([cityId, locId]) => {
+              const a = getNodePos(cityId);
+              const b = getNodePos(locId);
+              if (!a || !b) return null;
+              const city = cities.find(c => c.id === cityId);
+              const bossOk = !city?.unlockBoss || bossesDefeated.includes(city.unlockBoss);
+              const cityOk = city && (city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel));
+              const locOk = unlockedLocs.some(l => l.id === locId);
+              return { a, b, active: cityOk && locOk, type: 'city', key: `c_${cityId}_${locId}` };
+            }).filter(Boolean),
+          ];
+          return allConns.map((conn, idx) => {
+            const { a, b, active, key } = conn;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            const midX = (a.x + b.x) / 2;
+            const midY = (a.y + b.y) / 2;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const imgHPct = dist * 0.85;
+            const imgWPct = imgHPct * 0.35;
+            const connScale = Math.max(0.3, 1 / camZoom);
             return (
-              <g key={idx}>
-                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={0.5} />
-                {[0, 1].map(d => (
-                  <circle key={d} r={dotR} fill={dotColor} filter={dotFilter}>
-                    <animateMotion dur={`${4 + Math.random() * 2}s`} repeatCount="indefinite" begin={`${d * 2.5}s`}>
-                      <mpath href={`#path_${idx}`} />
-                    </animateMotion>
-                  </circle>
-                ))}
-              </g>
+              <div key={key} style={{
+                position: 'absolute',
+                left: `${midX}%`, top: `${midY}%`,
+                width: `${imgWPct}%`, height: `${imgHPct}%`,
+                transform: `translate(-50%, -50%) rotate(${angle}deg) scale(${connScale})`,
+                pointerEvents: 'none',
+                zIndex: 1,
+                opacity: active ? 0.45 : 0.12,
+                transition: 'opacity 0.5s',
+              }}>
+                <div style={{
+                  width: '100%', height: '100%',
+                  backgroundImage: 'url(/images/footsteps.png)',
+                  backgroundSize: '100% 100%',
+                  backgroundRepeat: 'no-repeat',
+                  mixBlendMode: 'screen',
+                  maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,0) 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,0) 100%)',
+                  animation: active ? `footstepWalk ${3 + (idx % 3)}s ease-in-out infinite` : 'none',
+                }} />
+              </div>
             );
-          })}
-          {cityConnections.map(([cityId, locId], idx) => {
-            const cityPos = getNodePos(cityId);
-            const locPos = getNodePos(locId);
-            if (!cityPos || !locPos) return null;
-            const city = cities.find(c => c.id === cityId);
-            const bossOk = !city?.unlockBoss || bossesDefeated.includes(city.unlockBoss);
-            const isCityUnlocked = city && (city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel));
-            const isLocUnlocked = unlockedLocs.some(l => l.id === locId);
-            const bothOk = isCityUnlocked && isLocUnlocked;
-            const dotColor = bothOk ? 'rgba(74,222,128,0.5)' : 'rgba(100,100,120,0.25)';
-            const dotFilter = bothOk ? 'url(#dotGlowGreen)' : 'url(#dotGlowGray)';
-            const dotR = bothOk ? 0.45 : 0.3;
-            return (
-              <g key={`cc_${idx}`}>
-                <line x1={cityPos.x} y1={cityPos.y} x2={locPos.x} y2={locPos.y} stroke="transparent" strokeWidth={0.5} />
-                {[0, 1].map(d => (
-                  <circle key={d} r={dotR} fill={dotColor} filter={dotFilter}>
-                    <animateMotion dur={`${5 + Math.random() * 1.5}s`} repeatCount="indefinite" begin={`${d * 2.8}s`}>
-                      <mpath href={`#cpath_${idx}`} />
-                    </animateMotion>
-                  </circle>
-                ))}
-              </g>
-            );
-          })}
-        </svg>
+          });
+        })()}
 
         {markerMode && (
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
