@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
+import { setBgm } from '../utils/audioManager';
 import { locations } from '../data/enemies';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
@@ -238,6 +239,7 @@ export default function LocationView() {
     bossesDefeated, level, heroRoster, activeHeroIds, zoneConquer,
     zoneStats, completedQuests, completeQuest, gold,
   } = useGameStore();
+  useEffect(() => { setBgm('scene'); }, []);
   const loc = locations.find(l => l.id === currentLocation);
   if (!loc) return null;
 

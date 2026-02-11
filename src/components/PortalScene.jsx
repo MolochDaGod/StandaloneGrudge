@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { getItemPrice, getSellPrice, generateShopInventory } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
+import { setBgm } from '../utils/audioManager';
 
 const PORTAL_NODES = [
   { id: 'forge', name: 'Void Forge', icon: 'hammer', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
@@ -23,6 +24,7 @@ const ENCHANT_RECIPES = [
 ];
 
 export default function PortalScene() {
+  useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const gold = useGameStore(s => s.gold);
   const level = useGameStore(s => s.level);

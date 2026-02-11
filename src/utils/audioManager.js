@@ -145,6 +145,7 @@ function startIntroMusic() {
 
 function stopBgm() {
   stopIntroMusic();
+  stopSceneMusic();
   bgmNodes.forEach(n => {
     try { n.stop(); } catch(e) {}
   });
@@ -250,10 +251,41 @@ function startBattleMusic() {
   bgmNodes._beatInterval = beatInterval;
 }
 
+let sceneAudio = null;
+
+function stopSceneMusic() {
+  if (sceneAudio) {
+    sceneAudio.pause();
+    sceneAudio.currentTime = 0;
+    sceneAudio = null;
+  }
+}
+
+function startSceneMusic() {
+  if (currentBgm === 'scene') return;
+  stopBgm();
+  currentBgm = 'scene';
+  sceneAudio = new Audio('/audio/scene_theme.mp3');
+  sceneAudio.loop = true;
+  sceneAudio.volume = musicMuted ? 0 : Math.min(musicVolume, 0.45);
+  sceneAudio.play().catch(() => {
+    const tryPlay = () => {
+      if (sceneAudio && currentBgm === 'scene') {
+        sceneAudio.play().catch(() => {});
+      }
+      window.removeEventListener('click', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
+    };
+    window.addEventListener('click', tryPlay, { once: true });
+    window.addEventListener('keydown', tryPlay, { once: true });
+  });
+}
+
 export function setBgm(type) {
   if (type === 'intro') startIntroMusic();
   else if (type === 'battle') startBattleMusic();
   else if (type === 'ambient') startAmbientMusic();
+  else if (type === 'scene') startSceneMusic();
   else stopBgm();
 }
 
@@ -270,6 +302,7 @@ export function setMusicMuted(muted) {
   musicMuted = muted;
   if (bgmGain) bgmGain.gain.value = muted ? 0 : musicVolume;
   if (introAudio) introAudio.volume = muted ? 0 : Math.min(musicVolume, 0.45);
+  if (sceneAudio) sceneAudio.volume = muted ? 0 : Math.min(musicVolume, 0.45);
 }
 
 export function setSfxMuted(muted) {
@@ -281,6 +314,7 @@ export function setMusicVolume(vol) {
   musicVolume = vol;
   if (bgmGain && !musicMuted) bgmGain.gain.value = vol;
   if (introAudio && !musicMuted) introAudio.volume = Math.min(vol, 0.45);
+  if (sceneAudio && !musicMuted) sceneAudio.volume = Math.min(vol, 0.45);
 }
 
 export function setSfxVolume(vol) {

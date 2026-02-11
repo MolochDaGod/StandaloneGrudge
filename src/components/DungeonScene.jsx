@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
+import { setBgm } from '../utils/audioManager';
 
 const DUNGEON_CONFIGS = {
   default: {
@@ -49,6 +50,7 @@ const DUNGEON_CONFIGS = {
 };
 
 export default function DungeonScene() {
+  useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const dungeonProgress = useGameStore(s => s.dungeonProgress);
   const startBattle = useGameStore(s => s.startBattle);

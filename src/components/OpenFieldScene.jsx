@@ -3,6 +3,7 @@ import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
+import { setBgm } from '../utils/audioManager';
 
 const FIELD_EVENTS = [
   { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444' },
@@ -12,6 +13,7 @@ const FIELD_EVENTS = [
 ];
 
 export default function OpenFieldScene() {
+  useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const startBattle = useGameStore(s => s.startBattle);
   const playerRace = useGameStore(s => s.playerRace);

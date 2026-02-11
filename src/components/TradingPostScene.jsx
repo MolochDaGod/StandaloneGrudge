@@ -4,6 +4,7 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { getItemPrice, getSellPrice } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
+import { setBgm } from '../utils/audioManager';
 
 const TRADER_NODES = [
   { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon' },
@@ -13,6 +14,7 @@ const TRADER_NODES = [
 ];
 
 export default function TradingPostScene() {
+  useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const gold = useGameStore(s => s.gold);
   const shopInventory = useGameStore(s => s.shopInventory);

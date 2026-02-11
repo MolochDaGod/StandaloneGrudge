@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
+import { setBgm } from '../utils/audioManager';
 
 const RESOURCE_NODES = [
   { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24' },
@@ -15,6 +16,7 @@ const RESOURCE_NODES = [
 const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
 
 export default function CampScene() {
+  useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const harvestResources = useGameStore(s => s.harvestResources);
   const harvestNodes = useGameStore(s => s.harvestNodes);

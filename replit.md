@@ -28,7 +28,7 @@ The application is a React 19 frontend developed with Vite, managing global stat
     - **Consumables:** 6 types of potions available via shops and drops, usable in battle.
     - **Trading:** Camp merchant system for buying/selling equipment with dynamic inventory.
     - **Scene System:** 4 interactive scene views accessible from the world map (Camp, Dungeon, Trading Post, Open Field) with unique functionalities and background images.
-- **Audio System:** Web Audio API for synthesized combat sounds and adaptive background music.
+- **Audio System:** Web Audio API for synthesized combat sounds and adaptive background music. Four BGM tracks: intro (Title/Lobby MP3), ambient (World Map synth), battle (combat synth), and scene (cities/locations/dungeons MP3 - "Elevate Your Mind"). Music capped at 0.45 volume, respects mute/volume settings.
 - **Particle Effects:** CSS-animated particle effects for in-battle actions.
 - **World Map:** An RTS-style 2D map with zoom/pan. Uses a centralized layer system for z-index ordering and coordinate management. Features 32 unlockable locations across 5 terrain regions, following faction-based progression arcs. Includes environmental effects (rivers, lava) and a dynamic day/night cycle.
     - **Map Node Menus:** Zone popup menus use `MenuButton` components with image icons, Cinzel font, gradient backgrounds, and keyboard shortcuts.
