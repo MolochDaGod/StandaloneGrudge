@@ -179,6 +179,20 @@ export default function SpriteAnimation({
         imageRendering: 'pixelated',
         filter: cssFilter || 'none',
       }} />
+      {spriteData?.showGuideGrid && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: 'url(/attached_assets/image_1770792986896.png)',
+          backgroundSize: '100% 100%',
+          pointerEvents: 'none',
+          opacity: 0.3,
+          zIndex: 20
+        }} />
+      )}
       {tintColor && (
         <div style={{
           position: 'absolute',
