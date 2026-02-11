@@ -17,6 +17,7 @@ import LootPopup from './components/LootPopup';
 import SettingsMenu from './components/SettingsMenu';
 import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
+import AdminSprite from './components/AdminSprite';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -134,6 +135,7 @@ export default function App() {
 
   if (path === '/adminmap') return <AdminMap />;
   if (path === '/adminbattle') return <AdminBattle />;
+  if (path === '/adminsprite') return <AdminSprite />;
 
   return <GameApp />;
 }
