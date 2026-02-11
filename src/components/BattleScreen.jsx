@@ -1810,48 +1810,61 @@ export default function BattleScreen() {
       }} />
 
       <div style={{
-        flex: '0 0 auto', padding: '6px 16px', background: 'rgba(0,0,0,0.6)',
-        borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', zIndex: 10, backdropFilter: 'blur(4px)',
+        flex: '0 0 auto', background: 'rgba(0,0,0,0.6)',
+        borderBottom: '1px solid var(--border)', zIndex: 10, backdropFilter: 'blur(4px)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'var(--accent)', fontSize: '0.8rem' }}>
-            {isBoss ? 'BOSS BATTLE' : battleState?.isMission ? `MISSION (${battleState.missionRound}/${battleState.missionTotalRounds})` : battleState?.isArena ? 'ARENA' : 'BATTLE'}
-          </span>
-          <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>Turn {battleState?.turnCount || 1}</span>
+        <div style={{ padding: '4px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'var(--accent)', fontSize: '0.7rem' }}>
+              {isBoss ? 'BOSS BATTLE' : battleState?.isMission ? `MISSION (${battleState.missionRound}/${battleState.missionTotalRounds})` : battleState?.isArena ? 'ARENA' : 'BATTLE'}
+            </span>
+            <span style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>Turn {battleState?.turnCount || 1}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {currentUnit && !isVictory && !isDefeat && (
+              <div style={{
+                color: currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)',
+                fontSize: '0.6rem', fontWeight: 600,
+                padding: '2px 8px',
+                background: currentUnit.team === 'player' ? 'rgba(110,231,183,0.15)' : 'rgba(239,68,68,0.15)',
+                borderRadius: 6,
+                border: `1px solid ${currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
+              }}>
+                {currentUnit.isPlayerControlled ? `${currentUnit.name}'s TURN` : `${currentUnit.name}'s turn`}
+              </div>
+            )}
+            {isMissionRoundComplete && (
+              <button onClick={() => {
+                useGameStore.getState().advanceMissionRound();
+              }} style={{
+                background: 'linear-gradient(135deg, rgba(192,132,252,0.3), rgba(192,132,252,0.1))',
+                border: '1px solid #c084fc', borderRadius: 8,
+                padding: '3px 10px', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700,
+                animation: 'glow 2s infinite',
+              }}>Next Round</button>
+            )}
+            {(isVictory || isDefeat) && (
+              <button onClick={() => {
+                if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+                else returnToWorld();
+              }} style={{
+                background: 'var(--border)', border: 'none', borderRadius: 8,
+                padding: '3px 10px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.65rem'
+              }}>Return</button>
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {currentUnit && !isVictory && !isDefeat && (
-            <div style={{
-              color: currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)',
-              fontSize: '0.7rem', fontWeight: 600,
-              padding: '2px 8px',
-              background: currentUnit.team === 'player' ? 'rgba(110,231,183,0.15)' : 'rgba(239,68,68,0.15)',
-              borderRadius: 6,
-              border: `1px solid ${currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
-            }}>
-              {currentUnit.isPlayerControlled ? `${currentUnit.name}'s TURN` : `${currentUnit.name}'s turn`}
-            </div>
-          )}
-          {isMissionRoundComplete && (
-            <button onClick={() => {
-              useGameStore.getState().advanceMissionRound();
-            }} style={{
-              background: 'linear-gradient(135deg, rgba(192,132,252,0.3), rgba(192,132,252,0.1))',
-              border: '1px solid #c084fc', borderRadius: 8,
-              padding: '4px 12px', color: '#c084fc', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
-              animation: 'glow 2s infinite',
-            }}>Next Round</button>
-          )}
-          {(isVictory || isDefeat) && (
-            <button onClick={() => {
-              if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
-              else returnToWorld();
-            }} style={{
-              background: 'var(--border)', border: 'none', borderRadius: 8,
-              padding: '4px 12px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.75rem'
-            }}>Return</button>
-          )}
+        <div ref={logRef} style={{
+          padding: '0 16px 4px', maxHeight: 36, overflow: 'hidden',
+          borderTop: '1px solid rgba(255,255,255,0.04)',
+        }}>
+          {battleLog.slice(-3).map((msg, i, arr) => (
+            <div key={i} style={{
+              color: i === arr.length - 1 ? 'var(--text)' : 'var(--muted)',
+              padding: '0.5px 0', opacity: i === arr.length - 1 ? 1 : 0.5,
+              fontSize: '0.55rem',
+            }}>{msg}</div>
+          ))}
         </div>
       </div>
 
@@ -2269,34 +2282,6 @@ export default function BattleScreen() {
 
       </div>
 
-      <div style={{
-        flex: '0 0 60px', maxHeight: 60,
-        backgroundImage: 'url(/images/battle-panel-bg.png)',
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        borderTop: '2px solid #8b7355',
-        padding: '4px 10px',
-        overflow: 'hidden', fontSize: '0.7rem', zIndex: 10,
-        position: 'relative',
-      }} ref={logRef}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(0,0,0,0.6)',
-          pointerEvents: 'none',
-        }} />
-        <div style={{ position: 'relative', zIndex: 1, height: '100%', overflow: 'auto' }}>
-          <div style={{
-            color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 600,
-            marginBottom: 2, letterSpacing: 1, textTransform: 'uppercase'
-          }}>Battle Log</div>
-          {battleLog.map((msg, i) => (
-            <div key={i} style={{
-              color: i === battleLog.length - 1 ? 'var(--text)' : 'var(--muted)',
-              padding: '0.5px 0', opacity: i === battleLog.length - 1 ? 1 : 0.65,
-              fontSize: '0.68rem',
-            }}>{msg}</div>
-          ))}
-        </div>
-      </div>
 
       <div style={{
         position: 'absolute', bottom: 210, right: 16, zIndex: 50,
