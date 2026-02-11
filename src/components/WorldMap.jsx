@@ -211,17 +211,17 @@ const zoneResourceMap = {
   thornwood_pass:     { resource: 'wood', sprite: 'pine_trees', count: 4 },
   iron_peaks:         { resource: 'ore', sprite: 'rocks', rockRow: 0, count: 4 },
   blood_canyon:       { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
-  frozen_tundra:      { resource: 'ore', sprite: 'rocks', rockRow: 2, count: 2 },
+  frozen_tundra:      { resource: 'ore', sprite: 'dead_trees', count: 3 },
   dragon_peaks:       { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 3 },
   ashen_battlefield:  { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
-  windswept_ridge:    { resource: 'ore', sprite: 'rocks', rockRow: 2, count: 2 },
+  windswept_ridge:    { resource: 'ore', sprite: 'dead_trees', count: 3 },
   molten_core:        { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 4 },
   shadow_forest:      { resource: 'wood', sprite: 'trees', count: 5 },
   obsidian_wastes:    { resource: 'ore', sprite: 'rocks', rockRow: 0, count: 2 },
   ruins_of_ashenmoor: { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
   blight_hollow:      { resource: 'herbs', sprite: 'trees', count: 3 },
   shadow_citadel:     { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(200deg) saturate(1.5)', count: 2 },
-  stormspire_peak:    { resource: 'crystals', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(200deg) saturate(1.5)', count: 3 },
+  stormspire_peak:    { resource: 'crystals', sprite: 'dead_trees', filter: 'hue-rotate(200deg) saturate(1.5) brightness(1.3)', count: 4 },
   demon_gate:         { resource: 'gold', sprite: 'rocks', rockRow: 1, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 2 },
   abyssal_depths:     { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(200deg) saturate(1.5)', count: 4 },
   infernal_forge:     { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 3 },
@@ -260,8 +260,42 @@ const generateResourcePositions = (zoneId, count) => {
 const SPRITE_INFO = {
   trees: { src: '/sprites/trees.png', frameW: 16, frameH: 16, cols: 4, rows: 1, fullFrame: 3, halfFrame: 2, lowFrame: 1, stumpFrame: 0 },
   pine_trees: { src: '/sprites/pine_trees.png', frameW: 16, frameH: 16, cols: 3, rows: 1, fullFrame: 2, halfFrame: 1, lowFrame: 0, stumpFrame: 0 },
+  dead_trees: { src: '/sprites/dead_trees.png', frameW: 16, frameH: 16, cols: 4, rows: 1, fullFrame: 3, halfFrame: 2, lowFrame: 1, stumpFrame: 0 },
   rocks: { src: '/sprites/rocks.png', frameW: 16, frameH: 16, cols: 3, rows: 4, fullFrame: 2, halfFrame: 1, lowFrame: 0, stumpFrame: 0 },
+  wheat: { src: '/sprites/wheat.png', frameW: 16, frameH: 16, cols: 4, rows: 1 },
 };
+
+const generatePathGrass = () => {
+  const grassNodes = [];
+  const rng = seededRng('path_grass_global');
+  const excludeZones = new Set(['void_throne', 'hall_of_odin', 'maw_of_madra', 'sanctum_of_omni',
+    'molten_core', 'infernal_forge', 'obsidian_wastes', 'demon_gate', 'abyssal_depths',
+    'void_threshold', 'corrupted_spire', 'dreadmaw_canyon']);
+  pathConnections.forEach(([a, b]) => {
+    if (excludeZones.has(a) || excludeZones.has(b)) return;
+    const pA = locationPositions[a];
+    const pB = locationPositions[b];
+    if (!pA || !pB) return;
+    const dx = pB.x - pA.x;
+    const dy = pB.y - pA.y;
+    const segLen = Math.sqrt(dx * dx + dy * dy);
+    const count = Math.max(1, Math.floor(segLen / 5));
+    for (let i = 0; i < count; i++) {
+      const t = 0.15 + rng() * 0.7;
+      const perpAngle = Math.atan2(dy, dx) + Math.PI / 2;
+      const offset = (rng() - 0.5) * 3.5;
+      grassNodes.push({
+        x: pA.x + dx * t + Math.cos(perpAngle) * offset,
+        y: pA.y + dy * t + Math.sin(perpAngle) * offset,
+        frame: Math.floor(rng() * 4),
+        opacity: 0.35 + rng() * 0.35,
+        scale: 0.7 + rng() * 0.6,
+      });
+    }
+  });
+  return grassNodes;
+};
+const pathGrassPositions = generatePathGrass();
 
 const MAP_GRID = { cols: 100, rows: 100 };
 
@@ -1238,6 +1272,30 @@ export default function WorldMap() {
               }} />
             );
           });
+        })}
+
+        {/* Path grass decorations */}
+        {pathGrassPositions.map((gp, gi) => {
+          const wheatInfo = SPRITE_INFO.wheat;
+          const grassScale = Math.max(0.06, 0.12 * gp.scale / camZoom);
+          const bgX = -(gp.frame * wheatInfo.frameW);
+          return (
+            <div key={`grass_${gi}`} style={{
+              position: 'absolute',
+              left: `${gp.x}%`, top: `${gp.y}%`,
+              width: wheatInfo.frameW, height: wheatInfo.frameH,
+              transform: `translate(-50%, -50%) scale(${grassScale})`,
+              transformOrigin: 'center center',
+              pointerEvents: 'none',
+              zIndex: MAP_LAYERS.LANDMARKS,
+              backgroundImage: `url(${wheatInfo.src})`,
+              backgroundSize: `${wheatInfo.cols * wheatInfo.frameW}px ${wheatInfo.frameH}px`,
+              backgroundPosition: `${bgX}px 0px`,
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated',
+              opacity: gp.opacity,
+            }} />
+          );
         })}
 
         {/* Harvestable resource nodes */}
