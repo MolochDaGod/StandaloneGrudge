@@ -119,6 +119,30 @@ const spriteSheets = {
     death: { src: '/sprites/elite-orc/death.png', frames: 4 },
     walk: { src: '/sprites/elite-orc/walk.png', frames: 8 },
   },
+  'medieval-warrior-3': {
+    folder: 'medieval-warrior-3',
+    frameWidth: 135,
+    frameHeight: 135,
+    idle: { src: '/sprites/medieval-warrior-3/Idle.png', frames: 10 },
+    attack1: { src: '/sprites/medieval-warrior-3/Attack1.png', frames: 4 },
+    attack2: { src: '/sprites/medieval-warrior-3/Attack2.png', frames: 4 },
+    attack3: { src: '/sprites/medieval-warrior-3/Attack3.png', frames: 5 },
+    hurt: { src: '/sprites/medieval-warrior-3/GetHit.png', frames: 3 },
+    death: { src: '/sprites/medieval-warrior-3/Death.png', frames: 9 },
+    walk: { src: '/sprites/medieval-warrior-3/Run.png', frames: 6 },
+  },
+  'fantasy-warrior': {
+    folder: 'fantasy-warrior',
+    frameWidth: 162,
+    frameHeight: 162,
+    idle: { src: '/sprites/fantasy-warrior/Idle.png', frames: 10 },
+    attack1: { src: '/sprites/fantasy-warrior/Attack1.png', frames: 7 },
+    attack2: { src: '/sprites/fantasy-warrior/Attack2.png', frames: 7 },
+    attack3: { src: '/sprites/fantasy-warrior/Attack3.png', frames: 8 },
+    hurt: { src: '/sprites/fantasy-warrior/TakeHit.png', frames: 3 },
+    death: { src: '/sprites/fantasy-warrior/Death.png', frames: 7 },
+    walk: { src: '/sprites/fantasy-warrior/Run.png', frames: 8 },
+  },
   skeleton: {
     folder: 'skeleton',
     idle: { src: '/sprites/skeleton/idle.png', frames: 6 },
@@ -615,12 +639,12 @@ export const worgBearTransformSprite = {
 
 export const eliteTransformSprites = {
   warrior: {
-    human: spriteSheets['fire-knight'],
-    elf: spriteSheets['fire-knight'],
-    dwarf: spriteSheets['fire-knight'],
-    barbarian: spriteSheets['fire-knight'],
-    orc: { ...spriteSheets['fire-knight'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
-    undead: { ...spriteSheets['fire-knight'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+    human: spriteSheets['medieval-warrior-3'],
+    elf: spriteSheets['fantasy-warrior'],
+    dwarf: spriteSheets['medieval-warrior-3'],
+    barbarian: spriteSheets['fantasy-warrior'],
+    orc: { ...spriteSheets['medieval-warrior-3'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    undead: { ...spriteSheets['fantasy-warrior'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
   },
   mage: {
     human: spriteSheets['water-priestess'],
@@ -784,6 +808,8 @@ export const enemySpriteMap = {
   eldritch_horror: spriteSheets['cthulu-boss'],
   frost_titan: spriteSheets['frost-guardian'],
   loreon_knight: spriteSheets['loreon-knight'],
+  medieval_warrior: spriteSheets['medieval-warrior-3'],
+  fantasy_warrior: spriteSheets['fantasy-warrior'],
 };
 
 export const effectSprites = {
