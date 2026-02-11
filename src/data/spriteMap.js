@@ -57,6 +57,17 @@ const spriteSheets = {
     block: { src: '/sprites/orc-rider/block.png', frames: 4 },
     walk: { src: '/sprites/orc-rider/walk.png', frames: 8 },
   },
+  'barbarian-mage': {
+    folder: 'barbarian-mage/Wizard Pack',
+    idle: { src: '/sprites/barbarian-mage/Wizard Pack/Idle.png', frames: 6 },
+    attack1: { src: '/sprites/barbarian-mage/Wizard Pack/Attack1.png', frames: 8 },
+    attack2: { src: '/sprites/barbarian-mage/Wizard Pack/Attack2.png', frames: 8 },
+    hurt: { src: '/sprites/barbarian-mage/Wizard Pack/Hit.png', frames: 4 },
+    death: { src: '/sprites/barbarian-mage/Wizard Pack/Death.png', frames: 7 },
+    walk: { src: '/sprites/barbarian-mage/Wizard Pack/Run.png', frames: 8 },
+    jump: { src: '/sprites/barbarian-mage/Wizard Pack/Jump.png', frames: 2 },
+    fall: { src: '/sprites/barbarian-mage/Wizard Pack/Fall.png', frames: 2 },
+  },
   archer: classSpriteMap.ranger,
   'human-ranger': {
     folder: 'human-ranger',
@@ -343,7 +354,7 @@ export const raceClassSpriteMap = {
   },
   barbarian: {
     warrior: spriteSheets['barbarian-warrior'],
-    mage: spriteSheets.priest,
+    mage: spriteSheets['barbarian-mage'],
     worge: spriteSheets.soldier,
     ranger: spriteSheets['barbarian-ranger'],
   },
