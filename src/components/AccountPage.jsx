@@ -85,42 +85,46 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
         }}>ACTIVE</div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: isActive ? 12 : 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: isActive ? 12 : 0, position: 'relative', minHeight: 260 }}>
         <div style={{
-          width: '100%', height: 180, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          overflow: 'hidden', position: 'relative',
+          width: '100%', height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative',
         }}>
           <div style={{
             filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
             transition: 'filter 0.3s',
+            marginTop: 20,
           }}>
             <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.2} speed={150} />
           </div>
-        </div>
 
-        <div style={{ textAlign: 'center', marginTop: 4 }}>
-          <div className="font-cinzel" style={{
-            color: isSelected ? 'var(--gold)' : 'var(--text)',
-            fontSize: '0.85rem', fontWeight: 700,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170,
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 30%)',
+            padding: '16px 6px 6px',
+            textAlign: 'center',
           }}>
-            {hero.name}
+            <div className="font-cinzel" style={{
+              color: isSelected ? 'var(--gold)' : 'var(--text)',
+              fontSize: '0.85rem', fontWeight: 700,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170, margin: '0 auto',
+            }}>
+              {hero.name}
+            </div>
+            <div style={{ color: cls?.color || 'var(--muted)', fontSize: '0.7rem', fontWeight: 600 }}>
+              Lv.{hero.level} {race?.name || ''} {cls?.name || ''}
+            </div>
+            <div style={{ width: '100%', marginTop: 4 }}>
+              <MiniBar current={hero.currentHealth} max={stats.health} color="#22c55e" height={4} />
+              <MiniBar current={hero.currentMana} max={stats.mana} color="#3b82f6" height={3} />
+            </div>
+            <div style={{
+              fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 600,
+              background: 'rgba(255,215,0,0.1)', padding: '2px 8px', borderRadius: 4, marginTop: 4, display: 'inline-block',
+            }}>
+              CP: {cp.toLocaleString()}
+            </div>
           </div>
-          <div style={{ color: cls?.color || 'var(--muted)', fontSize: '0.7rem', fontWeight: 600 }}>
-            Lv.{hero.level} {race?.name || ''} {cls?.name || ''}
-          </div>
-        </div>
-
-        <div style={{ width: '100%', marginTop: 6 }}>
-          <MiniBar current={hero.currentHealth} max={stats.health} color="#22c55e" height={4} />
-          <MiniBar current={hero.currentMana} max={stats.mana} color="#3b82f6" height={3} />
-        </div>
-
-        <div style={{
-          fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 600,
-          background: 'rgba(255,215,0,0.1)', padding: '2px 8px', borderRadius: 4, marginTop: 4,
-        }}>
-          CP: {cp.toLocaleString()}
         </div>
       </div>
     </div>
