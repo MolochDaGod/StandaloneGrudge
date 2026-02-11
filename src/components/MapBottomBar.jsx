@@ -457,44 +457,70 @@ export default function MapBottomBar({
         <div style={{
           flex: '1 1 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '28px 4px 12px',
+          padding: '20px 4px 8px',
+          position: 'relative',
         }}>
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(8, 1fr)',
-            gap: 3,
+            position: 'relative',
             width: '100%',
             maxWidth: 480,
           }}>
-            {buttons.map(btn => (
-              <button key={btn.id} onClick={btn.action} style={{
-                background: 'rgba(0,0,0,0.35)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 6,
-                padding: '6px 2px 4px',
-                cursor: 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: 2,
-                transition: 'all 0.15s',
-                position: 'relative',
-                animation: btn.pulse ? 'glow 2s infinite' : 'none',
-              }}
-                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
-                onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-              >
-                <InlineIcon name={btn.icon} size={18} />
-                <span style={{ fontSize: '0.45rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif" }}>{btn.label}</span>
-                {btn.badge && (
-                  <span style={{
-                    position: 'absolute', top: -2, right: -2,
-                    background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
-                    fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
+            <div style={{
+              position: 'absolute', inset: -12,
+              backgroundImage: 'url(/ui/button-container-panel.png)',
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              pointerEvents: 'none',
+              opacity: 0.85,
+            }} />
+            <div style={{
+              position: 'relative',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(8, 1fr)',
+              gap: 4,
+              padding: '8px 10px',
+            }}>
+              {buttons.map(btn => (
+                <button key={btn.id} onClick={btn.action} style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 0,
+                  padding: 0,
+                  cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 1,
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                }}
+                  onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.querySelector('.btn-frame').style.filter = 'brightness(1.4) drop-shadow(0 0 6px rgba(255,215,0,0.5))'; e.currentTarget.querySelector('.btn-frame').style.transform = 'scale(1.08)'; }}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={e => { hideTooltip(); e.currentTarget.querySelector('.btn-frame').style.filter = 'brightness(1)'; e.currentTarget.querySelector('.btn-frame').style.transform = 'scale(1)'; }}
+                >
+                  <div className="btn-frame" style={{
+                    width: 42, height: 42,
+                    backgroundImage: 'url(/ui/icon-button-frame.png)',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{btn.badge}</span>
-                )}
-              </button>
-            ))}
+                    transition: 'filter 0.2s, transform 0.2s',
+                  }}>
+                    <InlineIcon name={btn.icon} size={18} />
+                  </div>
+                  <span style={{ fontSize: '0.42rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{btn.label}</span>
+                  {btn.badge && (
+                    <span style={{
+                      position: 'absolute', top: 0, right: 0,
+                      background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
+                      fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 0 6px rgba(255,215,0,0.5)',
+                    }}>{btn.badge}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
