@@ -66,6 +66,13 @@ export function Tip({ content, children, style, ...rest }) {
 const PADDING = 12;
 const CURSOR_OFFSET = 14;
 
+function getResponsiveFontScale() {
+  const w = window.innerWidth;
+  if (w < 480) return 0.85;
+  if (w < 768) return 0.92;
+  return 1;
+}
+
 export default function GameTooltipRenderer() {
   const [state, setState] = useState({ content: null, x: 0, y: 0 });
   const tipRef = useRef(null);
@@ -105,14 +112,14 @@ export default function GameTooltipRenderer() {
       top = PADDING;
     }
 
-    const maxW = vw - PADDING * 2;
+    const maxW = Math.min(vw - PADDING * 2, 380);
     const maxH = vh - PADDING * 2;
 
     setPos({
       left,
       top,
       opacity: 1,
-      maxWidth: Math.min(360, maxW),
+      maxWidth: maxW,
       maxHeight: maxH,
     });
   }, [state]);
@@ -121,6 +128,7 @@ export default function GameTooltipRenderer() {
 
   const isString = typeof state.content === 'string';
   const isComplex = React.isValidElement(state.content);
+  const scale = getResponsiveFontScale();
 
   return createPortal(
     <div
@@ -130,38 +138,45 @@ export default function GameTooltipRenderer() {
         left: pos.left,
         top: pos.top,
         opacity: pos.opacity,
-        maxWidth: pos.maxWidth || 360,
+        maxWidth: pos.maxWidth || 380,
         maxHeight: pos.maxHeight || 500,
         overflowY: 'auto',
         overflowX: 'hidden',
         zIndex: TOOLTIP,
         pointerEvents: 'none',
-        transition: 'opacity 0.1s ease',
-        background: 'linear-gradient(135deg, rgba(14,12,10,0.97), rgba(22,18,14,0.97))',
-        border: '2px solid rgba(180,150,90,0.6)',
-        borderRadius: 8,
-        padding: isString ? '6px 10px' : '8px 12px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.8), 0 0 12px rgba(180,150,90,0.15), inset 0 1px 0 rgba(255,215,0,0.08)',
+        transition: 'opacity 0.12s ease-out',
+        background: 'linear-gradient(160deg, rgba(18,14,10,0.98) 0%, rgba(28,22,16,0.98) 40%, rgba(20,16,12,0.98) 100%)',
+        border: '1px solid rgba(180,150,90,0.5)',
+        borderRadius: 6,
+        padding: isString ? `${6 * scale}px ${10 * scale}px` : `${8 * scale}px ${12 * scale}px`,
+        boxShadow: '0 6px 32px rgba(0,0,0,0.85), 0 0 1px rgba(180,150,90,0.4), inset 0 1px 0 rgba(255,215,0,0.06)',
         fontFamily: "'Jost', sans-serif",
-        fontSize: '0.72rem',
-        lineHeight: 1.45,
+        fontSize: `${0.72 * scale}rem`,
+        lineHeight: 1.5,
         color: '#d4cfc4',
         wordWrap: 'break-word',
+        backdropFilter: 'blur(8px)',
       }}
     >
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0, height: 1,
-        background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent)',
+        background: 'linear-gradient(90deg, transparent 5%, rgba(255,215,0,0.25) 50%, transparent 95%)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 0, left: 0, right: 0, height: 1,
+        background: 'linear-gradient(90deg, transparent 10%, rgba(180,150,90,0.15) 50%, transparent 90%)',
       }} />
       {isString ? (
         state.content.split('\n').map((line, i) => (
           <div key={i} style={{
-            color: i === 0 ? '#e8d5a3' : '#a09888',
+            color: i === 0 ? '#f0e4c8' : '#b0a890',
             fontWeight: i === 0 ? 700 : 400,
-            fontSize: i === 0 ? '0.78rem' : '0.68rem',
+            fontSize: i === 0 ? `${0.78 * scale}rem` : `${0.68 * scale}rem`,
             fontFamily: i === 0 ? "'Cinzel', serif" : "'Jost', sans-serif",
-            marginBottom: i < state.content.split('\n').length - 1 ? 2 : 0,
+            marginBottom: i < state.content.split('\n').length - 1 ? 3 : 0,
+            letterSpacing: i === 0 ? '0.02em' : 'normal',
           }}>{line}</div>
         ))
       ) : isComplex ? (

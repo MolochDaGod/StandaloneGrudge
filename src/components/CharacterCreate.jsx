@@ -77,7 +77,7 @@ export default function CharacterCreate() {
       position: 'relative',
     }}>
       <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         backgroundImage: 'url(/backgrounds/character_create.png)',
         backgroundSize: 'cover', backgroundPosition: 'center',
         opacity: 0.35, zIndex: 0, pointerEvents: 'none',

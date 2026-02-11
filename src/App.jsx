@@ -90,6 +90,9 @@ function GameApp() {
   const bgVisible = !screensWithOwnBackground.includes(screen);
   const bgBlurred = screen !== 'title' && screen !== 'lobby' && screen !== 'intro';
 
+  const fullBleedScreens = ['world', 'battle', 'intro'];
+  const isFullBleed = fullBleedScreens.includes(screen);
+
   const renderScreen = () => {
     switch (screen) {
       case 'title': return <TitleScreen />;
@@ -109,16 +112,29 @@ function GameApp() {
     }
   };
 
+  const contentStyle = isFullBleed ? {
+    position: 'relative', zIndex: 1, width: '100%', height: '100%',
+    opacity: transitioning ? 0 : 1,
+    transition: 'opacity 0.3s ease',
+    animation: 'fadeIn 0.5s ease',
+  } : {
+    position: 'absolute', zIndex: 1,
+    top: 'var(--frame-inset-top)',
+    left: 'var(--frame-inset-side)',
+    right: 'var(--frame-inset-side)',
+    bottom: 'var(--frame-inset-bottom)',
+    opacity: transitioning ? 0 : 1,
+    transition: 'opacity 0.3s ease',
+    animation: 'fadeIn 0.5s ease',
+    overflow: 'hidden',
+    borderRadius: 2,
+  };
+
   return (
     <div className="game-frame">
       <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
         <VideoBackground blurred={bgBlurred} visible={bgVisible} />
-        <div style={{
-          position: 'relative', zIndex: 1, width: '100%', height: '100%',
-          opacity: transitioning ? 0 : 1,
-          transition: 'opacity 0.3s ease',
-          animation: 'fadeIn 0.5s ease'
-        }}>
+        <div style={contentStyle}>
           {renderScreen()}
         </div>
         <FrameMaskLayer />

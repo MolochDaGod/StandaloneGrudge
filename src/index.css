@@ -13,6 +13,11 @@
   --mage: #8b5cf6;
   --worge: #d97706;
   --ranger: #22c55e;
+
+  --frame-inset-top: 1.2%;
+  --frame-inset-side: 3.8%;
+  --frame-inset-bottom: 27%;
+  --frame-content-bottom: 27%;
 }
 
 * {
@@ -76,6 +81,29 @@ body {
   .game-frame {
     max-width: 100%;
     max-height: 100%;
+  }
+  :root {
+    --frame-inset-top: 1%;
+    --frame-inset-side: 3%;
+    --frame-inset-bottom: 26%;
+    --frame-content-bottom: 26%;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --frame-inset-top: 0.8%;
+    --frame-inset-side: 2.5%;
+    --frame-inset-bottom: 25%;
+    --frame-content-bottom: 25%;
+  }
+}
+
+@media (max-height: 600px) {
+  :root {
+    --frame-inset-top: 1%;
+    --frame-inset-bottom: 26%;
+    --frame-content-bottom: 26%;
   }
 }
 

@@ -105,25 +105,26 @@ export const BOSS_WALKUP = {
 // Speech bubbles on world map, just below frame
 export const CHAT_BUBBLES = 9500;
 
-// ─── LAYER 11: LOADING SCREEN (9998) ───────────────────────
-export const LOADING_SCREEN = 9998;
+// ─── LAYER 11: LOADING SCREEN (10505) ──────────────────────
+export const LOADING_SCREEN = 10505;
 
-// ─── LAYER 12: FULL-SCREEN OVERLAYS (9998–9999) ────────────
-// Loot popup, hero create modal, intro cinematic
-export const LOOT_POPUP = 9998;
-export const HERO_CREATE_MODAL = 9999;
+// ─── LAYER 12: FULL-SCREEN OVERLAYS (10520–10530) ──────────
+// Loot popup, hero create modal — above frame and settings
+export const LOOT_POPUP = 10520;
+export const HERO_CREATE_MODAL = 10525;
 
-// ─── LAYER 13: SETTINGS & ADMIN (9990–9999) ────────────────
-export const SETTINGS_BUTTON = 9990;
-export const SETTINGS_PANEL = 9991;
-export const ADMIN_GIZMO = 9998;
-export const ADMIN_GIZMO_PANEL = 9993;
-export const ADMIN_GIZMO_BUTTON = 10008;
+// ─── LAYER 13: SETTINGS & ADMIN (10510–10520) ──────────────
+// Settings and admin UI must appear above the frame border
+export const SETTINGS_BUTTON = 10510;
+export const SETTINGS_PANEL = 10511;
+export const ADMIN_GIZMO = 10515;
+export const ADMIN_GIZMO_PANEL = 10516;
+export const ADMIN_GIZMO_BUTTON = 10518;
 
-// ─── LAYER 14: MAP BOTTOM BAR & POPUPS (10000–10100) ───────
-// Bottom bar sits just below frame, popups just above
-export const BOTTOM_BAR = 10000;
-export const BOTTOM_BAR_POPUPS = 10100;
+// ─── LAYER 14: MAP BOTTOM BAR & POPUPS (10600–10700) ───────
+// Bottom bar sits ABOVE the frame border so its UI is visible
+export const BOTTOM_BAR = 10600;
+export const BOTTOM_BAR_POPUPS = 10700;
 
 // ─── LAYER 15: UI FRAME BORDER (10500) ─────────────────────
 // The ornate fantasy border. Set via CSS custom property.
@@ -136,8 +137,8 @@ export const UI_FRAME = 10500;
 export const FRAME_MASK = 10501;
 export const FRAME_EDITOR = 10502;
 
-// ─── LAYER 17: INTRO CINEMATIC (10600) ─────────────────────
-export const INTRO_CINEMATIC = 10600;
+// ─── LAYER 17: INTRO CINEMATIC (10800) ─────────────────────
+export const INTRO_CINEMATIC = 10800;
 
 // ─── LAYER 18: TOOLTIPS (99999) ────────────────────────────
 // Portaled to document.body – outside .game-frame context

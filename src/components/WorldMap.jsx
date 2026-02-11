@@ -1344,7 +1344,7 @@ export default function WorldMap() {
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
       onMouseLeave={handleMapMouseUp}
-      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
+      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab') }}
     >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
@@ -3154,7 +3154,7 @@ export default function WorldMap() {
         )}
 
         <div style={{
-          position: 'absolute', top: 6, left: 14, right: 14,
+          position: 'absolute', top: 10, left: 48, right: 48,
           background: 'linear-gradient(180deg, rgba(10,14,30,0.85) 0%, rgba(10,14,30,0.5) 70%, transparent 100%)',
           padding: '8px 12px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -3262,12 +3262,12 @@ export default function WorldMap() {
           };
           return (
           <div style={{
-            position: 'absolute', top: 70, right: 12, zIndex: MAP_LAYERS.HUD_SIDE,
+            position: 'absolute', top: 70, right: 50, zIndex: MAP_LAYERS.HUD_SIDE,
             background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(110,231,183,0.2)',
             borderRadius: 12, padding: 14, maxWidth: 380, width: 370,
             boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
             animation: 'fadeIn 0.15s ease-out',
-            maxHeight: 'calc(100vh - 160px)', overflowY: 'auto',
+            maxHeight: 'calc(100% - 35% - 80px)', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h4 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.85rem', margin: 0 }}>
@@ -3461,11 +3461,12 @@ export default function WorldMap() {
 
         {showGruda && (
           <div style={{
-            position: 'absolute', top: 70, right: 12, zIndex: MAP_LAYERS.HUD_SIDE,
+            position: 'absolute', top: 70, right: 50, zIndex: MAP_LAYERS.HUD_SIDE,
             background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(239,68,68,0.25)',
             borderRadius: 12, padding: 14, maxWidth: 380, width: 360,
             boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
             animation: 'fadeIn 0.15s ease-out',
+            maxHeight: 'calc(100% - 35% - 80px)', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h4 className="font-cinzel" style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
