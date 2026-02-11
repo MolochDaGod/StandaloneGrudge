@@ -266,6 +266,73 @@ const SPRITE_INFO = {
   wheat: { src: '/sprites/wheat.png', frameW: 16, frameH: 16, cols: 4, rows: 1 },
 };
 
+const mergeRouteStrokes = (routes) => {
+  if (!routes || routes.length < 2) return routes;
+  const MERGE_DIST = 3.5;
+  const dist = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+  const used = new Set();
+  const merged = [];
+
+  const findClosest = (pt, skipIdx) => {
+    let bestIdx = -1, bestEnd = null, bestDist = Infinity;
+    for (let i = 0; i < routes.length; i++) {
+      if (used.has(i) || i === skipIdx) continue;
+      const r = routes[i];
+      if (!r.points || r.points.length < 2) continue;
+      const dStart = dist(pt, r.points[0]);
+      const dEnd = dist(pt, r.points[r.points.length - 1]);
+      if (dStart < bestDist && dStart < MERGE_DIST) {
+        bestDist = dStart; bestIdx = i; bestEnd = 'start';
+      }
+      if (dEnd < bestDist && dEnd < MERGE_DIST) {
+        bestDist = dEnd; bestIdx = i; bestEnd = 'end';
+      }
+    }
+    return bestIdx >= 0 ? { idx: bestIdx, end: bestEnd } : null;
+  };
+
+  for (let i = 0; i < routes.length; i++) {
+    if (used.has(i)) continue;
+    const r = routes[i];
+    if (!r.points || r.points.length < 2) continue;
+    used.add(i);
+    let chain = [...r.points];
+    const avgWidth = r.width || 2.5;
+    let widthSum = avgWidth;
+    let widthCount = 1;
+
+    let changed = true;
+    while (changed) {
+      changed = false;
+      const tailPt = chain[chain.length - 1];
+      const match = findClosest(tailPt, -1);
+      if (match) {
+        used.add(match.idx);
+        const mr = routes[match.idx];
+        const pts = match.end === 'start' ? mr.points.slice(1) : [...mr.points].reverse().slice(1);
+        chain = chain.concat(pts);
+        widthSum += (mr.width || 2.5);
+        widthCount++;
+        changed = true;
+        continue;
+      }
+      const headPt = chain[0];
+      const matchHead = findClosest(headPt, -1);
+      if (matchHead) {
+        used.add(matchHead.idx);
+        const mr = routes[matchHead.idx];
+        const pts = matchHead.end === 'end' ? mr.points.slice(0, -1) : [...mr.points].reverse().slice(0, -1);
+        chain = pts.concat(chain);
+        widthSum += (mr.width || 2.5);
+        widthCount++;
+        changed = true;
+      }
+    }
+    merged.push({ points: chain, width: widthSum / widthCount });
+  }
+  return merged;
+};
+
 const buildRouteNetwork = (routes, locPositions) => {
   if (!routes || routes.length === 0) return { getPathBetween: () => null };
   const allPoints = [];
@@ -4002,6 +4069,17 @@ export default function WorldMap() {
               color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             }}>Undo Last</button>
           )}
+          {editRoutes.length > 1 && (
+            <button onClick={() => {
+              const merged = mergeRouteStrokes(editRoutes);
+              setEditRoutes(merged);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(merged));
+            }} style={{
+              padding: '6px 14px', background: 'rgba(74,222,128,0.15)',
+              border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8,
+              color: '#4ade80', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>Merge ({editRoutes.length})</button>
+          )}
           {editRoutes.length > 0 && (
             <span style={{ fontSize: '0.55rem', color: 'rgba(180,160,120,0.6)' }}>
               {editRoutes.length} stroke{editRoutes.length !== 1 ? 's' : ''}
@@ -4071,6 +4149,17 @@ export default function WorldMap() {
               border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6,
               color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
             }}>Undo Last</button>
+          )}
+          {editRoutes.length > 1 && (
+            <button onClick={() => {
+              const merged = mergeRouteStrokes(editRoutes);
+              setEditRoutes(merged);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(merged));
+            }} style={{
+              padding: '4px 10px', background: 'rgba(74,222,128,0.15)',
+              border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6,
+              color: '#4ade80', cursor: 'pointer', fontSize: '0.6rem',
+            }}>Merge ({editRoutes.length})</button>
           )}
           <button onClick={() => { setDrawingRoute(null); setRoutePoints([]); }} style={{
             padding: '4px 12px', background: 'rgba(180,160,120,0.15)',
