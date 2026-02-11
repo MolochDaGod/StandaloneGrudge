@@ -96,13 +96,56 @@ const GENERIC_CHATTER = [
 ];
 
 const GOAL_CHATTER = [
-  ["{a}: We need better weapons. Let's find a merchant.", "{b}: Good idea. Our current gear won't cut it much longer."],
-  ["{a}: That zone isn't conquered yet. Let's finish it.", "{b}: More conquering means better harvest yields too."],
-  ["{a}: We should challenge that boss soon.", "{b}: Agreed. Time to prove our worth."],
-  ["{a}: Let's grind some levels before moving on.", "{b}: Smart. No point rushing to our deaths."],
-  ["{a}: The harder zones have the best loot.", "{b}: Risk and reward... I like it."],
-  ["{a}: We should recruit another hero.", "{b}: More allies means more firepower!"],
+  { lines: ["{a}: We need better weapons. Let's find a merchant.", "{b}: Good idea. Our current gear won't cut it much longer."], trigger: 'suggest_trade' },
+  { lines: ["{a}: That zone isn't conquered yet. Let's finish it.", "{b}: More conquering means better harvest yields too."], trigger: 'suggest_hunt' },
+  { lines: ["{a}: We should challenge that boss soon.", "{b}: Agreed. Time to prove our worth."], trigger: 'boss_nearby' },
+  { lines: ["{a}: Let's grind some levels before moving on.", "{b}: Smart. No point rushing to our deaths."], trigger: 'suggest_hunt' },
+  { lines: ["{a}: The harder zones have the best loot.", "{b}: Risk and reward... I like it."], trigger: 'suggest_hunt' },
+  { lines: ["{a}: We should recruit another hero.", "{b}: More allies means more firepower!"], trigger: 'suggest_recruit' },
 ];
+
+export const QUICK_RESPONSES = {
+  low_health: [
+    { label: 'Rest', icon: '🏨', action: 'rest' },
+    { label: 'Use Potion', icon: '🧪', action: 'use_potion' },
+  ],
+  high_gold: [
+    { label: 'Trade', icon: '🛒', action: 'open_trade' },
+    { label: 'Upgrade', icon: '🔧', action: 'open_upgrades' },
+  ],
+  low_gold: [
+    { label: 'Hunt!', icon: '⚔️', action: 'hunt' },
+    { label: 'Sell Loot', icon: '💰', action: 'open_trade' },
+  ],
+  boss_nearby: [
+    { label: 'Fight Boss', icon: '👑', action: 'fight_boss' },
+    { label: 'Prepare', icon: '🛡️', action: 'open_gear' },
+  ],
+  boss_defeated: [
+    { label: 'Celebrate!', icon: '🎉', action: 'rest' },
+    { label: 'Move On', icon: '🗺️', action: 'dismiss' },
+  ],
+  high_conquer: [
+    { label: 'Push Forward', icon: '➡️', action: 'dismiss' },
+    { label: 'Harvest', icon: '⛏️', action: 'open_harvest' },
+  ],
+  new_zone: [
+    { label: 'Explore', icon: '🔍', action: 'hunt' },
+    { label: 'Be Careful', icon: '🛡️', action: 'dismiss' },
+  ],
+  suggest_trade: [
+    { label: 'Let\'s Shop', icon: '🛒', action: 'open_trade' },
+    { label: 'Later', icon: '✋', action: 'dismiss' },
+  ],
+  suggest_hunt: [
+    { label: 'Hunt!', icon: '⚔️', action: 'hunt' },
+    { label: 'Not Yet', icon: '✋', action: 'dismiss' },
+  ],
+  suggest_recruit: [
+    { label: 'Recruit', icon: '➕', action: 'recruit' },
+    { label: 'We\'re Good', icon: '✋', action: 'dismiss' },
+  ],
+};
 
 const RACE_CHATTER = {
   human: [
@@ -189,7 +232,7 @@ export function generateDialogue(heroes, gameState) {
     if (chatter && response) {
       const line1 = chatter.lines[Math.floor(Math.random() * chatter.lines.length)].replace('{name}', hero1.name);
       const line2 = response.lines[Math.floor(Math.random() * response.lines.length)].replace('{name}', hero2.name);
-      return { speaker1: hero1, speaker2: hero2, line1, line2 };
+      return { speaker1: hero1, speaker2: hero2, line1, line2, trigger };
     }
   }
 
@@ -218,15 +261,22 @@ export function generateDialogue(heroes, gameState) {
         };
       }
     }
-    const goalPool = GOAL_CHATTER;
-    const genericPool = GENERIC_CHATTER;
-    const pool = Math.random() > 0.5 ? goalPool : genericPool;
-    const pair = pool[Math.floor(Math.random() * pool.length)];
+    const useGoal = Math.random() > 0.5;
+    if (useGoal) {
+      const goal = GOAL_CHATTER[Math.floor(Math.random() * GOAL_CHATTER.length)];
+      return {
+        speaker1: hero1, speaker2: hero2,
+        line1: goal.lines[0].replace('{a}', hero1.name).replace('{b}', hero2.name),
+        line2: goal.lines[1].replace('{a}', hero1.name).replace('{b}', hero2.name),
+        trigger: goal.trigger,
+      };
+    }
+    const pair = GENERIC_CHATTER[Math.floor(Math.random() * GENERIC_CHATTER.length)];
     return {
-      speaker1: hero1,
-      speaker2: hero2,
+      speaker1: hero1, speaker2: hero2,
       line1: pair[0].replace('{a}', hero1.name).replace('{b}', hero2.name),
       line2: pair[1].replace('{a}', hero1.name).replace('{b}', hero2.name),
+      trigger: 'generic',
     };
   }
 

@@ -11,6 +11,7 @@ import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
 import { generateDialogue } from '../data/dialogue';
+import ChatBubbleSystem from './ChatBubble';
 import { generateRandomEvent, getRewardDescription } from '../data/randomEvents';
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverStyle, nodeScale as calcNodeScale } from './mapConstants';
@@ -1216,6 +1217,34 @@ export default function WorldMap() {
   const bossDefeated = selectedLoc?.boss ? bossesDefeated.includes(selectedLoc.boss) : false;
   const isCleared = selectedLoc ? locationsCleared.includes(selectedLoc.id) : false;
 
+  useEffect(() => {
+    if (!selectedLoc) return;
+    const menuActions = [];
+    menuActions.push(() => handleBattle(selectedLoc.id));
+    if (selectedLoc.boss && !bossDefeated) {
+      menuActions.push(() => handleBoss(selectedLoc.id, selectedLoc.boss));
+    }
+    menuActions.push(() => handleRest());
+    menuActions.push(() => { enterLocation(selectedLoc.id); setSelectedLocation(null); });
+    menuActions.push(null);
+
+    const handler = (e) => {
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= menuActions.length && menuActions[num - 1]) {
+        e.preventDefault();
+        e.stopPropagation();
+        menuActions[num - 1]();
+      }
+      if (e.key === 'Escape') {
+        setSelectedLocation(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedLoc, bossDefeated]);
+
   const getPopupSide = (nodeId) => {
     const pos = getNodePos(nodeId);
     if (!pos) return 'right';
@@ -2045,82 +2074,44 @@ export default function WorldMap() {
 
         {currentDialogue && dialoguePhase > 0 && (() => {
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-          const speaker1Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker1?.id);
-          const speaker2Idx = activeHeroes.findIndex(h => h.id === currentDialogue.speaker2?.id);
-          const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
+          const heroSpriteMap = {};
+          activeHeroes.forEach(h => {
+            heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId);
+          });
 
-          const getHeroMapPos = (idx) => {
-            return {
-              x: zonePos.x,
-              y: zonePos.y - 2,
-            };
+          const handleBubbleAction = (action) => {
+            switch(action) {
+              case 'rest': handleRest(); break;
+              case 'hunt': if (currentZone) handleBattle(currentZone); break;
+              case 'fight_boss': {
+                const loc = locations.find(l => l.id === currentZone);
+                if (loc?.boss) handleBoss(currentZone, loc.boss);
+                break;
+              }
+              case 'open_gear': case 'open_upgrades':
+                setScreen('account'); break;
+              case 'open_trade': {
+                const nearCity = cities.find(c => c.id === currentZone);
+                if (nearCity) { setSelectedCity(nearCity.id); setCitySubmenu('trade'); }
+                break;
+              }
+              case 'recruit': setScreen('heroCreate'); break;
+              case 'use_potion': setScreen('account'); break;
+              case 'open_harvest': break;
+              case 'dismiss': break;
+              default: break;
+            }
           };
 
           return (
-            <>
-              {dialoguePhase >= 1 && speaker1Idx >= 0 && (() => {
-                const pos = getHeroMapPos(speaker1Idx);
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    left: `${Math.max(4, Math.min(82, pos.x))}%`,
-                    top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: MAP_LAYERS.TOOLTIPS, pointerEvents: 'none', maxWidth: 160,
-                    animation: 'fadeIn 0.4s ease-out',
-                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, opacity 0.5s',
-                  }}>
-                    <div style={{
-                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(110,231,183,0.3)',
-                      borderRadius: 10, padding: '5px 8px',
-                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    }}>
-                      <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.45rem', marginBottom: 2 }}>
-                        {currentDialogue.speaker1?.name}
-                      </div>
-                      {currentDialogue.line1}
-                    </div>
-                    <div style={{
-                      width: 0, height: 0,
-                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                      borderTop: '5px solid rgba(14,22,48,0.92)',
-                      marginLeft: 12,
-                    }} />
-                  </div>
-                );
-              })()}
-              {dialoguePhase >= 2 && speaker2Idx >= 0 && (() => {
-                const pos = getHeroMapPos(speaker2Idx);
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    left: `${Math.max(4, Math.min(82, pos.x + 3))}%`,
-                    top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: MAP_LAYERS.TOOLTIPS, pointerEvents: 'none', maxWidth: 160,
-                    animation: 'fadeIn 0.4s ease-out',
-                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
-                  }}>
-                    <div style={{
-                      background: 'rgba(14,22,48,0.92)', border: '1px solid rgba(251,191,36,0.3)',
-                      borderRadius: 10, padding: '5px 8px',
-                      fontSize: '0.5rem', color: '#e2e8f0', lineHeight: 1.4,
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                    }}>
-                      <div style={{ fontWeight: 700, color: 'var(--gold)', fontSize: '0.45rem', marginBottom: 2 }}>
-                        {currentDialogue.speaker2?.name}
-                      </div>
-                      {currentDialogue.line2}
-                    </div>
-                    <div style={{
-                      width: 0, height: 0,
-                      borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                      borderTop: '5px solid rgba(14,22,48,0.92)',
-                      marginLeft: 12,
-                    }} />
-                  </div>
-                );
-              })()}
-            </>
+            <ChatBubbleSystem
+              dialogue={currentDialogue}
+              phase={dialoguePhase}
+              containerRef={outerRef}
+              heroSprites={heroSpriteMap}
+              onAction={handleBubbleAction}
+              onDismiss={() => { setDialoguePhase(0); setTimeout(() => setCurrentDialogue(null), 300); }}
+            />
           );
         })()}
 
@@ -2281,58 +2272,66 @@ export default function WorldMap() {
               })()}
             </div>
 
-            <div style={{ padding: '8px' }}>
-              <MenuButton
-                icon="⚔️" label="Hunt Monsters" sublabel={`Fight Lv.${selectedLoc.levelRange[0]}-${selectedLoc.levelRange[1]} enemies`}
-                color="var(--accent)" onClick={() => handleBattle(selectedLoc.id)}
-              />
+            <div style={{ padding: '6px 8px' }}>
+              {(() => {
+                const menuItems = [];
+                let idx = 1;
 
-              {selectedLoc.boss && !bossDefeated && (
-                <MenuButton
-                  icon="👑" label="Challenge Boss" sublabel={`Defeat the ${selectedLoc.boss.replace('_', ' ')}`}
-                  color="#ef4444" onClick={() => handleBoss(selectedLoc.id, selectedLoc.boss)}
-                  glow
-                />
-              )}
+                menuItems.push({ key: idx++, props: {
+                  iconSrc: '/sprites/ui/icons/icon_crossed_swords.png',
+                  label: 'Hunt Monsters', sublabel: `Fight Lv.${selectedLoc.levelRange[0]}-${selectedLoc.levelRange[1]} enemies`,
+                  color: 'var(--accent)', onClick: () => handleBattle(selectedLoc.id),
+                }});
 
-              {selectedLoc.boss && bossDefeated && (
-                <div style={{
-                  padding: '8px 12px', margin: '4px 0', borderRadius: 8,
-                  background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)',
-                  color: 'var(--success)', fontSize: '0.75rem', textAlign: 'center',
-                }}>
-                  ✅ Boss Defeated
-                </div>
-              )}
+                if (selectedLoc.boss && !bossDefeated) {
+                  menuItems.push({ key: idx++, props: {
+                    iconSrc: locationIcons[selectedLoc.id]?.img,
+                    label: 'Challenge Boss', sublabel: `Defeat the ${selectedLoc.boss.replace(/_/g, ' ')}`,
+                    color: '#ef4444', onClick: () => handleBoss(selectedLoc.id, selectedLoc.boss), glow: true,
+                  }});
+                }
 
-              <MenuButton
-                icon="🏨" label="Rest at Inn" sublabel={`Heal party (${level * 5}g)`}
-                color="#60a5fa" onClick={handleRest}
-              />
+                menuItems.push({ key: idx++, props: {
+                  iconSrc: '/backgrounds/trade_day.png',
+                  label: 'Rest at Inn', sublabel: `Heal party (${level * 5}g)`,
+                  color: '#60a5fa', onClick: handleRest,
+                }});
 
-              <MenuButton
-                icon="🏕️" label="Visit Location" sublabel="Explore this area"
-                color="#c084fc" onClick={() => {
-                  enterLocation(selectedLoc.id);
-                  setSelectedLocation(null);
-                }}
-              />
+                menuItems.push({ key: idx++, props: {
+                  iconSrc: locationIcons[selectedLoc.id]?.img,
+                  label: 'Visit Location', sublabel: 'Explore this area',
+                  color: '#c084fc', onClick: () => { enterLocation(selectedLoc.id); setSelectedLocation(null); },
+                }});
 
-              <MenuButton
-                icon="🛒" label="Trade" sublabel="Buy supplies & sell loot"
-                color="var(--gold)" onClick={() => {
-                  setSelectedLocation(null);
-                }}
-                disabled
-              />
+                menuItems.push({ key: idx++, props: {
+                  icon: '\u{1F6D2}', label: 'Trade', sublabel: 'Buy supplies & sell loot',
+                  color: 'var(--gold)', onClick: () => { setSelectedLocation(null); }, disabled: true,
+                }});
+
+                return (
+                  <>
+                    {selectedLoc.boss && bossDefeated && (
+                      <div style={{
+                        padding: '6px 10px', margin: '4px 0', borderRadius: 8,
+                        background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                        color: 'var(--success)', fontSize: '0.7rem', textAlign: 'center',
+                        fontFamily: "'Cinzel', serif", fontWeight: 600,
+                      }}>Boss Defeated</div>
+                    )}
+                    {menuItems.map(item => (
+                      <MenuButton key={item.key} {...item.props} hotkey={item.key} />
+                    ))}
+                  </>
+                );
+              })()}
             </div>
 
             <div style={{
-              padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
+              padding: '5px 16px 8px', borderTop: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center',
             }}>
-              <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
-                Click anywhere to close
+              <span style={{ fontSize: '0.5rem', color: 'rgba(150,150,170,0.3)', fontFamily: "'Cinzel', serif" }}>
+                Press 1-{selectedLoc?.boss && !bossDefeated ? '4' : '3'} &bull; Esc to close
               </span>
             </div>
           </div>,
@@ -4191,30 +4190,68 @@ export default function WorldMap() {
   );
 }
 
-function MenuButton({ icon, label, sublabel, color, onClick, glow, disabled }) {
+function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disabled, hotkey }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        width: '100%', padding: '10px 12px', margin: '3px 0',
-        background: disabled ? 'rgba(40,40,60,0.3)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${disabled ? 'rgba(80,80,100,0.2)' : 'rgba(255,255,255,0.06)'}`,
-        borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
+        width: '100%', padding: '8px 10px', margin: '4px 0',
+        background: disabled ? 'rgba(40,40,60,0.3)' : 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.06))',
+        border: `1.5px solid ${disabled ? 'rgba(80,80,100,0.2)' : `${color}33`}`,
+        borderRadius: 10, cursor: disabled ? 'not-allowed' : 'pointer',
         color: disabled ? 'rgba(150,150,170,0.4)' : '#fff',
-        fontSize: '0.8rem', fontWeight: 600, textAlign: 'left',
-        transition: 'all 0.15s',
+        fontSize: '0.85rem', fontWeight: 600, textAlign: 'left',
+        transition: 'all 0.2s',
         animation: glow ? 'glow 2s infinite' : 'none',
         opacity: disabled ? 0.5 : 1,
+        position: 'relative',
       }}
-      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = `${color}22`; e.currentTarget.style.borderColor = color; }}}
-      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}}
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = `linear-gradient(135deg, ${color}15, ${color}25)`; e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = `0 0 12px ${color}30, inset 0 0 20px ${color}08`; }}}
+      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.06))'; e.currentTarget.style.borderColor = `${color}33`; e.currentTarget.style.boxShadow = 'none'; }}}
     >
-      <span style={{ fontSize: '1.1rem' }}>{icon}</span>
-      <div>
-        <div style={{ color: disabled ? 'rgba(150,150,170,0.4)' : color }}>{label}</div>
-        {sublabel && <div style={{ fontSize: '0.6rem', color: 'var(--muted)', fontWeight: 400 }}>
+      {hotkey && (
+        <div style={{
+          position: 'absolute', top: -6, right: -4,
+          width: 18, height: 18, borderRadius: 4,
+          background: 'linear-gradient(135deg, #2a2040, #1a1530)',
+          border: `1px solid ${color}66`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.55rem', fontWeight: 800, color: color,
+          fontFamily: "'Cinzel', serif",
+          boxShadow: `0 0 6px ${color}30`,
+          zIndex: 2,
+        }}>{hotkey}</div>
+      )}
+      {iconSrc ? (
+        <div style={{
+          width: 38, height: 38, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+          border: `2px solid ${disabled ? 'rgba(80,80,100,0.3)' : `${color}88`}`,
+          boxShadow: disabled ? 'none' : `0 0 8px ${color}30, inset 0 0 10px rgba(0,0,0,0.5)`,
+          position: 'relative',
+        }}>
+          <img src={iconSrc} alt="" style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            filter: disabled ? 'grayscale(1) brightness(0.4)' : 'brightness(1.1) contrast(1.1)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(135deg, transparent 60%, ${color}30)`,
+            borderRadius: 6,
+          }} />
+        </div>
+      ) : (
+        <span style={{ fontSize: '1.3rem', width: 38, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          color: disabled ? 'rgba(150,150,170,0.4)' : color,
+          fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '0.8rem',
+          textShadow: disabled ? 'none' : `0 0 8px ${color}40`,
+          letterSpacing: '0.02em',
+        }}>{label}</div>
+        {sublabel && <div style={{ fontSize: '0.58rem', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.3 }}>
           {sublabel}{disabled ? ' (Coming soon)' : ''}
         </div>}
       </div>
