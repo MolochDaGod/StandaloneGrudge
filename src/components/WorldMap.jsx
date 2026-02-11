@@ -723,6 +723,19 @@ export default function WorldMap() {
   const bossDefeated = selectedLoc?.boss ? bossesDefeated.includes(selectedLoc.boss) : false;
   const isCleared = selectedLoc ? locationsCleared.includes(selectedLoc.id) : false;
 
+  const getPopupSide = (nodeId) => {
+    const pos = getNodePos(nodeId);
+    if (!pos) return 'right';
+    return pos.x > 50 ? 'left' : 'right';
+  };
+
+  const popupPositionStyle = (nodeId) => {
+    const side = getPopupSide(nodeId);
+    return side === 'left'
+      ? { left: 16, right: 'auto', animation: 'slideInLeft 0.2s ease-out' }
+      : { right: 16, left: 'auto', animation: 'slideInRight 0.2s ease-out' };
+  };
+
   return (
     <div
       ref={outerRef}
@@ -1477,7 +1490,7 @@ export default function WorldMap() {
         {selectedLoc && outerRef.current && createPortal(
           <div ref={menuRef} style={{
             position: 'absolute',
-            right: 16, top: '50%',
+            top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 50,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
@@ -1487,7 +1500,7 @@ export default function WorldMap() {
             width: 260,
             maxHeight: '70vh', overflowY: 'auto',
             boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${locationIcons[selectedLoc.id]?.glow || 'rgba(110,231,183,0.2)'}`,
-            animation: 'slideInRight 0.2s ease-out',
+            ...popupPositionStyle(selectedLoc.id),
           }}>
             <div style={{
               padding: '14px 16px 10px',
@@ -1607,7 +1620,7 @@ export default function WorldMap() {
           return createPortal(
             <div ref={menuRef} style={{
               position: 'absolute',
-              right: 16, top: '50%',
+              top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 50,
               background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
@@ -1617,7 +1630,7 @@ export default function WorldMap() {
               width: 280,
               maxHeight: '70vh', overflowY: 'auto',
               boxShadow: '0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(74,222,128,0.3)',
-              animation: 'slideInRight 0.2s ease-out',
+              ...popupPositionStyle(city.id),
             }}>
               <div style={{
                 padding: '14px 16px 10px',
@@ -2083,7 +2096,7 @@ export default function WorldMap() {
         {selectedEvent && outerRef.current && createPortal(
           <div ref={menuRef} style={{
             position: 'absolute',
-            right: 16, top: '50%',
+            top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 50,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
@@ -2091,7 +2104,13 @@ export default function WorldMap() {
             borderRadius: 14, padding: 0,
             minWidth: 240, maxHeight: '60vh', overflowY: 'auto',
             boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${selectedEvent.color}40`,
-            animation: 'slideInRight 0.2s ease-out',
+            ...(() => {
+              const evtPos = locationPositions[selectedEvent.locationId];
+              const evtX = evtPos ? evtPos.x : 0;
+              return evtX > 50
+                ? { left: 16, right: 'auto', animation: 'slideInLeft 0.2s ease-out' }
+                : { right: 16, left: 'auto', animation: 'slideInRight 0.2s ease-out' };
+            })(),
           }}>
             <div style={{
               padding: '14px 16px 10px',
@@ -2752,6 +2771,10 @@ export default function WorldMap() {
             0% { opacity: 0; transform: translateY(-50%) translateX(30px); }
             100% { opacity: 1; transform: translateY(-50%) translateX(0); }
           }
+          @keyframes slideInLeft {
+            0% { opacity: 0; transform: translateY(-50%) translateX(-30px); }
+            100% { opacity: 1; transform: translateY(-50%) translateX(0); }
+          }
           @keyframes bossAppear {
             0% { transform: scale(0.3); opacity: 0; }
             60% { transform: scale(1.15); opacity: 1; }
@@ -2908,9 +2931,11 @@ export default function WorldMap() {
 
       {markerMode && markerMenuNode && !drawingArea && (
         <div data-marker-menu style={{
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          position: 'absolute', top: '50%',
+          transform: 'translateY(-50%)',
           zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
           borderRadius: 12, padding: 16, minWidth: 220, backdropFilter: 'blur(8px)',
+          ...popupPositionStyle(markerMenuNode),
         }}>
           <div style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>
             {markerMenuNode}
