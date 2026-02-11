@@ -3087,6 +3087,16 @@ export default function WorldMap() {
               ⛺ Camp
             </button>
 
+            {level >= 15 && (
+              <button onClick={() => enterScene('portal', 'world')} style={{
+                background: 'rgba(192,38,211,0.15)', border: '1px solid rgba(192,38,211,0.4)',
+                borderRadius: 8, padding: '4px 10px', color: '#c026d3',
+                cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+              }}>
+                🌀 Nexus
+              </button>
+            )}
+
             {(unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0)) && (
               <button onClick={() => setScreen('account')} style={{
                 background: 'rgba(239,68,68,0.2)', border: '1px solid var(--danger)',

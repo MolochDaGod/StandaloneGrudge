@@ -41,6 +41,12 @@ function getHeroStatsWithBonuses(hero) {
     if (stats[key] !== undefined) stats[key] += val;
     else stats[key] = val;
   });
+  if (hero.enchantBonuses) {
+    Object.entries(hero.enchantBonuses).forEach(([key, val]) => {
+      if (stats[key] !== undefined) stats[key] += val;
+      else stats[key] = val;
+    });
+  }
   return stats;
 }
 
@@ -2334,11 +2340,12 @@ const useGameStore = create(persist((set, get) => ({
     set({ currentScene: null, sceneReturnTo: null, dungeonProgress: null, screen: 'world' });
   },
 
-  startDungeon: (locationId) => {
+  startDungeon: (locationId, theme) => {
+    const totalNodes = theme === 'void' ? 6 : theme === 'lava' ? 6 : 5;
     set({
       currentScene: 'dungeon',
       sceneReturnTo: 'world',
-      dungeonProgress: { locationId, currentNode: 0, totalNodes: 5, completed: [] },
+      dungeonProgress: { locationId, currentNode: 0, totalNodes, completed: [], theme: theme || 'default' },
       screen: 'scene',
     });
   },

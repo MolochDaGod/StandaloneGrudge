@@ -103,6 +103,14 @@ const spriteSheets = {
     death: { src: '/sprites/wizard/death.png', frames: 4 },
     walk: { src: '/sprites/wizard/walk.png', frames: 8 },
   },
+  'evil-wizard': {
+    folder: 'evil-wizard',
+    idle: { src: '/sprites/evil-wizard/idle.png', frames: 8 },
+    attack1: { src: '/sprites/evil-wizard/attack1.png', frames: 8 },
+    hurt: { src: '/sprites/evil-wizard/hurt.png', frames: 4 },
+    death: { src: '/sprites/evil-wizard/death.png', frames: 5 },
+    walk: { src: '/sprites/evil-wizard/walk.png', frames: 8 },
+  },
   swordsman: {
     folder: 'swordsman',
     idle: { src: '/sprites/swordsman/idle.png', frames: 6 },
@@ -412,6 +420,7 @@ export const enemySpriteMap = {
   dragon_whelp: spriteSheets.werebear,
   lich: spriteSheets['armored-skeleton'],
   demon_lord: spriteSheets['knight-templar'],
+  evil_wizard: spriteSheets['evil-wizard'],
   void_king: spriteSheets.swordsman,
   water_elemental: spriteSheets['water-elemental'],
   nature_elemental: spriteSheets['nature-elemental'],

@@ -4,6 +4,8 @@ import CampScene from './CampScene';
 import DungeonScene from './DungeonScene';
 import TradingPostScene from './TradingPostScene';
 import OpenFieldScene from './OpenFieldScene';
+import PortalScene from './PortalScene';
+import BossWalkupScene from './BossWalkupScene';
 
 export default function SceneView() {
   const currentScene = useGameStore(s => s.currentScene);
@@ -13,6 +15,8 @@ export default function SceneView() {
     case 'dungeon': return <DungeonScene />;
     case 'trading': return <TradingPostScene />;
     case 'field': return <OpenFieldScene />;
+    case 'portal': return <PortalScene />;
+    case 'boss_walkup': return <BossWalkupScene />;
     default: return <CampScene />;
   }
 }

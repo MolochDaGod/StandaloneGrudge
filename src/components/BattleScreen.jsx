@@ -1032,11 +1032,18 @@ export default function BattleScreen() {
   const isBoss = battleState?.isBoss;
   const isTraining = battleState?.isTraining;
   const isArena = battleState?.isArena;
-  const isDungeon = useGameStore(s => s.dungeonProgress) !== null;
-  const dungeonNode = useGameStore(s => s.dungeonProgress?.currentNode);
-  const dungeonTotal = useGameStore(s => s.dungeonProgress?.totalNodes);
+  const dungeonProgress = useGameStore(s => s.dungeonProgress);
+  const isDungeon = dungeonProgress !== null;
+  const dungeonTheme = dungeonProgress?.theme || 'default';
+  const dungeonNode = dungeonProgress?.currentNode;
+  const dungeonTotal = dungeonProgress?.totalNodes;
   const isDungeonBoss = isDungeon && dungeonNode === (dungeonTotal || 5) - 1;
-  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeonBoss ? '/backgrounds/scene_field.png' : isDungeon ? '/backgrounds/scene_dungeon.png' : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
+  const getDungeonBg = () => {
+    if (dungeonTheme === 'lava') return isDungeonBoss ? '/backgrounds/lava_boss_walkup.png' : '/backgrounds/lava_dungeon_path.png';
+    if (dungeonTheme === 'void') return isDungeonBoss ? '/backgrounds/portal_arena.png' : '/backgrounds/purple_dungeon.png';
+    return isDungeonBoss ? '/backgrounds/scene_field.png' : '/backgrounds/scene_dungeon.png';
+  };
+  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
   const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];

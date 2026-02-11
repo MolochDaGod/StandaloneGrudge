@@ -90,6 +90,23 @@ export const enemyTemplates = {
       { id: 'hellfire_aura', name: 'Hellfire Aura', icon: '🔥', type: 'magical', damage: 1.0, cooldown: 3, description: 'Burns all heroes with infernal fire', effect: { type: 'dot', damage: 0.12, duration: 3 } },
     ]
   },
+  evil_wizard: {
+    name: 'Malachar the Undying', icon: '🧙‍♂️', color: '#c026d3',
+    baseHealth: 1400, baseDamage: 65, baseDefense: 35, baseMana: 600,
+    xpReward: 350, goldReward: 250, speed: 14,
+    isBoss: true,
+    abilities: [
+      { id: 'arcane_bolt', name: 'Arcane Bolt', icon: '🔮', type: 'magical', damage: 1.6, description: 'A crackling bolt of dark arcane energy' },
+      { id: 'chaos_storm', name: 'Chaos Storm', icon: '🌪️', type: 'magical', damage: 3.2, cooldown: 4, description: 'Unleashes a storm of chaotic energy on all heroes' },
+      { id: 'soul_siphon', name: 'Soul Siphon', icon: '💜', type: 'magical', damage: 1.8, cooldown: 3, description: 'Drains life force to restore health', drainPercent: 0.6 },
+      { id: 'dark_barrier', name: 'Dark Barrier', icon: '🛡️', type: 'buff', damage: 0, cooldown: 5, description: 'Erects a barrier of dark magic', effect: { stat: 'defense', flat: 50, duration: 3 } },
+      { id: 'necrotic_curse', name: 'Necrotic Curse', icon: '☠️', type: 'magical', damage: 1.0, cooldown: 4, description: 'Curses a hero with necrotic decay', effect: { type: 'dot', damage: 0.15, duration: 4 } },
+      { id: 'hellfire_rain', name: 'Hellfire Rain', icon: '🔥', type: 'magical', damage: 4.0, cooldown: 6, description: 'Rains hellfire from the sky, scorching all heroes' },
+      { id: 'petrify', name: 'Petrify', icon: '🗿', type: 'magical', damage: 0.5, cooldown: 5, description: 'Turns a hero to stone briefly', effect: { type: 'stun', duration: 2 } },
+      { id: 'dark_empowerment', name: 'Dark Empowerment', icon: '😈', type: 'buff', damage: 0, cooldown: 7, description: 'Channels forbidden power, greatly boosting damage', effect: { stat: 'damage', multiplier: 2.0, duration: 3 } },
+      { id: 'shadow_teleport', name: 'Shadow Teleport', icon: '🌀', type: 'buff', damage: 0, cooldown: 6, description: 'Teleports through shadow, greatly boosting speed', effect: { stat: 'speed', flat: 20, duration: 2 } },
+    ]
+  },
   void_king: {
     name: 'The Void King', icon: '👑', color: '#fbbf24',
     baseHealth: 1200, baseDamage: 60, baseDefense: 48, baseMana: 500,

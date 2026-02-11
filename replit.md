@@ -35,6 +35,9 @@ The application is a React 19 frontend developed with Vite, managing global stat
     - **Pathfinding:** Heroes walk along a node connection graph using BFS for shortest path, with dynamic footprint marks.
     - **Portal Fast Travel:** Three portal locations with animated visuals provide instant fast travel between unlocked portals.
     - **God Fights:** Three endgame God encounters unlock after defeating the Void King, each gated by faction-arc boss completions.
+    - **Void Nexus (Portal Scene):** Endgame hub accessible at level 15+ via Nexus button in world map HUD. Contains 6 interactive nodes: Void Forge (equipment upgrading), Arcane Enchanter (enchant heroes using resources for stat bonuses via enchantBonuses), Soul Vendor (high-tier shop), Salvage Pit (break items for gold + resources), and two dungeon portals (Void Rift, Infernal Gate). Uses portal_arena.png background.
+    - **Themed Dungeons:** DungeonScene supports 3 themes: default (5 nodes, scene_dungeon.png), void (6 nodes, purple_dungeon.png), lava (6 nodes, lava_dungeon_path.png). Lava dungeon boss triggers BossWalkupScene cinematic before Evil Wizard fight.
+    - **Evil Wizard Boss (Malachar the Undying):** Endgame boss with dedicated sprite sheet (evil-wizard/), 9 abilities including Chaos Storm, Soul Siphon, Hellfire Rain, Petrify, and Dark Empowerment. Spawned via startBossBattle('evil_wizard') from BossWalkupScene.
     - **Factions:** Crusade (Humans, Barbarians), Legion (Orcs, Undead), Fabled (Elves, Dwarves), each worshiping a specific God.
 - **Enemy System:** `createRaceClassEnemy` generates enemies based on race, class, and level, with stat scaling and procedural naming. Bosses have unique abilities. Monster sprite pack provides dedicated enemy sprites with various animations.
 - **Economy:** Gold gain from battles is reduced, and a harvest system allows heroes to be assigned to resource nodes.
