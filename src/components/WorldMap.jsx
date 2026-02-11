@@ -219,15 +219,7 @@ const buildSmoothPath = (points) => {
   return d;
 };
 
-const mapLandmarks = [
-  { type: 'river', points: [[14,72],[16,68],[14,64],[16,60],[18,56],[20,52]], color: 'rgba(56,189,248,0.25)', width: 1.2 },
-  { type: 'river', points: [[32,90],[34,86],[36,82],[38,78],[40,75]], color: 'rgba(56,189,248,0.2)', width: 1 },
-  { type: 'river', points: [[40,75],[44,72],[48,70],[50,68]], color: 'rgba(56,189,248,0.15)', width: 0.8 },
-  { type: 'river', points: [[44,40],[42,44],[40,48],[38,52],[36,56]], color: 'rgba(125,211,252,0.2)', width: 0.9 },
-  { type: 'lava', points: [[70,62],[72,58],[74,55],[76,52]], color: 'rgba(251,146,60,0.35)', width: 1.1 },
-  { type: 'lava', points: [[78,70],[80,66],[82,62],[84,58],[86,54]], color: 'rgba(239,68,68,0.3)', width: 1.0 },
-  { type: 'lava', points: [[86,54],[88,50],[90,48]], color: 'rgba(251,146,60,0.25)', width: 0.8 },
-];
+const mapLandmarks = [];
 
 export default function WorldMap() {
   const {
@@ -936,9 +928,8 @@ export default function WorldMap() {
             const d = buildSmoothPath(lava.points);
             return (
               <g key={`lava_${idx}`}>
-                <path d={d} fill="none" stroke="rgba(50,10,0,0.4)" strokeWidth={lava.width + 1.5} strokeLinecap="round" strokeLinejoin="round" />
                 <path d={d} fill="none" stroke={lava.color} strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 4px rgba(255,100,0,0.6))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                <path d={d} fill="none" stroke="rgba(255,200,50,0.2)" strokeWidth={lava.width * 0.4} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                <path d={d} fill="none" stroke="rgba(255,200,50,0.3)" strokeWidth={lava.width * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
               </g>
             );
           })}
@@ -1053,9 +1044,17 @@ export default function WorldMap() {
             {editLandmarks.map((lm, idx) => {
               if (!lm.points || lm.points.length < 2) return null;
               const d = lm.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
+              if (lm.type === 'lava') {
+                return (
+                  <g key={`elm_${idx}`}>
+                    <path d={d} fill="none" stroke={lm.color} strokeWidth={lm.width || 1} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 4px rgba(255,100,0,0.6))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                    <path d={d} fill="none" stroke="rgba(255,200,50,0.3)" strokeWidth={(lm.width || 1) * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                  </g>
+                );
+              }
               return (
                 <g key={`elm_${idx}`}>
-                  <path d={d} fill="none" stroke={lm.type === 'river' ? 'rgba(200,230,255,0.08)' : 'rgba(255,100,50,0.08)'} strokeWidth={(lm.width || 1) + 0.8} strokeLinecap="round" />
+                  <path d={d} fill="none" stroke="rgba(200,230,255,0.08)" strokeWidth={(lm.width || 1) + 0.8} strokeLinecap="round" />
                   <path d={d} fill="none" stroke={lm.color} strokeWidth={lm.width || 1} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 3px ${lm.color})` }} />
                 </g>
               );
