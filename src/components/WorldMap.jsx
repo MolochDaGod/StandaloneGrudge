@@ -4045,45 +4045,69 @@ export default function WorldMap() {
 
       {markerMode && devSubMode === 'pathfinding' && !drawingRoute && (
         <div data-marker-menu style={{
-          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
-          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
-          backdropFilter: 'blur(8px)',
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          zIndex: MAP_LAYERS.POPUPS, background: 'linear-gradient(0deg, rgba(10,14,30,0.98) 0%, rgba(10,14,30,0.92) 80%, transparent 100%)',
+          borderTop: '1px solid rgba(180,160,120,0.3)',
+          padding: '14px 20px 12px',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12,
+          backdropFilter: 'blur(10px)',
         }}>
+          {editRoutes.length > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(180,160,120,0.08)', borderRadius: 8, padding: '4px 10px',
+              border: '1px solid rgba(180,160,120,0.15)',
+            }}>
+              <span style={{ fontSize: '0.6rem', color: 'rgba(180,160,120,0.5)' }}>Strokes</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--font-cinzel)' }}>{editRoutes.length}</span>
+              <span style={{ fontSize: '0.5rem', color: 'rgba(180,160,120,0.4)' }}>
+                ({editRoutes.reduce((s, r) => s + (r.points?.length || 0), 0)} pts)
+              </span>
+            </div>
+          )}
           <button onClick={() => {
             setDrawingRoute('road');
             setRoutePoints([]);
           }} style={{
-            padding: '6px 14px', background: 'rgba(180,160,120,0.15)',
-            border: '1px solid rgba(180,160,120,0.4)', borderRadius: 8,
-            color: 'rgb(180,160,120)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            padding: '8px 18px', background: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(180,160,120,0.1))',
+            border: '1px solid rgba(251,191,36,0.4)', borderRadius: 8,
+            color: 'var(--gold)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+            fontFamily: 'var(--font-cinzel)', letterSpacing: '0.03em',
           }}>Paint Roads</button>
-          {editRoutes.length > 0 && (
-            <button onClick={() => {
-              const next = editRoutes.slice(0, -1);
-              setEditRoutes(next);
-              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
-            }} style={{
-              padding: '6px 14px', background: 'rgba(239,68,68,0.15)',
-              border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8,
-              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>Undo Last</button>
-          )}
           {editRoutes.length > 1 && (
             <button onClick={() => {
               const merged = mergeRouteStrokes(editRoutes);
               setEditRoutes(merged);
               localStorage.setItem('mapEditRoutes', JSON.stringify(merged));
             }} style={{
-              padding: '6px 14px', background: 'rgba(74,222,128,0.15)',
-              border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8,
-              color: '#4ade80', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>Merge ({editRoutes.length})</button>
+              padding: '8px 18px', background: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.08))',
+              border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8,
+              color: '#4ade80', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+              fontFamily: 'var(--font-cinzel)', letterSpacing: '0.03em',
+            }}>Merge All</button>
           )}
           {editRoutes.length > 0 && (
-            <span style={{ fontSize: '0.55rem', color: 'rgba(180,160,120,0.6)' }}>
-              {editRoutes.length} stroke{editRoutes.length !== 1 ? 's' : ''}
-            </span>
+            <button onClick={() => {
+              const next = editRoutes.slice(0, -1);
+              setEditRoutes(next);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
+            }} style={{
+              padding: '8px 14px', background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>Undo</button>
+          )}
+          {editRoutes.length > 0 && (
+            <button onClick={() => {
+              if (confirm('Clear all road strokes?')) {
+                setEditRoutes([]);
+                localStorage.setItem('mapEditRoutes', '[]');
+              }
+            }} style={{
+              padding: '8px 14px', background: 'rgba(239,68,68,0.05)',
+              border: '1px solid rgba(239,68,68,0.15)', borderRadius: 8,
+              color: 'rgba(248,113,113,0.6)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>Clear All</button>
           )}
         </div>
       )}
@@ -4125,52 +4149,60 @@ export default function WorldMap() {
 
       {markerMode && devSubMode === 'pathfinding' && drawingRoute && (
         <div data-marker-menu style={{
-          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
-          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 10, alignItems: 'center',
-          backdropFilter: 'blur(8px)',
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          zIndex: MAP_LAYERS.POPUPS, background: 'linear-gradient(0deg, rgba(10,14,30,0.98) 0%, rgba(10,14,30,0.92) 80%, transparent 100%)',
+          borderTop: '1px solid rgba(251,191,36,0.3)',
+          padding: '14px 20px 12px',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12,
+          backdropFilter: 'blur(10px)',
         }}>
-          <span style={{ color: 'rgb(251,191,36)', fontSize: '0.65rem', fontWeight: 700 }}>
-            Painting Mode
-          </span>
-          <span style={{ color: 'rgba(180,160,120,0.7)', fontSize: '0.55rem' }}>Width:</span>
-          <input type="range" min="1" max="6" step="0.5" value={roadWidth}
-            onChange={e => setRoadWidth(parseFloat(e.target.value))}
-            style={{ width: 60, accentColor: '#b4a078', cursor: 'pointer' }}
-          />
-          <span style={{ color: 'rgba(180,160,120,0.7)', fontSize: '0.55rem', minWidth: 16 }}>{roadWidth}</span>
-          {editRoutes.length > 0 && (
-            <button onClick={() => {
-              const next = editRoutes.slice(0, -1);
-              setEditRoutes(next);
-              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
-            }} style={{
-              padding: '4px 10px', background: 'rgba(239,68,68,0.15)',
-              border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6,
-              color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
-            }}>Undo Last</button>
-          )}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'rgba(251,191,36,0.1)', borderRadius: 8, padding: '5px 10px',
+            border: '1px solid rgba(251,191,36,0.25)',
+          }}>
+            <span style={{ fontSize: '0.55rem', color: 'rgba(251,191,36,0.7)' }}>Painting</span>
+            {editRoutes.length > 0 && (
+              <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, fontFamily: 'var(--font-cinzel)', marginLeft: 4 }}>{editRoutes.length}</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(180,160,120,0.06)', borderRadius: 8, padding: '4px 10px', border: '1px solid rgba(180,160,120,0.12)' }}>
+            <span style={{ color: 'rgba(180,160,120,0.6)', fontSize: '0.6rem' }}>Width</span>
+            <input type="range" min="1" max="6" step="0.5" value={roadWidth}
+              onChange={e => setRoadWidth(parseFloat(e.target.value))}
+              style={{ width: 70, accentColor: '#b4a078', cursor: 'pointer' }}
+            />
+            <span style={{ color: 'var(--gold)', fontSize: '0.7rem', fontWeight: 600, minWidth: 16, fontFamily: 'var(--font-cinzel)' }}>{roadWidth}</span>
+          </div>
           {editRoutes.length > 1 && (
             <button onClick={() => {
               const merged = mergeRouteStrokes(editRoutes);
               setEditRoutes(merged);
               localStorage.setItem('mapEditRoutes', JSON.stringify(merged));
             }} style={{
-              padding: '4px 10px', background: 'rgba(74,222,128,0.15)',
-              border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6,
-              color: '#4ade80', cursor: 'pointer', fontSize: '0.6rem',
-            }}>Merge ({editRoutes.length})</button>
+              padding: '8px 16px', background: 'linear-gradient(135deg, rgba(74,222,128,0.2), rgba(74,222,128,0.08))',
+              border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8,
+              color: '#4ade80', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700,
+              fontFamily: 'var(--font-cinzel)',
+            }}>Merge All</button>
+          )}
+          {editRoutes.length > 0 && (
+            <button onClick={() => {
+              const next = editRoutes.slice(0, -1);
+              setEditRoutes(next);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
+            }} style={{
+              padding: '8px 14px', background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>Undo</button>
           )}
           <button onClick={() => { setDrawingRoute(null); setRoutePoints([]); }} style={{
-            padding: '4px 12px', background: 'rgba(180,160,120,0.15)',
-            border: '1px solid rgba(180,160,120,0.4)', borderRadius: 6,
-            color: 'rgb(180,160,120)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 600,
+            padding: '8px 18px', background: 'linear-gradient(135deg, rgba(180,160,120,0.2), rgba(180,160,120,0.08))',
+            border: '1px solid rgba(180,160,120,0.4)', borderRadius: 8,
+            color: 'rgb(180,160,120)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+            fontFamily: 'var(--font-cinzel)', letterSpacing: '0.03em',
           }}>Done</button>
-          {editRoutes.length > 0 && (
-            <span style={{ fontSize: '0.5rem', color: 'rgba(180,160,120,0.5)' }}>
-              {editRoutes.length} stroke{editRoutes.length !== 1 ? 's' : ''}
-            </span>
-          )}
         </div>
       )}
 
