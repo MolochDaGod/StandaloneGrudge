@@ -357,16 +357,19 @@ export default function WorldMap() {
   useEffect(() => {
     const interval = setInterval(() => {
       const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+      const groupX = (Math.random() - 0.5) * 3;
+      const groupY = (Math.random() - 0.5) * 1.5;
+      const prevGroupX = wanderOffsets[activeHeroes[0]?.id]?.x || 0;
       const newOffsets = {};
       const newWalking = {};
-      activeHeroes.forEach(h => {
-        const prevX = wanderOffsets[h.id]?.x || 0;
-        const newX = (Math.random() - 0.5) * 4;
+      activeHeroes.forEach((h, i) => {
+        const jitterX = (Math.random() - 0.5) * 0.6;
+        const jitterY = (Math.random() - 0.5) * 0.4;
         newOffsets[h.id] = {
-          x: newX,
-          y: (Math.random() - 0.5) * 2,
+          x: groupX + jitterX,
+          y: groupY + jitterY,
         };
-        newWalking[h.id] = { moving: true, flipX: newX < prevX };
+        newWalking[h.id] = { moving: true, flipX: groupX < prevGroupX };
       });
       setWanderOffsets(newOffsets);
       setHeroWalking(newWalking);
@@ -387,18 +390,18 @@ export default function WorldMap() {
   useEffect(() => {
     const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
     if (activeHeroes.length < 2) return;
-    const delay = 12000 + Math.random() * 3000;
+    const delay = 5000 + Math.random() * 3000;
     const timeout = setTimeout(() => {
       const gameState = { gold, level, currentZone, zoneConquer, bossesDefeated, locationsCleared, victories, locations };
       const dialogue = generateDialogue(activeHeroes, gameState);
       if (dialogue) {
         setCurrentDialogue(dialogue);
         setDialoguePhase(1);
-        setTimeout(() => setDialoguePhase(2), 4000);
+        setTimeout(() => setDialoguePhase(2), 2500);
         setTimeout(() => {
           setDialoguePhase(0);
           setTimeout(() => setCurrentDialogue(null), 600);
-        }, 8000);
+        }, 6000);
       }
     }, delay);
     return () => clearTimeout(timeout);
@@ -1222,8 +1225,8 @@ export default function WorldMap() {
                       />
                     </div>
                     <div style={{
-                      width: 36, height: 8, borderRadius: '50%', marginTop: -4,
-                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.7), transparent)',
+                      width: 32, height: 6, borderRadius: '50%', marginTop: -10,
+                      background: 'radial-gradient(ellipse, rgba(0,0,0,0.6), transparent)',
                     }} />
                     <div style={{
                       textAlign: 'center',

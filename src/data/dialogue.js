@@ -104,6 +104,62 @@ const GOAL_CHATTER = [
   ["{a}: We should recruit another hero.", "{b}: More allies means more firepower!"],
 ];
 
+const RACE_CHATTER = {
+  human: [
+    "{name}: For honor and the realm!",
+    "{name}: Humanity's strength lies in our resilience.",
+    "{name}: The Crusade marches ever onward.",
+  ],
+  barbarian: [
+    "{name}: *cracks knuckles* When do we fight?",
+    "{name}: These civilized lands make me restless.",
+    "{name}: Odin watches over us. I can feel it.",
+  ],
+  orc: [
+    "{name}: Blood and iron! That's all that matters.",
+    "{name}: The Legion's enemies will know fear.",
+    "{name}: *sharpens weapon aggressively*",
+  ],
+  undead: [
+    "{name}: Death is not the end... merely a beginning.",
+    "{name}: The living fear what they don't understand.",
+    "{name}: Madra's whispers guide my every step.",
+  ],
+  elf: [
+    "{name}: The ancient magic stirs in this place.",
+    "{name}: Nature speaks to those who listen.",
+    "{name}: The Omni's wisdom flows through all things.",
+  ],
+  dwarf: [
+    "{name}: Nothing beats dwarven craftsmanship!",
+    "{name}: *examines nearby rocks* Good mineral deposits here.",
+    "{name}: The Fabled ones endure. Always have, always will.",
+  ],
+};
+
+const CLASS_CHATTER = {
+  warrior: [
+    "{name}: My blade thirsts for battle.",
+    "{name}: A true warrior never backs down.",
+    "{name}: Let me take the front line.",
+  ],
+  mage: [
+    "{name}: I sense arcane energy nearby...",
+    "{name}: Knowledge is the greatest weapon.",
+    "{name}: My spells are charged and ready.",
+  ],
+  rogue: [
+    "{name}: *checks the shadows* All clear... for now.",
+    "{name}: The best fights are the ones you win before they start.",
+    "{name}: I found a shortcut. Follow me.",
+  ],
+  cleric: [
+    "{name}: May the light protect us all.",
+    "{name}: I'll keep everyone healed, don't worry.",
+    "{name}: Even in darkness, hope endures.",
+  ],
+};
+
 export function generateDialogue(heroes, gameState) {
   if (!heroes || heroes.length < 2) return null;
 
@@ -137,7 +193,31 @@ export function generateDialogue(heroes, gameState) {
     }
   }
 
-  if (Math.random() > 0.4) {
+  if (Math.random() > 0.3) {
+    const roll = Math.random();
+    if (roll < 0.25) {
+      const raceLines1 = RACE_CHATTER[hero1.raceId] || [];
+      const raceLines2 = RACE_CHATTER[hero2.raceId] || CLASS_CHATTER[hero2.classId] || [];
+      if (raceLines1.length && raceLines2.length) {
+        return {
+          speaker1: hero1,
+          speaker2: hero2,
+          line1: raceLines1[Math.floor(Math.random() * raceLines1.length)].replace('{name}', hero1.name),
+          line2: raceLines2[Math.floor(Math.random() * raceLines2.length)].replace('{name}', hero2.name),
+        };
+      }
+    } else if (roll < 0.45) {
+      const classLines1 = CLASS_CHATTER[hero1.classId] || [];
+      const classLines2 = CLASS_CHATTER[hero2.classId] || RACE_CHATTER[hero2.raceId] || [];
+      if (classLines1.length && classLines2.length) {
+        return {
+          speaker1: hero1,
+          speaker2: hero2,
+          line1: classLines1[Math.floor(Math.random() * classLines1.length)].replace('{name}', hero1.name),
+          line2: classLines2[Math.floor(Math.random() * classLines2.length)].replace('{name}', hero2.name),
+        };
+      }
+    }
     const goalPool = GOAL_CHATTER;
     const genericPool = GENERIC_CHATTER;
     const pool = Math.random() > 0.5 ? goalPool : genericPool;
@@ -147,6 +227,17 @@ export function generateDialogue(heroes, gameState) {
       speaker2: hero2,
       line1: pair[0].replace('{a}', hero1.name).replace('{b}', hero2.name),
       line2: pair[1].replace('{a}', hero1.name).replace('{b}', hero2.name),
+    };
+  }
+
+  const fallbackRace = RACE_CHATTER[hero1.raceId] || RACE_CHATTER[hero2.raceId];
+  const fallbackClass = CLASS_CHATTER[hero2.classId] || CLASS_CHATTER[hero1.classId];
+  if (fallbackRace && fallbackClass) {
+    return {
+      speaker1: hero1,
+      speaker2: hero2,
+      line1: fallbackRace[Math.floor(Math.random() * fallbackRace.length)].replace('{name}', hero1.name),
+      line2: fallbackClass[Math.floor(Math.random() * fallbackClass.length)].replace('{name}', hero2.name),
     };
   }
 
