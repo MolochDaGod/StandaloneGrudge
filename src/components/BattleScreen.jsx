@@ -1074,12 +1074,12 @@ function getHitEffect(unit, abilityName, isRanged, abilityId) {
     const demonFx = fx.effect && fx.effect.startsWith('demonSlash') ? fx.effect : demonSlashes[Math.floor(Math.random() * demonSlashes.length)];
     return { sprite: effectSprites[demonFx], filter: null, postHeal: null };
   }
-  if (fx.effect) return { sprite: effectSprites[fx.effect], filter: fx.effectFilter || null, postHeal: fx.postHealEffect ? effectSprites[fx.postHealEffect] : null };
+  if (fx.effect) return { sprite: effectSprites[fx.effect], filter: fx.effectFilter || null, postHeal: fx.postHealEffect ? effectSprites[fx.postHealEffect] : null, followUp: fx.followUp || null };
   if (isRanged) {
     const color = getProjectileColor(unit, abilityName);
-    return { sprite: getHitEffectByColor(color), filter: null, postHeal: null };
+    return { sprite: getHitEffectByColor(color), filter: null, postHeal: null, followUp: null };
   }
-  return { sprite: effectSprites.hitEffect1, filter: null, postHeal: null };
+  return { sprite: effectSprites.hitEffect1, filter: null, postHeal: null, followUp: null };
 }
 
 export default function BattleScreen() {
@@ -1319,6 +1319,20 @@ export default function BattleScreen() {
     setTimeout(() => setSlashImpactFx(prev => prev.filter(s => s.id !== id)), 500);
   }, []);
 
+  const spawnFollowUpEffects = useCallback((followUp, x, y, filterOverride) => {
+    if (!followUp || !Array.isArray(followUp)) return;
+    followUp.forEach(fu => {
+      const sprite = effectSprites[fu.effect];
+      if (!sprite) return;
+      setTimeout(() => {
+        const fid = Date.now() + Math.random();
+        setHitEffects(prev => [...prev, { id: fid, x, y, sprite, filter: fu.filter || filterOverride || null }]);
+        const dur = (sprite.frames || 6) * 50 + 200;
+        setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== fid)), dur);
+      }, fu.delay || 0);
+    });
+  }, []);
+
   useEffect(() => {
     if (!lastAction || lastAction === actionProcessed.current) return;
     actionProcessed.current = lastAction;
@@ -1414,6 +1428,7 @@ export default function BattleScreen() {
               const hid = Date.now() + Math.random();
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR.sprite, filter: hfxR.filter }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
+              if (hfxR.followUp) spawnFollowUpEffects(hfxR.followUp, target.position.x, target.position.y, hfxR.filter);
             }
             if (isCrit) { playCrit(); spawnSlashImpact(target?.position?.x, target?.position?.y, 'large', getSlashColor(abilityType, abilityName, attacker.classId)); } else { playHurt(); spawnSlashImpact(target?.position?.x, target?.position?.y, 'small', getSlashColor(abilityType, abilityName, attacker.classId)); }
             spawnWeaponContact(target.position.x, target.position.y, 1);
@@ -1488,6 +1503,7 @@ export default function BattleScreen() {
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR2.sprite, filter: hfxR2.filter }]);
               const effectDur = (hfxR2.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxR2.followUp) spawnFollowUpEffects(hfxR2.followUp, target.position.x, target.position.y, hfxR2.filter);
             }
             if (isCrit) {
               playCrit();
@@ -1535,6 +1551,7 @@ export default function BattleScreen() {
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxIce.sprite, filter: hfxIce.filter || 'hue-rotate(180deg) brightness(1.3)' }]);
               const effectDur = (hfxIce.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxIce.followUp) spawnFollowUpEffects(hfxIce.followUp, target.position.x, target.position.y, hfxIce.filter);
             }
             if (isCrit) {
               playCrit();
@@ -1585,6 +1602,7 @@ export default function BattleScreen() {
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxW.sprite, filter: hfxW.filter || 'hue-rotate(160deg) brightness(1.3)' }]);
               const effectDur = (hfxW.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxW.followUp) spawnFollowUpEffects(hfxW.followUp, target.position.x, target.position.y, hfxW.filter);
             }
             if (isCrit) {
               playCrit();
@@ -1621,12 +1639,18 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             addParticle('hit', target.position.x, target.position.y, '#22c55e');
+            if (target.position && effectSprites.windProjectile) {
+              const wpId = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: wpId, x: target.position.x, y: target.position.y, sprite: effectSprites.windProjectile, filter: 'hue-rotate(90deg) saturate(2)' }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== wpId)), 500);
+            }
             const hfxP = getHitEffect(attacker, abilityName, true);
             if (hfxP.sprite && target.position) {
               const hid = Date.now() + Math.random();
               setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxP.sprite, filter: hfxP.filter || 'hue-rotate(90deg) saturate(2)' }]);
               const effectDur = (hfxP.sprite.frames || 18) * 35 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxP.followUp) spawnFollowUpEffects(hfxP.followUp, target.position.x, target.position.y, hfxP.filter || 'hue-rotate(90deg) saturate(2)');
             }
             if (isCrit) {
               playCrit();
@@ -1687,6 +1711,7 @@ export default function BattleScreen() {
                   setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR3.sprite, filter: hfxR3.filter }]);
                   const effectDur = (hfxR3.sprite.frames || 36) * 30 + 100;
                   setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                  if (hfxR3.followUp) spawnFollowUpEffects(hfxR3.followUp, target.position.x, target.position.y, hfxR3.filter);
                 }
                 if (isCrit) {
                   playCrit();
@@ -1748,6 +1773,7 @@ export default function BattleScreen() {
                 setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y + 2, sprite: hfxLeap.sprite, filter: hfxLeap.filter }]);
                 const effectDur = (hfxLeap.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxLeap.followUp) spawnFollowUpEffects(hfxLeap.followUp, target.position.x, target.position.y + 2, hfxLeap.filter);
               }
               if (isCrit) {
                 playCrit();
@@ -1806,6 +1832,7 @@ export default function BattleScreen() {
                 setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR4.sprite, filter: hfxR4.filter }]);
                 const effectDur = (hfxR4.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxR4.followUp) spawnFollowUpEffects(hfxR4.followUp, target.position.x, target.position.y, hfxR4.filter);
               }
               if (isCrit) {
                 playCrit();
@@ -1847,6 +1874,7 @@ export default function BattleScreen() {
                 setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR5.sprite, filter: hfxR5.filter }]);
                 const effectDur = (hfxR5.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxR5.followUp) spawnFollowUpEffects(hfxR5.followUp, target.position.x, target.position.y, hfxR5.filter);
               }
               if (isCrit) {
                 playCrit();
@@ -1898,6 +1926,7 @@ export default function BattleScreen() {
           const hid = Date.now() + Math.random();
           setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
           setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+          if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, target.position.x, target.position.y, hfxR6.filter);
           if (hfxR6.postHeal && target.position) {
             setTimeout(() => {
               const phid = Date.now() + Math.random();
@@ -1915,6 +1944,7 @@ export default function BattleScreen() {
             const hid = Date.now() + Math.random();
             setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, attacker.position.y, hfxR6.filter);
             if (hfxR6.postHeal && attacker.position) {
               setTimeout(() => {
                 const phid = Date.now() + Math.random();
@@ -1932,6 +1962,7 @@ export default function BattleScreen() {
             const hid = Date.now() + Math.random();
             setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: attacker.position.y, sprite: hfxR6.sprite, filter: hfxR6.filter }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, attacker.position.y, hfxR6.filter);
           }
         }
       }
