@@ -302,7 +302,7 @@ export default function LocationView() {
                 <div style={{ fontSize: '0.6rem', color: 'var(--muted)', display: 'flex', gap: 8, alignItems: 'center' }}>
                   <span>Lv.{loc.levelRange[0]}-{loc.levelRange[1]}</span>
                   {bossDefeated && <span style={{ color: 'var(--gold)' }}>Boss Cleared</span>}
-                  {conquer > 0 && <span style={{ color: conquer >= 100 ? 'var(--gold)' : clsColor, fontWeight: 600 }}>CP: {conquer}%</span>}
+                  {conquer > 0 && <span style={{ color: conquer >= 100 ? 'var(--gold)' : clsColor, fontWeight: 600 }}>CP: {Math.floor(conquer)}%</span>}
                 </div>
               </div>
             </div>

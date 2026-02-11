@@ -3,6 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { InlineIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 import { getRaceClassSprite } from '../data/spriteMap';
+import { setBgm } from '../utils/audioManager';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -26,6 +27,7 @@ export default function LobbyScreen() {
   const hasExistingSave = playerName && playerName.length > 0;
 
   useEffect(() => {
+    setBgm('intro');
     const t = setTimeout(() => setFadeIn(true), 100);
     return () => clearTimeout(t);
   }, []);

@@ -11,6 +11,8 @@ import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
 
+function floorTo2(n) { return Math.floor(n * 100) / 100; }
+
 function getHeroSkillBonuses(hero) {
   const bonuses = {};
   if (!hero.classId) return bonuses;
@@ -1820,9 +1822,9 @@ const useGameStore = create(persist((set, get) => ({
     const currentConquer = zoneConquer[locId] || 0;
 
     const conquerGain = state.battleState?.isBoss ? 25 : Math.max(1, Math.floor(8 - currentConquer * 0.06));
-    zoneConquer[locId] = Math.min(100, currentConquer + conquerGain);
+    zoneConquer[locId] = floorTo2(Math.min(100, currentConquer + conquerGain));
 
-    const xpReduction = currentConquer / 100 * 0.7;
+    const xpReduction = floorTo2(currentConquer / 100 * 0.7);
     const rawXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
     const totalXp = Math.max(1, Math.floor(rawXp * (1 - xpReduction)));
     const eventBonus = state.eventBonusRewards || null;
@@ -1876,7 +1878,7 @@ const useGameStore = create(persist((set, get) => ({
 
     const newConquer = zoneConquer[locId] || 0;
     log.push(`Victory! Gained ${adjustedTotalXp} XP and ${totalGold} Gold.${eventBonus ? ' (Event Bonus!)' : ''}`);
-    if (locId) log.push(`Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
+    if (locId) log.push(`Zone conquered: ${Math.floor(newConquer)}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
 
     const lootDrops = [];
     enemyUnits.forEach(e => {
@@ -2231,7 +2233,7 @@ const useGameStore = create(persist((set, get) => ({
     completed[zoneId] = [...completed[zoneId], questId];
     const zoneConquer = { ...state.zoneConquer };
     if (conquerBonus && zoneId) {
-      zoneConquer[zoneId] = Math.min(100, (zoneConquer[zoneId] || 0) + conquerBonus);
+      zoneConquer[zoneId] = floorTo2(Math.min(100, (zoneConquer[zoneId] || 0) + conquerBonus));
     }
     set({
       completedQuests: completed,
@@ -2313,7 +2315,7 @@ const useGameStore = create(persist((set, get) => ({
     let goldGained = 0;
 
     const maxConquer = Math.max(0, ...Object.values(state.zoneConquer || {}));
-    const conquerHarvestMult = 1 + (maxConquer / 100) * 3;
+    const conquerHarvestMult = floorTo2(1 + (maxConquer / 100) * 3);
 
     const zoneConquer = { ...state.zoneConquer };
     let conquerChanged = false;
@@ -2327,7 +2329,7 @@ const useGameStore = create(persist((set, get) => ({
       if (node.resource === 'gold') {
         goldGained += Math.floor(amount);
       } else {
-        newResources[node.resource] = (newResources[node.resource] || 0) + amount;
+        newResources[node.resource] = floorTo2((newResources[node.resource] || 0) + amount);
       }
     });
 
@@ -2335,9 +2337,9 @@ const useGameStore = create(persist((set, get) => ({
       const zoneId = state.heroStandingZone;
       const current = zoneConquer[zoneId] || 0;
       if (current < 100) {
-        const passiveRate = Math.max(0.05, 0.25 - current * 0.002);
-        const passiveGain = passiveRate * (elapsed / 2);
-        zoneConquer[zoneId] = Math.min(100, current + passiveGain);
+        const passiveRate = floorTo2(Math.max(0.05, 0.25 - current * 0.002));
+        const passiveGain = floorTo2(passiveRate * (elapsed / 2));
+        zoneConquer[zoneId] = floorTo2(Math.min(100, current + passiveGain));
         conquerChanged = true;
       }
     }
@@ -2346,8 +2348,8 @@ const useGameStore = create(persist((set, get) => ({
       const zoneId = state.heroStandingZone;
       const current = zoneConquer[zoneId] || 0;
       if (current < 100) {
-        const harvestConquerGain = Object.keys(state.activeHarvests).length * 0.08 * (elapsed / 2);
-        zoneConquer[zoneId] = Math.min(100, current + harvestConquerGain);
+        const harvestConquerGain = floorTo2(Object.keys(state.activeHarvests).length * 0.08 * (elapsed / 2));
+        zoneConquer[zoneId] = floorTo2(Math.min(100, current + harvestConquerGain));
         conquerChanged = true;
       }
     }

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
+import { setBgm } from '../utils/audioManager';
 
 export default function TitleScreen() {
   const setScreen = useGameStore(s => s.setScreen);
   const [fadeClass, setFadeClass] = useState(false);
 
   useEffect(() => {
+    setBgm('intro');
     const t1 = setTimeout(() => setFadeClass(true), 200);
     return () => clearTimeout(t1);
   }, []);

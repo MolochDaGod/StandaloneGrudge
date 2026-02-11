@@ -1892,7 +1892,7 @@ export default function WorldMap() {
                     whiteSpace: 'nowrap',
                     boxShadow: isConquered ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
                   }}>
-                    {conquer}%
+                    {Math.floor(conquer)}%
                   </div>
                 )}
               </div>
@@ -2122,7 +2122,7 @@ export default function WorldMap() {
               }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
                 <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
-                  Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {conquer}% conquered
+                  Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {Math.floor(conquer)}% conquered
                 </div>
                 {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
                 {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}

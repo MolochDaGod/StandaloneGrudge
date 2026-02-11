@@ -113,7 +113,38 @@ export function playClick() {
   playNote(600, 0.05, 'sine', sfxGain, 0.06);
 }
 
+let introAudio = null;
+
+function stopIntroMusic() {
+  if (introAudio) {
+    introAudio.pause();
+    introAudio.currentTime = 0;
+    introAudio = null;
+  }
+}
+
+function startIntroMusic() {
+  if (currentBgm === 'intro') return;
+  stopBgm();
+  currentBgm = 'intro';
+  introAudio = new Audio('/audio/intro_theme.mp3');
+  introAudio.loop = true;
+  introAudio.volume = musicMuted ? 0 : Math.min(musicVolume, 0.45);
+  introAudio.play().catch(() => {
+    const tryPlay = () => {
+      if (introAudio && currentBgm === 'intro') {
+        introAudio.play().catch(() => {});
+      }
+      window.removeEventListener('click', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
+    };
+    window.addEventListener('click', tryPlay, { once: true });
+    window.addEventListener('keydown', tryPlay, { once: true });
+  });
+}
+
 function stopBgm() {
+  stopIntroMusic();
   bgmNodes.forEach(n => {
     try { n.stop(); } catch(e) {}
   });
@@ -220,7 +251,8 @@ function startBattleMusic() {
 }
 
 export function setBgm(type) {
-  if (type === 'battle') startBattleMusic();
+  if (type === 'intro') startIntroMusic();
+  else if (type === 'battle') startBattleMusic();
   else if (type === 'ambient') startAmbientMusic();
   else stopBgm();
 }
@@ -237,6 +269,7 @@ let sfxVolume = 0.25;
 export function setMusicMuted(muted) {
   musicMuted = muted;
   if (bgmGain) bgmGain.gain.value = muted ? 0 : musicVolume;
+  if (introAudio) introAudio.volume = muted ? 0 : Math.min(musicVolume, 0.45);
 }
 
 export function setSfxMuted(muted) {
@@ -247,6 +280,7 @@ export function setSfxMuted(muted) {
 export function setMusicVolume(vol) {
   musicVolume = vol;
   if (bgmGain && !musicMuted) bgmGain.gain.value = vol;
+  if (introAudio && !musicMuted) introAudio.volume = Math.min(vol, 0.45);
 }
 
 export function setSfxVolume(vol) {
