@@ -13,6 +13,7 @@ import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getIt
 import { generateDialogue } from '../data/dialogue';
 import { generateRandomEvent, getRewardDescription } from '../data/randomEvents';
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
+import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverStyle, nodeScale as calcNodeScale } from './mapConstants';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -850,21 +851,17 @@ export default function WorldMap() {
         transition: isDragging ? 'none' : 'transform 0.3s ease-out',
         boxShadow: 'inset 0 0 0 4px rgba(45,35,18,0.85), inset 0 0 0 5px rgba(139,109,56,0.5), inset 0 0 0 6px rgba(30,22,10,0.9), inset 0 0 20px rgba(0,0,0,0.6), inset 0 0 4px rgba(180,140,60,0.15)',
       }}>
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        <div style={fullCoverStyle(MAP_LAYERS.TERRAIN_FILL, {
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
-          pointerEvents: 'none',
-        }} />
+        })} />
 
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          pointerEvents: 'none', zIndex: 1,
+        <div style={fullCoverStyle(MAP_LAYERS.DAY_NIGHT, {
           background: 'rgba(255,180,80,0.03)',
           animation: 'dayNightCycle 120s linear infinite',
-        }} />
+        })} />
 
         {showDebugGrid && (
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 999 }}>
+          <svg {...svgOverlayProps(MAP_LAYERS.DEBUG_GRID)}>
             {Array.from({ length: 11 }).map((_, i) => (
               <g key={`gridline_${i}`}>
                 <line x1={i * 10} y1={0} x2={i * 10} y2={100} stroke="rgba(255,255,255,0.1)" strokeWidth="0.15" />
@@ -879,7 +876,7 @@ export default function WorldMap() {
           </svg>
         )}
 
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+        <svg {...svgOverlayProps(MAP_LAYERS.TERRAIN_SVG)}>
           {terrainRegions.map((region, idx) => (
             <polygon key={idx}
               points={region.points}
@@ -899,7 +896,7 @@ export default function WorldMap() {
               position: 'absolute',
               left: `${lx}%`, top: `${ly}%`,
               transform: 'translate(-50%, -50%)',
-              pointerEvents: 'auto', zIndex: 2,
+              pointerEvents: 'auto', zIndex: MAP_LAYERS.REGION_LABELS,
               cursor: 'default',
               userSelect: 'none',
               fontFamily: "'MedievalSharp', cursive",
@@ -951,7 +948,7 @@ export default function WorldMap() {
           );
         })}
 
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+        <svg {...svgOverlayProps(MAP_LAYERS.LANDMARKS)}>
           {mapLandmarks.filter(l => l.type === 'river').map((river, idx) => {
             const d = buildSmoothPath(river.points);
             return (
@@ -1045,7 +1042,7 @@ export default function WorldMap() {
         })()}
 
         {markerMode && (
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 3 }}>
+          <svg {...svgOverlayProps(MAP_LAYERS.LANDMARKS)}>
             {Object.entries(movementAreas).map(([nodeId, pts]) => {
               if (!pts || pts.length < 3) return null;
               const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ') + ' Z';
@@ -1077,7 +1074,7 @@ export default function WorldMap() {
         )}
 
         {(editRoutes.length > 0 || editLandmarks.length > 0 || routePoints.length > 0 || landmarkPoints.length > 0) && (
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+          <svg {...svgOverlayProps(MAP_LAYERS.ROADS)}>
             {editLandmarks.map((lm, idx) => {
               if (!lm.points || lm.points.length < 2) return null;
               const d = lm.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
@@ -1137,7 +1134,7 @@ export default function WorldMap() {
               position: 'absolute',
               left: `${eff.x}%`, top: `${eff.y}%`,
               transform: `translate(-50%, -50%) scale(${effScale})`,
-              pointerEvents: 'none', zIndex: 4,
+              pointerEvents: 'none', zIndex: MAP_LAYERS.EFFECTS,
             }}>
               <div style={{
                 width: eff.size * 10 || 30, height: eff.size * 10 || 30,
@@ -1173,7 +1170,7 @@ export default function WorldMap() {
           const isConquered = conquer >= 100;
           const circumference = 2 * Math.PI * 26;
           const strokeDash = (conquer / 100) * circumference;
-          const nodeScale = Math.max(0.3, 1 / camZoom);
+          const ns = calcNodeScale(camZoom);
 
           return (
             <div key={loc.id}
@@ -1181,14 +1178,10 @@ export default function WorldMap() {
               onContextMenu={(e) => handleNodeRightClick(e, loc)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'location', id: loc.id, x: pos.x, y: pos.y }); }}
               onMouseLeave={() => setHoveredNode(null)}
-              style={{
-                position: 'absolute',
-                left: `${pos.x}%`, top: `${pos.y}%`,
-                transform: `translate(-50%, -50%) scale(${nodeScale})`,
-                zIndex: isSelected ? 10 : 3,
+              style={mapNodeStyle(pos, ns, isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.NODES, {
                 cursor: isUnlocked ? 'pointer' : 'not-allowed',
                 transition: 'transform 0.3s',
-              }}
+              })}
             >
               <div style={{ position: 'relative', width: 42, height: 42 }}>
                 {isUnlocked && portalLocations.includes(loc.id) && (
@@ -1341,7 +1334,7 @@ export default function WorldMap() {
           const bossOk = !city.unlockBoss || bossesDefeated.includes(city.unlockBoss);
           const isCityUnlocked = city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
           const isSelected = selectedCity === city.id;
-          const cityScale = Math.max(0.3, 1 / camZoom);
+          const cs = calcNodeScale(camZoom);
           const isCityDragging = devDragging === city.id;
 
           return (
@@ -1350,14 +1343,10 @@ export default function WorldMap() {
               onContextMenu={(e) => handleNodeRightClick(e, city)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'city', id: city.id, x: pos.x, y: pos.y, name: city.name }); }}
               onMouseLeave={() => setHoveredNode(null)}
-              style={{
-                position: 'absolute',
-                left: `${pos.x}%`, top: `${pos.y}%`,
-                transform: `translate(-50%, -50%) scale(${cityScale})`,
-                zIndex: isCityDragging ? 999 : isSelected ? 10 : 3,
+              style={mapNodeStyle(pos, cs, isCityDragging ? MAP_LAYERS.DEV_DRAGGING : isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.CITIES, {
                 cursor: isCityDragging ? 'grabbing' : isCityUnlocked ? 'pointer' : 'not-allowed',
                 transition: isCityDragging ? 'none' : 'transform 0.3s',
-              }}
+              })}
             >
               <div style={{ position: 'relative', width: 44, height: 44 }}>
                 <div style={{
@@ -1415,7 +1404,7 @@ export default function WorldMap() {
         {(() => {
           const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-          const heroScale = Math.max(0.35, 1 / camZoom);
+          const heroScale = calcNodeScale(camZoom, 0.35);
           const mapSpriteScale = 1.2;
           const spriteW = 100 * mapSpriteScale;
           const spriteH = 100 * mapSpriteScale;
@@ -1432,7 +1421,7 @@ export default function WorldMap() {
               width: containerW,
               height: containerH,
               transform: `translate(-50%, -65%) scale(${heroScale})`,
-              zIndex: 5,
+              zIndex: MAP_LAYERS.HERO,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
             }}>
@@ -1498,7 +1487,7 @@ export default function WorldMap() {
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
                 transform: 'translate(-50%, -120%)',
                 marginTop: -40,
-                zIndex: 60, pointerEvents: 'none',
+                zIndex: MAP_LAYERS.HOVER_INFO, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
                 border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 8, padding: '8px 12px',
@@ -1522,7 +1511,7 @@ export default function WorldMap() {
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
                 transform: 'translate(-50%, -120%)',
                 marginTop: -40,
-                zIndex: 60, pointerEvents: 'none',
+                zIndex: MAP_LAYERS.HOVER_INFO, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
                 border: '1px solid rgba(74,222,128,0.3)',
                 borderRadius: 8, padding: '8px 12px',
@@ -1560,7 +1549,7 @@ export default function WorldMap() {
                     position: 'absolute',
                     left: `${Math.max(4, Math.min(82, pos.x))}%`,
                     top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    zIndex: MAP_LAYERS.TOOLTIPS, pointerEvents: 'none', maxWidth: 160,
                     animation: 'fadeIn 0.4s ease-out',
                     transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, opacity 0.5s',
                   }}>
@@ -1591,7 +1580,7 @@ export default function WorldMap() {
                     position: 'absolute',
                     left: `${Math.max(4, Math.min(82, pos.x + 3))}%`,
                     top: `${Math.max(2, pos.y - 6)}%`,
-                    zIndex: 12, pointerEvents: 'none', maxWidth: 160,
+                    zIndex: MAP_LAYERS.TOOLTIPS, pointerEvents: 'none', maxWidth: 160,
                     animation: 'fadeIn 0.4s ease-out',
                     transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
                   }}>
@@ -1649,7 +1638,7 @@ export default function WorldMap() {
                 position: 'absolute',
                 left: `${pos.x + 5}%`, top: `${pos.y - 2}%`,
                 transform: `translate(-50%, -100%) scale(${eventScale})`,
-                zIndex: 6, cursor: 'pointer',
+                zIndex: MAP_LAYERS.EVENTS, cursor: 'pointer',
                 transition: 'transform 0.3s',
               }}
             >
@@ -1716,7 +1705,7 @@ export default function WorldMap() {
             position: 'absolute',
             top: '50%',
             transform: 'translateY(-50%)',
-            zIndex: 50,
+            zIndex: MAP_LAYERS.POPUPS,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
             border: `2px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}`,
             borderRadius: 14,
@@ -1846,7 +1835,7 @@ export default function WorldMap() {
               position: 'absolute',
               top: '50%',
               transform: 'translateY(-50%)',
-              zIndex: 50,
+              zIndex: MAP_LAYERS.POPUPS,
               background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
               border: '2px solid #4ade80',
               borderRadius: 14,
@@ -2322,7 +2311,7 @@ export default function WorldMap() {
             position: 'absolute',
             top: '50%',
             transform: 'translateY(-50%)',
-            zIndex: 50,
+            zIndex: MAP_LAYERS.POPUPS,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
             border: `2px solid ${selectedEvent.color}`,
             borderRadius: 14, padding: 0,
@@ -2391,7 +2380,7 @@ export default function WorldMap() {
           background: 'linear-gradient(180deg, rgba(10,14,30,0.92) 0%, rgba(10,14,30,0.7) 70%, transparent 100%)',
           padding: '10px 16px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          flexWrap: 'wrap', gap: 8, zIndex: 15,
+          flexWrap: 'wrap', gap: 8, zIndex: MAP_LAYERS.HUD_BUTTONS,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
@@ -2495,7 +2484,7 @@ export default function WorldMap() {
         </div>
 
         <div style={{
-          position: 'absolute', top: 80, left: 12, zIndex: 14,
+          position: 'absolute', top: 80, left: 12, zIndex: MAP_LAYERS.HUD_PANELS,
           background: 'rgba(8,12,28,0.85)',
           border: '1px solid rgba(110,231,183,0.15)',
           borderRadius: 10, padding: '10px 12px',
@@ -2548,7 +2537,7 @@ export default function WorldMap() {
           };
           return (
           <div style={{
-            position: 'absolute', top: 70, right: 12, zIndex: 16,
+            position: 'absolute', top: 70, right: 12, zIndex: MAP_LAYERS.HUD_SIDE,
             background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(110,231,183,0.2)',
             borderRadius: 12, padding: 14, maxWidth: 380, width: 370,
             boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
@@ -2747,7 +2736,7 @@ export default function WorldMap() {
 
         {showGruda && (
           <div style={{
-            position: 'absolute', top: 70, right: 12, zIndex: 16,
+            position: 'absolute', top: 70, right: 12, zIndex: MAP_LAYERS.HUD_SIDE,
             background: 'rgba(14,22,48,0.95)', border: '1px solid rgba(239,68,68,0.25)',
             borderRadius: 12, padding: 14, maxWidth: 380, width: 360,
             boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
@@ -2847,7 +2836,7 @@ export default function WorldMap() {
           backdropFilter: 'blur(6px)',
           padding: '12px 16px 10px',
           borderTop: '1px solid rgba(255,215,0,0.12)',
-          zIndex: 15,
+          zIndex: MAP_LAYERS.HUD_BUTTONS,
         }}>
           <div style={{
             display: 'flex', alignItems: 'stretch', gap: 12,
@@ -3075,7 +3064,7 @@ export default function WorldMap() {
 
       {bossWalkUp && (
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 100,
+          position: 'absolute', inset: 0, zIndex: MAP_LAYERS.BATTLE_OVERLAY,
           background: 'rgba(0,0,0,0.85)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           animation: 'fadeIn 0.5s ease-out',
@@ -3200,7 +3189,7 @@ export default function WorldMap() {
       {markerMode && (
         <div style={{
           position: 'absolute', top: 75, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 40, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.5)',
+          zIndex: MAP_LAYERS.DEV_MENUS, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.5)',
           borderRadius: 8, padding: '4px 10px', color: 'var(--gold)',
           fontSize: '0.65rem', fontWeight: 700, backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', gap: 6,
@@ -3244,7 +3233,7 @@ export default function WorldMap() {
         <div data-marker-menu style={{
           position: 'absolute', top: '50%',
           transform: 'translateY(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
           borderRadius: 12, padding: 16, minWidth: 220, backdropFilter: 'blur(8px)',
           ...popupPositionStyle(markerMenuNode),
         }}>
@@ -3286,7 +3275,7 @@ export default function WorldMap() {
       {markerMode && devSubMode === 'pathfinding' && !drawingRoute && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
           backdropFilter: 'blur(8px)',
         }}>
@@ -3320,7 +3309,7 @@ export default function WorldMap() {
       {markerMode && drawingArea && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(251,191,36,0.4)',
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
           backdropFilter: 'blur(8px)',
         }}>
@@ -3355,7 +3344,7 @@ export default function WorldMap() {
       {markerMode && devSubMode === 'pathfinding' && drawingRoute && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 10, alignItems: 'center',
           backdropFilter: 'blur(8px)',
         }}>
@@ -3395,7 +3384,7 @@ export default function WorldMap() {
       {markerMode && (devSubMode === 'streams' || devSubMode === 'lava') && !drawingLandmark && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)',
           border: `1px solid ${devSubMode === 'streams' ? 'rgba(56,189,248,0.4)' : 'rgba(251,146,60,0.4)'}`,
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
           backdropFilter: 'blur(8px)',
@@ -3432,7 +3421,7 @@ export default function WorldMap() {
       {markerMode && (devSubMode === 'streams' || devSubMode === 'lava') && drawingLandmark && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)',
           border: `1px solid ${drawingLandmark === 'river' ? 'rgba(56,189,248,0.4)' : 'rgba(251,146,60,0.4)'}`,
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
           backdropFilter: 'blur(8px)',
@@ -3474,7 +3463,7 @@ export default function WorldMap() {
       {markerMode && devSubMode === 'effects' && !placingEffect && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(167,139,250,0.4)',
+          zIndex: MAP_LAYERS.POPUPS, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(167,139,250,0.4)',
           borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 6, alignItems: 'center',
           flexWrap: 'wrap', justifyContent: 'center', maxWidth: 500,
           backdropFilter: 'blur(8px)',
@@ -3510,7 +3499,7 @@ export default function WorldMap() {
       )}
 
       <div style={{
-        position: 'absolute', bottom: 60, right: 12, zIndex: 30,
+        position: 'absolute', bottom: 60, right: 12, zIndex: MAP_LAYERS.DEV_TOOLBAR,
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '6px 4px',
         backdropFilter: 'blur(4px)', border: '1px solid rgba(255,215,0,0.15)',
