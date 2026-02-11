@@ -742,8 +742,11 @@ export default function WorldMap() {
       return;
     }
     if (!isDragging) return;
-    const dx = (e.clientX - dragStart.x) / camZoom * 0.12;
-    const dy = (e.clientY - dragStart.y) / camZoom * 0.12;
+    const el = mapRef.current;
+    const mapW = el ? el.offsetWidth : 1000;
+    const mapH = el ? el.offsetHeight : 700;
+    const dx = (e.clientX - dragStart.x) / (mapW * camZoom) * 100;
+    const dy = (e.clientY - dragStart.y) / (mapH * camZoom) * 100;
     setCamPos(p => clampCam({ x: p.x + dx, y: p.y + dy }, camZoom));
     setDragStart({ x: e.clientX, y: e.clientY });
   }, [isDragging, dragStart, camZoom, clampCam, drawingRoute, screenToMapPercent]);

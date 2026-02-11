@@ -35,7 +35,7 @@ export const SVG_OVERLAY_STYLE = {
 export function svgOverlayProps(zIndex) {
   return {
     viewBox: '0 0 100 100',
-    preserveAspectRatio: 'xMidYMid meet',
+    preserveAspectRatio: 'none',
     style: { ...SVG_OVERLAY_STYLE, zIndex },
   };
 }
