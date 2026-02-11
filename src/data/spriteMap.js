@@ -393,13 +393,30 @@ export const raceClassSpriteMap = {
 
 export const warriorTransformSprite = spriteSheets['demon-sword'];
 
+export const nightborneSprite = {
+  folder: 'nightborne',
+  frameWidth: 80,
+  frameHeight: 80,
+  facesLeft: true,
+  idle: { src: '/sprites/nightborne/idle.png', frames: 9 },
+  walk: { src: '/sprites/nightborne/walk.png', frames: 6 },
+  attack1: { src: '/sprites/nightborne/attack1.png', frames: 12 },
+  attack2: { src: '/sprites/nightborne/attack2.png', frames: 6 },
+  attack3: { src: '/sprites/nightborne/attack1.png', frames: 12 },
+  cast: { src: '/sprites/nightborne/cast.png', frames: 6 },
+  block: { src: '/sprites/nightborne/block.png', frames: 3 },
+  hurt: { src: '/sprites/nightborne/hurt.png', frames: 5 },
+  death: { src: '/sprites/nightborne/death.png', frames: 23 },
+  heal: { src: '/sprites/nightborne/cast.png', frames: 6 },
+};
+
 export const worgTransformSprite = {
-  human: spriteSheets.werewolf,
-  orc: spriteSheets.werebear,
-  elf: spriteSheets.werewolf,
-  undead: spriteSheets.werewolf,
-  barbarian: spriteSheets.werebear,
-  dwarf: spriteSheets.werebear,
+  human: nightborneSprite,
+  orc: nightborneSprite,
+  elf: nightborneSprite,
+  undead: nightborneSprite,
+  barbarian: nightborneSprite,
+  dwarf: nightborneSprite,
 };
 
 const monsterSprites = {
@@ -828,14 +845,14 @@ export const abilityEffectMap = {
   },
   worge: {
     'Mace Strike': { effect: 'hitBurst', beam: null, anim: 'attack1' },
-    'Lightning Lash': { effect: 'arcanelighting', beam: 'orange', anim: 'attack1' },
+    'Lightning Lash': { effect: 'arcanelighting', beam: 'orange', anim: 'attack2' },
     "Nature's Grasp": { effect: 'healingwave', beam: 'green', anim: 'heal', postHealEffect: 'healingregen' },
-    'Dagger Toss': { effect: 'windProjectile', beam: 'green', anim: 'attack1' },
-    'Bear Form': { effect: 'beamHoly', beam: null, anim: 'block' },
-    'Maul': { effect: 'hitBurst', beam: null, anim: 'attack1', comboAnims: ['attack1', 'attack2', 'attack1'] },
-    "Nature's Taunt": { effect: 'holylight', beam: null, anim: 'block' },
-    'Worge Charge': { effect: 'hitBurst', beam: null, anim: 'attack3', comboAnims: ['attack1', 'attack3'] },
-    'Revert Form': { effect: 'beamHoly', beam: null, anim: 'block' },
+    'Dagger Toss': { effect: 'windProjectile', beam: 'green', anim: 'attack2' },
+    'Bear Form': { effect: 'arcanemist', beam: null, anim: 'cast', followUp: [{ effect: 'beamHoly', delay: 200 }, { effect: 'arcanebolt', delay: 500 }] },
+    'Maul': { effect: 'arcaneslash', beam: null, anim: 'attack1', comboAnims: ['attack1', 'attack2', 'attack1'], followUp: [{ effect: 'hitBurst', delay: 150 }, { effect: 'critSlash', delay: 400 }] },
+    "Nature's Taunt": { effect: 'arcanemist', beam: null, anim: 'cast', followUp: [{ effect: 'holylight', delay: 300 }] },
+    'Worge Charge': { effect: 'critSlash', beam: null, anim: 'attack3', comboAnims: ['attack1', 'attack3', 'attack1'], followUp: [{ effect: 'hitBurst', delay: 200 }, { effect: 'arcaneslash', delay: 450 }] },
+    'Revert Form': { effect: 'beamHoly', beam: null, anim: 'cast', followUp: [{ effect: 'arcanemist', delay: 300 }] },
   },
   ranger: {
     'Quick Shot': { effect: 'critSlash', beam: 'green', anim: 'attack1' },

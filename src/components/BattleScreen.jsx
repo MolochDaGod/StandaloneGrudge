@@ -2222,14 +2222,66 @@ export default function BattleScreen() {
                 }} />
               )}
 
+              {isBearForm && unit.alive && (
+                <>
+                  {[1, 2, 3].map(i => (
+                    <div key={`trail-${i}`} style={{
+                      position: 'absolute', top: 0, left: 0,
+                      width: spriteSize, height: spriteSize,
+                      animation: `nightborneTrail${i} 0.6s ease-out infinite`,
+                      animationDelay: `${i * 0.08}s`,
+                      pointerEvents: 'none',
+                      zIndex: -i,
+                      mixBlendMode: 'screen',
+                    }}>
+                      <SpriteAnimation
+                        spriteData={spriteData}
+                        animation={anim}
+                        scale={spriteScale}
+                        flip={flipSprite}
+                        speed={autoBattleEnabled ? 150 : 188}
+                        loop={anim === 'idle' || anim === 'walk'}
+                      />
+                    </div>
+                  ))}
+                  <div style={{
+                    position: 'absolute', top: '50%', left: '50%',
+                    width: spriteSize * 1.4, height: spriteSize * 1.4,
+                    marginLeft: -spriteSize * 0.7, marginTop: -spriteSize * 0.7,
+                    borderRadius: '50%',
+                    animation: 'nightborneAura 2s ease-in-out infinite',
+                    pointerEvents: 'none',
+                    zIndex: -4,
+                  }} />
+                  {Array.from({ length: 6 }).map((_, pi) => (
+                    <div key={`nb-p-${pi}`} style={{
+                      position: 'absolute',
+                      left: `${30 + Math.random() * 40}%`,
+                      top: `${20 + Math.random() * 60}%`,
+                      width: 3, height: 3,
+                      borderRadius: '50%',
+                      background: `rgba(${140 + Math.floor(Math.random() * 80)}, 0, 255, 0.8)`,
+                      animation: `nightborneParticle ${1.2 + Math.random() * 0.8}s ease-out infinite`,
+                      animationDelay: `${pi * 0.25}s`,
+                      pointerEvents: 'none',
+                      zIndex: -1,
+                      '--px': `${-15 + Math.random() * 30}px`,
+                      '--py': `${-20 - Math.random() * 25}px`,
+                    }} />
+                  ))}
+                </>
+              )}
+
               <div style={{
                 position: 'absolute', top: 0, left: 0,
                 width: spriteSize, height: spriteSize,
                 filter: anim === 'hurt'
                   ? 'brightness(2) sepia(1) saturate(10) hue-rotate(-10deg) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
-                  : isCurrentTurnUnit && unit.alive
-                    ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
-                    : 'none',
+                  : isBearForm && unit.alive
+                    ? 'drop-shadow(0 0 10px rgba(120,0,255,0.7)) drop-shadow(0 0 20px rgba(80,0,180,0.4))'
+                    : isCurrentTurnUnit && unit.alive
+                      ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
+                      : 'none',
                 transition: 'filter 0.15s',
                 animation: anim === 'hurt' ? 'hurtBlink 0.15s ease-in-out 3' : 'none',
               }}>
