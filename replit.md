@@ -42,6 +42,7 @@ The application is a React 19 frontend developed with Vite, managing global stat
 - **Zone Quest System:** 29 zones each feature 4 optional quests (e.g., kill count, flawless wins, boss kills, conquer percentage) providing gold, XP, and conquer bonuses.
 - **Gruda Arena:** A standalone challenge mode (`public/api/play/gruda.html`) for simplified turn-based battles. Supports hero sharing via URL parameters or share codes, encoding full hero builds into compact, URL-safe tokens. Includes OG meta tags for social media previews.
 - **Battle Admin Mode:** A developer tool (accessible via `~`) for pausing battles and visually adjusting/copying battle effect parameters.
+- **Admin Sprite Editor:** Comprehensive dev tool (`/adminsprite`) with 5 tabs: Characters (sprite preview, layout markers, effect/beam config), Projectiles (11 projectile sprites including animated fire/water arrows), Buffs & Effects (15 buff/debuff visuals with category coloring), Weapons (14 weapon types with projectile and trail assignments), and Effect Layers (stackable multi-effect system with per-layer delay, duration, scale, opacity, filter controls, timeline visualization, 6 presets, and play preview). This is the central hub for configuring how sprites appear on map and in battles.
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 
 ## External Dependencies

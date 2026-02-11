@@ -366,6 +366,104 @@ export const effectSprites = {
   windProjectile: { src: '/effects/wind_projectile.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
 };
 
+export const projectileSprites = {
+  arrow_long: { src: '/sprites/projectiles/arrow_long.png', cols: 3, rows: 3, frameW: 32, frameH: 32, frames: 3, name: 'Long Arrow', type: 'physical' },
+  arrow_short: { src: '/sprites/projectiles/arrow_short.png', cols: 3, rows: 3, frameW: 32, frameH: 32, frames: 3, name: 'Short Arrow', type: 'physical' },
+  axe: { src: '/sprites/projectiles/axe.png', cols: 4, rows: 2, frameW: 32, frameH: 32, frames: 8, name: 'Throwing Axe', type: 'physical' },
+  ballista_bolt: { src: '/sprites/projectiles/ballista_bolt.png', cols: 3, rows: 1, frameW: 32, frameH: 32, frames: 3, name: 'Ballista Bolt', type: 'physical' },
+  bullet: { src: '/sprites/projectiles/bullet.png', cols: 3, rows: 3, frameW: 32, frameH: 32, frames: 3, name: 'Bullet', type: 'physical' },
+  fireball: { src: '/sprites/projectiles/fireball.png', cols: 4, rows: 1, frameW: 32, frameH: 32, frames: 4, name: 'Fireball', type: 'magic' },
+  short_big: { src: '/sprites/projectiles/short_big.png', cols: 2, rows: 1, frameW: 32, frameH: 32, frames: 2, name: 'Short Big', type: 'physical' },
+  spear: { src: '/sprites/projectiles/spear.png', cols: 2, rows: 1, frameW: 32, frameH: 32, frames: 2, name: 'Spear', type: 'physical' },
+  sword_short: { src: '/sprites/projectiles/sword_short.png', cols: 2, rows: 1, frameW: 32, frameH: 32, frames: 2, name: 'Short Sword', type: 'physical' },
+  fire_arrow: { frames: 8, frameFiles: Array.from({ length: 8 }, (_, i) => `/sprites/projectiles/fire_arrow/frame_0${i + 1}.png`), name: 'Fire Arrow', type: 'magic', animated: true },
+  water_arrow: { frames: 8, frameFiles: Array.from({ length: 8 }, (_, i) => `/sprites/projectiles/water_arrow/frame_0${i + 1}.png`), name: 'Water Arrow', type: 'magic', animated: true },
+};
+
+export const buffVisuals = {
+  shield: { effect: 'protectionCircle', color: '#4488ff', icon: '\u{1F6E1}', name: 'Shield', category: 'defensive' },
+  regen: { effect: 'healEffect', color: '#44ff88', icon: '\u{1F49A}', name: 'Regeneration', category: 'heal' },
+  haste: { effect: 'windBreath', color: '#ffdd44', icon: '\u26A1', name: 'Haste', category: 'buff' },
+  strength: { effect: 'holyVfx', color: '#ff4444', icon: '\u2694\uFE0F', name: 'Strength', category: 'buff' },
+  poison: { effect: 'windBreath', color: '#44ff44', icon: '\u2620\uFE0F', name: 'Poison', category: 'debuff', effectFilter: 'hue-rotate(90deg) saturate(2)' },
+  burn: { effect: 'brightFire', color: '#ff8800', icon: '\u{1F525}', name: 'Burn', category: 'debuff' },
+  freeze: { effect: 'freezing', color: '#88ccff', icon: '\u2744\uFE0F', name: 'Freeze', category: 'debuff' },
+  stun: { effect: 'thunderHit', color: '#ffff44', icon: '\u{1F4AB}', name: 'Stun', category: 'debuff' },
+  curse: { effect: 'midnight', color: '#aa44ff', icon: '\u{1F480}', name: 'Curse', category: 'debuff' },
+  bless: { effect: 'holyImpact', color: '#ffffaa', icon: '\u2728', name: 'Blessing', category: 'buff' },
+  rage: { effect: 'fireSpin', color: '#ff2222', icon: '\u{1F4A2}', name: 'Rage', category: 'buff' },
+  mana_shield: { effect: 'protectionCircle', color: '#8844ff', icon: '\u{1F52E}', name: 'Mana Shield', category: 'defensive', effectFilter: 'hue-rotate(220deg) saturate(1.5)' },
+  thorns: { effect: 'windProjectile', color: '#228833', icon: '\u{1F331}', name: 'Thorns', category: 'defensive', effectFilter: 'hue-rotate(90deg) saturate(2)' },
+  lifesteal: { effect: 'nebula', color: '#cc0000', icon: '\u{1FA78}', name: 'Lifesteal', category: 'buff' },
+  slow: { effect: 'magicBubbles', color: '#6688aa', icon: '\u{1F40C}', name: 'Slow', category: 'debuff', effectFilter: 'saturate(0.3)' },
+};
+
+export const weaponVisuals = {
+  sword: { projectile: null, trail: 'slash', name: 'Sword' },
+  axe: { projectile: 'axe', trail: 'hitEffect1', name: 'Axe' },
+  greatsword: { projectile: null, trail: 'slash', name: 'Greatsword' },
+  greataxe: { projectile: null, trail: 'hitEffect2', name: 'Greataxe' },
+  hammer_2h: { projectile: null, trail: 'hitEffect2', name: 'Two-Hand Hammer' },
+  hammer_1h: { projectile: null, trail: 'hitEffect3', name: 'One-Hand Hammer' },
+  staff: { projectile: 'fireball', trail: 'midnight', name: 'Staff' },
+  dagger: { projectile: 'sword_short', trail: 'slash', name: 'Dagger' },
+  bow: { projectile: 'arrow_long', trail: null, name: 'Bow' },
+  crossbow: { projectile: 'ballista_bolt', trail: null, name: 'Crossbow' },
+  gun: { projectile: 'bullet', trail: null, name: 'Gun' },
+  wand: { projectile: 'fireball', trail: 'magicBubbles', name: 'Wand' },
+  shield: { projectile: null, trail: 'hitEffect2', name: 'Shield' },
+  spear: { projectile: 'spear', trail: 'hitEffect1', name: 'Spear' },
+};
+
+export const effectLayerPresets = {
+  fire_combo: {
+    name: 'Fire Combo',
+    layers: [
+      { effect: 'brightFire', delay: 0, duration: 600, scale: 1.5, filter: '', opacity: 1 },
+      { effect: 'fireExplosion', delay: 300, duration: 500, scale: 2, filter: '', opacity: 0.8 },
+      { effect: 'fireSpin', delay: 600, duration: 800, scale: 1.2, filter: 'brightness(1.3)', opacity: 0.6 },
+    ],
+  },
+  ice_shatter: {
+    name: 'Ice Shatter',
+    layers: [
+      { effect: 'freezing', delay: 0, duration: 800, scale: 2, filter: '', opacity: 1 },
+      { effect: 'hitEffect2', delay: 400, duration: 400, scale: 1.5, filter: 'hue-rotate(180deg)', opacity: 0.7 },
+    ],
+  },
+  holy_burst: {
+    name: 'Holy Burst',
+    layers: [
+      { effect: 'holyVfx', delay: 0, duration: 600, scale: 1.5, filter: '', opacity: 1 },
+      { effect: 'holyImpact', delay: 200, duration: 500, scale: 2, filter: '', opacity: 0.9 },
+      { effect: 'healEffect', delay: 500, duration: 800, scale: 1.8, filter: '', opacity: 0.5 },
+    ],
+  },
+  dark_curse: {
+    name: 'Dark Curse',
+    layers: [
+      { effect: 'midnight', delay: 0, duration: 700, scale: 1.5, filter: '', opacity: 1 },
+      { effect: 'nebula', delay: 300, duration: 600, scale: 1.2, filter: '', opacity: 0.7 },
+      { effect: 'felSpell', delay: 600, duration: 900, scale: 2, filter: '', opacity: 0.5 },
+    ],
+  },
+  lightning_strike: {
+    name: 'Lightning Strike',
+    layers: [
+      { effect: 'thunderHit', delay: 0, duration: 300, scale: 2, filter: '', opacity: 1 },
+      { effect: 'thunderProjectile', delay: 100, duration: 400, scale: 1.5, filter: '', opacity: 0.9 },
+      { effect: 'hitEffect1', delay: 300, duration: 300, scale: 1.2, filter: 'hue-rotate(60deg)', opacity: 0.6 },
+    ],
+  },
+  poison_cloud: {
+    name: 'Poison Cloud',
+    layers: [
+      { effect: 'windBreath', delay: 0, duration: 800, scale: 2, filter: 'hue-rotate(90deg) saturate(2)', opacity: 0.8 },
+      { effect: 'magicBubbles', delay: 200, duration: 600, scale: 1.5, filter: 'hue-rotate(90deg)', opacity: 0.6 },
+    ],
+  },
+};
+
 export const beamTrails = {
   green: '/effects/beams/beam_green.png',
   orange: '/effects/beams/beam_orange.png',
