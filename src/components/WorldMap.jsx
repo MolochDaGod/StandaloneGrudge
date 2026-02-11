@@ -222,6 +222,39 @@ const buildSmoothPath = (points) => {
 
 const mapLandmarks = [];
 
+const buildAdjacency = () => {
+  const adj = {};
+  const addEdge = (a, b) => {
+    if (!adj[a]) adj[a] = [];
+    if (!adj[b]) adj[b] = [];
+    if (!adj[a].includes(b)) adj[a].push(b);
+    if (!adj[b].includes(a)) adj[b].push(a);
+  };
+  pathConnections.forEach(([a, b]) => addEdge(a, b));
+  cityConnections.forEach(([a, b]) => addEdge(a, b));
+  return adj;
+};
+const adjacencyMap = buildAdjacency();
+
+const findPath = (start, end) => {
+  if (start === end) return [];
+  const queue = [[start]];
+  const visited = new Set([start]);
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const node = path[path.length - 1];
+    const neighbors = adjacencyMap[node] || [];
+    for (const next of neighbors) {
+      if (next === end) return [...path, next];
+      if (!visited.has(next)) {
+        visited.add(next);
+        queue.push([...path, next]);
+      }
+    }
+  }
+  return null;
+};
+
 export default function WorldMap() {
   const {
     level, xp, xpToNext, gold, playerName, playerClass, playerRace,
@@ -268,6 +301,11 @@ export default function WorldMap() {
   const [bossWalkUp, setBossWalkUp] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
+  const [movePath, setMovePath] = useState(null);
+  const [moveStep, setMoveStep] = useState(0);
+  const [isPathing, setIsPathing] = useState(false);
+  const [portalMenu, setPortalMenu] = useState(null);
+  const [portalTransition, setPortalTransition] = useState(false);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
   const [camZoom, setCamZoom] = useState(3);
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
@@ -476,6 +514,7 @@ export default function WorldMap() {
 
     Object.values(wanderTimersRef.current).forEach(t => clearTimeout(t));
     wanderTimersRef.current = {};
+    if (isPathing) return;
 
     const getRandomPoint = () => {
       if (area && area.length >= 3) {
@@ -565,7 +604,55 @@ export default function WorldMap() {
       Object.values(wanderTimersRef.current).forEach(t => clearTimeout(t));
       wanderTimersRef.current = {};
     };
-  }, [heroRoster, activeHeroIds, currentZone, movementAreas]);
+  }, [heroRoster, activeHeroIds, currentZone, movementAreas, isPathing]);
+
+  useEffect(() => {
+    if (!movePath || movePath.length < 2 || moveStep >= movePath.length - 1) {
+      if (movePath && moveStep >= movePath.length - 1) {
+        const dest = movePath[movePath.length - 1];
+        setCurrentZone(dest);
+        setIsPathing(false);
+        setIsMoving(false);
+        setMovePath(null);
+        setMoveStep(0);
+        heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
+          setHeroWalking(prev => { const next = { ...prev }; delete next[hero.id]; return next; });
+        });
+      }
+      return;
+    }
+    setIsPathing(true);
+    setIsMoving(true);
+    const currentNode = movePath[moveStep];
+    const nextNode = movePath[moveStep + 1];
+    const from = getNodePos(currentNode);
+    const to = getNodePos(nextNode);
+    if (!from || !to) return;
+
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const duration = Math.max(400, Math.min(1800, dist * 60));
+
+    setHeroPos(to);
+    setCurrentZone(nextNode);
+    heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
+      setHeroWalking(prev => ({ ...prev, [hero.id]: { moving: true, flipX: dx < 0 } }));
+    });
+
+    const camTarget = { x: -(to.x - 50), y: -(to.y - 50) };
+    const maxPan = Math.max(0, 50 - 50 / camZoom);
+    setCamPos({
+      x: Math.max(-maxPan, Math.min(maxPan, camTarget.x)),
+      y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
+    });
+
+    const timer = setTimeout(() => {
+      setMoveStep(prev => prev + 1);
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [movePath, moveStep]);
 
   useEffect(() => { setBgm('ambient'); }, []);
 
@@ -664,6 +751,7 @@ export default function WorldMap() {
         setSelectedCity(null);
         setCitySubmenu(null);
         setSelectedEvent(null);
+        setPortalMenu(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -734,14 +822,26 @@ export default function WorldMap() {
     setCitySubmenu(null);
     setSelectedEvent(null);
 
-    const target = getNodePos(loc.id);
-    if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
-      setIsMoving(true);
-      setHeroPos(target);
-      setCurrentZone(loc.id);
-      setTimeout(() => setIsMoving(false), 600);
+    if (isPathing) return;
+    
+    if (portalLocations.includes(loc.id)) {
+      setPortalMenu(loc.id);
+      return;
     }
-  }, [level, heroPos, getNodePos, devUnlocked, markerMode, devSubMode]);
+
+    if (currentZone === loc.id) {
+      setSelectedLocation(loc.id);
+      return;
+    }
+    const path = findPath(currentZone, loc.id);
+    if (path && path.length >= 2) {
+      setSelectedLocation(loc.id);
+      setMovePath(path);
+      setMoveStep(0);
+    } else {
+      setSelectedLocation(loc.id);
+    }
+  }, [level, heroPos, getNodePos, devUnlocked, markerMode, devSubMode, isPathing, currentZone]);
 
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
@@ -755,13 +855,13 @@ export default function WorldMap() {
     setCitySubmenu(null);
     setSelectedEvent(null);
 
-    const target = getNodePos(city.id);
-    if (target && (target.x !== heroPos.x || target.y !== heroPos.y)) {
-      setIsMoving(true);
-      setHeroPos(target);
-      setTimeout(() => setIsMoving(false), 600);
+    if (isPathing) return;
+    const path = findPath(currentZone, city.id);
+    if (path && path.length >= 2) {
+      setMovePath(path);
+      setMoveStep(0);
     }
-  }, [level, heroPos, getNodePos, devUnlocked]);
+  }, [level, heroPos, getNodePos, devUnlocked, isPathing, currentZone]);
 
   const handleBattle = (locId) => {
     useGameStore.setState({ currentLocation: locId });
@@ -953,8 +1053,16 @@ export default function WorldMap() {
             const d = buildSmoothPath(river.points);
             return (
               <g key={`river_${idx}`}>
-                <path d={d} fill="none" stroke="rgba(200,230,255,0.08)" strokeWidth={river.width + 0.8} strokeLinecap="round" strokeLinejoin="round" />
-                <path d={d} fill="none" stroke={river.color} strokeWidth={river.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 3px ${river.color})` }} />
+                <path d={d} fill="none" stroke="rgba(200,230,255,0.06)" strokeWidth={river.width + 1.2} strokeLinecap="round" strokeLinejoin="round" />
+                <path d={d} fill="none" stroke={river.color} strokeWidth={river.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px ${river.color})` }} />
+                <path d={d} fill="none" stroke="rgba(150,210,255,0.35)" strokeWidth={river.width * 0.4}
+                  strokeLinecap="round" strokeDasharray="0.8 1.2"
+                  style={{ animation: `waterFlow ${4 + idx}s linear infinite` }}
+                />
+                <path d={d} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={river.width * 0.15}
+                  strokeLinecap="round" strokeDasharray="0.3 2"
+                  style={{ animation: `waterFlow ${3 + idx * 0.7}s linear infinite` }}
+                />
               </g>
             );
           })}
@@ -962,8 +1070,10 @@ export default function WorldMap() {
             const d = buildSmoothPath(lava.points);
             return (
               <g key={`lava_${idx}`}>
-                <path d={d} fill="none" stroke={lava.color} strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 4px rgba(255,100,0,0.6))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                <path d={d} fill="none" stroke="rgba(255,200,50,0.3)" strokeWidth={lava.width * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                <path d={d} fill="none" stroke="rgba(80,20,0,0.5)" strokeWidth={lava.width + 1.2} strokeLinecap="round" strokeLinejoin="round" />
+                <path d={d} fill="none" stroke={lava.color} strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(255,100,0,0.8))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                <path d={d} fill="none" stroke="rgba(255,200,50,0.4)" strokeWidth={lava.width * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                <path d={d} fill="none" stroke="rgba(255,255,200,0.25)" strokeWidth={lava.width * 0.2} strokeLinecap="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
               </g>
             );
           })}
@@ -1079,17 +1189,60 @@ export default function WorldMap() {
               if (!lm.points || lm.points.length < 2) return null;
               const d = lm.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
               if (lm.type === 'lava') {
+                const w = lm.width || 1;
+                const pts = lm.points || [];
                 return (
                   <g key={`elm_${idx}`}>
-                    <path d={d} fill="none" stroke={lm.color} strokeWidth={lm.width || 1} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 4px rgba(255,100,0,0.6))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                    <path d={d} fill="none" stroke="rgba(255,200,50,0.3)" strokeWidth={(lm.width || 1) * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                    <path d={d} fill="none" stroke="rgba(80,20,0,0.5)" strokeWidth={w + 1.2} strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={d} fill="none" stroke={lm.color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 6px rgba(255,100,0,0.8))', animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                    <path d={d} fill="none" stroke="rgba(255,200,50,0.4)" strokeWidth={w * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                    <path d={d} fill="none" stroke="rgba(255,255,200,0.25)" strokeWidth={w * 0.2} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
+                    {pts.filter((_, i) => i % 3 === 0).map((p, pi) => {
+                      const px = Array.isArray(p) ? p[0] : p.x;
+                      const py = Array.isArray(p) ? p[1] : p.y;
+                      return Array.from({ length: 2 }, (_, ei) => (
+                        <circle key={`ember_${idx}_${pi}_${ei}`}
+                          cx={px + (Math.random() - 0.5) * 0.8}
+                          cy={py}
+                          r={0.15 + Math.random() * 0.1}
+                          fill={ei === 0 ? 'rgba(255,180,50,0.9)' : 'rgba(255,100,0,0.7)'}
+                          style={{
+                            animation: `emberRise ${1.5 + Math.random() * 2}s ease-out infinite ${Math.random() * 2}s`,
+                          }}
+                        />
+                      ));
+                    })}
                   </g>
                 );
               }
+              const w = lm.width || 1;
+              const pts = lm.points || [];
               return (
                 <g key={`elm_${idx}`}>
-                  <path d={d} fill="none" stroke="rgba(200,230,255,0.08)" strokeWidth={(lm.width || 1) + 0.8} strokeLinecap="round" />
-                  <path d={d} fill="none" stroke={lm.color} strokeWidth={lm.width || 1} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 3px ${lm.color})` }} />
+                  <path d={d} fill="none" stroke="rgba(200,230,255,0.06)" strokeWidth={w + 1.2} strokeLinecap="round" strokeLinejoin="round" />
+                  <path d={d} fill="none" stroke={lm.color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px ${lm.color})` }} />
+                  <path d={d} fill="none" stroke="rgba(150,210,255,0.35)" strokeWidth={w * 0.4}
+                    strokeLinecap="round" strokeLinejoin="round"
+                    strokeDasharray="0.8 1.2"
+                    style={{ animation: `waterFlow ${4 + idx}s linear infinite` }}
+                  />
+                  <path d={d} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={w * 0.15}
+                    strokeLinecap="round" strokeDasharray="0.3 2"
+                    style={{ animation: `waterFlow ${3 + idx * 0.7}s linear infinite ${idx * 0.3}s` }}
+                  />
+                  {pts.filter((_, i) => i % 4 === 0).map((p, si) => {
+                    const px = Array.isArray(p) ? p[0] : p.x;
+                    const py = Array.isArray(p) ? p[1] : p.y;
+                    return (
+                      <circle key={`sparkle_${idx}_${si}`}
+                        cx={px + (Math.random() - 0.5) * 0.5}
+                        cy={py + (Math.random() - 0.5) * 0.3}
+                        r={0.12}
+                        fill="rgba(255,255,255,0.8)"
+                        style={{ animation: `waterSparkle ${2 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 3}s` }}
+                      />
+                    );
+                  })}
                 </g>
               );
             })}
@@ -1185,14 +1338,41 @@ export default function WorldMap() {
             >
               <div style={{ position: 'relative', width: 42, height: 42 }}>
                 {isUnlocked && portalLocations.includes(loc.id) && (
-                  <div style={{
-                    position: 'absolute', inset: -5,
-                    borderRadius: '50%',
-                    background: `conic-gradient(from 0deg, ${icon.color}00, ${icon.color}66, ${icon.color}00, ${icon.color}44, ${icon.color}00)`,
-                    animation: 'portalSpin 3s linear infinite',
-                    opacity: 0.5,
-                    pointerEvents: 'none',
-                  }} />
+                  <>
+                    <div style={{
+                      position: 'absolute', inset: -8,
+                      borderRadius: '50%',
+                      background: `conic-gradient(from 0deg, ${icon.color}00, ${icon.color}44, ${icon.color}00, ${icon.color}22, ${icon.color}00)`,
+                      animation: 'portalSpin 4s linear infinite',
+                      opacity: 0.6,
+                      pointerEvents: 'none',
+                    }} />
+                    <div style={{
+                      position: 'absolute', inset: -5,
+                      borderRadius: '50%',
+                      background: `conic-gradient(from 180deg, ${icon.color}00, ${icon.color}66, ${icon.color}00, ${icon.color}44, ${icon.color}00)`,
+                      animation: 'portalSpin 3s linear infinite reverse',
+                      opacity: 0.5,
+                      pointerEvents: 'none',
+                    }} />
+                    <div style={{
+                      position: 'absolute', inset: -3,
+                      borderRadius: '50%',
+                      border: `1.5px solid ${icon.color}88`,
+                      boxShadow: `0 0 8px ${icon.color}44, inset 0 0 8px ${icon.color}22`,
+                      pointerEvents: 'none',
+                      animation: 'portalPulseGlow 2s ease-in-out infinite',
+                    }} />
+                    <div style={{
+                      position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)',
+                      fontSize: '0.5rem', fontWeight: 700, color: icon.color,
+                      textShadow: `0 0 6px ${icon.color}`, whiteSpace: 'nowrap',
+                      pointerEvents: 'none', opacity: 0.8,
+                      letterSpacing: '0.05em',
+                    }}>
+                      PORTAL
+                    </div>
+                  </>
                 )}
                 {(() => {
                   const hasBossActive = isUnlocked && loc.boss && !bossesDefeated.includes(loc.boss);
@@ -1821,6 +2001,124 @@ export default function WorldMap() {
             </div>
           </div>,
           outerRef.current
+        )}
+
+        {portalMenu && outerRef.current && createPortal(
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: MAP_LAYERS.POPUPS,
+            background: 'linear-gradient(135deg, rgba(10,8,30,0.97), rgba(20,15,45,0.97))',
+            border: '2px solid rgba(167,139,250,0.6)',
+            borderRadius: 16,
+            padding: 0, width: 300,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.9), 0 0 40px rgba(167,139,250,0.2)',
+            animation: 'fadeIn 0.2s ease-out',
+          }}>
+            <div style={{
+              padding: '16px 20px 12px',
+              borderBottom: '1px solid rgba(167,139,250,0.2)',
+              background: 'linear-gradient(135deg, rgba(167,139,250,0.1), transparent)',
+              borderRadius: '16px 16px 0 0',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '1.2rem', marginBottom: 4 }}>🌀</div>
+              <div className="font-cinzel" style={{ color: '#a78bfa', fontSize: '1rem', fontWeight: 700 }}>
+                Portal Network
+              </div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>
+                Fast travel to another portal
+              </div>
+            </div>
+            <div style={{ padding: '8px 12px' }}>
+              {portalLocations.filter(p => p !== portalMenu).map(destId => {
+                const destLoc = locations.find(l => l.id === destId);
+                const destUnlocked = destLoc && (destLoc.unlocked || (destLoc.unlockLevel && level >= destLoc.unlockLevel) || devUnlocked[destId]);
+                const destIcon = locationIcons[destId];
+                return (
+                  <button key={destId} onClick={() => {
+                    if (!destUnlocked) return;
+                    setPortalTransition(true);
+                    setPortalMenu(null);
+                    setSelectedLocation(null);
+                    setTimeout(() => {
+                      const target = getNodePos(destId);
+                      if (target) {
+                        setHeroPos(target);
+                        setCurrentZone(destId);
+                        const camTarget = { x: -(target.x - 50), y: -(target.y - 50) };
+                        const maxPan = Math.max(0, 50 - 50 / camZoom);
+                        setCamPos({
+                          x: Math.max(-maxPan, Math.min(maxPan, camTarget.x)),
+                          y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
+                        });
+                      }
+                      setTimeout(() => setPortalTransition(false), 600);
+                    }, 400);
+                  }} disabled={!destUnlocked} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    width: '100%', padding: '10px 14px', margin: '4px 0',
+                    background: destUnlocked ? 'rgba(167,139,250,0.06)' : 'rgba(40,40,60,0.3)',
+                    border: `1px solid ${destUnlocked ? 'rgba(167,139,250,0.2)' : 'rgba(80,80,100,0.2)'}`,
+                    borderRadius: 10, cursor: destUnlocked ? 'pointer' : 'not-allowed',
+                    color: destUnlocked ? '#fff' : 'rgba(150,150,170,0.4)',
+                    fontSize: '0.8rem', fontWeight: 600, textAlign: 'left',
+                    transition: 'all 0.15s',
+                    opacity: destUnlocked ? 1 : 0.5,
+                  }}
+                  onMouseEnter={e => { if (destUnlocked) { e.currentTarget.style.background = 'rgba(167,139,250,0.15)'; e.currentTarget.style.borderColor = '#a78bfa'; }}}
+                  onMouseLeave={e => { if (destUnlocked) { e.currentTarget.style.background = 'rgba(167,139,250,0.06)'; e.currentTarget.style.borderColor = 'rgba(167,139,250,0.2)'; }}}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', overflow: 'hidden',
+                      border: `2px solid ${destIcon?.color || '#a78bfa'}`,
+                      boxShadow: `0 0 8px ${destIcon?.glow || 'rgba(167,139,250,0.3)'}`,
+                      flexShrink: 0,
+                    }}>
+                      {destIcon?.img && <img src={destIcon.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    </div>
+                    <div>
+                      <div style={{ color: destUnlocked ? (destIcon?.color || '#a78bfa') : 'rgba(150,150,170,0.4)' }}>
+                        {destLoc?.name || destId.replace(/_/g, ' ')}
+                      </div>
+                      <div style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: 400 }}>
+                        {destUnlocked ? `Lv.${destLoc?.levelRange?.[0]}-${destLoc?.levelRange?.[1]}` : '🔒 Locked'}
+                      </div>
+                    </div>
+                    {destUnlocked && <div style={{ marginLeft: 'auto', fontSize: '0.9rem', opacity: 0.6 }}>🌀</div>}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{
+              padding: '8px 16px 12px', borderTop: '1px solid rgba(167,139,250,0.1)',
+              textAlign: 'center',
+            }}>
+              <button onClick={() => setPortalMenu(null)} style={{
+                padding: '6px 20px', background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                color: 'var(--muted)', cursor: 'pointer', fontSize: '0.7rem',
+              }}>Close</button>
+            </div>
+          </div>,
+          outerRef.current
+        )}
+
+        {portalTransition && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: MAP_LAYERS.BATTLE_OVERLAY,
+            background: 'radial-gradient(circle, rgba(167,139,250,0.3), rgba(0,0,0,0.95))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'portalTeleport 1s ease-in-out',
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              width: 120, height: 120, borderRadius: '50%',
+              background: 'conic-gradient(from 0deg, #a78bfa00, #a78bfa88, #a78bfa00, #a78bfa44, #a78bfa00)',
+              animation: 'portalSpin 0.5s linear infinite',
+              boxShadow: '0 0 60px rgba(167,139,250,0.5), inset 0 0 40px rgba(167,139,250,0.3)',
+            }} />
+          </div>
         )}
 
         {selectedCity && outerRef.current && (() => {
@@ -2962,6 +3260,29 @@ export default function WorldMap() {
           @keyframes lavaPulse {
             0%, 100% { opacity: 0.4; }
             50% { opacity: 1; }
+          }
+          @keyframes emberRise {
+            0% { opacity: 0.9; transform: translateY(0) scale(1); }
+            50% { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-2px) scale(0.3); }
+          }
+          @keyframes waterFlow {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -4; }
+          }
+          @keyframes waterSparkle {
+            0%, 100% { opacity: 0; r: 0.08; }
+            50% { opacity: 0.9; r: 0.18; }
+          }
+          @keyframes portalPulseGlow {
+            0%, 100% { opacity: 0.4; box-shadow: 0 0 6px currentColor; }
+            50% { opacity: 0.8; box-shadow: 0 0 16px currentColor; }
+          }
+          @keyframes portalTeleport {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
           }
           @keyframes steamRise {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
