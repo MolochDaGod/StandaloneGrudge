@@ -316,11 +316,12 @@ export default function LocationView() {
                 color: '#0b1020', fontWeight: 700, fontSize: '0.75rem',
                 cursor: 'pointer', fontFamily: "'Cinzel', serif",
                 transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', gap: 6,
               }}
               onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 12px rgba(110,231,183,0.4)'; }}
               onMouseLeave={e => { e.target.style.transform = 'none'; e.target.style.boxShadow = 'none'; }}
               >
-                <><EssentialIcon name="Skull" size={12} style={{ marginRight: 4 }} /> Hunt</>
+                <InlineIcon name="crossedSwords" size={14} style={{ marginRight: 0 }} /> Hunt
               </button>
               {loc.boss && !bossDefeated && (
                 <button onClick={() => startBossBattle(loc.boss)} style={{
@@ -329,11 +330,12 @@ export default function LocationView() {
                   color: 'var(--danger)', fontWeight: 700, fontSize: '0.75rem',
                   cursor: 'pointer', fontFamily: "'Cinzel', serif",
                   transition: 'all 0.2s', animation: 'glow 2s infinite',
+                  display: 'flex', alignItems: 'center', gap: 6,
                 }}
                 onMouseEnter={e => e.target.style.transform = 'translateY(-1px)'}
                 onMouseLeave={e => e.target.style.transform = 'none'}
                 >
-                  <><EssentialIcon name="ChestTreasure" size={12} style={{ marginRight: 4 }} /> Boss</>
+                  <InlineIcon name="skull" size={14} style={{ marginRight: 0 }} /> Boss
                 </button>
               )}
             </div>
@@ -359,8 +361,8 @@ export default function LocationView() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
-                <h3 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.85rem', margin: 0 }}>
-                  <EssentialIcon name="Book" size={14} style={{ marginRight: 6 }} />Zone Quests
+                <h3 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center' }}>
+                  <InlineIcon name="scroll" size={16} style={{ marginRight: 6 }} />Zone Quests
                 </h3>
                 <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginTop: 1 }}>
                   Complete quests for rewards & faster conquering
