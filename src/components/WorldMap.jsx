@@ -846,36 +846,49 @@ export default function WorldMap() {
             const { a, b, active, key } = conn;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-            const midX = (a.x + b.x) / 2;
-            const midY = (a.y + b.y) / 2;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const imgHPct = dist * 0.85;
-            const imgWPct = imgHPct * 0.35;
-            const connScale = Math.max(0.3, 1 / camZoom);
-            return (
-              <div key={key} style={{
+            const stepCount = Math.max(3, Math.round(dist / 2.2));
+            const steps = [];
+            for (let i = 1; i < stepCount; i++) {
+              const t = i / stepCount;
+              const x = a.x + dx * t;
+              const y = a.y + dy * t;
+              const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+              const isLeft = i % 2 === 0;
+              const perpX = -Math.sin(angle * Math.PI / 180) * 0.25;
+              const perpY = Math.cos(angle * Math.PI / 180) * 0.25;
+              steps.push({
+                x: x + (isLeft ? perpX : -perpX),
+                y: y + (isLeft ? perpY : -perpY),
+                angle: angle + (isLeft ? -15 : 15),
+                delay: i * 0.15,
+              });
+            }
+            const dotScale = Math.max(0.4, 0.8 / camZoom);
+            return steps.map((step, si) => (
+              <div key={`${key}_${si}`} style={{
                 position: 'absolute',
-                left: `${midX}%`, top: `${midY}%`,
-                width: `${imgWPct}%`, height: `${imgHPct}%`,
-                transform: `translate(-50%, -50%) rotate(${angle}deg) scale(${connScale})`,
+                left: `${step.x}%`, top: `${step.y}%`,
+                width: 8, height: 12,
+                transform: `translate(-50%, -50%) rotate(${step.angle + 90}deg) scale(${dotScale})`,
                 pointerEvents: 'none',
                 zIndex: 1,
-                opacity: active ? 0.45 : 0.12,
+                opacity: active ? 0.5 : 0.1,
                 transition: 'opacity 0.5s',
               }}>
                 <div style={{
                   width: '100%', height: '100%',
-                  backgroundImage: 'url(/images/footsteps.png)',
-                  backgroundSize: '100% 100%',
-                  backgroundRepeat: 'no-repeat',
-                  mixBlendMode: 'screen',
-                  maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,0) 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,0) 100%)',
-                  animation: active ? `footstepWalk ${3 + (idx % 3)}s ease-in-out infinite` : 'none',
-                }} />
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                }}>
+                  <div style={{
+                    width: 5, height: 7, borderRadius: '45% 45% 35% 35%',
+                    background: active ? 'rgba(255,215,0,0.7)' : 'rgba(150,150,170,0.4)',
+                    boxShadow: active ? '0 0 4px rgba(255,215,0,0.4)' : 'none',
+                    animation: active ? `footstepPulse ${2 + (si % 4) * 0.5}s ease-in-out infinite ${step.delay}s` : 'none',
+                  }} />
+                </div>
               </div>
-            );
+            ));
           });
         })()}
 
