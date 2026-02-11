@@ -408,26 +408,32 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
   );
 }
 
-function FireballProjectile({ startX, startY, endX, endY, phase, onImpact }) {
-  const sunburnSprite = effectSprites.sunburn;
+const FIREBALL_FRAMES = [
+  '/icons/fireball_frame_01.png',
+  '/icons/fireball_frame_02.png',
+  '/icons/fireball_frame_03.png',
+  '/icons/fireball_frame_04.png',
+  '/icons/fireball_frame_05.png',
+  '/icons/fireball_frame_06.png',
+  '/icons/fireball_frame_07.png',
+  '/icons/fireball_frame_08.png',
+];
+
+function FireballProjectile({ startX, startY, endX, endY, phase }) {
   const [frame, setFrame] = React.useState(0);
-  const displaySize = 44;
-  const cols = Math.round(Math.sqrt(sunburnSprite.frames));
-  const frameW = sunburnSprite.size / cols;
-  const scaleX = displaySize / frameW;
-  const riseY = startY - 12;
+  const displaySize = 56;
+  const riseY = startY - 14;
+  const [rotation, setRotation] = React.useState(0);
 
   React.useEffect(() => {
     let f = 0;
     const interval = setInterval(() => {
-      f = (f + 1) % sunburnSprite.frames;
+      f = (f + 1) % FIREBALL_FRAMES.length;
       setFrame(f);
-    }, 40);
+      setRotation(prev => prev + 45);
+    }, 80);
     return () => clearInterval(interval);
   }, []);
-
-  const col = frame % cols;
-  const row = Math.floor(frame / cols);
 
   let posX, posY;
   if (phase === 'rise') {
@@ -447,29 +453,106 @@ function FireballProjectile({ startX, startY, endX, endY, phase, onImpact }) {
       left: `${posX}%`,
       top: `${phase === 'rise' ? riseY : posY}%`,
       transition: phase === 'rise'
-        ? 'top 0.4s ease-out'
+        ? 'top 0.5s ease-out'
         : phase === 'fly'
-          ? 'left 0.45s ease-in, top 0.45s ease-in'
+          ? 'left 0.5s ease-in, top 0.5s ease-in'
           : 'none',
       transform: 'translate(-50%, -50%)',
       zIndex: 210, pointerEvents: 'none',
     }}>
       <div style={{
+        width: displaySize, height: displaySize,
+        transform: `rotate(${rotation}deg)`,
+        transition: 'transform 0.08s linear',
+      }}>
+        <img
+          src={FIREBALL_FRAMES[frame]}
+          alt=""
+          style={{
+            width: displaySize,
+            height: displaySize,
+            borderRadius: '50%',
+            filter: 'drop-shadow(0 0 12px #f97316) drop-shadow(0 0 24px #ef4444) brightness(1.2)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FireScatterSprite({ x, y, angle, delay }) {
+  const fireSprite = effectSprites.fireSpin || effectSprites.fire || effectSprites.sunburn;
+  const [frame, setFrame] = React.useState(0);
+  const [visible, setVisible] = React.useState(false);
+  const [scattered, setScattered] = React.useState(false);
+  const displaySize = 40;
+  const totalFrames = fireSprite?.frames || 64;
+  const spriteSize = fireSprite?.size || 800;
+  const cols = Math.round(Math.sqrt(totalFrames));
+  const frameW = spriteSize / cols;
+  const scaleX = displaySize / frameW;
+  const dist = 8;
+  const targetX = x + Math.cos(angle * Math.PI / 180) * dist;
+  const targetY = y + Math.sin(angle * Math.PI / 180) * dist;
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      setVisible(true);
+      requestAnimationFrame(() => setScattered(true));
+    }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  React.useEffect(() => {
+    if (!visible) return;
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [visible, totalFrames]);
+
+  if (!visible || !fireSprite) return null;
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${scattered ? targetX : x}%`,
+      top: `${scattered ? targetY : y}%`,
+      transform: 'translate(-50%, -50%)',
+      transition: 'left 0.4s ease-out, top 0.4s ease-out, opacity 0.3s',
+      zIndex: 215, pointerEvents: 'none',
+      opacity: frame > totalFrames * 0.7 ? 0 : 1,
+    }}>
+      <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
-        animation: 'pulse 0.3s infinite',
       }}>
         <div style={{
           width: displaySize,
           height: displaySize,
-          backgroundImage: `url(${sunburnSprite.src})`,
-          backgroundSize: `${sunburnSprite.size * scaleX}px ${sunburnSprite.size * scaleX}px`,
+          backgroundImage: `url(${fireSprite.src})`,
+          backgroundSize: `${spriteSize * scaleX}px ${spriteSize * scaleX}px`,
           backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          filter: 'drop-shadow(0 0 10px #f97316) drop-shadow(0 0 20px #ef4444) brightness(1.3)',
+          filter: 'drop-shadow(0 0 8px #f97316) brightness(1.4)',
         }} />
       </div>
     </div>
+  );
+}
+
+function FireballExplosion({ x, y, angles }) {
+  return (
+    <>
+      {angles.map((angle, i) => (
+        <FireScatterSprite key={i} x={x} y={y} angle={angle} delay={i * 60} />
+      ))}
+    </>
   );
 }
 
@@ -689,6 +772,7 @@ export default function BattleScreen() {
   const [castingFx, setCastingFx] = useState([]);
   const [weaponContactFx, setWeaponContactFx] = useState([]);
   const [fireballFx, setFireballFx] = useState([]);
+  const [fireExplosionFx, setFireExplosionFx] = useState([]);
   const [iceStormFx, setIceStormFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
@@ -1029,6 +1113,14 @@ export default function BattleScreen() {
           if (!evaded) {
             setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
             addParticle('hit', target.position.x, target.position.y, '#f97316');
+            const exId = Date.now() + Math.random();
+            const scatterAngles = [
+              Math.random() * 40 - 20,
+              120 + Math.random() * 40 - 20,
+              240 + Math.random() * 40 - 20,
+            ];
+            setFireExplosionFx(prev => [...prev, { id: exId, x: target.position.x, y: target.position.y, angles: scatterAngles }]);
+            setTimeout(() => setFireExplosionFx(prev => prev.filter(e => e.id !== exId)), 2500);
             const hfxR2 = getHitEffect(attacker, abilityName, true);
             if (hfxR2.sprite && target.position) {
               const hid = Date.now() + Math.random();
@@ -1843,6 +1935,10 @@ export default function BattleScreen() {
 
         {fireballFx.map(fb => (
           <FireballProjectile key={fb.id} startX={fb.startX} startY={fb.startY} endX={fb.endX} endY={fb.endY} phase={fb.phase} />
+        ))}
+
+        {fireExplosionFx.map(ex => (
+          <FireballExplosion key={ex.id} x={ex.x} y={ex.y} angles={ex.angles} />
         ))}
 
         {iceStormFx.map(ice => (
