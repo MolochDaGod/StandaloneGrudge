@@ -147,7 +147,6 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
 
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 30%)',
             padding: '16px 6px 6px',
             textAlign: 'center',
           }}>
