@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
+import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
@@ -1089,7 +1090,7 @@ export default function BattleScreen() {
     level, cooldowns, currentLocation,
     useAbility, processAIAction, advanceTurn, setSelectedTarget,
     returnToWorld, startBattle, returnFromTraining,
-    skipTurn, defendTurn, autoAttack,
+    skipTurn, defendTurn, autoAttack, moveRow,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
     inventory, useConsumable, useGrudge,
@@ -2876,6 +2877,90 @@ export default function BattleScreen() {
             </div>
           ) : isPlayerTurn && currentUnit ? (
             <>
+              {(() => {
+                if (!currentUnit || currentUnit.team !== 'player') return null;
+                const currentRow = currentUnit.row || 'battle';
+                const rowCfg = PLAYER_ROWS[currentRow];
+                const adjacent = getAdjacentRows(currentUnit);
+                const rows = ['protection', 'battle', 'back'];
+                const currentIdx = rows.indexOf(currentRow);
+                const canForward = currentIdx > 0 && adjacent.includes(rows[currentIdx - 1]);
+                const canBack = currentIdx < rows.length - 1 && adjacent.includes(rows[currentIdx + 1]);
+                const forwardRow = canForward ? PLAYER_ROWS[rows[currentIdx - 1]] : null;
+                const backRow = canBack ? PLAYER_ROWS[rows[currentIdx + 1]] : null;
+                const mods = rowCfg?.modifiers || {};
+                const modEntries = Object.entries(mods);
+
+                return (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5,
+                    justifyContent: 'center',
+                  }}>
+                    <button
+                      disabled={!canForward}
+                      onClick={() => canForward && moveRow('forward')}
+                      title={forwardRow ? `Move to ${forwardRow.name}` : ''}
+                      style={{
+                        width: 32, height: 32, borderRadius: 4,
+                        background: canForward ? 'rgba(59,130,246,0.3)' : 'rgba(40,40,50,0.3)',
+                        border: `2px solid ${canForward ? '#3b82f6' : '#333'}`,
+                        color: canForward ? '#93c5fd' : '#555',
+                        cursor: canForward ? 'pointer' : 'not-allowed',
+                        fontSize: '1rem', fontWeight: 900, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s', opacity: canForward ? 1 : 0.4,
+                      }}
+                      onMouseEnter={e => { if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.5)'; }}
+                      onMouseLeave={e => { if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.3)'; }}
+                    >{'\u25C0'}</button>
+                    <div style={{
+                      background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(212,169,106,0.3)',
+                      borderRadius: 6, padding: '3px 10px', textAlign: 'center', minWidth: 110,
+                    }}>
+                      <div style={{
+                        fontSize: '0.6rem', fontWeight: 800, color: '#d4a96a',
+                        letterSpacing: 1, textTransform: 'uppercase',
+                      }}>
+                        <InlineIcon name={rowCfg?.icon || 'crossed_swords'} size={10} /> {rowCfg?.name || 'Battle Line'}
+                      </div>
+                      {modEntries.length > 0 ? (
+                        <div style={{ fontSize: '0.45rem', color: '#a08b6d', marginTop: 1, lineHeight: 1.3 }}>
+                          {modEntries.map(([key, val]) => {
+                            const isPositive = key.includes('Bonus') || key.includes('Chance') || (key.includes('Mult') && val > 1);
+                            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace('Mult', '').replace('Penalty', '');
+                            const display = typeof val === 'number' && val < 1 ? `${Math.round(val * 100)}%` : typeof val === 'number' && val > 1 ? `${Math.round(val * 100)}%` : `+${val}`;
+                            return (
+                              <span key={key} style={{
+                                color: isPositive ? '#4ade80' : '#f87171',
+                                marginRight: 4,
+                              }}>{isPositive ? '+' : ''}{display} {label}</span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '0.45rem', color: '#6b7280', marginTop: 1 }}>No modifiers</div>
+                      )}
+                    </div>
+                    <button
+                      disabled={!canBack}
+                      onClick={() => canBack && moveRow('back')}
+                      title={backRow ? `Move to ${backRow.name}` : ''}
+                      style={{
+                        width: 32, height: 32, borderRadius: 4,
+                        background: canBack ? 'rgba(245,158,11,0.3)' : 'rgba(40,40,50,0.3)',
+                        border: `2px solid ${canBack ? '#f59e0b' : '#333'}`,
+                        color: canBack ? '#fcd34d' : '#555',
+                        cursor: canBack ? 'pointer' : 'not-allowed',
+                        fontSize: '1rem', fontWeight: 900, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s', opacity: canBack ? 1 : 0.4,
+                      }}
+                      onMouseEnter={e => { if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.5)'; }}
+                      onMouseLeave={e => { if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.3)'; }}
+                    >{'\u25B6'}</button>
+                  </div>
+                );
+              })()}
               <div style={{
                 display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 5,
               }}>

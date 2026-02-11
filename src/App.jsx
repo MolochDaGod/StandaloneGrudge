@@ -20,6 +20,7 @@ import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
 import SceneView from './components/SceneView';
+import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
 
 function GameApp() {
@@ -144,6 +145,7 @@ export default function App() {
   if (path === '/adminmap') return <AdminMap />;
   if (path === '/adminbattle') return <AdminBattle />;
   if (path === '/adminsprite') return <AdminSprite />;
+  if (path === '/discordauth') return <DiscordAuth />;
 
   return <GameApp />;
 }

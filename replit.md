@@ -7,7 +7,7 @@ Grudge Warlords is a Final Fantasy 7-inspired turn-based RPG with a dark fantasy
 I want the agent to use clear and concise language. I prefer iterative development with small, testable changes. Before making any significant architectural changes or adding new external dependencies, please ask for my approval. Ensure all code adheres to modern React practices and maintains a consistent styling approach.
 
 ## System Architecture
-The application is a React 19 frontend developed with Vite, managing global state via a single Zustand store. Styling utilizes inline styles and CSS variables, designed for static deployment.
+The application is a React 19 frontend developed with Vite, with an Express backend (server.js) for Discord OAuth and API routes. State management uses a single Zustand store. Styling utilizes inline styles and CSS variables. Deployment uses autoscale with `server.prod.js` serving both API and static build from `dist/`.
 
 **UI/UX Decisions:**
 - **Typography & Visuals:** Uses Cinzel (headings) and Jost (body) fonts. Visuals include pixel art sprites, particle and beam effects, a 2D world map with clickable nodes, and animated hero movement. War Council tabs feature unique fantasy backgrounds, and hero card sprites are scaled for visual impact.
@@ -49,10 +49,15 @@ The application is a React 19 frontend developed with Vite, managing global stat
 - **Battle Admin Mode:** Developer tool for pausing battles and adjusting effects.
 - **Admin Sprite Editor:** Comprehensive dev tool for configuring character sprites, projectiles, buffs/effects, weapons, and effect layers.
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
+- **Tactical Movement UI:** Battle action bar includes row position arrows (left/right) showing current row name, icon, and active modifiers (buffs/debuffs). Uses `moveRow('forward'/'back')` from gameStore with row data from `battleRows.js`.
+- **Discord OAuth:** `/discordauth` route handles Discord login with CSRF state protection. Backend server (server.js on port 3001 dev, server.prod.js on port 5000 prod) exchanges codes for tokens and creates beta channel invites.
+- **Beta Tester System:** Uses `GAME_API_GRUDA` bot token to create one-time invite links to Discord channel `1381760000946470987`. Invites expire after 24 hours.
 
 ## External Dependencies
 - **React:** Frontend library.
-- **Vite:** Development server and build tool.
+- **Vite:** Development server and build tool, with proxy to backend in dev.
 - **Zustand:** State management library.
+- **Express:** Backend server for Discord OAuth API routes.
+- **discord.js:** Discord API client library.
 - **Google Fonts:** For Cinzel and Jost fonts.
 - **Web Audio API:** For in-game sound effects and music.
