@@ -419,6 +419,17 @@ const FIREBALL_FRAMES = [
   '/icons/fireball_frame_08.png',
 ];
 
+const WATER_ARROW_FRAMES = [
+  '/icons/water_arrow_frame_01.png',
+  '/icons/water_arrow_frame_02.png',
+  '/icons/water_arrow_frame_03.png',
+  '/icons/water_arrow_frame_04.png',
+  '/icons/water_arrow_frame_05.png',
+  '/icons/water_arrow_frame_06.png',
+  '/icons/water_arrow_frame_07.png',
+  '/icons/water_arrow_frame_08.png',
+];
+
 function FireballProjectile({ startX, startY, endX, endY, phase }) {
   const [frame, setFrame] = React.useState(0);
   const displaySize = 56;
@@ -551,6 +562,115 @@ function FireballExplosion({ x, y, angles }) {
     <>
       {angles.map((angle, i) => (
         <FireScatterSprite key={i} x={x} y={y} angle={angle} delay={i * 60} />
+      ))}
+    </>
+  );
+}
+
+function WaterArrowProjectile({ startX, startY, endX, endY, phase }) {
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 64;
+  const riseY = startY - 10;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % WATER_ARROW_FRAMES.length;
+      setFrame(f);
+    }, 70);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  let posX, posY;
+  if (phase === 'rise') { posX = startX; posY = startY; }
+  else if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.4s ease-out'
+        : phase === 'fly'
+          ? 'left 0.45s ease-in, top 0.45s ease-in'
+          : 'none',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 210, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize,
+        transform: `rotate(${angle + 180}deg)`,
+      }}>
+        <img
+          src={WATER_ARROW_FRAMES[frame]}
+          alt=""
+          style={{
+            width: displaySize,
+            height: displaySize,
+            filter: 'drop-shadow(0 0 10px #22d3ee) drop-shadow(0 0 20px #0891b2) brightness(1.3)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WaterSplashSprite({ x, y, angle, delay }) {
+  const [visible, setVisible] = React.useState(false);
+  const [scattered, setScattered] = React.useState(false);
+  const [opacity, setOpacity] = React.useState(1);
+  const size = 16 + Math.random() * 12;
+  const dist = 5 + Math.random() * 6;
+  const targetX = x + Math.cos(angle * Math.PI / 180) * dist;
+  const targetY = y + Math.sin(angle * Math.PI / 180) * dist;
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      setVisible(true);
+      requestAnimationFrame(() => setScattered(true));
+    }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  React.useEffect(() => {
+    if (!visible) return;
+    const t = setTimeout(() => setOpacity(0), 400);
+    return () => clearTimeout(t);
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${scattered ? targetX : x}%`,
+      top: `${scattered ? targetY : y}%`,
+      transform: 'translate(-50%, -50%)',
+      transition: 'left 0.5s ease-out, top 0.5s ease-out, opacity 0.4s',
+      zIndex: 215, pointerEvents: 'none',
+      opacity,
+    }}>
+      <div style={{
+        width: size, height: size,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, #67e8f9 0%, #06b6d4 50%, #0e7490 100%)',
+        boxShadow: '0 0 8px #22d3ee, 0 0 16px rgba(6,182,212,0.5)',
+      }} />
+    </div>
+  );
+}
+
+function WaterSplashExplosion({ x, y, angles }) {
+  return (
+    <>
+      {angles.map((angle, i) => (
+        <WaterSplashSprite key={i} x={x} y={y} angle={angle} delay={i * 40} />
       ))}
     </>
   );
@@ -692,6 +812,12 @@ function isIceStormAbility(abilityName) {
   return abilityName.toLowerCase() === 'ice storm';
 }
 
+function isWaterAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('tidal') || n.includes('torrent') || n.includes('tsunami') || n.includes('water') || n.includes('deluge') || n.includes('aqua') || n.includes('splash');
+}
+
 function getProjectileColor(unit, abilityName) {
   if (!abilityName) return '#e2e8f0';
   const n = abilityName.toLowerCase();
@@ -774,6 +900,8 @@ export default function BattleScreen() {
   const [fireballFx, setFireballFx] = useState([]);
   const [fireExplosionFx, setFireExplosionFx] = useState([]);
   const [iceStormFx, setIceStormFx] = useState([]);
+  const [waterArrowFx, setWaterArrowFx] = useState([]);
+  const [waterSplashFx, setWaterSplashFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
@@ -1191,6 +1319,54 @@ export default function BattleScreen() {
         }, 1100 * spd);
         setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
         setTimeout(() => advanceTurn(), 1600 * spd);
+      } else if (ranged && isWaterAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const wId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = attacker.position.y;
+        setWaterArrowFx(prev => [...prev, { id: wId, startX, startY, endX: target.position.x, endY: target.position.y, phase: 'start' }]);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.map(f => f.id === wId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.map(f => f.id === wId ? { ...f, phase: 'fly' } : f));
+        }, 450 * spd);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.filter(f => f.id !== wId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, target.position.y, '#22d3ee');
+            const splashAngles = Array.from({ length: 5 }, () => Math.random() * 360);
+            const splId = Date.now() + Math.random();
+            setWaterSplashFx(prev => [...prev, { id: splId, x: target.position.x, y: target.position.y, angles: splashAngles }]);
+            setTimeout(() => setWaterSplashFx(prev => prev.filter(e => e.id !== splId)), 2000);
+            addParticle('cast', target.position.x, target.position.y, '#06b6d4');
+            const hfxW = getHitEffect(attacker, abilityName, true);
+            if (hfxW.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxW.sprite, filter: hfxW.filter || 'hue-rotate(160deg) brightness(1.3)' }]);
+              const effectDur = (hfxW.sprite.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+            }
+            if (isCrit) {
+              playCrit();
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 950 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1500 * spd);
       } else if (ranged) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
         setTimeout(() => {
@@ -1943,6 +2119,14 @@ export default function BattleScreen() {
 
         {iceStormFx.map(ice => (
           <IceStormProjectile key={ice.id} startX={ice.startX} startY={ice.startY} endX={ice.endX} endY={ice.endY} phase={ice.phase} />
+        ))}
+
+        {waterArrowFx.map(w => (
+          <WaterArrowProjectile key={w.id} startX={w.startX} startY={w.startY} endX={w.endX} endY={w.endY} phase={w.phase} />
+        ))}
+
+        {waterSplashFx.map(s => (
+          <WaterSplashExplosion key={s.id} x={s.x} y={s.y} angles={s.angles} />
         ))}
 
         {floatingDmg.map(f => (
