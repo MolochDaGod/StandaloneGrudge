@@ -265,6 +265,90 @@ const SPRITE_INFO = {
   wheat: { src: '/sprites/wheat.png', frameW: 16, frameH: 16, cols: 4, rows: 1 },
 };
 
+const buildRouteNetwork = (routes, locPositions) => {
+  if (!routes || routes.length === 0) return { getPathBetween: () => null };
+  const allPoints = [];
+  const segments = [];
+  routes.forEach(road => {
+    if (!road.points || road.points.length < 2) return;
+    const startIdx = allPoints.length;
+    road.points.forEach(p => allPoints.push({ x: p.x, y: p.y }));
+    for (let i = startIdx; i < allPoints.length - 1; i++) {
+      segments.push([i, i + 1]);
+    }
+  });
+  const STITCH_DIST = 3.5;
+  const routeStarts = [];
+  let idx = 0;
+  routes.forEach(road => {
+    if (!road.points || road.points.length < 2) { return; }
+    routeStarts.push({ start: idx, end: idx + road.points.length - 1 });
+    idx += road.points.length;
+  });
+  for (let i = 0; i < routeStarts.length; i++) {
+    for (let j = i + 1; j < routeStarts.length; j++) {
+      const ends_i = [routeStarts[i].start, routeStarts[i].end];
+      const ends_j = [routeStarts[j].start, routeStarts[j].end];
+      for (const ei of ends_i) {
+        for (const ej of ends_j) {
+          const dx = allPoints[ei].x - allPoints[ej].x;
+          const dy = allPoints[ei].y - allPoints[ej].y;
+          if (Math.sqrt(dx * dx + dy * dy) < STITCH_DIST) {
+            segments.push([ei, ej]);
+          }
+        }
+      }
+    }
+  }
+  const adj = {};
+  segments.forEach(([a, b]) => {
+    if (!adj[a]) adj[a] = [];
+    if (!adj[b]) adj[b] = [];
+    if (!adj[a].includes(b)) adj[a].push(b);
+    if (!adj[b].includes(a)) adj[b].push(a);
+  });
+  const findNearest = (pos) => {
+    let bestIdx = -1, bestDist = Infinity;
+    for (let i = 0; i < allPoints.length; i++) {
+      const dx = allPoints[i].x - pos.x;
+      const dy = allPoints[i].y - pos.y;
+      const d = dx * dx + dy * dy;
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    }
+    return bestIdx;
+  };
+  const bfsRoute = (startIdx, endIdx) => {
+    if (startIdx === endIdx) return [startIdx];
+    if (startIdx < 0 || endIdx < 0) return null;
+    const queue = [[startIdx]];
+    const visited = new Set([startIdx]);
+    while (queue.length > 0) {
+      const path = queue.shift();
+      const node = path[path.length - 1];
+      for (const next of (adj[node] || [])) {
+        if (next === endIdx) return [...path, next];
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push([...path, next]);
+        }
+      }
+    }
+    return null;
+  };
+  const getPathBetween = (fromPos, toPos) => {
+    const fromIdx = findNearest(fromPos);
+    const toIdx = findNearest(toPos);
+    if (fromIdx < 0 || toIdx < 0) return null;
+    const route = bfsRoute(fromIdx, toIdx);
+    if (!route) return null;
+    const points = [{ x: fromPos.x, y: fromPos.y }];
+    route.forEach(i => points.push({ x: allPoints[i].x, y: allPoints[i].y }));
+    points.push({ x: toPos.x, y: toPos.y });
+    return points;
+  };
+  return { getPathBetween, allPoints };
+};
+
 const generatePathGrass = () => {
   const grassNodes = [];
   const rng = seededRng('path_grass_global');
@@ -420,6 +504,10 @@ export default function WorldMap() {
   const [movePath, setMovePath] = useState(null);
   const [moveStep, setMoveStep] = useState(0);
   const [isPathing, setIsPathing] = useState(false);
+  const [walkPolyline, setWalkPolyline] = useState(null);
+  const [walkProgress, setWalkProgress] = useState(0);
+  const walkAnimRef = useRef(null);
+  const routeNetworkRef = useRef(null);
   const [portalMenu, setPortalMenu] = useState(null);
   const [portalTransition, setPortalTransition] = useState(false);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
@@ -735,6 +823,9 @@ export default function WorldMap() {
         setIsMoving(false);
         setMovePath(null);
         setMoveStep(0);
+        setWalkPolyline(null);
+        setWalkProgress(0);
+        if (walkAnimRef.current) { cancelAnimationFrame(walkAnimRef.current); walkAnimRef.current = null; }
         heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
           setHeroWalking(prev => { const next = { ...prev }; delete next[hero.id]; return next; });
         });
@@ -749,63 +840,110 @@ export default function WorldMap() {
     const to = getNodePos(nextNode);
     if (!from || !to) return;
 
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const duration = Math.max(400, Math.min(1800, dist * 60));
+    const network = routeNetworkRef.current;
+    let polyline = network ? network.getPathBetween(from, to) : null;
+    if (!polyline || polyline.length < 2) {
+      polyline = [{ x: from.x, y: from.y }, { x: to.x, y: to.y }];
+    }
 
-    setHeroPos(to);
-    setCurrentZone(nextNode);
-    heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
-      setHeroWalking(prev => ({ ...prev, [hero.id]: { moving: true, flipX: dx < 0 } }));
-    });
+    let totalDist = 0;
+    const segDists = [];
+    for (let i = 1; i < polyline.length; i++) {
+      const dx = polyline[i].x - polyline[i - 1].x;
+      const dy = polyline[i].y - polyline[i - 1].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      segDists.push(d);
+      totalDist += d;
+    }
 
-    const camTarget = { x: -(to.x - 50), y: -(to.y - 50) };
-    const maxPan = Math.max(0, 50 - 50 / camZoom);
-    setCamPos({
-      x: Math.max(-maxPan, Math.min(maxPan, camTarget.x)),
-      y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
-    });
+    const WALK_SPEED = 2.8;
+    const duration = Math.max(1500, (totalDist / WALK_SPEED) * 1000);
 
-    const footprintCount = Math.max(3, Math.round(dist / 1.8));
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    const footprintTimers = [];
-    for (let i = 1; i <= footprintCount; i++) {
-      const delay = (i / footprintCount) * duration;
-      const t = i / footprintCount;
-      const fpTimer = setTimeout(() => {
-        const isLeft = i % 2 === 0;
-        const perpX = -Math.sin(angle * Math.PI / 180) * 0.2;
-        const perpY = Math.cos(angle * Math.PI / 180) * 0.2;
+    const getPolyPos = (t) => {
+      const targetDist = t * totalDist;
+      let accumulated = 0;
+      for (let i = 0; i < segDists.length; i++) {
+        if (accumulated + segDists[i] >= targetDist) {
+          const segT = segDists[i] > 0 ? (targetDist - accumulated) / segDists[i] : 0;
+          return {
+            x: polyline[i].x + (polyline[i + 1].x - polyline[i].x) * segT,
+            y: polyline[i].y + (polyline[i + 1].y - polyline[i].y) * segT,
+            dx: polyline[i + 1].x - polyline[i].x,
+            dy: polyline[i + 1].y - polyline[i].y,
+          };
+        }
+        accumulated += segDists[i];
+      }
+      const last = polyline[polyline.length - 1];
+      return { x: last.x, y: last.y, dx: 0, dy: 0 };
+    };
+
+    let startTime = null;
+    let lastFpDist = 0;
+    const FP_SPACING = 1.2;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      const pos = getPolyPos(eased);
+
+      setHeroPos({ x: pos.x, y: pos.y });
+      heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
+        setHeroWalking(prev => ({ ...prev, [hero.id]: { moving: true, flipX: pos.dx < 0 } }));
+      });
+
+      const camTarget = { x: -(pos.x - 50), y: -(pos.y - 50) };
+      const maxPan = Math.max(0, 50 - 50 / camZoom);
+      setCamPos({
+        x: Math.max(-maxPan, Math.min(maxPan, camTarget.x)),
+        y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
+      });
+
+      const currentDist = eased * totalDist;
+      if (currentDist - lastFpDist >= FP_SPACING) {
+        lastFpDist = currentDist;
+        const angle = Math.atan2(pos.dy, pos.dx) * (180 / Math.PI);
+        const isLeft = Math.round(currentDist / FP_SPACING) % 2 === 0;
+        const perpX = -Math.sin(angle * Math.PI / 180) * 0.15;
+        const perpY = Math.cos(angle * Math.PI / 180) * 0.15;
         const fpId = footprintIdRef.current++;
         setWalkFootprints(prev => [...prev, {
           id: fpId,
-          x: from.x + dx * t + (isLeft ? perpX : -perpX),
-          y: from.y + dy * t + (isLeft ? perpY : -perpY),
+          x: pos.x + (isLeft ? perpX : -perpX),
+          y: pos.y + (isLeft ? perpY : -perpY),
           angle: angle + (isLeft ? -15 : 15),
           born: Date.now(),
         }]);
-        const cleanupTimer = setTimeout(() => {
+        setTimeout(() => {
           setWalkFootprints(prev => prev.filter(fp => fp.id !== fpId));
         }, 3000);
-        footprintCleanupRef.current.push(cleanupTimer);
-      }, delay);
-      footprintTimers.push(fpTimer);
-    }
+      }
 
-    const timer = setTimeout(() => {
-      setMoveStep(prev => prev + 1);
-    }, duration);
+      if (t < 1) {
+        walkAnimRef.current = requestAnimationFrame(animate);
+      } else {
+        setCurrentZone(nextNode);
+        setMoveStep(prev => prev + 1);
+      }
+    };
+
+    walkAnimRef.current = requestAnimationFrame(animate);
 
     return () => {
-      clearTimeout(timer);
-      footprintTimers.forEach(t => clearTimeout(t));
-      footprintCleanupRef.current.forEach(t => clearTimeout(t));
-      footprintCleanupRef.current = [];
+      if (walkAnimRef.current) {
+        cancelAnimationFrame(walkAnimRef.current);
+        walkAnimRef.current = null;
+      }
     };
   }, [movePath, moveStep]);
 
   useEffect(() => { setBgm('ambient'); }, []);
+
+  useEffect(() => {
+    routeNetworkRef.current = buildRouteNetwork(editRoutes, locationPositions);
+  }, [editRoutes]);
 
   useEffect(() => {
     const hasActive = Object.keys(activeHarvests).length > 0;
@@ -1775,7 +1913,8 @@ export default function WorldMap() {
         })}
 
         {(() => {
-          const zonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
+          const baseZonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
+          const zonePos = isPathing ? heroPos : baseZonePos;
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const heroScale = calcNodeScale(camZoom, 0.35);
           const mapSpriteScale = 1.2;
@@ -1799,7 +1938,7 @@ export default function WorldMap() {
               height: containerH,
               transform: `translate(-${hitAnchorX}px, -${hitAnchorY}px) scale(${heroScale})`,
               zIndex: MAP_LAYERS.HERO,
-              transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
+              transition: 'transform 0.3s',
               pointerEvents: 'none',
             }}>
               {activeHeroes.map((hero, idx) => {
@@ -1816,7 +1955,7 @@ export default function WorldMap() {
                     left: baseX + wanderX,
                     top: wanderY,
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out',
+                    transition: isPathing ? 'none' : 'left 1.5s ease-in-out, top 1.5s ease-in-out',
                   }}>
                     <div style={{
                       position: 'relative',
