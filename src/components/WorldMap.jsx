@@ -30,12 +30,6 @@ const bossMapSprites = {
   god_omni: { glow: 'rgba(167,139,250,0.8)', terrain: '/backgrounds/boss_blue.png', shape: 'godgate', effect: 'void', color1: '#a8f', color2: '#508' },
 };
 
-const portalShapes = {
-  archway: 'polygon(15% 100%, 5% 60%, 5% 25%, 15% 5%, 30% 0%, 70% 0%, 85% 5%, 95% 25%, 95% 60%, 85% 100%)',
-  volcano: 'polygon(50% 0%, 35% 15%, 20% 35%, 10% 55%, 5% 75%, 8% 90%, 15% 100%, 85% 100%, 92% 90%, 95% 75%, 90% 55%, 80% 35%, 65% 15%)',
-  rift: 'polygon(40% 0%, 30% 10%, 20% 25%, 15% 40%, 18% 55%, 12% 70%, 10% 85%, 15% 100%, 85% 100%, 90% 85%, 88% 70%, 82% 55%, 85% 40%, 80% 25%, 70% 10%, 60% 0%)',
-  godgate: 'polygon(20% 100%, 5% 70%, 0% 45%, 5% 20%, 15% 5%, 30% 0%, 50% -2%, 70% 0%, 85% 5%, 95% 20%, 100% 45%, 95% 70%, 80% 100%)',
-};
 
 const locationPositions = {
   verdant_plains:     { x: 12, y: 85 },
@@ -326,6 +320,15 @@ export default function WorldMap() {
     });
   }, [clampCam]);
 
+  const screenToMapPercent = useCallback((clientX, clientY) => {
+    const el = mapRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
+  }, []);
+
   const handleMapMouseDown = useCallback((e) => {
     if (drawingArea && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
       e.preventDefault();
@@ -550,15 +553,6 @@ export default function WorldMap() {
       window.removeEventListener('mouseup', onUp);
     };
   }, [devDragging]);
-
-  const screenToMapPercent = useCallback((clientX, clientY) => {
-    const el = mapRef.current;
-    if (!el) return null;
-    const rect = el.getBoundingClientRect();
-    const x = ((clientX - rect.left) / rect.width) * 100;
-    const y = ((clientY - rect.top) / rect.height) * 100;
-    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
-  }, []);
 
   const handleLocationClick = useCallback((e, loc) => {
     e.preventDefault();
@@ -911,35 +905,54 @@ export default function WorldMap() {
                     pointerEvents: 'none',
                   }} />
                 )}
-                <div style={{
-                  width: 56, height: 56,
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  border: `2px solid ${isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color + '80') : 'rgba(80,80,100,0.4)'}`,
-                  opacity: isUnlocked ? 1 : 0.4,
-                  boxShadow: isSelected
-                    ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}`
-                    : isUnlocked
-                      ? `0 0 8px ${icon.glow}`
-                      : 'none',
-                  transition: 'all 0.3s',
-                  animation: isSelected ? 'pulse 1.5s infinite' : 'none',
-                  position: 'relative',
-                }}>
-                  {isUnlocked && icon.img ? (
-                    <img src={icon.img} alt={loc.name} style={{
-                      width: '100%', height: '100%', objectFit: 'cover',
-                      filter: cleared ? 'saturate(0.7) brightness(0.8)' : 'none',
-                    }} />
-                  ) : (
+                {(() => {
+                  const hasBossActive = isUnlocked && loc.boss && !bossesDefeated.includes(loc.boss);
+                  const isHovered = hoveredNode?.type === 'location' && hoveredNode?.id === loc.id;
+                  return (
                     <div style={{
-                      width: '100%', height: '100%',
-                      background: 'rgba(30,30,50,0.8)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.2rem',
-                    }}>🔒</div>
-                  )}
-                </div>
+                      width: 56, height: 56,
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      border: `2px solid ${isUnlocked ? (hasBossActive ? (isHovered ? icon.color + '80' : '#cc0000') : isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color + '80') : 'rgba(80,80,100,0.4)'}`,
+                      opacity: isUnlocked ? 1 : 0.4,
+                      boxShadow: isSelected
+                        ? `0 0 20px ${icon.glow}, 0 0 40px ${icon.glow}`
+                        : hasBossActive && !isHovered
+                          ? '0 0 12px rgba(200,0,0,0.7), 0 0 24px rgba(200,0,0,0.4)'
+                          : isUnlocked
+                            ? `0 0 8px ${icon.glow}`
+                            : 'none',
+                      transition: 'all 0.3s',
+                      animation: isSelected ? 'pulse 1.5s infinite' : hasBossActive && !isHovered ? 'bossNodePulse 2s ease-in-out infinite' : 'none',
+                      position: 'relative',
+                    }}>
+                      {isUnlocked && icon.img ? (<>
+                        <img src={hasBossActive ? '/images/bosslogo.png' : icon.img} alt={loc.name} style={{
+                          width: '100%', height: '100%', objectFit: 'cover',
+                          filter: cleared ? 'saturate(0.7) brightness(0.8)' : 'none',
+                          position: 'absolute', top: 0, left: 0,
+                          opacity: hasBossActive && isHovered ? 0 : 1,
+                          transition: 'opacity 0.35s ease-in-out',
+                        }} />
+                        {hasBossActive && (
+                          <img src={icon.img} alt={loc.name} style={{
+                            width: '100%', height: '100%', objectFit: 'cover',
+                            position: 'absolute', top: 0, left: 0,
+                            opacity: isHovered ? 1 : 0,
+                            transition: 'opacity 0.35s ease-in-out',
+                          }} />
+                        )}
+                      </>) : (
+                        <div style={{
+                          width: '100%', height: '100%',
+                          background: 'rgba(30,30,50,0.8)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '1.2rem',
+                        }}>🔒</div>
+                      )}
+                    </div>
+                  );
+                })()}
                 {isUnlocked && conquer > 0 && (
                   <div style={{
                     position: 'absolute', bottom: -4, left: 4, right: 4,
@@ -1021,195 +1034,6 @@ export default function WorldMap() {
           );
         })}
 
-        {locations.filter(loc => loc.boss && !bossesDefeated.includes(loc.boss)).map(loc => {
-          const pos = getNodePos(loc.id);
-          if (!pos) return null;
-          const locBossOk = !loc.unlockBoss || bossesDefeated.includes(loc.unlockBoss);
-          const locReqOk = !loc.unlockRequiredBosses || loc.unlockRequiredBosses.every(b => bossesDefeated.includes(b));
-          const isLocUnlocked = loc.unlocked || (locBossOk && locReqOk && loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
-          if (!isLocUnlocked) return null;
-          const bs = bossMapSprites[loc.boss] || {};
-          const isGodBoss = loc.isGodFight;
-          const portalW = isGodBoss ? 64 : 56;
-          const portalH = isGodBoss ? 64 : 56;
-          const shape = portalShapes[bs.shape] || portalShapes.archway;
-          const bossX = Math.max(5, Math.min(95, pos.x + 3));
-          const bossY = Math.max(5, Math.min(95, pos.y - 3));
-          const bossScale = Math.max(0.3, 1 / camZoom);
-          const glowColor = bs.glow || 'rgba(255,0,0,0.5)';
-          const solidGlow = glowColor.replace(/,\s*[\d.]+\)$/, ', 1)');
-          const c1 = bs.color1 || '#f44';
-          const c2 = bs.color2 || '#800';
-          const eff = bs.effect || 'portal';
-
-          return (
-            <div key={`boss_${loc.boss}`} style={{
-              position: 'absolute',
-              left: `${bossX}%`, top: `${bossY}%`,
-              transform: `translate(-50%, -50%) scale(${bossScale})`,
-              zIndex: isGodBoss ? 5 : 4,
-              pointerEvents: 'none',
-              transition: 'transform 0.3s',
-            }}>
-              <div style={{
-                position: 'relative', width: portalW, height: portalH,
-                clipPath: shape,
-                filter: `drop-shadow(0 0 ${isGodBoss ? 14 : 8}px ${glowColor})`,
-              }}>
-                {bs.terrain && (
-                  <img src={bs.terrain} alt="" style={{
-                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    objectFit: 'cover', opacity: 0.85,
-                  }} />
-                )}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `linear-gradient(180deg, ${c2}44 0%, transparent 40%, ${c2}88 100%)`,
-                }} />
-
-                {eff === 'portal' && (<>
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse at 50% 40%, ${c1}66 0%, transparent 60%)`,
-                    animation: 'bossPortalPulse 2.5s ease-in-out infinite',
-                  }} />
-                  <div style={{
-                    position: 'absolute', top: '15%', left: '20%', width: '60%', height: '50%',
-                    borderRadius: '50%',
-                    background: `conic-gradient(from 0deg, ${c1}00, ${c1}88, ${c1}00, ${c1}44, ${c1}00)`,
-                    animation: 'portalSpin 3s linear infinite',
-                    opacity: 0.6,
-                  }} />
-                </>)}
-
-                {eff === 'lava' && (<>
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%',
-                    background: `linear-gradient(0deg, ${c1}cc 0%, ${c1}66 40%, transparent 100%)`,
-                    animation: 'bossLavaFlow 2s ease-in-out infinite',
-                  }} />
-                  <div style={{
-                    position: 'absolute', bottom: '10%', left: '15%', width: '70%', height: '20%',
-                    background: `radial-gradient(ellipse, ${c1}ff, ${c1}44, transparent)`,
-                    animation: 'bossPortalPulse 1.5s ease-in-out infinite alternate',
-                    borderRadius: '50%',
-                  }} />
-                  {[0.2, 0.4, 0.6, 0.8].map((xp, i) => (
-                    <div key={i} style={{
-                      position: 'absolute', bottom: '30%', left: `${xp * 100}%`,
-                      width: 4, height: 4, borderRadius: '50%',
-                      background: c1, opacity: 0.8,
-                      animation: `bossEmberRise 1.8s ease-out infinite ${i * 0.4}s`,
-                    }} />
-                  ))}
-                </>)}
-
-                {eff === 'souls' && (<>
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse at 50% 60%, ${c1}44 0%, transparent 70%)`,
-                    animation: 'bossPortalPulse 3s ease-in-out infinite',
-                  }} />
-                  {[0.2, 0.4, 0.6, 0.8].map((xp, i) => (
-                    <div key={i} style={{
-                      position: 'absolute', bottom: '20%', left: `${xp * 100}%`,
-                      width: 6, height: 6, borderRadius: '50%',
-                      background: `radial-gradient(circle, ${c1}cc, transparent)`,
-                      animation: `bossSoulFloat ${2 + i * 0.3}s ease-in-out infinite ${i * 0.5}s`,
-                    }} />
-                  ))}
-                </>)}
-
-                {eff === 'waves' && (<>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{
-                      position: 'absolute', bottom: `${10 + i * 15}%`, left: 0, right: 0, height: '12%',
-                      background: `linear-gradient(90deg, transparent, ${c1}66, transparent)`,
-                      animation: `bossWaveFlow 2.5s ease-in-out infinite ${i * 0.6}s`,
-                      borderRadius: '50%',
-                    }} />
-                  ))}
-                </>)}
-
-                {eff === 'frost' && (<>
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse at 50% 30%, ${c1}55 0%, transparent 70%)`,
-                    animation: 'bossPortalPulse 3s ease-in-out infinite',
-                  }} />
-                  {[0.15, 0.4, 0.65, 0.85].map((xp, i) => (
-                    <div key={i} style={{
-                      position: 'absolute', top: `${15 + i * 12}%`, left: `${xp * 100}%`,
-                      width: 3, height: 3, borderRadius: '50%',
-                      background: '#fff', opacity: 0.7,
-                      animation: `bossFrostSparkle 2s ease-in-out infinite ${i * 0.4}s`,
-                    }} />
-                  ))}
-                </>)}
-
-                {eff === 'void' && (<>
-                  <div style={{
-                    position: 'absolute', top: '20%', left: '20%', width: '60%', height: '50%',
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${c2}ff 0%, ${c1}44 50%, transparent 70%)`,
-                    animation: 'bossVoidPulse 2s ease-in-out infinite',
-                  }} />
-                  <div style={{
-                    position: 'absolute', top: '15%', left: '15%', width: '70%', height: '55%',
-                    borderRadius: '50%',
-                    border: `1px solid ${c1}66`,
-                    animation: 'bossVoidRing 3s linear infinite',
-                  }} />
-                </>)}
-
-                {eff === 'vines' && (<>
-                  {[0, 1, 2, 3].map(i => (
-                    <div key={i} style={{
-                      position: 'absolute', bottom: 0, left: `${10 + i * 22}%`,
-                      width: 3, height: `${30 + i * 10}%`,
-                      background: `linear-gradient(0deg, ${c1}aa, ${c1}33, transparent)`,
-                      animation: `bossVineGrow 3s ease-in-out infinite ${i * 0.5}s`,
-                      borderRadius: 2,
-                    }} />
-                  ))}
-                </>)}
-
-                {eff === 'lightning' && (<>
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: `radial-gradient(ellipse at 50% 30%, ${c1}44 0%, transparent 60%)`,
-                    animation: 'bossLightningFlash 1.5s ease-in-out infinite',
-                  }} />
-                  {[0.3, 0.5, 0.7].map((xp, i) => (
-                    <div key={i} style={{
-                      position: 'absolute', top: 0, left: `${xp * 100}%`,
-                      width: 2, height: '60%',
-                      background: `linear-gradient(180deg, ${c1}ee, ${c1}44, transparent)`,
-                      animation: `bossLightningBolt 0.8s ease-out infinite ${i * 0.3 + 0.2}s`,
-                      opacity: 0,
-                    }} />
-                  ))}
-                </>)}
-
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  boxShadow: `inset 0 0 15px ${c2}aa, inset 0 -8px 12px ${c2}cc`,
-                  pointerEvents: 'none',
-                }} />
-              </div>
-
-              <div className="font-cinzel" style={{
-                textAlign: 'center', marginTop: 3,
-                fontSize: isGodBoss ? '0.55rem' : '0.45rem', fontWeight: 700,
-                color: solidGlow,
-                textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${glowColor}`,
-                whiteSpace: 'nowrap',
-              }}>
-                {isGodBoss ? 'GOD' : 'BOSS'}
-              </div>
-            </div>
-          );
-        })}
 
         {cities.map((city) => {
           const pos = getNodePos(city.id);
