@@ -127,7 +127,7 @@ function startIntroMusic() {
   if (currentBgm === 'intro') return;
   stopBgm();
   currentBgm = 'intro';
-  introAudio = new Audio('/audio/intro_theme.mp3');
+  introAudio = new Audio('/audio/youth_thinker.mp3');
   introAudio.loop = true;
   introAudio.volume = musicMuted ? 0 : Math.min(musicVolume, 0.45);
   introAudio.play().catch(() => {
@@ -265,7 +265,7 @@ function startSceneMusic() {
   if (currentBgm === 'scene') return;
   stopBgm();
   currentBgm = 'scene';
-  sceneAudio = new Audio('/audio/scene_theme.mp3');
+  sceneAudio = new Audio('/audio/elevate_your_mind.mp3');
   sceneAudio.loop = true;
   sceneAudio.volume = musicMuted ? 0 : Math.min(musicVolume, 0.45);
   sceneAudio.play().catch(() => {
