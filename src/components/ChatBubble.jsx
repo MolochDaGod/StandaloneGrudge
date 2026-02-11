@@ -48,15 +48,18 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
     return () => clearTimeout(t);
   }, [index]);
 
-  const bubbleScale = Math.max(0.22, 0.55 / camZoom);
-  const tailH = 20;
-  const bubbleW = 200;
+  const bubbleScale = Math.max(0.44, 1.1 / camZoom);
+  const tailH = 36;
+  const bubbleW = 400;
+
+  const anchorX = speakerPos ? speakerPos.x : (isLeft ? 20 : 100);
+  const anchorY = speakerPos?.y ?? 0;
 
   return (
     <div style={{
       position: 'absolute',
-      left: speakerPos ? speakerPos.x : (isLeft ? 20 : 100),
-      bottom: 0,
+      left: anchorX,
+      bottom: -anchorY,
       transform: `translateX(-50%)`,
       zIndex: 9500 + index,
       pointerEvents: 'none',
@@ -69,25 +72,25 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
         transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
         pointerEvents: 'auto',
         cursor: 'pointer',
-        marginBottom: tailH * bubbleScale + 2,
+        marginBottom: tailH * bubbleScale + 4,
       }}
         onClick={(e) => { e.stopPropagation(); if (onDismiss) onDismiss(); }}
       >
         <div style={{
           position: 'relative',
           width: bubbleW,
-          filter: `drop-shadow(2px 3px 0px rgba(0,0,0,0.5))`,
+          filter: `drop-shadow(3px 4px 0px rgba(0,0,0,0.55))`,
         }}>
           <div style={{
             background: '#fffef5',
-            border: '3px solid #111',
-            borderRadius: 22,
-            padding: '8px 12px 8px 10px',
+            border: '4px solid #111',
+            borderRadius: 26,
+            padding: '14px 18px 14px 16px',
             position: 'relative',
           }}>
             <div style={{
-              position: 'absolute', top: 2, right: 7,
-              fontSize: '0.65rem', color: '#aaa', lineHeight: 1,
+              position: 'absolute', top: 4, right: 10,
+              fontSize: '1rem', color: '#999', lineHeight: 1,
               fontWeight: 700, fontFamily: 'sans-serif',
               pointerEvents: 'auto',
             }}>
@@ -95,21 +98,21 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
             </div>
 
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              marginBottom: 3,
+              display: 'flex', alignItems: 'center', gap: 10,
+              marginBottom: 6,
             }}>
               <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                border: `2.5px solid ${bubble.colorHex}`,
+                width: 56, height: 56, borderRadius: '50%',
+                border: `3px solid ${bubble.colorHex}`,
                 overflow: 'hidden', flexShrink: 0,
                 background: '#2a2a4a',
-                boxShadow: `inset 0 0 4px rgba(0,0,0,0.6)`,
+                boxShadow: `inset 0 0 6px rgba(0,0,0,0.6), 0 0 8px ${bubble.colorHex}44`,
               }}>
-                {bubble.spriteData && <SpriteFace spriteData={bubble.spriteData} size={32} />}
+                {bubble.spriteData && <SpriteFace spriteData={bubble.spriteData} size={56} />}
               </div>
               <div style={{
                 fontFamily: "'Cinzel', serif", fontWeight: 800,
-                fontSize: '0.6rem', color: '#1a1a2e',
+                fontSize: '1.1rem', color: '#1a1a2e',
                 letterSpacing: '0.02em',
                 textTransform: 'uppercase',
               }}>
@@ -118,9 +121,9 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
             </div>
 
             <div style={{
-              fontSize: '0.65rem',
+              fontSize: '1.1rem',
               color: '#222',
-              lineHeight: 1.45,
+              lineHeight: 1.5,
               fontWeight: 500,
               fontFamily: "'Jost', sans-serif",
               wordBreak: 'break-word',
@@ -130,13 +133,13 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
           </div>
 
           <svg
-            width="44"
+            width="56"
             height={tailH}
-            viewBox={`0 0 44 ${tailH}`}
+            viewBox={`0 0 56 ${tailH}`}
             style={{
               position: 'absolute',
               top: '100%',
-              marginTop: -3,
+              marginTop: -4,
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'block',
@@ -144,13 +147,13 @@ function ComicBubble({ bubble, speakerPos, onDismiss, camZoom, index, isLeft }) 
             }}
           >
             <path
-              d={`M 10 0 C 14 ${tailH * 0.5}, 18 ${tailH * 0.8}, 22 ${tailH} C 26 ${tailH * 0.8}, 30 ${tailH * 0.5}, 34 0`}
+              d={`M 12 0 C 17 ${tailH * 0.5}, 22 ${tailH * 0.85}, 28 ${tailH} C 34 ${tailH * 0.85}, 39 ${tailH * 0.5}, 44 0`}
               fill="#fffef5"
               stroke="#111"
-              strokeWidth="3"
+              strokeWidth="4"
               strokeLinejoin="round"
             />
-            <line x1="12" y1="0" x2="32" y2="0" stroke="#fffef5" strokeWidth="5" />
+            <line x1="14" y1="0" x2="42" y2="0" stroke="#fffef5" strokeWidth="6" />
           </svg>
         </div>
       </div>

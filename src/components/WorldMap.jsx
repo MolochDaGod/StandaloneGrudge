@@ -571,6 +571,7 @@ export default function WorldMap() {
   const [currentDialogue, setCurrentDialogue] = useState(null);
   const [dialoguePhase, setDialoguePhase] = useState(0);
   const [chatLog, setChatLog] = useState([]);
+  const [chatInput, setChatInput] = useState('');
   const chatLogRef = useRef(null);
   const [bossWalkUp, setBossWalkUp] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -2133,9 +2134,10 @@ export default function WorldMap() {
             const offset = wanderOffsets[h.id] || { x: 0, y: 0 };
             const heroSpriteData = getPlayerSprite(h.classId, h.raceId);
             const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale2;
+            const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale2;
             speakerPositions[h.id] = {
               x: idx * (spriteW2 * 0.4) + offset.x * 3 + heroFrameW / 2,
-              y: 0,
+              y: heroFrameH * footCrop2,
             };
           });
 
@@ -3647,46 +3649,107 @@ export default function WorldMap() {
             display: 'flex', alignItems: 'stretch', gap: 12,
           }}>
             <div style={{
-              flex: '0 0 260px', minWidth: 0,
-              background: 'rgba(10,14,32,0.8)',
+              flex: '0 0 340px', minWidth: 0,
+              background: 'rgba(10,14,32,0.85)',
               borderRadius: 10,
-              border: '1px solid rgba(255,215,0,0.1)',
+              border: '1px solid rgba(255,215,0,0.15)',
               display: 'flex', flexDirection: 'column',
               overflow: 'hidden',
             }}>
               <div style={{
-                padding: '4px 10px 3px',
+                padding: '5px 12px 4px',
                 background: 'rgba(255,215,0,0.06)',
-                borderBottom: '1px solid rgba(255,215,0,0.08)',
-                display: 'flex', alignItems: 'center', gap: 5,
+                borderBottom: '1px solid rgba(255,215,0,0.1)',
+                display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                <span style={{ fontSize: '0.55rem', opacity: 0.6 }}>💬</span>
-                <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>💬</span>
+                <span className="font-cinzel" style={{ fontSize: '0.7rem', color: 'rgba(255,215,0,0.55)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
               </div>
               <div ref={chatLogRef} style={{
-                flex: 1, overflowY: 'auto', padding: '5px 10px 5px',
-                maxHeight: 64, minHeight: 40,
-                fontSize: '0.55rem', lineHeight: 1.6,
+                flex: 1, overflowY: 'auto', padding: '6px 12px 6px',
+                maxHeight: 96, minHeight: 60,
+                fontSize: '0.85rem', lineHeight: 1.6,
                 scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
               }}>
                 {chatLog.length > 0 ? chatLog.map(entry => (
                   <div key={entry.id} style={{
-                    marginBottom: 3, padding: '1px 0',
+                    marginBottom: 4, padding: '2px 0',
                     animation: 'fadeIn 0.3s ease-out',
                   }}>
                     <span style={{
-                      fontWeight: 700, color: entry.color, marginRight: 5,
-                      fontSize: '0.52rem', textTransform: 'uppercase', letterSpacing: '0.03em',
+                      fontWeight: 700, color: entry.color, marginRight: 6,
+                      fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.03em',
                     }}>{entry.speaker}</span>
                     <span style={{ color: 'rgba(226,232,240,0.85)', fontWeight: 400 }}>{entry.line}</span>
                   </div>
                 )) : (
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    height: '100%', minHeight: 36,
-                    fontSize: '0.5rem', color: 'rgba(148,163,184,0.35)', fontStyle: 'italic',
+                    height: '100%', minHeight: 50,
+                    fontSize: '0.8rem', color: 'rgba(148,163,184,0.35)', fontStyle: 'italic',
                   }}>Your party is quiet...</div>
                 )}
+              </div>
+              <div style={{
+                padding: '4px 8px 6px',
+                borderTop: '1px solid rgba(255,215,0,0.08)',
+                display: 'flex', gap: 6, alignItems: 'center',
+              }}>
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && chatInput.trim()) {
+                      const leader = heroRoster.find(h => activeHeroIds.includes(h.id));
+                      const name = leader?.name || 'You';
+                      setChatLog(prev => [...prev.slice(-49), {
+                        id: Date.now(),
+                        speaker: name,
+                        line: chatInput.trim(),
+                        color: '#a78bfa',
+                      }]);
+                      setChatInput('');
+                    }
+                  }}
+                  placeholder="Say something..."
+                  style={{
+                    flex: 1, background: 'rgba(20,24,48,0.9)',
+                    border: '1px solid rgba(255,215,0,0.12)',
+                    borderRadius: 6, padding: '5px 10px',
+                    color: 'rgba(226,232,240,0.9)', fontSize: '0.75rem',
+                    fontFamily: "'Jost', sans-serif",
+                    outline: 'none',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.35)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.12)'}
+                />
+                <button
+                  onClick={() => {
+                    if (chatInput.trim()) {
+                      const leader = heroRoster.find(h => activeHeroIds.includes(h.id));
+                      const name = leader?.name || 'You';
+                      setChatLog(prev => [...prev.slice(-49), {
+                        id: Date.now(),
+                        speaker: name,
+                        line: chatInput.trim(),
+                        color: '#a78bfa',
+                      }]);
+                      setChatInput('');
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(255,215,0,0.12)',
+                    border: '1px solid rgba(255,215,0,0.2)',
+                    borderRadius: 6, padding: '4px 10px',
+                    color: 'var(--gold)', fontSize: '0.7rem',
+                    fontFamily: "'Cinzel', serif", fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.target.style.background = 'rgba(255,215,0,0.22)'; e.target.style.borderColor = 'rgba(255,215,0,0.4)'; }}
+                  onMouseLeave={(e) => { e.target.style.background = 'rgba(255,215,0,0.12)'; e.target.style.borderColor = 'rgba(255,215,0,0.2)'; }}
+                >Send</button>
               </div>
             </div>
 
