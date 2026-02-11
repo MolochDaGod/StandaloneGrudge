@@ -530,7 +530,7 @@ export default function WorldMap() {
     setScreen, startBattle, startBossBattle, getUnlockedLocations, restAtInn,
     victories, unspentPoints, skillPoints, heroRoster, activeHeroIds, maxHeroSlots,
     setActiveHeroes, locationsCleared, bossesDefeated, zoneConquer,
-    harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests,
+    harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests, setHeroStandingZone,
     startMissionBattle, startArenaBattle, completedMissions,
     upgradeEquipment,
     shopInventory, inventory, buyItem, sellItem, refreshShop,
@@ -554,7 +554,11 @@ export default function WorldMap() {
   const [upgradeMsg, setUpgradeMsg] = useState(null);
   const [tradeTab, setTradeTab] = useState('buy');
   const [heroPos, setHeroPos] = useState(locationPositions.verdant_plains);
-  const [currentZone, setCurrentZone] = useState('verdant_plains');
+  const [currentZone, setCurrentZone] = useState(() => {
+    const zone = 'verdant_plains';
+    useGameStore.getState().setHeroStandingZone?.(zone);
+    return zone;
+  });
   const [isMoving, setIsMoving] = useState(false);
   const [wanderOffsets, setWanderOffsets] = useState({});
   const mapRef = useRef(null);
@@ -888,6 +892,7 @@ export default function WorldMap() {
       if (movePath && moveStep >= movePath.length - 1) {
         const dest = movePath[movePath.length - 1];
         setCurrentZone(dest);
+        setHeroStandingZone(dest);
         setIsPathing(false);
         setIsMoving(false);
         setMovePath(null);
@@ -902,6 +907,7 @@ export default function WorldMap() {
       return;
     }
     setIsPathing(true);
+    setHeroStandingZone(null);
     setIsMoving(true);
     const currentNode = movePath[moveStep];
     const nextNode = movePath[moveStep + 1];

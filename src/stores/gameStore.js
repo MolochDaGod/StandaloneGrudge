@@ -385,6 +385,7 @@ const useGameStore = create(persist((set, get) => ({
   maxHeroSlots: 1,
   locationsCleared: [],
   zoneConquer: {},
+  heroStandingZone: null,
   zoneStats: {},
   completedQuests: {},
   inventory: [],
@@ -2314,6 +2315,9 @@ const useGameStore = create(persist((set, get) => ({
     const maxConquer = Math.max(0, ...Object.values(state.zoneConquer || {}));
     const conquerHarvestMult = 1 + (maxConquer / 100) * 3;
 
+    const zoneConquer = { ...state.zoneConquer };
+    let conquerChanged = false;
+
     Object.entries(state.activeHarvests).forEach(([nodeId, heroId]) => {
       const node = state.harvestNodes.find(n => n.id === nodeId);
       const hero = state.heroRoster.find(h => h.id === heroId);
@@ -2327,9 +2331,35 @@ const useGameStore = create(persist((set, get) => ({
       }
     });
 
+    if (state.heroStandingZone) {
+      const zoneId = state.heroStandingZone;
+      const current = zoneConquer[zoneId] || 0;
+      if (current < 100) {
+        const passiveRate = Math.max(0.05, 0.25 - current * 0.002);
+        const passiveGain = passiveRate * (elapsed / 2);
+        zoneConquer[zoneId] = Math.min(100, current + passiveGain);
+        conquerChanged = true;
+      }
+    }
+
+    if (Object.keys(state.activeHarvests).length > 0 && state.heroStandingZone) {
+      const zoneId = state.heroStandingZone;
+      const current = zoneConquer[zoneId] || 0;
+      if (current < 100) {
+        const harvestConquerGain = Object.keys(state.activeHarvests).length * 0.08 * (elapsed / 2);
+        zoneConquer[zoneId] = Math.min(100, current + harvestConquerGain);
+        conquerChanged = true;
+      }
+    }
+
     const updates = { lastHarvestTick: now, harvestResources: newResources };
     if (goldGained > 0) updates.gold = state.gold + goldGained;
+    if (conquerChanged) updates.zoneConquer = zoneConquer;
     set(updates);
+  },
+
+  setHeroStandingZone: (zoneId) => {
+    set({ heroStandingZone: zoneId });
   },
 
   enterScene: (sceneType, returnTo) => {
@@ -2397,7 +2427,12 @@ const useGameStore = create(persist((set, get) => ({
     const event = (state.randomEvents || []).find(e => e.id === eventId);
     if (!event) return;
     const remaining = state.randomEvents.filter(e => e.id !== eventId);
-    set({ randomEvents: remaining, eventBonusRewards: event.rewards || null });
+    const zoneConquer = { ...state.zoneConquer };
+    if (event.locationId) {
+      const current = zoneConquer[event.locationId] || 0;
+      zoneConquer[event.locationId] = Math.min(100, current + 3);
+    }
+    set({ randomEvents: remaining, eventBonusRewards: event.rewards || null, zoneConquer });
     useGameStore.setState({ currentLocation: event.locationId });
     state.startBattle(event.locationId);
   },
