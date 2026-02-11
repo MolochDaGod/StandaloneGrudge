@@ -76,20 +76,28 @@ const zoneGradients = {
   default: 'linear-gradient(180deg, #141828 0%, #0e1220 40%, #0a0e18 70%, #060a10 100%)',
 };
 
-const critEffects = {
-  spell: {
-    src: '/effects/explosion_crit.webp',
-    frames: 32, cols: 8, rows: 4,
-    width: 1024, height: 512,
-    frameW: 128, frameH: 128,
-  },
-  melee: {
-    src: '/effects/slash_crit.jpg',
-    frames: 18, cols: 6, rows: 3,
-    width: 6144, height: 3072,
-    frameW: 1024, frameH: 1024,
-  },
+const critEffectPools = {
+  spell: [
+    { key: 'felSpell', filter: 'brightness(1.6) saturate(1.5)' },
+    { key: 'sunburn', filter: 'brightness(1.5) saturate(1.8)' },
+    { key: 'vortex', filter: 'brightness(1.4) hue-rotate(30deg) saturate(1.5)' },
+    { key: 'nebula', filter: 'brightness(1.5) saturate(2)' },
+    { key: 'midnight', filter: 'brightness(1.6) saturate(1.8)' },
+  ],
+  melee: [
+    { key: 'flameLash', filter: 'brightness(1.5) saturate(1.8)' },
+    { key: 'weaponHit', filter: 'brightness(1.6) saturate(1.5)' },
+    { key: 'fireSpin', filter: 'brightness(1.5) saturate(2)' },
+    { key: 'brightFire', filter: 'brightness(1.4) saturate(1.8)' },
+    { key: 'fireExplosion', filter: 'brightness(1.5) saturate(1.5)' },
+  ],
 };
+
+function getRandomCritEffect(type) {
+  const pool = critEffectPools[type] || critEffectPools.melee;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return { sprite: effectSprites[pick.key], filter: pick.filter };
+}
 
 function EffectSprite({ x, y, sprite, filter: filterProp }) {
   const [frame, setFrame] = React.useState(0);
@@ -145,15 +153,16 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
   );
 }
 
-function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 }) {
+function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.5, endScale = 1.8 }) {
   const [frame, setFrame] = React.useState(0);
+  if (!sprite) return null;
   const totalFrames = sprite.frames;
-  const baseSize = 140;
+  const baseSize = 160;
 
   const cols = sprite.cols || Math.round(Math.sqrt(sprite.frames));
   const rows = sprite.rows || Math.ceil(totalFrames / cols);
-  const frameW = sprite.frameW || (sprite.width / cols);
-  const frameH = sprite.frameH || (sprite.height / rows);
+  const frameW = sprite.frameW || (sprite.size ? sprite.size / cols : (sprite.width / cols));
+  const frameH = sprite.frameH || (sprite.size ? sprite.size / cols : (sprite.height / rows));
 
   React.useEffect(() => {
     let f = 0;
@@ -195,7 +204,9 @@ function GrowingEffectSprite({ x, y, sprite, startScale = 0.5, endScale = 1.8 })
         backgroundSize: `${cols * frameW * scaleX}px ${rows * frameH * scaleY}px`,
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
         mixBlendMode: 'screen',
+        ...(filterProp ? { filter: filterProp } : {}),
       }} />
     </div>
   );
@@ -1396,7 +1407,7 @@ export default function BattleScreen() {
               playCrit();
               if (target.position) {
                 const critId = Date.now() + Math.random();
-                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
                 setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
               }
             } else {
@@ -1441,7 +1452,7 @@ export default function BattleScreen() {
               playCrit();
               if (target.position) {
                 const critId = Date.now() + Math.random();
-                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
                 setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
               }
             } else {
@@ -1489,7 +1500,7 @@ export default function BattleScreen() {
               playCrit();
               if (target.position) {
                 const critId = Date.now() + Math.random();
-                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
                 setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
               }
             } else {
@@ -1529,7 +1540,7 @@ export default function BattleScreen() {
               playCrit();
               if (target.position) {
                 const critId = Date.now() + Math.random();
-                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('spell') }]);
                 setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
               }
             } else {
@@ -1588,7 +1599,7 @@ export default function BattleScreen() {
                   if (target.position) {
                     const critType = abilityType === 'magical' ? 'spell' : 'melee';
                     const critId = Date.now() + Math.random();
-                    setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                    setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect(critType) }]);
                     setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
                   }
                 } else {
@@ -1646,7 +1657,7 @@ export default function BattleScreen() {
                 playCrit();
                 if (target.position) {
                   const critId = Date.now() + Math.random();
-                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'melee' }]);
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect('melee') }]);
                   setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
                 }
               } else {
@@ -1703,7 +1714,7 @@ export default function BattleScreen() {
                 if (target.position) {
                   const critType = abilityType === 'magical' ? 'spell' : 'melee';
                   const critId = Date.now() + Math.random();
-                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect(critType) }]);
                   setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
                 }
               } else {
@@ -1742,7 +1753,7 @@ export default function BattleScreen() {
                 if (target.position) {
                   const critType = abilityType === 'magical' ? 'spell' : 'melee';
                   const critId = Date.now() + Math.random();
-                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: critType }]);
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, ...getRandomCritEffect(critType) }]);
                   setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
                 }
               } else {
@@ -2320,7 +2331,7 @@ export default function BattleScreen() {
         ))}
 
         {critFx.map(c => (
-          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={critEffects[c.type]} />
+          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={c.sprite} filter={c.filter} />
         ))}
 
         {dodgeFlashes.map(d => (
