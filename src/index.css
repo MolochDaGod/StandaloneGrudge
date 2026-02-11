@@ -50,10 +50,8 @@ body {
 }
 
 .game-frame {
-  width: 100%;
-  height: 100%;
-  max-width: 1200px;
-  max-height: 900px;
+  width: 100vw;
+  height: 100vh;
   position: relative;
   border: none;
   overflow: hidden;
@@ -70,18 +68,16 @@ body {
   background-image: url('/ui/game-border-frame.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
+  background-position: center center;
   pointer-events: none;
   z-index: var(--z-ui-frame, 10500);
   clip-path: inset(var(--frame-crop-top, 0%) var(--frame-crop-right, 0%) var(--frame-crop-bottom, 0%) var(--frame-crop-left, 0%));
   opacity: var(--frame-opacity, 1);
   display: var(--frame-display, block);
+  image-rendering: auto;
 }
 
 @media (max-width: 768px) {
-  .game-frame {
-    max-width: 100%;
-    max-height: 100%;
-  }
   :root {
     --frame-inset-top: 1%;
     --frame-inset-side: 3%;
