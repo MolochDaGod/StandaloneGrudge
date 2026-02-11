@@ -34,7 +34,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Particle Effects:** CSS-animated particle effects for in-battle actions.
 - **World Map:** An RTS-style 2D map with zoom/pan. Uses a centralized layer system for z-index ordering and coordinate management. Features 32 unlockable locations across 5 terrain regions, following faction-based progression arcs. Includes environmental effects (rivers, lava) and a dynamic day/night cycle.
     - **Map Node Menus:** Zone popup menus use `MenuButton` components with image icons, Cinzel font, gradient backgrounds, and keyboard shortcuts.
-    - **Chat Bubble System:** Physics-based AI conversation bubbles on the world map with collision resolution, floating animation, and hover-triggered quick responses linked to game actions.
+    - **Chat Bubble System:** Comic-style speech bubbles on the world map anchored to speaker hero sprites. Cream/white bubbles with thick black borders, SVG curved tails pointing to the speaking hero, sprite face portraits, and click-to-dismiss. Bubbles persist on screen until clicked or new dialogue triggers.
     - **Pathfinding:** Heroes walk along a node connection graph using BFS for shortest path, with dynamic footprint marks.
     - **Portal Fast Travel:** Three portal locations with animated visuals provide instant fast travel between unlocked portals.
     - **God Fights:** Three endgame God encounters unlock after defeating the Void King, each gated by faction-arc boss completions.

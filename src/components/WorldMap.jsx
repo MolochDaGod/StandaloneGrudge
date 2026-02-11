@@ -1080,10 +1080,7 @@ export default function WorldMap() {
             return [...prev.slice(-49), entry];
           });
         }, 2500);
-        setTimeout(() => {
-          setDialoguePhase(0);
-          setTimeout(() => setCurrentDialogue(null), 600);
-        }, 6000);
+        
       }
     }, delay);
     return () => clearTimeout(timeout);
@@ -2103,6 +2100,61 @@ export default function WorldMap() {
                   </div>
                 );
               })}
+
+            </div>
+          );
+        })()}
+
+        {currentDialogue && dialoguePhase > 0 && (() => {
+          const baseZonePos2 = getNodePos(currentZone) || locationPositions.verdant_plains;
+          const zonePos2 = isPathing ? heroPos : baseZonePos2;
+          const activeHeroes2 = heroRoster.filter(h => activeHeroIds.includes(h.id));
+          const heroSpriteMap = {};
+          const speakerPositions = {};
+          const mapSpriteScale2 = 1.2;
+          const heroScale2 = calcNodeScale(camZoom, 0.35);
+          const baseFrame2 = 100;
+          const spriteW2 = baseFrame2 * mapSpriteScale2;
+          const spriteH2 = baseFrame2 * mapSpriteScale2;
+          const footCrop2 = 0.82;
+          const visibleH2 = Math.round(spriteH2 * footCrop2);
+          const heroCount2 = activeHeroes2.length;
+          const containerW2 = heroCount2 * (spriteW2 * 0.4) + spriteW2 * 0.6;
+          const hitOffsetX2 = 0;
+          const hitOffsetY2 = -10 * mapSpriteScale2;
+          const hitAnchorX2 = containerW2 / 2 + hitOffsetX2;
+          const hitAnchorY2 = visibleH2 / 2 + hitOffsetY2;
+
+          activeHeroes2.forEach((h, idx) => {
+            heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId);
+            const offset = wanderOffsets[h.id] || { x: 0, y: 0 };
+            const heroSpriteData = getPlayerSprite(h.classId, h.raceId);
+            const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale2;
+            speakerPositions[h.id] = {
+              x: idx * (spriteW2 * 0.4) + offset.x * 3 + heroFrameW / 2,
+              y: 0,
+            };
+          });
+
+          return (
+            <div style={{
+              position: 'absolute',
+              left: `${zonePos2.x}%`,
+              top: `${zonePos2.y}%`,
+              width: containerW2,
+              height: 0,
+              transform: `translate(-${hitAnchorX2}px, -${hitAnchorY2}px) scale(${heroScale2})`,
+              zIndex: 9999,
+              pointerEvents: 'none',
+            }}>
+              <ChatBubbleSystem
+                dialogue={currentDialogue}
+                phase={dialoguePhase}
+                heroSprites={heroSpriteMap}
+                speakerPositions={speakerPositions}
+                onDismiss={() => { setDialoguePhase(0); setTimeout(() => setCurrentDialogue(null), 300); }}
+                camZoom={camZoom}
+              />
             </div>
           );
         })()}
@@ -2161,48 +2213,7 @@ export default function WorldMap() {
           return null;
         })()}
 
-        {currentDialogue && dialoguePhase > 0 && (() => {
-          const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-          const heroSpriteMap = {};
-          activeHeroes.forEach(h => {
-            heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId);
-          });
-
-          const handleBubbleAction = (action) => {
-            switch(action) {
-              case 'rest': handleRest(); break;
-              case 'hunt': if (currentZone) handleBattle(currentZone); break;
-              case 'fight_boss': {
-                const loc = locations.find(l => l.id === currentZone);
-                if (loc?.boss) handleBoss(currentZone, loc.boss);
-                break;
-              }
-              case 'open_gear': case 'open_upgrades':
-                setScreen('account'); break;
-              case 'open_trade': {
-                const nearCity = cities.find(c => c.id === currentZone);
-                if (nearCity) { setSelectedCity(nearCity.id); setCitySubmenu('trade'); }
-                break;
-              }
-              case 'recruit': setScreen('heroCreate'); break;
-              case 'use_potion': setScreen('account'); break;
-              case 'open_harvest': break;
-              case 'dismiss': break;
-              default: break;
-            }
-          };
-
-          return (
-            <ChatBubbleSystem
-              dialogue={currentDialogue}
-              phase={dialoguePhase}
-              containerRef={outerRef}
-              heroSprites={heroSpriteMap}
-              onAction={handleBubbleAction}
-              onDismiss={() => { setDialoguePhase(0); setTimeout(() => setCurrentDialogue(null), 300); }}
-            />
-          );
-        })()}
+        {/* Chat bubbles are now rendered inside the hero container below */}
 
         {(randomEvents || []).map(event => {
           const pos = locationPositions[event.locationId];
