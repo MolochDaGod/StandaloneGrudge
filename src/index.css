@@ -50,27 +50,29 @@ body {
   max-width: 1200px;
   max-height: 900px;
   position: relative;
-  border: 3px solid #2a3150;
-  border-image: linear-gradient(135deg, #8b7355, #d4a96a 30%, #8b7355 50%, #d4a96a 70%, #8b7355) 1;
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.8),
-    0 0 30px rgba(139,115,85,0.15),
-    inset 0 0 30px rgba(0,0,0,0.3);
+  border: none;
   overflow: hidden;
   background: var(--bg);
+}
+
+.game-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/ui/game-border-frame.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 10500;
 }
 
 @media (max-width: 768px) {
   .game-frame {
     max-width: 100%;
     max-height: 100%;
-    border-width: 2px;
-  }
-}
-
-@media (min-width: 1201px) {
-  .game-frame {
-    border-radius: 4px;
   }
 }
 

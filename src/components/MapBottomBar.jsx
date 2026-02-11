@@ -8,7 +8,8 @@ import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 
-const BAR_HEIGHT = 130;
+const BAR_HEIGHT = '26.2%';
+const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
 
 function HarvestingPopup({ onClose }) {
   const {
@@ -24,7 +25,7 @@ function HarvestingPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: BAR_HEIGHT + 8, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(251,191,36,0.3)',
       borderRadius: 12, padding: 16, width: 360, maxHeight: 400, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -117,7 +118,7 @@ function GearPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: BAR_HEIGHT + 8, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(110,231,183,0.3)',
       borderRadius: 12, padding: 16, width: 380, maxHeight: 450, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -202,7 +203,7 @@ function CharacterPopup({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', bottom: BAR_HEIGHT + 8, right: 10, zIndex: 10100,
+      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: 10100,
       background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(168,85,247,0.3)',
       borderRadius: 12, padding: 16, width: 400, maxHeight: 500, overflowY: 'auto',
       boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
@@ -359,19 +360,15 @@ export default function MapBottomBar({
 
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
-        backgroundImage: 'url(/ui/bottom-bar-bg.png)',
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'bottom center',
         pointerEvents: 'auto',
         display: 'flex',
         alignItems: 'stretch',
         padding: '0',
       }}>
         <div style={{
-          flex: '0 0 24.5%',
+          flex: '0 0 28%',
           display: 'flex', flexDirection: 'column',
-          padding: '18px 10px 12px 18px',
+          padding: '24px 8px 12px 28px',
           overflow: 'hidden',
         }}>
           <div style={{
@@ -422,7 +419,7 @@ export default function MapBottomBar({
         <div style={{
           flex: '1 1 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '22px 4px 14px',
+          padding: '28px 4px 12px',
         }}>
           <div style={{
             display: 'grid',
@@ -463,9 +460,9 @@ export default function MapBottomBar({
         </div>
 
         <div style={{
-          flex: '0 0 24.5%',
+          flex: '0 0 20%',
           display: 'flex', flexDirection: 'column',
-          padding: '10px 18px 10px 8px',
+          padding: '20px 28px 14px 8px',
           position: 'relative',
         }}>
           <div style={{

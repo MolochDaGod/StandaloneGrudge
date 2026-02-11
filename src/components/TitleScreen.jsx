@@ -28,6 +28,7 @@ export default function TitleScreen() {
         width: '100%', height: '100%',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
+        padding: '6% 3% 27% 3%',
         opacity: fadeClass ? 1 : 0,
         transition: 'opacity 1.5s ease',
       }}>
@@ -40,7 +41,7 @@ export default function TitleScreen() {
           </div>
 
           <h1 className="font-cinzel" style={{
-            fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+            fontSize: 'clamp(2rem, 5vw, 3.5rem)',
             background: 'linear-gradient(135deg, #6ee7b7, #ffd700, #ef4444)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             textShadow: 'none', marginBottom: 8, lineHeight: 1.1,
@@ -90,7 +91,7 @@ export default function TitleScreen() {
         </div>
 
         <div style={{
-          position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center',
+          position: 'absolute', bottom: '28%', left: 0, right: 0, textAlign: 'center',
           color: 'var(--muted)', fontSize: '0.65rem', opacity: 0.3,
         }}>
           &copy; 2026 Grudge Studio &bull; Inspired by Final Fantasy VII
