@@ -852,97 +852,97 @@ function HeroDetailPanel({ hero, onClose }) {
 
                   <div style={{
                     flex: 1,
-                    backgroundImage: `url(${UI_PANELS.equipGrid})`,
-                    backgroundSize: '128px 128px', imageRendering: 'pixelated',
-                    backgroundRepeat: 'repeat',
-                    border: '1px solid rgba(139,115,85,0.25)',
+                    background: 'rgba(30,24,16,0.9)',
+                    border: '2px solid rgba(139,115,85,0.5)',
                     borderTop: 'none',
                     borderRadius: '0 0 6px 6px',
-                    padding: 4,
-                    minHeight: 200,
-                    maxHeight: 300,
+                    padding: 6,
+                    maxHeight: 340,
                     overflowY: 'auto',
                   }}>
-                    {inventory.length === 0 ? (
-                      <div style={{ color: '#6b5c47', fontSize: '0.6rem', fontStyle: 'italic', padding: '20px 8px', textAlign: 'center' }}>
-                        No items yet. Defeat enemies to find loot!
-                      </div>
-                    ) : (
-                      <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2,
-                      }}>
-                        {[...inventory]
-                          .sort((a, b) => {
-                            const aEquip = canClassEquip(hero.classId, a) ? 0 : 1;
-                            const bEquip = canClassEquip(hero.classId, b) ? 0 : 1;
-                            if (aEquip !== bEquip) return aEquip - bEquip;
-                            const slotOrder = { weapon: 0, offhand: 1, helmet: 2, armor: 3, feet: 4, ring: 5, relic: 6, consumable: 7 };
-                            const aSlot = slotOrder[a.slot] ?? 8;
-                            const bSlot = slotOrder[b.slot] ?? 8;
-                            if (aSlot !== bSlot) return aSlot - bSlot;
-                            return (b.tier || 1) - (a.tier || 1);
-                          })
-                          .map(item => {
-                          const r = TIERS[item.tier] || TIERS[1];
-                          const itemCanEquip = item.slot === 'consumable' || canClassEquip(hero.classId, item);
-                          const isSelected = selectedItemId === item.id;
-                          const isHovered = hoveredItemId === item.id;
-                          const spriteIcon = getItemSpriteIcon(item);
-                          return (
-                            <div key={item.id}
-                              draggable={itemCanEquip}
-                              onDragStart={e => {
-                                e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
-                                e.dataTransfer.effectAllowed = 'move';
-                                setSelectedItemId(null);
-                              }}
-                              onClick={() => {
-                                if (!itemCanEquip) return;
-                                if (isSelected) {
-                                  const slotKey = item.slot;
-                                  if (slotKey && slotKey !== 'consumable' && !( slotKey === 'offhand' && is2H)) {
-                                    equipItem(hero.id, item);
-                                  }
+                    {(() => {
+                      const sorted = [...inventory].sort((a, b) => {
+                        const aEquip = canClassEquip(hero.classId, a) ? 0 : 1;
+                        const bEquip = canClassEquip(hero.classId, b) ? 0 : 1;
+                        if (aEquip !== bEquip) return aEquip - bEquip;
+                        const slotOrder = { weapon: 0, offhand: 1, helmet: 2, armor: 3, feet: 4, ring: 5, relic: 6, consumable: 7 };
+                        const aSlot = slotOrder[a.slot] ?? 8;
+                        const bSlot = slotOrder[b.slot] ?? 8;
+                        if (aSlot !== bSlot) return aSlot - bSlot;
+                        return (b.tier || 1) - (a.tier || 1);
+                      });
+                      const slotsPerPage = 16;
+                      const totalSlots = Math.max(slotsPerPage, Math.ceil(sorted.length / slotsPerPage) * slotsPerPage);
+                      const slots = Array.from({ length: totalSlots }, (_, i) => sorted[i] || null);
+                      return (
+                        <div style={{
+                          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3,
+                        }}>
+                          {slots.map((item, i) => {
+                            const r = item ? (TIERS[item.tier] || TIERS[1]) : null;
+                            const itemCanEquip = item ? (item.slot === 'consumable' || canClassEquip(hero.classId, item)) : false;
+                            const isSelected = item && selectedItemId === item.id;
+                            const isHovered = item && hoveredItemId === item.id;
+                            const spriteIcon = item ? getItemSpriteIcon(item) : null;
+                            return (
+                              <div key={item ? item.id : `empty_${i}`}
+                                draggable={item && itemCanEquip}
+                                onDragStart={e => {
+                                  if (!item) return;
+                                  e.dataTransfer.setData('text/plain', JSON.stringify({ id: item.id, slot: item.slot }));
+                                  e.dataTransfer.effectAllowed = 'move';
                                   setSelectedItemId(null);
-                                } else {
-                                  setSelectedItemId(item.id);
-                                }
-                              }}
-                              onMouseEnter={() => setHoveredItemId(item.id)}
-                              onMouseLeave={() => setHoveredItemId(null)}
-                              title={`${item.name}${item.tier ? ` (T${item.tier})` : ''}`}
-                              style={{
-                                aspectRatio: '1', 
-                                backgroundImage: `url(${isSelected ? UI_SLOTS.highlight : UI_SLOTS.empty})`,
-                                backgroundSize: '100%', imageRendering: 'pixelated',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: itemCanEquip ? 'pointer' : 'not-allowed',
-                                position: 'relative',
-                                opacity: itemCanEquip ? 1 : 0.35,
-                                transition: 'transform 0.1s',
-                                transform: isHovered && itemCanEquip ? 'scale(1.08)' : 'scale(1)',
-                              }}
-                            >
-                              {spriteIcon ? (
-                                <div style={{
-                                  width: 28, height: 28,
-                                  backgroundImage: `url(${spriteIcon})`,
-                                  backgroundSize: '28px 28px',
+                                }}
+                                onClick={() => {
+                                  if (!item || !itemCanEquip) return;
+                                  if (isSelected) {
+                                    const slotKey = item.slot;
+                                    if (slotKey && slotKey !== 'consumable' && !(slotKey === 'offhand' && is2H)) {
+                                      equipItem(hero.id, item);
+                                    }
+                                    setSelectedItemId(null);
+                                  } else {
+                                    setSelectedItemId(item.id);
+                                  }
+                                }}
+                                onMouseEnter={() => item && setHoveredItemId(item.id)}
+                                onMouseLeave={() => item && setHoveredItemId(null)}
+                                title={item ? `${item.name}${item.tier ? ` (T${item.tier})` : ''}` : 'Empty'}
+                                style={{
+                                  aspectRatio: '1',
+                                  background: isSelected ? 'rgba(180,160,100,0.25)' : 'rgba(60,48,30,0.6)',
+                                  border: `2px solid ${isSelected ? 'rgba(212,169,106,0.8)' : isHovered && item ? 'rgba(180,160,100,0.5)' : 'rgba(100,80,50,0.5)'}`,
+                                  borderRadius: 4,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: item && itemCanEquip ? 'pointer' : item ? 'not-allowed' : 'default',
+                                  position: 'relative',
+                                  opacity: item ? (itemCanEquip ? 1 : 0.35) : 0.5,
+                                  transition: 'all 0.15s',
                                   imageRendering: 'pixelated',
-                                  filter: `drop-shadow(0 0 2px rgba(0,0,0,0.8))${isHovered ? ' brightness(1.3)' : ''}`,
-                                }} />
-                              ) : (
-                                <span style={{ fontSize: '1.1rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
-                              )}
-                              <div style={{
-                                position: 'absolute', bottom: 1, left: 2, right: 2,
-                                height: 2, background: r?.color || 'rgba(139,115,85,0.4)', borderRadius: 1,
-                              }} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                                }}
+                              >
+                                {item && spriteIcon ? (
+                                  <img src={spriteIcon} alt={item.name} style={{
+                                    width: '70%', height: '70%', objectFit: 'contain',
+                                    imageRendering: 'pixelated',
+                                    filter: `drop-shadow(0 0 2px rgba(0,0,0,0.8))${isHovered ? ' brightness(1.3)' : ''}`,
+                                  }} />
+                                ) : item ? (
+                                  <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                                ) : null}
+                                {item && r && (
+                                  <div style={{
+                                    position: 'absolute', bottom: 2, left: 3, right: 3,
+                                    height: 2, background: r.color || 'rgba(139,115,85,0.4)', borderRadius: 1,
+                                    boxShadow: `0 0 4px ${r.color || 'transparent'}`,
+                                  }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
