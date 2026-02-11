@@ -159,8 +159,8 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
             transform: `translate(-50%, -50%) rotate(${rot}deg)`,
             width: sz, height: sz,
             overflow: 'hidden',
-            mixBlendMode: 'screen',
             opacity: i === 0 ? 1 : 0.85,
+            ...EFFECT_BLEND,
           }}>
             <div style={{
               width: sz, height: sz,
@@ -176,6 +176,9 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
     </div>
   );
 }
+
+const EFFECT_MASK = 'radial-gradient(ellipse at center, black 50%, transparent 80%)';
+const EFFECT_BLEND = { WebkitMaskImage: EFFECT_MASK, maskImage: EFFECT_MASK, mixBlendMode: 'screen' };
 
 function EffectSprite({ x, y, sprite, filter: filterProp }) {
   const [frame, setFrame] = React.useState(0);
@@ -214,7 +217,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
       overflow: 'hidden',
       zIndex: 250,
       pointerEvents: 'none',
-      mixBlendMode: 'screen',
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -224,8 +227,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
-        mixBlendMode: 'screen',
-        ...(filterProp ? { filter: filterProp } : {}),
+        filter: filterProp || 'none',
       }} />
     </div>
   );
@@ -272,8 +274,8 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
       overflow: 'hidden',
       zIndex: 260,
       pointerEvents: 'none',
-      mixBlendMode: 'screen',
       opacity: progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1,
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -283,8 +285,7 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
         backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
-        mixBlendMode: 'screen',
-        ...(filterProp ? { filter: filterProp } : {}),
+        filter: filterProp || 'none',
       }} />
     </div>
   );
@@ -309,7 +310,10 @@ function ThunderProjectileSprite() {
 
   const col = frame % cols;
   return (
-    <div style={{ width: displaySize, height: displaySize, overflow: 'hidden', mixBlendMode: 'screen' }}>
+    <div style={{
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      ...EFFECT_BLEND,
+    }}>
       <div style={{
         width: displaySize,
         height: displaySize,
@@ -319,7 +323,6 @@ function ThunderProjectileSprite() {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 8px #facc15) drop-shadow(0 0 16px #f59e0b)',
-        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -351,7 +354,8 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
       position: 'absolute', top: offsetY, left: '50%',
       transform: 'translateX(-50%)', pointerEvents: 'none',
       width: displaySize, height: displaySize, overflow: 'hidden', opacity,
-      zIndex: 10, mixBlendMode: 'screen',
+      zIndex: 10,
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -364,7 +368,6 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: filter || 'none',
-        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -395,7 +398,7 @@ function DodgeFlashSprite({ x, y }) {
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 210, opacity: 0.9,
-      mixBlendMode: 'screen',
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -406,7 +409,6 @@ function DodgeFlashSprite({ x, y }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'hue-rotate(180deg) brightness(2) drop-shadow(0 0 8px #38bdf8) drop-shadow(0 0 16px #6ee7b7)',
-        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -438,7 +440,7 @@ function CastingSpriteEffect({ x, y }) {
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.8,
-      mixBlendMode: 'screen',
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -449,7 +451,6 @@ function CastingSpriteEffect({ x, y }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #8b5cf6)',
-        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -490,7 +491,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.9,
-      mixBlendMode: 'screen',
+      ...EFFECT_BLEND,
     }}>
       <div style={{
         width: displaySize,
@@ -501,7 +502,6 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: 'drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 8px #f59e0b)',
-        mixBlendMode: 'screen',
       }} />
     </div>
   );
@@ -640,6 +640,7 @@ function FireScatterSprite({ x, y, angle, delay }) {
     }}>
       <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
+        ...EFFECT_BLEND,
       }}>
         <div style={{
           width: displaySize,
@@ -866,6 +867,7 @@ function IceStormProjectile({ startX, startY, endX, endY, phase }) {
       <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
         animation: 'pulse 0.4s infinite',
+        ...EFFECT_BLEND,
       }}>
         <div style={{
           width: displaySize,
@@ -924,6 +926,7 @@ function PoisonGustProjectile({ startX, startY, endX, endY, phase }) {
     }}>
       <div style={{
         width: displaySize, height: displaySize, overflow: 'hidden',
+        ...EFFECT_BLEND,
       }}>
         <div style={{
           width: displaySize,

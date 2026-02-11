@@ -2366,6 +2366,7 @@ export default function WorldMap() {
               {(() => {
                 const menuItems = [];
                 let idx = 1;
+                const isConquered = ((zoneConquer || {})[selectedLoc.id] || 0) >= 100;
 
                 menuItems.push({ key: idx++, props: {
                   iconSrc: '/sprites/ui/icons/icon_crossed_swords.png',
