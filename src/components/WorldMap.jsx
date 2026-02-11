@@ -1381,8 +1381,8 @@ export default function WorldMap() {
               </image>
             </pattern>
             <filter id="lavaGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="blur" />
-              <feColorMatrix in="blur" type="matrix" values="1.2 0 0 0 0.1  0 0.3 0 0 0  0 0 0.1 0 0  0 0 0 0.9 0" result="glow" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.4" result="blur" />
+              <feColorMatrix in="blur" type="matrix" values="1.5 0 0 0 0.15  0 0.5 0 0 0  0 0 0.1 0 0  0 0 0 1 0" result="glow" />
               <feMerge>
                 <feMergeNode in="glow" />
                 <feMergeNode in="SourceGraphic" />
@@ -1406,8 +1406,10 @@ export default function WorldMap() {
             const d = buildSmoothPath(lava.points);
             return (
               <g key={`lava_${idx}`} filter="url(#lavaGlow)">
-                <path d={d} fill="none" stroke="url(#lavaTexture)" strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" filter="url(#lavaSoft)" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                <path d={d} fill="none" stroke="rgba(255,200,50,0.15)" strokeWidth={lava.width * 0.3} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                <path d={d} fill="none" stroke="rgba(180,40,0,0.7)" strokeWidth={lava.width + 0.4} strokeLinecap="round" strokeLinejoin="round" />
+                <path d={d} fill="none" stroke="url(#lavaTexture)" strokeWidth={lava.width} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                <path d={d} fill="none" stroke="rgba(255,160,30,0.5)" strokeWidth={lava.width * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                <path d={d} fill="none" stroke="rgba(255,230,80,0.25)" strokeWidth={lava.width * 0.2} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
               </g>
             );
           })}
@@ -1592,8 +1594,10 @@ export default function WorldMap() {
                 const w = lm.width || 1;
                 return (
                   <g key={`elm_${idx}`} filter="url(#lavaGlowEdit)">
-                    <path d={d} fill="none" stroke="url(#lavaTextureEdit)" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" filter="url(#lavaSoftEdit)" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
-                    <path d={d} fill="none" stroke="rgba(255,200,50,0.15)" strokeWidth={w * 0.3} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                    <path d={d} fill="none" stroke="rgba(180,40,0,0.7)" strokeWidth={w + 0.4} strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={d} fill="none" stroke="url(#lavaTextureEdit)" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${3 + idx}s ease-in-out infinite` }} />
+                    <path d={d} fill="none" stroke="rgba(255,160,30,0.5)" strokeWidth={w * 0.5} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${2 + idx * 0.5}s ease-in-out infinite alternate` }} />
+                    <path d={d} fill="none" stroke="rgba(255,230,80,0.25)" strokeWidth={w * 0.2} strokeLinecap="round" strokeLinejoin="round" style={{ animation: `lavaPulse ${1.5 + idx * 0.3}s ease-in-out infinite` }} />
                   </g>
                 );
               }
@@ -3607,8 +3611,8 @@ export default function WorldMap() {
             50% { transform: scale(1.15); opacity: 1; }
           }
           @keyframes lavaPulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
+            0%, 100% { opacity: 0.75; filter: brightness(1.1); }
+            50% { opacity: 0.95; filter: brightness(1.4); }
           }
           @keyframes emberRise {
             0% { opacity: 0.9; transform: translateY(0) scale(1); }
