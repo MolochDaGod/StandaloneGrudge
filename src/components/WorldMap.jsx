@@ -287,12 +287,27 @@ export default function WorldMap() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const camInitRef = useRef(false);
   const [markerMode, setMarkerMode] = useState(false);
+  const [devSubMode, setDevSubMode] = useState('marker');
   const [markerMenuNode, setMarkerMenuNode] = useState(null);
   const [drawingArea, setDrawingArea] = useState(null);
   const [drawingPoints, setDrawingPoints] = useState([]);
   const [movementAreas, setMovementAreas] = useState(() => {
     try { return JSON.parse(localStorage.getItem('mapMovementAreas') || '{}'); } catch { return {}; }
   });
+  const [drawingLandmark, setDrawingLandmark] = useState(null);
+  const [landmarkPoints, setLandmarkPoints] = useState([]);
+  const [editLandmarks, setEditLandmarks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mapEditLandmarks') || '[]'); } catch { return []; }
+  });
+  const [drawingRoute, setDrawingRoute] = useState(null);
+  const [routePoints, setRoutePoints] = useState([]);
+  const [editRoutes, setEditRoutes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mapEditRoutes') || '{}'); } catch { return {}; }
+  });
+  const [editEffects, setEditEffects] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mapEditEffects') || '[]'); } catch { return []; }
+  });
+  const [placingEffect, setPlacingEffect] = useState(null);
 
   useEffect(() => {
     if (camInitRef.current) return;
@@ -342,12 +357,41 @@ export default function WorldMap() {
       if (pt) setDrawingPoints(prev => [...prev, pt]);
       return;
     }
+    if (drawingLandmark && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pt = screenToMapPercent(e.clientX, e.clientY);
+      if (pt) setLandmarkPoints(prev => [...prev, [pt.x, pt.y]]);
+      return;
+    }
+    if (drawingRoute && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pt = screenToMapPercent(e.clientX, e.clientY);
+      if (pt) setRoutePoints(prev => [...prev, pt]);
+      return;
+    }
+    if (placingEffect && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pt = screenToMapPercent(e.clientX, e.clientY);
+      if (pt) {
+        const newEffect = { ...placingEffect, x: pt.x, y: pt.y, id: Date.now() };
+        setEditEffects(prev => {
+          const next = [...prev, newEffect];
+          localStorage.setItem('mapEditEffects', JSON.stringify(next));
+          return next;
+        });
+        setPlacingEffect(null);
+      }
+      return;
+    }
     if (markerMode && e.button === 0) return;
     if (e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-node]')) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, [drawingArea, screenToMapPercent, markerMode]);
+  }, [drawingArea, drawingLandmark, drawingRoute, placingEffect, screenToMapPercent, markerMode]);
 
   const handleMapMouseMove = useCallback((e) => {
     if (!isDragging) return;
@@ -492,9 +536,15 @@ export default function WorldMap() {
       if ((e.key === '#') || (e.code === 'Digit3' && e.shiftKey)) {
         e.preventDefault();
         setMarkerMode(m => !m);
+        setDevSubMode('marker');
         setMarkerMenuNode(null);
         setDrawingArea(null);
         setDrawingPoints([]);
+        setDrawingLandmark(null);
+        setLandmarkPoints([]);
+        setDrawingRoute(null);
+        setRoutePoints([]);
+        setPlacingEffect(null);
       }
     };
     window.addEventListener('keydown', handler);
@@ -623,9 +673,13 @@ export default function WorldMap() {
     e.stopPropagation();
 
     if (markerMode) {
-      setMarkerMenuNode(loc.id);
-      setDrawingArea(null);
-      setDrawingPoints([]);
+      if (devSubMode === 'marker') {
+        setMarkerMenuNode(loc.id);
+        setDrawingArea(null);
+        setDrawingPoints([]);
+      } else if (devSubMode === 'pathfinding') {
+        setMarkerMenuNode(loc.id);
+      }
       return;
     }
 
@@ -644,7 +698,7 @@ export default function WorldMap() {
       setCurrentZone(loc.id);
       setTimeout(() => setIsMoving(false), 600);
     }
-  }, [level, heroPos, getNodePos, devUnlocked, markerMode]);
+  }, [level, heroPos, getNodePos, devUnlocked, markerMode, devSubMode]);
 
   const handleCityClick = useCallback((e, city) => {
     e.preventDefault();
@@ -936,6 +990,86 @@ export default function WorldMap() {
             )}
           </svg>
         )}
+
+        {(Object.keys(editRoutes).length > 0 || editLandmarks.length > 0 || routePoints.length > 0 || landmarkPoints.length > 0) && (
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+            {editLandmarks.map((lm, idx) => {
+              if (!lm.points || lm.points.length < 2) return null;
+              const d = lm.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
+              return (
+                <g key={`elm_${idx}`}>
+                  <path d={d} fill="none" stroke={lm.type === 'river' ? 'rgba(200,230,255,0.08)' : 'rgba(255,100,50,0.08)'} strokeWidth={(lm.width || 1) + 0.8} strokeLinecap="round" />
+                  <path d={d} fill="none" stroke={lm.color} strokeWidth={lm.width || 1} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 3px ${lm.color})` }} />
+                </g>
+              );
+            })}
+            {Object.entries(editRoutes).map(([nodeId, pts]) => {
+              if (!pts || pts.length < 2) return null;
+              const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+              return (
+                <g key={`route_${nodeId}`}>
+                  <path d={d} fill="none" stroke="rgba(56,189,248,0.15)" strokeWidth={0.8} strokeLinecap="round" />
+                  <path d={d} fill="none" stroke="rgba(56,189,248,0.5)" strokeWidth={0.3} strokeLinecap="round" strokeDasharray="1,0.5" />
+                  {markerMode && pts.map((p, i) => (
+                    <circle key={i} cx={p.x} cy={p.y} r={0.35} fill="rgba(56,189,248,0.6)" stroke="rgba(56,189,248,0.9)" strokeWidth={0.1} />
+                  ))}
+                  {markerMode && <text x={pts[0].x} y={pts[0].y - 0.8} fill="rgba(56,189,248,0.7)" fontSize="1.1" textAnchor="middle">{nodeId}</text>}
+                </g>
+              );
+            })}
+            {routePoints.length > 0 && (
+              <g>
+                <polyline points={routePoints.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(56,189,248,0.7)" strokeWidth={0.3} strokeLinecap="round" />
+                {routePoints.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={0.5} fill="rgba(56,189,248,0.8)" stroke="#fff" strokeWidth={0.15} />
+                ))}
+              </g>
+            )}
+            {landmarkPoints.length > 0 && (
+              <g>
+                <polyline points={landmarkPoints.map(p => `${p[0]},${p[1]}`).join(' ')} fill="none"
+                  stroke={drawingLandmark === 'river' ? 'rgba(56,189,248,0.7)' : 'rgba(251,146,60,0.7)'}
+                  strokeWidth={0.4} strokeLinecap="round" />
+                {landmarkPoints.map((p, i) => (
+                  <circle key={i} cx={p[0]} cy={p[1]} r={0.5}
+                    fill={drawingLandmark === 'river' ? 'rgba(56,189,248,0.8)' : 'rgba(251,146,60,0.8)'}
+                    stroke="#fff" strokeWidth={0.15} />
+                ))}
+              </g>
+            )}
+          </svg>
+        )}
+
+        {editEffects.map(eff => {
+          const effScale = Math.max(0.4, 1 / camZoom);
+          return (
+            <div key={eff.id} style={{
+              position: 'absolute',
+              left: `${eff.x}%`, top: `${eff.y}%`,
+              transform: `translate(-50%, -50%) scale(${effScale})`,
+              pointerEvents: 'none', zIndex: 4,
+            }}>
+              <div style={{
+                width: eff.size * 10 || 30, height: eff.size * 10 || 30,
+                borderRadius: '50%',
+                background: eff.type === 'portal' ? `conic-gradient(from 0deg, ${eff.color}00, ${eff.color}88, ${eff.color}00, ${eff.color}44, ${eff.color}00)`
+                  : eff.type === 'swirl' ? `radial-gradient(circle, ${eff.color}66, ${eff.color}00)`
+                  : eff.type === 'fire' ? `radial-gradient(circle, ${eff.color}88, ${eff.color}44, transparent)`
+                  : eff.type === 'sparkle' ? `radial-gradient(circle, ${eff.color}aa, ${eff.color}00)`
+                  : eff.type === 'smoke' ? `radial-gradient(circle, ${eff.color}44, transparent)`
+                  : `radial-gradient(circle, ${eff.color}66, ${eff.color}22, transparent)`,
+                animation: eff.type === 'portal' ? 'portalSpin 3s linear infinite'
+                  : eff.type === 'swirl' ? 'portalSpin 4s linear infinite'
+                  : 'pulse 2s ease-in-out infinite',
+                boxShadow: `0 0 12px ${eff.color}40`,
+              }} />
+              {markerMode && <div style={{
+                position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.45rem', color: eff.color, whiteSpace: 'nowrap', fontWeight: 600, opacity: 0.7,
+              }}>{eff.type}</div>}
+            </div>
+          );
+        })}
 
         {locations.map((loc) => {
           const pos = getNodePos(loc.id);
@@ -1274,7 +1408,7 @@ export default function WorldMap() {
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
                 transform: 'translate(-50%, -120%)',
                 marginTop: -40,
-                zIndex: 25, pointerEvents: 'none',
+                zIndex: 60, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
                 border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 8, padding: '8px 12px',
@@ -1298,7 +1432,7 @@ export default function WorldMap() {
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
                 transform: 'translate(-50%, -120%)',
                 marginTop: -40,
-                zIndex: 25, pointerEvents: 'none',
+                zIndex: 60, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
                 border: '1px solid rgba(74,222,128,0.3)',
                 borderRadius: 8, padding: '8px 12px',
@@ -2231,9 +2365,15 @@ export default function WorldMap() {
             }}>💀 Gruda</button>
             <button onClick={() => {
               setMarkerMode(m => !m);
+              setDevSubMode('marker');
               setMarkerMenuNode(null);
               setDrawingArea(null);
               setDrawingPoints([]);
+              setDrawingLandmark(null);
+              setLandmarkPoints([]);
+              setDrawingRoute(null);
+              setRoutePoints([]);
+              setPlacingEffect(null);
             }} style={{
               background: markerMode ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${markerMode ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.1)'}`,
@@ -2918,18 +3058,46 @@ export default function WorldMap() {
         <div style={{
           position: 'absolute', top: 75, left: '50%', transform: 'translateX(-50%)',
           zIndex: 40, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.5)',
-          borderRadius: 8, padding: '4px 14px', color: 'var(--gold)',
+          borderRadius: 8, padding: '4px 10px', color: 'var(--gold)',
           fontSize: '0.65rem', fontWeight: 700, backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', gap: 8,
+          display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <span>MARKER MODE</span>
+          <select
+            value={devSubMode}
+            onChange={(e) => {
+              setDevSubMode(e.target.value);
+              setMarkerMenuNode(null);
+              setDrawingArea(null);
+              setDrawingPoints([]);
+              setDrawingLandmark(null);
+              setLandmarkPoints([]);
+              setDrawingRoute(null);
+              setRoutePoints([]);
+              setPlacingEffect(null);
+            }}
+            style={{
+              background: 'rgba(10,14,30,0.9)', color: 'var(--gold)', border: '1px solid rgba(251,191,36,0.4)',
+              borderRadius: 6, padding: '3px 6px', fontSize: '0.6rem', fontWeight: 700,
+              cursor: 'pointer', outline: 'none',
+            }}
+          >
+            <option value="marker">Marker</option>
+            <option value="pathfinding">Pathfinding</option>
+            <option value="streams">Streams</option>
+            <option value="lava">Lava</option>
+            <option value="effects">Effects</option>
+          </select>
           <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '0.55rem' }}>
-            {drawingArea ? 'Click map to place points, then Save' : 'Click a node to set movement area'}
+            {devSubMode === 'marker' && (drawingArea ? 'Click to place points, then Save' : 'Click a node to set movement area')}
+            {devSubMode === 'pathfinding' && (drawingRoute ? `Drawing route: ${drawingRoute} (${routePoints.length} pts)` : 'Click a node to draw sprite walk route')}
+            {devSubMode === 'streams' && (drawingLandmark === 'river' ? `Drawing river (${landmarkPoints.length} pts)` : 'Click Draw River to start')}
+            {devSubMode === 'lava' && (drawingLandmark === 'lava' ? `Drawing lava (${landmarkPoints.length} pts)` : 'Click Draw Lava to start')}
+            {devSubMode === 'effects' && (placingEffect ? `Click map to place ${placingEffect.type}` : 'Choose an effect type to place')}
           </span>
         </div>
       )}
 
-      {markerMode && markerMenuNode && !drawingArea && (
+      {markerMode && devSubMode === 'marker' && markerMenuNode && !drawingArea && (
         <div data-marker-menu style={{
           position: 'absolute', top: '50%',
           transform: 'translateY(-50%)',
@@ -2972,6 +3140,49 @@ export default function WorldMap() {
         </div>
       )}
 
+      {markerMode && devSubMode === 'pathfinding' && markerMenuNode && !drawingRoute && (
+        <div data-marker-menu style={{
+          position: 'absolute', top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(56,189,248,0.4)',
+          borderRadius: 12, padding: 16, minWidth: 220, backdropFilter: 'blur(8px)',
+          ...popupPositionStyle(markerMenuNode),
+        }}>
+          <div style={{ color: '#38bdf8', fontSize: '0.8rem', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>
+            {markerMenuNode}
+          </div>
+          <button onClick={() => {
+            setDrawingRoute(markerMenuNode);
+            setRoutePoints([]);
+            setMarkerMenuNode(null);
+          }} style={{
+            width: '100%', padding: '8px 12px', background: 'rgba(56,189,248,0.15)',
+            border: '1px solid rgba(56,189,248,0.4)', borderRadius: 8,
+            color: '#38bdf8', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            marginBottom: 6,
+          }}>Draw Walk Route</button>
+          {editRoutes[markerMenuNode] && (
+            <button onClick={() => {
+              const next = { ...editRoutes };
+              delete next[markerMenuNode];
+              setEditRoutes(next);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
+              setMarkerMenuNode(null);
+            }} style={{
+              width: '100%', padding: '8px 12px', background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+              marginBottom: 6,
+            }}>Clear Route</button>
+          )}
+          <button onClick={() => setMarkerMenuNode(null)} style={{
+            width: '100%', padding: '6px 12px', background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8,
+            color: 'var(--muted)', cursor: 'pointer', fontSize: '0.65rem',
+          }}>Cancel</button>
+        </div>
+      )}
+
       {markerMode && drawingArea && (
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
@@ -3004,6 +3215,158 @@ export default function WorldMap() {
             padding: '4px 10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
             borderRadius: 6, color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
           }}>Cancel</button>
+        </div>
+      )}
+
+      {markerMode && devSubMode === 'pathfinding' && drawingRoute && (
+        <div data-marker-menu style={{
+          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(56,189,248,0.4)',
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <span style={{ color: '#38bdf8', fontSize: '0.65rem', fontWeight: 700 }}>
+            Route: {drawingRoute} ({routePoints.length} pts)
+          </span>
+          <button onClick={() => setRoutePoints(prev => prev.slice(0, -1))} disabled={routePoints.length === 0} style={{
+            padding: '4px 10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 6, color: '#ccc', cursor: 'pointer', fontSize: '0.6rem',
+            opacity: routePoints.length === 0 ? 0.4 : 1,
+          }}>Undo</button>
+          <button onClick={() => {
+            if (routePoints.length >= 2) {
+              const next = { ...editRoutes, [drawingRoute]: routePoints };
+              setEditRoutes(next);
+              localStorage.setItem('mapEditRoutes', JSON.stringify(next));
+            }
+            setDrawingRoute(null);
+            setRoutePoints([]);
+          }} disabled={routePoints.length < 2} style={{
+            padding: '4px 10px', background: routePoints.length >= 2 ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${routePoints.length >= 2 ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 6, color: routePoints.length >= 2 ? '#4ade80' : '#666', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Save</button>
+          <button onClick={() => { setDrawingRoute(null); setRoutePoints([]); }} style={{
+            padding: '4px 10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 6, color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Cancel</button>
+        </div>
+      )}
+
+      {markerMode && (devSubMode === 'streams' || devSubMode === 'lava') && !drawingLandmark && (
+        <div data-marker-menu style={{
+          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)',
+          border: `1px solid ${devSubMode === 'streams' ? 'rgba(56,189,248,0.4)' : 'rgba(251,146,60,0.4)'}`,
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <button onClick={() => {
+            setDrawingLandmark(devSubMode === 'streams' ? 'river' : 'lava');
+            setLandmarkPoints([]);
+          }} style={{
+            padding: '6px 14px',
+            background: devSubMode === 'streams' ? 'rgba(56,189,248,0.15)' : 'rgba(251,146,60,0.15)',
+            border: `1px solid ${devSubMode === 'streams' ? 'rgba(56,189,248,0.4)' : 'rgba(251,146,60,0.4)'}`,
+            borderRadius: 8,
+            color: devSubMode === 'streams' ? '#38bdf8' : '#fb923c',
+            cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+          }}>Draw {devSubMode === 'streams' ? 'River' : 'Lava Flow'}</button>
+          {editLandmarks.filter(l => l.type === (devSubMode === 'streams' ? 'river' : 'lava')).length > 0 && (
+            <button onClick={() => {
+              const type = devSubMode === 'streams' ? 'river' : 'lava';
+              const next = editLandmarks.filter(l => l.type !== type);
+              setEditLandmarks(next);
+              localStorage.setItem('mapEditLandmarks', JSON.stringify(next));
+            }} style={{
+              padding: '6px 14px', background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+            }}>Clear All {devSubMode === 'streams' ? 'Rivers' : 'Lava'}</button>
+          )}
+          <span style={{ color: 'var(--muted)', fontSize: '0.55rem' }}>
+            {editLandmarks.filter(l => l.type === (devSubMode === 'streams' ? 'river' : 'lava')).length} saved
+          </span>
+        </div>
+      )}
+
+      {markerMode && (devSubMode === 'streams' || devSubMode === 'lava') && drawingLandmark && (
+        <div data-marker-menu style={{
+          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)',
+          border: `1px solid ${drawingLandmark === 'river' ? 'rgba(56,189,248,0.4)' : 'rgba(251,146,60,0.4)'}`,
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <span style={{ color: drawingLandmark === 'river' ? '#38bdf8' : '#fb923c', fontSize: '0.65rem', fontWeight: 700 }}>
+            {drawingLandmark === 'river' ? 'River' : 'Lava'}: {landmarkPoints.length} pts
+          </span>
+          <button onClick={() => setLandmarkPoints(prev => prev.slice(0, -1))} disabled={landmarkPoints.length === 0} style={{
+            padding: '4px 10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 6, color: '#ccc', cursor: 'pointer', fontSize: '0.6rem',
+            opacity: landmarkPoints.length === 0 ? 0.4 : 1,
+          }}>Undo</button>
+          <button onClick={() => {
+            if (landmarkPoints.length >= 2) {
+              const newLm = {
+                type: drawingLandmark,
+                points: landmarkPoints,
+                color: drawingLandmark === 'river' ? 'rgba(56,189,248,0.25)' : 'rgba(251,146,60,0.35)',
+                width: drawingLandmark === 'river' ? 1.0 : 1.1,
+              };
+              const next = [...editLandmarks, newLm];
+              setEditLandmarks(next);
+              localStorage.setItem('mapEditLandmarks', JSON.stringify(next));
+            }
+            setDrawingLandmark(null);
+            setLandmarkPoints([]);
+          }} disabled={landmarkPoints.length < 2} style={{
+            padding: '4px 10px', background: landmarkPoints.length >= 2 ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${landmarkPoints.length >= 2 ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 6, color: landmarkPoints.length >= 2 ? '#4ade80' : '#666', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Save</button>
+          <button onClick={() => { setDrawingLandmark(null); setLandmarkPoints([]); }} style={{
+            padding: '4px 10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 6, color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
+          }}>Cancel</button>
+        </div>
+      )}
+
+      {markerMode && devSubMode === 'effects' && !placingEffect && (
+        <div data-marker-menu style={{
+          position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(167,139,250,0.4)',
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 6, alignItems: 'center',
+          flexWrap: 'wrap', justifyContent: 'center', maxWidth: 500,
+          backdropFilter: 'blur(8px)',
+        }}>
+          {[
+            { type: 'portal', label: 'Portal', color: '#a78bfa' },
+            { type: 'swirl', label: 'Swirl', color: '#38bdf8' },
+            { type: 'fire', label: 'Fire', color: '#f97316' },
+            { type: 'sparkle', label: 'Sparkle', color: '#fbbf24' },
+            { type: 'smoke', label: 'Smoke', color: '#9ca3af' },
+            { type: 'void', label: 'Void', color: '#c084fc' },
+          ].map(eff => (
+            <button key={eff.type} onClick={() => setPlacingEffect({ type: eff.type, color: eff.color, size: 3 })} style={{
+              padding: '5px 10px', background: `${eff.color}15`,
+              border: `1px solid ${eff.color}60`, borderRadius: 6,
+              color: eff.color, cursor: 'pointer', fontSize: '0.6rem', fontWeight: 600,
+            }}>{eff.label}</button>
+          ))}
+          {editEffects.length > 0 && (
+            <button onClick={() => {
+              setEditEffects([]);
+              localStorage.setItem('mapEditEffects', '[]');
+            }} style={{
+              padding: '5px 10px', background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 600,
+            }}>Clear All</button>
+          )}
+          <span style={{ color: 'var(--muted)', fontSize: '0.5rem', width: '100%', textAlign: 'center' }}>
+            {editEffects.length} effect{editEffects.length !== 1 ? 's' : ''} placed
+          </span>
         </div>
       )}
 
