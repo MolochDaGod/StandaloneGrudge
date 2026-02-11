@@ -200,6 +200,68 @@ const terrainRegions = [
 
 const portalLocations = ['shadow_citadel', 'demon_gate', 'void_throne'];
 
+const zoneResourceMap = {
+  verdant_plains:     { resource: 'wood', sprite: 'trees', count: 4 },
+  dark_forest:        { resource: 'wood', sprite: 'pine_trees', count: 5 },
+  mystic_grove:       { resource: 'herbs', sprite: 'trees', count: 3 },
+  whispering_caverns: { resource: 'crystals', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(200deg) saturate(1.5)', count: 3 },
+  haunted_marsh:      { resource: 'herbs', sprite: 'trees', count: 2 },
+  cursed_ruins:       { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
+  crystal_caves:      { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(200deg) saturate(1.5)', count: 5 },
+  thornwood_pass:     { resource: 'wood', sprite: 'pine_trees', count: 4 },
+  iron_peaks:         { resource: 'ore', sprite: 'rocks', rockRow: 0, count: 4 },
+  blood_canyon:       { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
+  frozen_tundra:      { resource: 'ore', sprite: 'rocks', rockRow: 2, count: 2 },
+  dragon_peaks:       { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 3 },
+  ashen_battlefield:  { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
+  windswept_ridge:    { resource: 'ore', sprite: 'rocks', rockRow: 2, count: 2 },
+  molten_core:        { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 4 },
+  shadow_forest:      { resource: 'wood', sprite: 'trees', count: 5 },
+  obsidian_wastes:    { resource: 'ore', sprite: 'rocks', rockRow: 0, count: 2 },
+  ruins_of_ashenmoor: { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
+  blight_hollow:      { resource: 'herbs', sprite: 'trees', count: 3 },
+  shadow_citadel:     { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(200deg) saturate(1.5)', count: 2 },
+  stormspire_peak:    { resource: 'crystals', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(200deg) saturate(1.5)', count: 3 },
+  demon_gate:         { resource: 'gold', sprite: 'rocks', rockRow: 1, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 2 },
+  abyssal_depths:     { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(200deg) saturate(1.5)', count: 4 },
+  infernal_forge:     { resource: 'gold', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(35deg) saturate(2) brightness(1.2)', count: 3 },
+  dreadmaw_canyon:    { resource: 'ore', sprite: 'rocks', rockRow: 1, count: 3 },
+  void_threshold:     { resource: 'crystals', sprite: 'rocks', rockRow: 2, filter: 'hue-rotate(260deg) saturate(2)', count: 2 },
+  corrupted_spire:    { resource: 'crystals', sprite: 'rocks', rockRow: 0, filter: 'hue-rotate(260deg) saturate(2)', count: 3 },
+};
+
+const resourceToHarvestId = {
+  wood: 'lumber_yard', ore: 'ore_vein', crystals: 'crystal_cave', gold: 'gold_mine', herbs: 'herb_garden',
+};
+
+const seededRng = (seed) => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return () => { h = (h * 1103515245 + 12345) & 0x7fffffff; return h / 0x7fffffff; };
+};
+
+const generateResourcePositions = (zoneId, count) => {
+  const pos = locationPositions[zoneId];
+  if (!pos) return [];
+  const rng = seededRng(zoneId + '_res');
+  const nodes = [];
+  for (let i = 0; i < count; i++) {
+    const angle = rng() * Math.PI * 2;
+    const dist = 1.5 + rng() * 3;
+    nodes.push({
+      x: pos.x + Math.cos(angle) * dist,
+      y: pos.y + Math.sin(angle) * dist,
+      variant: Math.floor(rng() * 4),
+    });
+  }
+  return nodes;
+};
+
+const SPRITE_INFO = {
+  trees: { src: '/sprites/trees.png', frameW: 16, frameH: 16, cols: 4, rows: 1, fullFrame: 3, halfFrame: 2, lowFrame: 1, stumpFrame: 0 },
+  pine_trees: { src: '/sprites/pine_trees.png', frameW: 16, frameH: 16, cols: 3, rows: 1, fullFrame: 2, halfFrame: 1, lowFrame: 0, stumpFrame: 0 },
+  rocks: { src: '/sprites/rocks.png', frameW: 16, frameH: 16, cols: 3, rows: 4, fullFrame: 2, halfFrame: 1, lowFrame: 0, stumpFrame: 0 },
+};
 
 const MAP_GRID = { cols: 100, rows: 100 };
 
@@ -330,6 +392,7 @@ export default function WorldMap() {
   const [walkFootprints, setWalkFootprints] = useState([]);
   const footprintIdRef = useRef(0);
   const footprintCleanupRef = useRef([]);
+  const [harvestTick, setHarvestTick] = useState(0);
   const [camZoom, setCamZoom] = useState(3);
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
   const [devUnlocked, setDevUnlocked] = useState({});
@@ -709,6 +772,13 @@ export default function WorldMap() {
   }, [movePath, moveStep]);
 
   useEffect(() => { setBgm('ambient'); }, []);
+
+  useEffect(() => {
+    const hasActive = Object.keys(activeHarvests).length > 0;
+    if (!hasActive) return;
+    const interval = setInterval(() => setHarvestTick(t => t + 1), 2000);
+    return () => clearInterval(interval);
+  }, [activeHarvests]);
 
   useEffect(() => {
     if (chatLogRef.current) {
@@ -1165,6 +1235,52 @@ export default function WorldMap() {
                 opacity: 0.7,
                 filter: 'drop-shadow(0 0 3px rgba(100,200,255,0.4))',
                 animation: `waterSpriteAnim 1.6s steps(16) infinite ${delay}s`,
+              }} />
+            );
+          });
+        })}
+
+        {/* Harvestable resource nodes */}
+        {Object.entries(zoneResourceMap).map(([zoneId, zoneRes]) => {
+          const resPositions = generateResourcePositions(zoneId, zoneRes.count);
+          const spriteInfo = SPRITE_INFO[zoneRes.sprite];
+          if (!spriteInfo || resPositions.length === 0) return null;
+          const harvestId = resourceToHarvestId[zoneRes.resource];
+          const isBeingHarvested = Object.entries(activeHarvests).some(([nId]) => nId === harvestId);
+          const resScale = Math.max(0.08, 0.14 / camZoom);
+          return resPositions.map((rp, ri) => {
+            let frameCol;
+            if (isBeingHarvested) {
+              const cycleLen = 4;
+              const phase = ((harvestTick + ri) % cycleLen) / cycleLen;
+              if (phase < 0.3) frameCol = spriteInfo.fullFrame;
+              else if (phase < 0.6) frameCol = spriteInfo.halfFrame;
+              else if (phase < 0.85) frameCol = spriteInfo.lowFrame;
+              else frameCol = spriteInfo.stumpFrame;
+            } else {
+              frameCol = spriteInfo.fullFrame;
+            }
+            if (frameCol < 0) return null;
+            const row = zoneRes.rockRow || 0;
+            const bgX = -(frameCol * spriteInfo.frameW);
+            const bgY = -(row * spriteInfo.frameH);
+            const sheetW = spriteInfo.cols * spriteInfo.frameW;
+            const sheetH = (spriteInfo.rows || 1) * spriteInfo.frameH;
+            return (
+              <div key={`res_${zoneId}_${ri}`} style={{
+                position: 'absolute',
+                left: `${rp.x}%`, top: `${rp.y}%`,
+                width: spriteInfo.frameW, height: spriteInfo.frameH,
+                transform: `translate(-50%, -50%) scale(${resScale})`,
+                transformOrigin: 'center center',
+                pointerEvents: 'none',
+                zIndex: MAP_LAYERS.LANDMARKS + 2,
+                backgroundImage: `url(${spriteInfo.src})`,
+                backgroundSize: `${sheetW}px ${sheetH}px`,
+                backgroundPosition: `${bgX}px ${bgY}px`,
+                backgroundRepeat: 'no-repeat',
+                imageRendering: 'pixelated',
+                filter: zoneRes.filter || 'none',
               }} />
             );
           });
