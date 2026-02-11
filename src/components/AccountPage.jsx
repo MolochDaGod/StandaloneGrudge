@@ -85,15 +85,20 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
         }}>ACTIVE</div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: isActive ? 12 : 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: isActive ? 12 : 0 }}>
         <div style={{
-          filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
-          transition: 'filter 0.3s',
+          width: '100%', height: 180, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          overflow: 'hidden', position: 'relative',
         }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={5.6} speed={150} />
+          <div style={{
+            filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
+            transition: 'filter 0.3s',
+          }}>
+            <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.2} speed={150} />
+          </div>
         </div>
 
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', marginTop: 4 }}>
           <div className="font-cinzel" style={{
             color: isSelected ? 'var(--gold)' : 'var(--text)',
             fontSize: '0.85rem', fontWeight: 700,
@@ -106,12 +111,14 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
           </div>
         </div>
 
-        <MiniBar current={hero.currentHealth} max={stats.health} color="#22c55e" height={4} />
-        <MiniBar current={hero.currentMana} max={stats.mana} color="#3b82f6" height={3} />
+        <div style={{ width: '100%', marginTop: 6 }}>
+          <MiniBar current={hero.currentHealth} max={stats.health} color="#22c55e" height={4} />
+          <MiniBar current={hero.currentMana} max={stats.mana} color="#3b82f6" height={3} />
+        </div>
 
         <div style={{
           fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 600,
-          background: 'rgba(255,215,0,0.1)', padding: '2px 8px', borderRadius: 4,
+          background: 'rgba(255,215,0,0.1)', padding: '2px 8px', borderRadius: 4, marginTop: 4,
         }}>
           CP: {cp.toLocaleString()}
         </div>
