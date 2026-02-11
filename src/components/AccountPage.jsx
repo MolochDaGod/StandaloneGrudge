@@ -633,15 +633,12 @@ function HeroDetailPanel({ hero, onClose }) {
           const hoveredItem = hoveredItemId ? (inventory.find(i => i.id === hoveredItemId) || (() => { for (const s of Object.keys(eq)) { if (eq[s]?.id === hoveredItemId) return eq[s]; } return null; })()) : null;
           const slotCanReceiveSelected = (slot) => selectedItem && selectedItem.slot === slot && canClassEquip(hero.classId, selectedItem);
 
-          const slotSize = 44;
-
           const SLOT_LABELS = { weapon: 'Wpn', offhand: 'Off', helmet: 'Helm', armor: 'Body', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
 
           const renderEquipSlot = (slot, disabled = false) => {
             const equipped = eq[slot];
             const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
             const canReceive = !disabled && slotCanReceiveSelected(slot);
-            const slotIcon = SLOT_ICON_MAP[slot];
             return (
               <div
                 key={slot}
@@ -673,13 +670,11 @@ function HeroDetailPanel({ hero, onClose }) {
                   } catch {}
                 }}
                 style={{
-                  width: slotSize, height: slotSize,
-                  backgroundImage: `url(${UI_SLOTS.empty})`,
-                  backgroundSize: `${slotSize}px ${slotSize}px`, imageRendering: 'pixelated',
+                  width: '100%', height: '100%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: canReceive ? 'pointer' : (equipped ? 'pointer' : 'default'),
                   opacity: disabled ? 0.3 : 1,
-                  transition: 'box-shadow 0.15s, transform 0.1s',
+                  transition: 'box-shadow 0.15s',
                   boxShadow: canReceive ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
                   position: 'relative',
                 }}
@@ -687,31 +682,16 @@ function HeroDetailPanel({ hero, onClose }) {
                 {equipped ? (() => {
                   const eqSprite = getItemSpriteIcon(equipped);
                   return eqSprite ? (
-                    <div style={{
-                      width: slotSize - 10, height: slotSize - 10,
-                      backgroundImage: `url(${eqSprite})`,
-                      backgroundSize: `${slotSize - 10}px ${slotSize - 10}px`,
+                    <img src={eqSprite} alt={equipped.name} style={{
+                      width: '75%', height: '75%', objectFit: 'contain',
                       imageRendering: 'pixelated',
                       filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
                     }} />
                   ) : (
                     <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
                   );
-                })() : (
-                  <div style={{
-                    width: slotSize - 10, height: slotSize - 10,
-                    backgroundImage: `url(${slotIcon})`,
-                    backgroundSize: `${slotSize - 10}px ${slotSize - 10}px`,
-                    imageRendering: 'pixelated',
-                    opacity: 0.25,
-                  }} />
-                )}
-                {tierDef && <div style={{ position: 'absolute', bottom: 1, left: 3, right: 3, height: 2, background: tierDef.color, borderRadius: 1 }} />}
-                <div style={{
-                  position: 'absolute', bottom: -10, left: 0, right: 0,
-                  textAlign: 'center', fontSize: '0.4rem', color: equipped ? (tierDef?.color || '#a08b6d') : 'rgba(120,110,90,0.5)',
-                  fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5,
-                }}>{SLOT_LABELS[slot]}</div>
+                })() : null}
+                {tierDef && <div style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 2, background: tierDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tierDef.color}` }} />}
               </div>
             );
           };
@@ -743,7 +723,21 @@ function HeroDetailPanel({ hero, onClose }) {
           );
 
           const FULL_SLOT_LABELS = { weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
-          const cellSize = slotSize + 4;
+
+          const panelScale = 2.5;
+          const panelW = 96 * panelScale;
+          const panelH = 128 * panelScale;
+          const slotPx = 20 * panelScale;
+
+          const slotPositions = {
+            helmet:  { left: 35 * panelScale, top: 8 * panelScale },
+            weapon:  { left: 11 * panelScale, top: 32 * panelScale },
+            armor:   { left: 35 * panelScale, top: 32 * panelScale },
+            offhand: { left: 59 * panelScale, top: 32 * panelScale },
+            feet:    { left: 35 * panelScale, top: 56 * panelScale },
+            ring:    { left: 17 * panelScale, top: 85 * panelScale },
+            relic:   { left: 52 * panelScale, top: 85 * panelScale },
+          };
 
           return (
             <div>
@@ -752,59 +746,34 @@ function HeroDetailPanel({ hero, onClose }) {
                   flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
                 }}>
                   <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: `${cellSize}px ${cellSize}px ${cellSize}px`,
-                    gridTemplateRows: `${cellSize}px ${cellSize}px ${cellSize}px ${cellSize}px`,
-                    gap: 2,
-                    background: 'rgba(30,22,14,0.7)',
-                    border: '2px solid rgba(139,115,85,0.4)',
-                    borderRadius: 8,
-                    padding: 6,
+                    width: panelW, height: panelH,
+                    backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+                    backgroundSize: `${panelW}px ${panelH}px`,
+                    imageRendering: 'pixelated',
                     position: 'relative',
                   }}>
-                    <div style={{ gridColumn: '1', gridRow: '1' }} />
-                    <div style={{ gridColumn: '2', gridRow: '1', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('helmet')}
-                    </div>
-                    <div style={{ gridColumn: '3', gridRow: '1' }} />
-
-                    <div style={{ gridColumn: '1', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('weapon')}
-                    </div>
-                    <div style={{ gridColumn: '2', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('armor')}
-                    </div>
-                    <div style={{ gridColumn: '3', gridRow: '2', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('offhand', is2H)}
-                    </div>
-
-                    <div style={{ gridColumn: '1', gridRow: '3' }} />
-                    <div style={{ gridColumn: '2', gridRow: '3', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('feet')}
-                    </div>
-                    <div style={{ gridColumn: '3', gridRow: '3' }} />
-
-                    <div style={{ gridColumn: '1', gridRow: '4', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('ring')}
-                    </div>
-                    <div style={{ gridColumn: '2', gridRow: '4' }} />
-                    <div style={{ gridColumn: '3', gridRow: '4', display: 'flex', justifyContent: 'center' }}>
-                      {renderEquipSlot('relic')}
-                    </div>
-
+                    {Object.entries(slotPositions).map(([slot, pos]) => (
+                      <div key={slot} style={{
+                        position: 'absolute',
+                        left: pos.left, top: pos.top,
+                        width: slotPx, height: slotPx,
+                      }}>
+                        {renderEquipSlot(slot, slot === 'offhand' && is2H)}
+                      </div>
+                    ))}
                     {is2H && (
                       <div style={{
-                        position: 'absolute', bottom: -14, left: 0, right: 0,
+                        position: 'absolute', bottom: 8, left: 0, right: 0,
                         textAlign: 'center', fontSize: '0.45rem', color: '#f59e0b', fontWeight: 600,
                       }}>
-                        2H equipped — off-hand locked
+                        2H — off-hand locked
                       </div>
                     )}
                   </div>
 
                   <div style={{
-                    marginTop: is2H ? 18 : 8,
-                    width: cellSize * 3 + 16,
+                    marginTop: 6,
+                    width: panelW,
                     background: 'rgba(20,16,10,0.6)',
                     border: '1px solid rgba(139,115,85,0.25)',
                     borderRadius: 6,
