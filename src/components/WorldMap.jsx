@@ -2395,7 +2395,7 @@ export default function WorldMap() {
                 const isConquered = ((zoneConquer || {})[selectedLoc.id] || 0) >= 100;
 
                 menuItems.push({ key: idx++, props: {
-                  iconSrc: '/images/hunt_battle.png',
+                  iconSrc: '/images/hunt_monsters.png',
                   label: 'Hunt Monsters', sublabel: `Fight Lv.${selectedLoc.levelRange[0]}-${selectedLoc.levelRange[1]} enemies`,
                   color: 'var(--accent)', onClick: () => handleBattle(selectedLoc.id),
                 }});
