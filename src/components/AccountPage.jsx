@@ -32,6 +32,17 @@ const CLASS_BG = {
 
 function MiniBar({ current, max, color, height = 6, label }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
+  const barHeight = Math.max(height, 6);
+  const fillColors = {
+    '#22c55e': { top: '#78e08f', mid: '#38b764', bot: '#1e6f3e', glow: 'rgba(34,197,94,0.4)' },
+    '#ef4444': { top: '#ff8a8a', mid: '#ef4444', bot: '#a22', glow: 'rgba(239,68,68,0.5)' },
+    '#3b82f6': { top: '#7db8ff', mid: '#3b82f6', bot: '#1d4ed8', glow: 'rgba(59,130,246,0.4)' },
+    '#f59e0b': { top: '#fcd34d', mid: '#f59e0b', bot: '#b45309', glow: 'rgba(245,158,11,0.4)' },
+    '#dc2626': { top: '#f87171', mid: '#dc2626', bot: '#7f1d1d', glow: 'rgba(220,38,38,0.6)' },
+    '#a855f7': { top: '#c084fc', mid: '#a855f7', bot: '#6b21a8', glow: 'rgba(168,85,247,0.4)' },
+    '#06b6d4': { top: '#67e8f9', mid: '#06b6d4', bot: '#0e7490', glow: 'rgba(6,182,212,0.4)' },
+  };
+  const fc = fillColors[color] || { top: color + '99', mid: color, bot: color + 'aa', glow: color + '44' };
   return (
     <div style={{ marginBottom: 4 }}>
       {label && (
@@ -40,8 +51,29 @@ function MiniBar({ current, max, color, height = 6, label }) {
           <span>{Math.floor(current)}/{Math.floor(max)}</span>
         </div>
       )}
-      <div style={{ height, background: 'rgba(0,0,0,0.4)', borderRadius: height / 2, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, borderRadius: height / 2, transition: 'width 0.3s' }} />
+      <div style={{
+        height: barHeight,
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%)',
+        overflow: 'hidden',
+        border: '1px solid #2a2a3e',
+        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)',
+        position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, bottom: 0,
+          width: `${pct}%`,
+          background: `linear-gradient(180deg, ${fc.top} 0%, ${fc.mid} 40%, ${fc.bot} 100%)`,
+          transition: 'width 0.3s',
+          boxShadow: pct > 0 ? `0 0 ${barHeight}px ${fc.glow}` : 'none',
+        }} />
+        {pct > 0 && barHeight >= 5 && (
+          <div style={{
+            position: 'absolute', top: 1, left: 1,
+            width: `calc(${pct}% - 2px)`, height: '40%',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)',
+            transition: 'width 0.3s',
+          }} />
+        )}
       </div>
     </div>
   );
