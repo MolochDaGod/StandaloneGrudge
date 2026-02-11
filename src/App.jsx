@@ -113,12 +113,12 @@ function GameApp() {
   };
 
   const contentStyle = isFullBleed ? {
-    position: 'relative', zIndex: 1, width: '100%', height: '100%',
+    position: 'relative', zIndex: 10501, width: '100%', height: '100%',
     opacity: transitioning ? 0 : 1,
     transition: 'opacity 0.3s ease',
     animation: 'fadeIn 0.5s ease',
   } : {
-    position: 'absolute', zIndex: 1,
+    position: 'absolute', zIndex: 10501,
     top: 'var(--frame-inset-top)',
     left: 'var(--frame-inset-side)',
     right: 'var(--frame-inset-side)',

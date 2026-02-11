@@ -8,12 +8,23 @@
 //   2. BODY PORTAL (document.body) - tooltips only
 //
 // Within .game-frame, the ornate border frame (::after) sits
-// at UI_FRAME (10500). Anything that must appear ABOVE the
-// frame border needs a z-index > 10500.
+// at UI_FRAME (10500). The content wrapper in App.jsx is at
+// z-index 10501, placing ALL screen content above the frame.
+// Internal screen z-indices (map layers, battle layers, scene
+// layers) are relative within that stacking context.
+//
+// Overlays (Settings, LootPopup, AdminGizmo) render as siblings
+// of the content wrapper and use elevated z-indices (10510+).
 //
 // Each screen (WorldMap, BattleScreen, Scenes) uses its own
-// sub-range within the game frame context. Since screens never
+// sub-range within the content wrapper. Since screens never
 // coexist, their internal layers don't conflict.
+//
+// INSIDE content wrapper (relative z-indices):
+//   Layers 1-10: Map/scene/battle internals, BOTTOM_BAR
+// OUTSIDE content wrapper (absolute z-indices):
+//   Settings (10510+), Admin (10515+), Loot (10520+),
+//   HeroCreate (10525), Intro (10800), Tooltip (99999)
 // ============================================================
 
 // ─── LAYER 1: BACKGROUNDS (0) ──────────────────────────────
@@ -40,6 +51,7 @@ export const SELECTED_NODE = 10;
 
 // ─── LAYER 4: MAP INFO (12–16) ─────────────────────────────
 // Hover info panels, HUD elements on world map
+// Content wrapper is at z-index 10501, so these are relative within it
 export const MAP_TOOLTIPS = 12;
 export const HUD_PANELS = 14;
 export const HUD_BUTTONS = 15;
@@ -101,8 +113,8 @@ export const BOSS_WALKUP = {
   SKIP_BUTTON: 30,
 };
 
-// ─── LAYER 10: CHAT BUBBLES (9500+) ────────────────────────
-// Speech bubbles on world map, just below frame
+// ─── LAYER 10: CHAT BUBBLES (9500) ─────────────────────────
+// Speech bubbles on world map, above all map elements
 export const CHAT_BUBBLES = 9500;
 
 // ─── LAYER 11: LOADING SCREEN (10505) ──────────────────────
@@ -122,7 +134,10 @@ export const ADMIN_GIZMO_PANEL = 10516;
 export const ADMIN_GIZMO_BUTTON = 10518;
 
 // ─── LAYER 14: MAP BOTTOM BAR & POPUPS (10600–10700) ───────
-// Bottom bar sits ABOVE the frame border so its UI is visible
+// Inside WorldMap (content wrapper stacking context).
+// High values ensure bottom bar is above all map elements.
+// Sibling overlays (Settings, Loot, Admin) render outside
+// the content wrapper at 10510+ and naturally appear above.
 export const BOTTOM_BAR = 10600;
 export const BOTTOM_BAR_POPUPS = 10700;
 
