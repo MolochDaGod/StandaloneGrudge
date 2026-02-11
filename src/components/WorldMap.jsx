@@ -293,6 +293,8 @@ export default function WorldMap() {
   });
   const [drawingRoute, setDrawingRoute] = useState(null);
   const [routePoints, setRoutePoints] = useState([]);
+  const paintingRouteRef = useRef(false);
+  const [roadWidth, setRoadWidth] = useState(2.5);
   const [editRoutes, setEditRoutes] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('mapEditRoutes') || '[]');
@@ -374,7 +376,10 @@ export default function WorldMap() {
       e.preventDefault();
       e.stopPropagation();
       const pt = screenToMapPercent(e.clientX, e.clientY);
-      if (pt) setRoutePoints(prev => [...prev, { x: pt.x, y: pt.y }]);
+      if (pt) {
+        paintingRouteRef.current = true;
+        setRoutePoints([{ x: pt.x, y: pt.y }]);
+      }
       return;
     }
     if (placingEffect && e.button === 0 && !e.target.closest('button') && !e.target.closest('[data-marker-menu]')) {
@@ -400,14 +405,46 @@ export default function WorldMap() {
   }, [drawingArea, drawingLandmark, drawingRoute, placingEffect, screenToMapPercent, markerMode]);
 
   const handleMapMouseMove = useCallback((e) => {
+    if (paintingRouteRef.current && drawingRoute) {
+      e.preventDefault();
+      const pt = screenToMapPercent(e.clientX, e.clientY);
+      if (pt) {
+        setRoutePoints(prev => {
+          const last = prev[prev.length - 1];
+          if (last) {
+            const dist = Math.sqrt((pt.x - last.x) ** 2 + (pt.y - last.y) ** 2);
+            if (dist < 0.3) return prev;
+          }
+          return [...prev, { x: pt.x, y: pt.y }];
+        });
+      }
+      return;
+    }
     if (!isDragging) return;
     const dx = (e.clientX - dragStart.x) / camZoom * 0.12;
     const dy = (e.clientY - dragStart.y) / camZoom * 0.12;
     setCamPos(p => clampCam({ x: p.x + dx, y: p.y + dy }, camZoom));
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isDragging, dragStart, camZoom, clampCam]);
+  }, [isDragging, dragStart, camZoom, clampCam, drawingRoute, screenToMapPercent]);
 
-  const handleMapMouseUp = useCallback(() => { setIsDragging(false); }, []);
+  const handleMapMouseUp = useCallback(() => {
+    if (paintingRouteRef.current) {
+      paintingRouteRef.current = false;
+      setRoutePoints(pts => {
+        if (pts.length >= 2) {
+          const newRoad = { points: pts, width: roadWidth };
+          setEditRoutes(prev => {
+            const next = [...prev, newRoad];
+            localStorage.setItem('mapEditRoutes', JSON.stringify(next));
+            return next;
+          });
+        }
+        return [];
+      });
+      return;
+    }
+    setIsDragging(false);
+  }, [roadWidth]);
 
   useEffect(() => {
     const el = mapRef.current?.parentElement;
@@ -802,7 +839,7 @@ export default function WorldMap() {
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
       onMouseLeave={handleMapMouseUp}
-      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: isDragging ? 'grabbing' : 'grab', border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
+      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), border: '2px solid rgba(30,25,15,0.9)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4), 0 0 1px rgba(139,109,56,0.3)' }}
     >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
@@ -1061,24 +1098,21 @@ export default function WorldMap() {
             })}
             {editRoutes.map((road, roadIdx) => {
               if (!road.points || road.points.length < 2) return null;
+              const w = road.width || 2.5;
               const d = road.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
               return (
                 <g key={`road_${roadIdx}`}>
-                  <path d={d} fill="none" stroke="rgba(180,160,120,0.12)" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
-                  <path d={d} fill="none" stroke="rgba(180,160,120,0.35)" strokeWidth={0.4} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="0.8,0.4" />
-                  {markerMode && road.points.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r={0.35} fill="rgba(180,160,120,0.6)" stroke="rgba(180,160,120,0.9)" strokeWidth={0.1} />
-                  ))}
-                  {markerMode && <text x={road.points[0].x} y={road.points[0].y - 0.8} fill="rgba(180,160,120,0.7)" fontSize="1" textAnchor="middle">Road {roadIdx + 1}</text>}
+                  <path d={d} fill="none" stroke="rgba(160,140,100,0.08)" strokeWidth={w + 0.6} strokeLinecap="round" strokeLinejoin="round" />
+                  <path d={d} fill="none" stroke="rgba(180,160,110,0.18)" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+                  <path d={d} fill="none" stroke="rgba(210,190,140,0.12)" strokeWidth={w * 0.4} strokeLinecap="round" strokeLinejoin="round" />
+                  {markerMode && <text x={road.points[0].x} y={road.points[0].y - (w / 2 + 0.5)} fill="rgba(180,160,120,0.7)" fontSize="0.9" textAnchor="middle">{roadIdx + 1}</text>}
                 </g>
               );
             })}
             {routePoints.length > 0 && (
               <g>
-                <polyline points={routePoints.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(56,189,248,0.7)" strokeWidth={0.3} strokeLinecap="round" />
-                {routePoints.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r={0.5} fill="rgba(56,189,248,0.8)" stroke="#fff" strokeWidth={0.15} />
-                ))}
+                <polyline points={routePoints.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(251,191,36,0.35)" strokeWidth={roadWidth} strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points={routePoints.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="rgba(251,191,36,0.15)" strokeWidth={roadWidth + 0.6} strokeLinecap="round" strokeLinejoin="round" />
               </g>
             )}
             {landmarkPoints.length > 0 && (
@@ -3198,7 +3232,7 @@ export default function WorldMap() {
           </select>
           <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '0.55rem' }}>
             {devSubMode === 'marker' && (drawingArea ? 'Click to place points, then Save' : 'Click a node to set movement area')}
-            {devSubMode === 'pathfinding' && (drawingRoute ? `Drawing road (${routePoints.length} pts)` : 'Click Draw Road to start, then click map to place points')}
+            {devSubMode === 'pathfinding' && (drawingRoute ? 'Hold left-click and drag to paint a path' : 'Enable painting mode, then hold & drag to draw roads')}
             {devSubMode === 'streams' && (drawingLandmark === 'river' ? `Drawing river (${landmarkPoints.length} pts)` : 'Click Draw River to start')}
             {devSubMode === 'lava' && (drawingLandmark === 'lava' ? `Drawing lava (${landmarkPoints.length} pts)` : 'Click Draw Lava to start')}
             {devSubMode === 'effects' && (placingEffect ? `Click map to place ${placingEffect.type}` : 'Choose an effect type to place')}
@@ -3263,7 +3297,7 @@ export default function WorldMap() {
             padding: '6px 14px', background: 'rgba(180,160,120,0.15)',
             border: '1px solid rgba(180,160,120,0.4)', borderRadius: 8,
             color: 'rgb(180,160,120)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-          }}>Draw Road</button>
+          }}>Paint Roads</button>
           {editRoutes.length > 0 && (
             <button onClick={() => {
               const next = editRoutes.slice(0, -1);
@@ -3271,13 +3305,13 @@ export default function WorldMap() {
               localStorage.setItem('mapEditRoutes', JSON.stringify(next));
             }} style={{
               padding: '6px 14px', background: 'rgba(239,68,68,0.15)',
-              border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8,
+              border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8,
               color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>Delete Last Road</button>
+            }}>Undo Last</button>
           )}
           {editRoutes.length > 0 && (
             <span style={{ fontSize: '0.55rem', color: 'rgba(180,160,120,0.6)' }}>
-              {editRoutes.length} road{editRoutes.length !== 1 ? 's' : ''} saved
+              {editRoutes.length} stroke{editRoutes.length !== 1 ? 's' : ''}
             </span>
           )}
         </div>
@@ -3322,34 +3356,39 @@ export default function WorldMap() {
         <div data-marker-menu style={{
           position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
           zIndex: 50, background: 'rgba(10,14,30,0.95)', border: '1px solid rgba(180,160,120,0.4)',
-          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 8, alignItems: 'center',
+          borderRadius: 10, padding: '8px 14px', display: 'flex', gap: 10, alignItems: 'center',
           backdropFilter: 'blur(8px)',
         }}>
-          <span style={{ color: 'rgb(180,160,120)', fontSize: '0.65rem', fontWeight: 700 }}>
-            Road ({routePoints.length} pts)
+          <span style={{ color: 'rgb(251,191,36)', fontSize: '0.65rem', fontWeight: 700 }}>
+            Painting Mode
           </span>
-          <button onClick={() => setRoutePoints(prev => prev.slice(0, -1))} disabled={routePoints.length === 0} style={{
-            padding: '4px 10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: 6, color: '#ccc', cursor: 'pointer', fontSize: '0.6rem',
-            opacity: routePoints.length === 0 ? 0.4 : 1,
-          }}>Undo</button>
-          <button onClick={() => {
-            if (routePoints.length >= 2) {
-              const next = [...editRoutes, { points: routePoints }];
+          <span style={{ color: 'rgba(180,160,120,0.7)', fontSize: '0.55rem' }}>Width:</span>
+          <input type="range" min="1" max="6" step="0.5" value={roadWidth}
+            onChange={e => setRoadWidth(parseFloat(e.target.value))}
+            style={{ width: 60, accentColor: '#b4a078', cursor: 'pointer' }}
+          />
+          <span style={{ color: 'rgba(180,160,120,0.7)', fontSize: '0.55rem', minWidth: 16 }}>{roadWidth}</span>
+          {editRoutes.length > 0 && (
+            <button onClick={() => {
+              const next = editRoutes.slice(0, -1);
               setEditRoutes(next);
               localStorage.setItem('mapEditRoutes', JSON.stringify(next));
-            }
-            setDrawingRoute(null);
-            setRoutePoints([]);
-          }} disabled={routePoints.length < 2} style={{
-            padding: '4px 10px', background: routePoints.length >= 2 ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
-            border: `1px solid ${routePoints.length >= 2 ? 'rgba(34,197,94,0.5)' : 'rgba(255,255,255,0.1)'}`,
-            borderRadius: 6, color: routePoints.length >= 2 ? '#4ade80' : '#666', cursor: 'pointer', fontSize: '0.6rem',
-          }}>Save</button>
+            }} style={{
+              padding: '4px 10px', background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6,
+              color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
+            }}>Undo Last</button>
+          )}
           <button onClick={() => { setDrawingRoute(null); setRoutePoints([]); }} style={{
-            padding: '4px 10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-            borderRadius: 6, color: '#f87171', cursor: 'pointer', fontSize: '0.6rem',
-          }}>Cancel</button>
+            padding: '4px 12px', background: 'rgba(180,160,120,0.15)',
+            border: '1px solid rgba(180,160,120,0.4)', borderRadius: 6,
+            color: 'rgb(180,160,120)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 600,
+          }}>Done</button>
+          {editRoutes.length > 0 && (
+            <span style={{ fontSize: '0.5rem', color: 'rgba(180,160,120,0.5)' }}>
+              {editRoutes.length} stroke{editRoutes.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
       )}
 
