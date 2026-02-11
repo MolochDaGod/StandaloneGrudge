@@ -8,7 +8,7 @@ import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
 
 const FIELD_EVENTS = [
-  { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/buildings/enemy_patrol.png' },
+  { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/hunt_battle.png' },
   { id: 'chest', name: 'Treasure Chest', icon: 'gift', x: 30, y: 35, type: 'loot', color: '#fbbf24', img: '/images/buildings/treasure_chest.png' },
   { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3', img: '/images/buildings/healing_shrine.png' },
   { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316', img: '/images/buildings/campfire.png' },

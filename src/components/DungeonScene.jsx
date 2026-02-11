@@ -172,7 +172,7 @@ export default function DungeonScene() {
               overflow: 'hidden',
               filter: isCompleted ? 'grayscale(0.5)' : isLocked ? 'grayscale(0.8)' : 'none',
             }}>
-              {isCompleted ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={node.type === 'boss' ? '/images/buildings/boss_lair.png' : '/images/buildings/dungeon_gate.png'} alt={node.name} style={{ width: node.type === 'boss' ? 68 : 56, height: node.type === 'boss' ? 68 : 56, objectFit: 'contain', imageRendering: 'auto' }} />}
+              {isCompleted ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={node.type === 'boss' ? '/images/buildings/boss_lair.png' : '/images/hunt_battle.png'} alt={node.name} style={{ width: node.type === 'boss' ? 68 : 56, height: node.type === 'boss' ? 68 : 56, objectFit: 'contain', imageRendering: 'auto', borderRadius: node.type === 'boss' ? 0 : 6 }} />}
             </div>
             <div className="font-cinzel" style={{
               color: isCompleted ? '#6ee7b3' : nodeColor,

@@ -333,7 +333,7 @@ export default function LocationView() {
               onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 12px rgba(110,231,183,0.4)'; }}
               onMouseLeave={e => { e.target.style.transform = 'none'; e.target.style.boxShadow = 'none'; }}
               >
-                <InlineIcon name="crossedSwords" size={14} style={{ marginRight: 0 }} /> Hunt
+                <img src="/images/hunt_battle.png" alt="" style={{ width: 18, height: 18, borderRadius: 3, objectFit: 'cover' }} /> Hunt
               </button>
               {loc.boss && !bossDefeated && (
                 <button onClick={() => startBossBattle(loc.boss)} style={{
