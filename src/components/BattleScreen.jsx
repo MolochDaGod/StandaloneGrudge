@@ -793,6 +793,64 @@ function IceStormProjectile({ startX, startY, endX, endY, phase }) {
   );
 }
 
+function PoisonGustProjectile({ startX, startY, endX, endY, phase }) {
+  const gustSprite = effectSprites.windBreath;
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 72;
+  const cols = gustSprite.cols || 18;
+  const frameW = gustSprite.frameW || 32;
+  const frameH = gustSprite.frameH || 32;
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % (gustSprite.frames || 18);
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  let posX, posY;
+  if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${posY}%`,
+      transition: phase === 'fly'
+        ? 'left 0.55s ease-in, top 0.55s ease-in'
+        : 'none',
+      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+      zIndex: 210, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${gustSprite.src})`,
+          backgroundSize: `${cols * frameW * scaleX}px ${(gustSprite.rows || 1) * frameH * scaleY}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'hue-rotate(90deg) saturate(2.5) drop-shadow(0 0 10px #22c55e) drop-shadow(0 0 20px #16a34a) brightness(1.3)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
 function MiniBar({ current, max, color, height = 5, width = 60 }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   return (
@@ -875,6 +933,12 @@ function isWaterAbility(abilityName) {
   if (!abilityName) return false;
   const n = abilityName.toLowerCase();
   return n.includes('tidal') || n.includes('torrent') || n.includes('tsunami') || n.includes('water') || n.includes('deluge') || n.includes('aqua') || n.includes('splash');
+}
+
+function isPoisonGustAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('poison arrow') || n.includes('poison spore') || n.includes('toxic spore') || n.includes('envenom');
 }
 
 function getProjectileColor(unit, abilityName) {
@@ -961,6 +1025,7 @@ export default function BattleScreen() {
   const [iceStormFx, setIceStormFx] = useState([]);
   const [waterArrowFx, setWaterArrowFx] = useState([]);
   const [waterSplashFx, setWaterSplashFx] = useState([]);
+  const [poisonGustFx, setPoisonGustFx] = useState([]);
   const [resurrectFx, setResurrectFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
@@ -1438,6 +1503,46 @@ export default function BattleScreen() {
         }, 950 * spd);
         setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
         setTimeout(() => advanceTurn(), 1500 * spd);
+      } else if (ranged && isPoisonGustAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const pgId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = attacker.position.y;
+        setPoisonGustFx(prev => [...prev, { id: pgId, startX, startY, endX: target.position.x, endY: target.position.y, phase: 'start' }]);
+        setTimeout(() => {
+          setPoisonGustFx(prev => prev.map(f => f.id === pgId ? { ...f, phase: 'fly' } : f));
+        }, 50);
+        setTimeout(() => {
+          setPoisonGustFx(prev => prev.filter(f => f.id !== pgId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, target.position.y, '#22c55e');
+            const hfxP = getHitEffect(attacker, abilityName, true);
+            if (hfxP.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y, sprite: hfxP.sprite, filter: hfxP.filter || 'hue-rotate(90deg) saturate(2)' }]);
+              const effectDur = (hfxP.sprite.frames || 18) * 35 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+            }
+            if (isCrit) {
+              playCrit();
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'spell' }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 600 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1200 * spd);
       } else if (ranged) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
         setTimeout(() => {
@@ -2248,6 +2353,10 @@ export default function BattleScreen() {
 
         {waterSplashFx.map(s => (
           <WaterSplashExplosion key={s.id} x={s.x} y={s.y} angles={s.angles} />
+        ))}
+
+        {poisonGustFx.map(pg => (
+          <PoisonGustProjectile key={pg.id} startX={pg.startX} startY={pg.startY} endX={pg.endX} endY={pg.endY} phase={pg.phase} />
         ))}
 
         {resurrectFx.map(r => (
