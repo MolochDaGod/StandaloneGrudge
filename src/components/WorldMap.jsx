@@ -1210,7 +1210,7 @@ export default function WorldMap() {
           <defs>
             <pattern id="lavaTexture" patternUnits="userSpaceOnUse" width="8" height="8">
               <image href="/backgrounds/lava_texture.png" x="0" y="0" width="8" height="8" preserveAspectRatio="xMidYMid slice">
-                <animate attributeName="x" from="0" to="-8" dur="12s" repeatCount="indefinite" />
+                <animate attributeName="y" from="0" to="-8" dur="12s" repeatCount="indefinite" />
               </image>
             </pattern>
             <filter id="lavaGlow" x="-40%" y="-40%" width="180%" height="180%">
@@ -1402,7 +1402,7 @@ export default function WorldMap() {
             <defs>
               <pattern id="lavaTextureEdit" patternUnits="userSpaceOnUse" width="8" height="8">
                 <image href="/backgrounds/lava_texture.png" x="0" y="0" width="8" height="8" preserveAspectRatio="xMidYMid slice">
-                  <animate attributeName="x" from="0" to="-8" dur="12s" repeatCount="indefinite" />
+                  <animate attributeName="y" from="0" to="-8" dur="12s" repeatCount="indefinite" />
                 </image>
               </pattern>
               <filter id="lavaGlowEdit" x="-40%" y="-40%" width="180%" height="180%">
