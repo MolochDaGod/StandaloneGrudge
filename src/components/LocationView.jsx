@@ -7,7 +7,7 @@ import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { getQuestsForZone, checkQuestProgress } from '../data/quests';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { InlineIcon } from '../data/uiSprites';
+import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 
 const SLOT_ICONS = {
   weapon: 'crossed_swords', offhand: 'shield', helmet: 'helm', armor: 'shield',
@@ -318,7 +318,7 @@ export default function LocationView() {
               onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 12px rgba(110,231,183,0.4)'; }}
               onMouseLeave={e => { e.target.style.transform = 'none'; e.target.style.boxShadow = 'none'; }}
               >
-                Hunt
+                <><EssentialIcon name="Skull" size={12} style={{ marginRight: 4 }} /> Hunt</>
               </button>
               {loc.boss && !bossDefeated && (
                 <button onClick={() => startBossBattle(loc.boss)} style={{
@@ -331,7 +331,7 @@ export default function LocationView() {
                 onMouseEnter={e => e.target.style.transform = 'translateY(-1px)'}
                 onMouseLeave={e => e.target.style.transform = 'none'}
                 >
-                  Boss
+                  <><EssentialIcon name="ChestTreasure" size={12} style={{ marginRight: 4 }} /> Boss</>
                 </button>
               )}
             </div>
@@ -358,7 +358,7 @@ export default function LocationView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div>
                 <h3 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.85rem', margin: 0 }}>
-                  Zone Quests
+                  <EssentialIcon name="Book" size={14} style={{ marginRight: 6 }} />Zone Quests
                 </h3>
                 <div style={{ fontSize: '0.5rem', color: 'var(--muted)', marginTop: 1 }}>
                   Complete quests for rewards & faster conquering

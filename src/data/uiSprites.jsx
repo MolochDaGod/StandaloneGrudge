@@ -348,3 +348,15 @@ export function InlineIcon({ name, src, size = 14, style = {} }) {
     />
   );
 }
+
+export function EssentialIcon({ name, size = 16, style = {} }) {
+  return (
+    <img
+      src={`/icons/Icons_Essential/v1.2/Icons/${name}.png`}
+      alt=""
+      width={size}
+      height={size}
+      style={{ imageRendering: 'pixelated', verticalAlign: 'middle', ...style }}
+    />
+  );
+}

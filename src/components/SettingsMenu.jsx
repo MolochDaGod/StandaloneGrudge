@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
+import { EssentialIcon } from '../data/uiSprites';
 import {
   setMusicMuted, setSfxMuted, setMusicVolume, setSfxVolume,
   getMusicMuted, getSfxMuted, getMusicVolume, getSfxVolume,
@@ -109,7 +110,7 @@ export default function SettingsMenu() {
         }}
         title="Settings"
       >
-        &#9881;
+        <EssentialIcon name="Gear" size={20} />
       </button>
 
       {open && (
@@ -129,7 +130,7 @@ export default function SettingsMenu() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.95rem', fontWeight: 700 }}>
-                Settings
+                <EssentialIcon name="Gear" size={14} style={{ marginRight: 6 }} />Settings
               </span>
               <button onClick={() => { setOpen(false); setConfirmReset(false); }} style={{
                 background: 'none', border: 'none', color: 'var(--muted)', fontSize: '1.1rem', cursor: 'pointer',
@@ -139,11 +140,11 @@ export default function SettingsMenu() {
 
           <div style={{ padding: '12px 16px' }}>
             <div style={{ color: 'var(--gold)', fontSize: '0.7rem', fontWeight: 700, marginBottom: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-              Sound
+              <EssentialIcon name="SpeakerOn" size={12} style={{ marginRight: 4 }} />Sound
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ color: 'var(--text)', fontSize: '0.82rem' }}>Music</span>
+              <span style={{ color: 'var(--text)', fontSize: '0.82rem' }}><EssentialIcon name="MusicNotes" size={12} style={{ marginRight: 4 }} />Music</span>
               <button onClick={handleMusicToggle} style={toggleStyle(!musicOff)}>
                 <div style={toggleKnob(!musicOff)} />
               </button>
@@ -155,7 +156,7 @@ export default function SettingsMenu() {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ color: 'var(--text)', fontSize: '0.82rem' }}>Sound Effects</span>
+              <span style={{ color: 'var(--text)', fontSize: '0.82rem' }}><EssentialIcon name="SpeakerOn" size={12} style={{ marginRight: 4 }} />Sound Effects</span>
               <button onClick={handleSfxToggle} style={toggleStyle(!sfxOff)}>
                 <div style={toggleKnob(!sfxOff)} />
               </button>
@@ -170,7 +171,7 @@ export default function SettingsMenu() {
           {playerName && (
             <div style={{ padding: '0 16px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
               <div style={{ color: 'var(--gold)', fontSize: '0.7rem', fontWeight: 700, marginBottom: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-                Game Info
+                <EssentialIcon name="Info" size={12} style={{ marginRight: 4 }} />Game Info
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: 4 }}>
                 <span>Warlord</span><span style={{ color: 'var(--text)' }}>{playerName}</span>
@@ -186,7 +187,7 @@ export default function SettingsMenu() {
 
           <div style={{ padding: '0 16px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
             <div style={{ color: 'var(--gold)', fontSize: '0.7rem', fontWeight: 700, marginBottom: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-              Game
+              <EssentialIcon name="Gamepad" size={12} style={{ marginRight: 4 }} />Game
             </div>
             {!confirmReset ? (
               <button onClick={handleReset} style={{
@@ -195,7 +196,7 @@ export default function SettingsMenu() {
                 color: '#ef4444', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
                 transition: 'all 0.2s',
               }}>
-                Restart Game
+                <EssentialIcon name="Restart" size={14} style={{ marginRight: 6 }} />Restart Game
               </button>
             ) : (
               <div>

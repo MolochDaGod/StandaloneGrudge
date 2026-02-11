@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import { setBgm } from '../utils/audioManager';
+import { EssentialIcon } from '../data/uiSprites';
 
 export default function TitleScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -59,6 +60,7 @@ export default function TitleScreen() {
               label="PLAY AS GUEST"
               onClick={() => handleLogin('guest')}
               primary
+              icon={<EssentialIcon name="Gamepad" size={20} style={{ marginRight: 8 }} />}
             />
 
             <MenuButton
@@ -75,6 +77,7 @@ export default function TitleScreen() {
               label="GRUDGE STUDIO"
               onClick={() => window.open('https://grudgestudio.com', '_blank')}
               subtle
+              icon={<EssentialIcon name="Home" size={16} style={{ marginRight: 8 }} />}
             />
           </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import useGameStore from '../stores/gameStore';
-import { InlineIcon } from '../data/uiSprites';
+import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 import { getRaceClassSprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
@@ -111,12 +111,12 @@ export default function LobbyScreen() {
           display: 'flex', flexDirection: 'column',
           padding: '16px 0',
         }}>
-          <NavItem icon="battle" label="PLAY" active={activeTab === 'main'} onClick={() => setActiveTab('main')} />
-          <NavItem icon="scroll" label="CHARACTERS" active={activeTab === 'characters'} onClick={() => setActiveTab('characters')} />
-          <NavItem icon="trophy" label="ACCOUNT" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
-          <NavItem icon="target" label="DISCORD" active={activeTab === 'discord'} onClick={() => setActiveTab('discord')} />
+          <NavItem essentialIcon="Gamepad" label="PLAY" active={activeTab === 'main'} onClick={() => setActiveTab('main')} />
+          <NavItem essentialIcon="Team" label="CHARACTERS" active={activeTab === 'characters'} onClick={() => setActiveTab('characters')} />
+          <NavItem essentialIcon="Briefcase" label="ACCOUNT" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
+          <NavItem essentialIcon="Cloud" label="DISCORD" active={activeTab === 'discord'} onClick={() => setActiveTab('discord')} />
           <div style={{ flex: 1 }} />
-          <NavItem icon="sparkle" label="CREDITS" active={activeTab === 'credits'} onClick={() => setActiveTab('credits')} />
+          <NavItem essentialIcon="Trophy" label="CREDITS" active={activeTab === 'credits'} onClick={() => setActiveTab('credits')} />
         </div>
 
         <div style={{
@@ -154,7 +154,7 @@ export default function LobbyScreen() {
   );
 }
 
-function NavItem({ icon, label, active, onClick }) {
+function NavItem({ essentialIcon, label, active, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -177,7 +177,7 @@ function NavItem({ icon, label, active, onClick }) {
         textAlign: 'left',
       }}
     >
-      <InlineIcon name={icon} size={16} />
+      <EssentialIcon name={essentialIcon} size={16} />
       {label}
     </button>
   );
@@ -203,10 +203,10 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
               <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 4 }}>
                 Level {playerLevel} {playerRace} {playerClass} &bull;{' '}
                 <InlineIcon name="gold" size={12} /> {gold} Gold &bull;{' '}
-                {heroRoster?.length || 0} Heroes
+                <EssentialIcon name="Team" size={12} /> {heroRoster?.length || 0} Heroes
               </div>
             </div>
-            <LobbyButton label="CONTINUE" onClick={onContinue} primary />
+            <LobbyButton label="CONTINUE" onClick={onContinue} primary icon="Play" />
           </div>
         </div>
       )}
@@ -221,7 +221,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
               Begin your journey through the realms. Choose your race and class.
             </div>
           </div>
-          <LobbyButton label="NEW GAME" onClick={onNewGame} />
+          <LobbyButton label="NEW GAME" onClick={onNewGame} icon="Restart" />
         </div>
       </div>
 
@@ -231,15 +231,15 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
-            { icon: 'sword', text: '24 Warlord Combinations' },
-            { icon: 'battle', text: 'Tactical Turn-Based Combat' },
-            { icon: 'scroll', text: 'Deep Skill Trees' },
-            { icon: 'crown', text: 'Endgame Boss Fights' },
-            { icon: 'trophy', text: 'Zone Conquest System' },
-            { icon: 'portal', text: 'Void Nexus Portal Hub' },
+            { essentialIcon: 'Hammer', text: '24 Warlord Combinations' },
+            { essentialIcon: 'Skull', text: 'Tactical Turn-Based Combat' },
+            { essentialIcon: 'Book', text: 'Deep Skill Trees' },
+            { essentialIcon: 'ChestTreasure', text: 'Endgame Boss Fights' },
+            { essentialIcon: 'Trophy', text: 'Zone Conquest System' },
+            { essentialIcon: 'Key', text: 'Void Nexus Portal Hub' },
           ].map(f => (
             <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted)', fontSize: '0.8rem' }}>
-              <InlineIcon name={f.icon} size={14} /> {f.text}
+              <EssentialIcon name={f.essentialIcon} size={14} /> {f.text}
             </div>
           ))}
         </div>
@@ -451,7 +451,7 @@ function CreditEntry({ title, role }) {
   );
 }
 
-function LobbyButton({ label, onClick, primary }) {
+function LobbyButton({ label, onClick, primary, icon }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -475,7 +475,7 @@ function LobbyButton({ label, onClick, primary }) {
         whiteSpace: 'nowrap',
       }}
     >
-      {label}
+      {icon && <EssentialIcon name={icon} size={14} style={{ marginRight: 6 }} />}{label}
     </button>
   );
 }
