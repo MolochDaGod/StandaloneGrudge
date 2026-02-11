@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import SpriteAnimation from './SpriteAnimation';
-import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets } from '../data/spriteMap';
+import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets } from '../data/spriteMap';
 import { classDefinitions } from '../data/classes';
 import { WEAPON_SKILLS, CLASS_EQUIPMENT_RULES } from '../data/equipment';
 
@@ -14,11 +14,48 @@ const allWeaponKeys = Object.keys(weaponVisuals);
 
 const TABS = [
   { id: 'characters', label: 'Characters', icon: '\u{1F9D1}' },
+  { id: 'effects', label: 'Effects Gallery', icon: '\u{1F4A5}' },
   { id: 'projectiles', label: 'Projectiles', icon: '\u{1F3AF}' },
   { id: 'buffs', label: 'Buffs & Effects', icon: '\u2728' },
   { id: 'weapons', label: 'Weapons', icon: '\u2694\uFE0F' },
   { id: 'layers', label: 'Effect Layers', icon: '\u{1F4DA}' },
 ];
+
+const EFFECT_CATEGORIES = {
+  hits: { label: 'Hit Effects', color: '#ef4444', keys: ['hitEffect1', 'hitEffect2', 'hitEffect3', 'weaponHit'] },
+  slashes: { label: 'Slashes', color: '#f97316', keys: ['slash', 'demonSlash1', 'demonSlash2', 'demonSlash3'] },
+  fire: { label: 'Fire & Explosion', color: '#f59e0b', keys: ['brightFire', 'fire', 'fireSpin', 'fireExplosion', 'fireExplosion2', 'flameLash'] },
+  ice: { label: 'Ice & Water', color: '#38bdf8', keys: ['freezing', 'magicBubbles'] },
+  thunder: { label: 'Thunder & Lightning', color: '#facc15', keys: ['thunderHit', 'thunderProjectile', 'thunderProjectile2'] },
+  holy: { label: 'Holy & Light', color: '#fde68a', keys: ['holyImpact', 'holyRepeatable', 'holyVfx', 'sunburn'] },
+  dark: { label: 'Dark & Shadow', color: '#a78bfa', keys: ['midnight', 'nebula', 'phantom', 'felSpell', 'vortex'] },
+  nature: { label: 'Nature & Wind', color: '#4ade80', keys: ['windBreath', 'windHit', 'windProjectile'] },
+  magic: { label: 'Magic & Arcane', color: '#818cf8', keys: ['magicSpell', 'magic8', 'blueFire', 'casting', 'magickaHit'] },
+  defensive: { label: 'Defensive & Healing', color: '#2dd4bf', keys: ['protectionCircle', 'healEffect', 'resurrect'] },
+  utility: { label: 'Utility', color: '#94a3b8', keys: ['loading'] },
+};
+
+function getEffectUsage(effectKey) {
+  const usage = [];
+  Object.entries(abilityEffectMap).forEach(([cls, abilities]) => {
+    Object.entries(abilities).forEach(([name, fx]) => {
+      if (fx.effect === effectKey) usage.push({ type: 'class', class: cls, name });
+    });
+  });
+  Object.entries(weaponSkillEffectMap).forEach(([id, fx]) => {
+    if (fx.effect === effectKey) usage.push({ type: 'weapon', id });
+  });
+  Object.entries(enemyAbilityEffects).forEach(([name, fx]) => {
+    if (fx.effect === effectKey) usage.push({ type: 'enemy', name });
+  });
+  Object.entries(buffVisuals).forEach(([id, b]) => {
+    if (b.effect === effectKey) usage.push({ type: 'buff', id, name: b.name });
+  });
+  Object.entries(weaponVisuals).forEach(([id, w]) => {
+    if (w.trail === effectKey) usage.push({ type: 'weapon_trail', id, name: w.name });
+  });
+  return usage;
+}
 
 function getAllSkillsForClass(classId) {
   const skills = [];
@@ -411,6 +448,10 @@ export default function AdminSprite() {
   const [layerPreset, setLayerPreset] = useState('fire_combo');
   const [layerSpeed, setLayerSpeed] = useState(80);
 
+  const [galleryCat, setGalleryCat] = useState('all');
+  const [gallerySearch, setGallerySearch] = useState('');
+  const [gallerySelected, setGallerySelected] = useState(null);
+
   const spriteData = raceClassSpriteMap[race]?.[cls];
   const skills = getAllSkillsForClass(cls);
   const transformSprite = cls === 'warrior' ? warriorTransformSprite : cls === 'worge' ? worgTransformSprite[race] : null;
@@ -680,6 +721,172 @@ export default function AdminSprite() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'effects' && (
+          <div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+              <button onClick={() => setGalleryCat('all')} style={{
+                ...S.btn(galleryCat === 'all' ? '#8b5cf6' : '#333'),
+                border: galleryCat === 'all' ? '1px solid #8b5cf6' : '1px solid #4a3c28',
+              }}>All ({allEffectKeys.length})</button>
+              {Object.entries(EFFECT_CATEGORIES).map(([catId, cat]) => (
+                <button key={catId} onClick={() => setGalleryCat(catId)} style={{
+                  ...S.btn(galleryCat === catId ? cat.color : '#333'),
+                  border: galleryCat === catId ? `1px solid ${cat.color}` : '1px solid #4a3c28',
+                  color: galleryCat === catId ? '#fff' : '#c4b998',
+                }}>{cat.label} ({cat.keys.length})</button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
+              <input
+                type="text"
+                value={gallerySearch}
+                onChange={e => setGallerySearch(e.target.value)}
+                placeholder="Search effects..."
+                style={{ ...S.select, flex: 1, maxWidth: 300 }}
+              />
+              <span style={{ fontSize: 11, color: '#8a7d65' }}>
+                {(() => {
+                  const keys = galleryCat === 'all' ? allEffectKeys : (EFFECT_CATEGORIES[galleryCat]?.keys || []);
+                  const filtered = gallerySearch ? keys.filter(k => k.toLowerCase().includes(gallerySearch.toLowerCase())) : keys;
+                  return `${filtered.length} effects`;
+                })()}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 600 }}>
+                {(galleryCat === 'all' ? [{ id: 'all', label: 'All Effects', color: '#ffd700', keys: allEffectKeys }] : [EFFECT_CATEGORIES[galleryCat]].filter(Boolean).map(c => ({ ...c, id: galleryCat }))).map(cat => {
+                  const filteredKeys = gallerySearch ? cat.keys.filter(k => k.toLowerCase().includes(gallerySearch.toLowerCase())) : cat.keys;
+                  if (filteredKeys.length === 0) return null;
+                  return (
+                    <div key={cat.id} style={{ marginBottom: 20 }}>
+                      <h3 style={{ ...S.h3, color: cat.color, borderBottom: `1px solid ${cat.color}33`, paddingBottom: 6 }}>
+                        {cat.label} ({filteredKeys.length})
+                      </h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                        {filteredKeys.map(key => {
+                          const isSelected = gallerySelected === key;
+                          const usage = getEffectUsage(key);
+                          return (
+                            <div key={key} onClick={() => setGallerySelected(key)} style={{
+                              background: isSelected ? 'rgba(139,92,246,0.3)' : 'rgba(0,0,0,0.3)',
+                              border: isSelected ? '2px solid #8b5cf6' : '1px solid rgba(74,60,40,0.3)',
+                              borderRadius: 8, padding: 8, cursor: 'pointer', textAlign: 'center',
+                              transition: 'all 0.15s',
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, height: 60, alignItems: 'center' }}>
+                                <EffectSpritePreview effectKey={key} scale={1.2} speed={80} />
+                              </div>
+                              <div style={{ fontSize: 11, color: '#e0d6c2', fontWeight: 'bold', marginBottom: 2 }}>{key}</div>
+                              <div style={{ fontSize: 9, color: usage.length > 0 ? '#22c55e' : '#666' }}>
+                                {usage.length > 0 ? `${usage.length} binding${usage.length > 1 ? 's' : ''}` : 'unbound'}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ flex: '0 0 360px' }}>
+                {gallerySelected && (
+                  <div style={{ position: 'sticky', top: 20 }}>
+                    <div style={S.panel}>
+                      <h3 style={{ ...S.h3, marginBottom: 12 }}>Preview: {gallerySelected}</h3>
+                      <div style={{
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200,
+                        background: 'radial-gradient(ellipse at center, rgba(30,25,40,0.8) 0%, rgba(10,10,20,1) 80%)',
+                        borderRadius: 6, border: '1px solid rgba(74,60,40,0.3)', marginBottom: 12,
+                      }}>
+                        <EffectSpritePreview effectKey={gallerySelected} scale={3} speed={80} />
+                      </div>
+                      <div style={{ fontSize: 11, color: '#8a7d65', lineHeight: 1.6, marginBottom: 12 }}>
+                        {(() => {
+                          const e = effectSprites[gallerySelected];
+                          if (!e) return null;
+                          return (
+                            <>
+                              <div><strong style={{ color: '#c4b998' }}>Source:</strong> {e.src}</div>
+                              <div><strong style={{ color: '#c4b998' }}>Frames:</strong> {e.frames}</div>
+                              {e.cols && <div><strong style={{ color: '#c4b998' }}>Grid:</strong> {e.cols}x{e.rows} ({e.frameW}x{e.frameH}px)</div>}
+                              {e.size && <div><strong style={{ color: '#c4b998' }}>Sheet:</strong> {e.size}x{e.size}px (auto-grid)</div>}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div style={{ ...S.panel, marginTop: 12 }}>
+                      <h3 style={S.h3}>Skill Bindings</h3>
+                      {(() => {
+                        const usage = getEffectUsage(gallerySelected);
+                        if (usage.length === 0) return <div style={{ fontSize: 11, color: '#666' }}>No skills or abilities use this effect yet.</div>;
+                        return (
+                          <div style={{ maxHeight: 300, overflow: 'auto' }}>
+                            {usage.map((u, i) => {
+                              const typeColors = { class: '#ffd700', weapon: '#3b82f6', enemy: '#ef4444', buff: '#22c55e', weapon_trail: '#f97316' };
+                              const typeLabels = { class: 'Class Ability', weapon: 'Weapon Skill', enemy: 'Enemy Ability', buff: 'Buff Visual', weapon_trail: 'Weapon Trail' };
+                              return (
+                                <div key={i} style={{
+                                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                  padding: '4px 8px', borderBottom: '1px solid rgba(74,60,40,0.2)',
+                                  fontSize: 11,
+                                }}>
+                                  <span style={{ color: '#e0d6c2' }}>
+                                    {u.type === 'class' ? `${u.class} - ${u.name}` :
+                                     u.type === 'weapon' ? u.id :
+                                     u.type === 'enemy' ? u.name :
+                                     u.type === 'buff' ? u.name :
+                                     u.type === 'weapon_trail' ? u.name : ''}
+                                  </span>
+                                  <span style={{
+                                    color: typeColors[u.type] || '#888',
+                                    fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5,
+                                    background: `${typeColors[u.type]}22`, padding: '1px 6px', borderRadius: 3,
+                                  }}>{typeLabels[u.type] || u.type}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <div style={{ ...S.panel, marginTop: 12 }}>
+                      <h3 style={S.h3}>Quick Copy</h3>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button onClick={() => {
+                          navigator.clipboard.writeText(`effect: '${gallerySelected}'`);
+                          flash('Copied effect key!');
+                        }} style={S.btn('#3b82f6')}>Copy Key</button>
+                        <button onClick={() => {
+                          navigator.clipboard.writeText(JSON.stringify(effectSprites[gallerySelected], null, 2));
+                          flash('Copied sprite data!');
+                        }} style={S.btn('#8b5cf6')}>Copy Sprite Data</button>
+                        <button onClick={() => {
+                          navigator.clipboard.writeText(JSON.stringify({ effect: gallerySelected, beam: null, anim: 'attack1' }, null, 2));
+                          flash('Copied binding template!');
+                        }} style={S.btn('#22c55e')}>Copy Binding Template</button>
+                        {copied && <span style={{ color: '#22c55e', fontSize: 11, alignSelf: 'center' }}>{copied}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!gallerySelected && (
+                  <div style={S.panel}>
+                    <p style={{ fontSize: 12, color: '#8a7d65', textAlign: 'center', padding: 40 }}>
+                      Click on any effect to see its details, preview, and skill bindings
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -467,6 +467,8 @@ export const effectSprites = {
   windBreath: { src: '/effects/wind_breath.png', cols: 18, rows: 1, frameW: 32, frameH: 32, frames: 18 },
   windHit: { src: '/effects/wind_hit.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
   windProjectile: { src: '/effects/wind_projectile.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
+  resurrect: { src: '/effects/resurrect_sprite.png', cols: 6, rows: 4, frameW: 256, frameH: 256, frames: 24 },
+  loading: { src: '/effects/pixel/15_loading_spritesheet.png', size: 1100, frames: 121 },
 };
 
 export const projectileSprites = {
@@ -626,6 +628,25 @@ export const enemyAbilityEffects = {
   'Sword Slash': { effect: 'slash', beam: null },
   'Shield Wall': { effect: 'protectionCircle', beam: null },
   'Bone Breaker': { effect: 'hitEffect2', beam: null },
+  'Wing Slash': { effect: 'slash', beam: null },
+  'Sonic Screech': { effect: 'windBreath', beam: 'purple' },
+  'Blood Drain': { effect: 'nebula', beam: 'red' },
+  'Imp Scratch': { effect: 'hitEffect3', beam: null },
+  'Hex Bolt': { effect: 'felSpell', beam: 'purple' },
+  'Imp Frenzy': { effect: 'fireSpin', beam: null },
+  'Jaw Snap': { effect: 'hitEffect1', beam: null },
+  'Tongue Lash': { effect: 'hitEffect2', beam: null },
+  'Devour Gold': { effect: 'hitEffect1', beam: null },
+  'Iron Shell': { effect: 'protectionCircle', beam: null },
+  'Talon Strike': { effect: 'slash', beam: null },
+  'Dive Bomb': { effect: 'hitEffect1', beam: null },
+  'Murder of Crows': { effect: 'midnight', beam: 'purple' },
+  'Shadow Feint': { effect: 'phantom', beam: null },
+  'Stone Fist': { effect: 'hitEffect2', beam: null },
+  'Petrify Gaze': { effect: 'freezing', beam: 'purple' },
+  'Quake Slam': { effect: 'hitEffect2', beam: null },
+  'Fortify': { effect: 'protectionCircle', beam: null },
+  'Crumble Curse': { effect: 'felSpell', beam: 'purple' },
 };
 
 export const abilityEffectMap = {
