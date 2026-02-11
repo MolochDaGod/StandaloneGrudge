@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { locations } from '../data/enemies';
 import { cities, cityPositions, cityConnections } from '../data/cities';
@@ -254,7 +255,6 @@ export default function WorldMap() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [citySubmenu, setCitySubmenu] = useState(null);
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showWarParty, setShowWarParty] = useState(false);
   const [showGruda, setShowGruda] = useState(false);
   const [grudaCopied, setGrudaCopied] = useState(null);
@@ -266,6 +266,7 @@ export default function WorldMap() {
   const [isMoving, setIsMoving] = useState(false);
   const [wanderOffsets, setWanderOffsets] = useState({});
   const mapRef = useRef(null);
+  const outerRef = useRef(null);
   const menuRef = useRef(null);
 
   const [heroWalking, setHeroWalking] = useState({});
@@ -491,31 +492,6 @@ export default function WorldMap() {
     const isUnlocked = loc.unlocked || (loc.unlockLevel && level >= loc.unlockLevel) || devUnlocked[loc.id];
     if (!isUnlocked) return;
 
-    const rect = mapRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const pos = getNodePos(loc.id);
-    const nodeXPx = (pos.x / 100) * rect.width;
-    const nodeYPx = (pos.y / 100) * rect.height;
-    const menuWidth = 240;
-    const menuHeight = 350;
-    const viewportFraction = nodeYPx / rect.height;
-
-    let menuX = nodeXPx + 35;
-    let menuY;
-
-    if (viewportFraction > 0.4) {
-      menuY = nodeYPx - menuHeight - 10;
-    } else {
-      menuY = nodeYPx + 35;
-    }
-
-    if (menuX + menuWidth > rect.width) menuX = nodeXPx - menuWidth - 10;
-    if (menuX < 10) menuX = 10;
-    if (menuY < 10) menuY = 10;
-    if (menuY + menuHeight > rect.height) menuY = rect.height - menuHeight - 60;
-
-    setMenuPos({ x: menuX, y: menuY });
     setSelectedLocation(loc.id);
     setSelectedCity(null);
     setCitySubmenu(null);
@@ -537,31 +513,6 @@ export default function WorldMap() {
     const isCityUnlocked = city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel) || devUnlocked[city.id];
     if (!isCityUnlocked) return;
 
-    const rect = mapRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const pos = getNodePos(city.id);
-    const nodeXPx = (pos.x / 100) * rect.width;
-    const nodeYPx = (pos.y / 100) * rect.height;
-    const menuWidth = 300;
-    const menuHeight = 420;
-    const viewportFraction = nodeYPx / rect.height;
-
-    let menuX = nodeXPx + 35;
-    let menuY;
-
-    if (viewportFraction > 0.4) {
-      menuY = nodeYPx - menuHeight - 10;
-    } else {
-      menuY = nodeYPx + 35;
-    }
-
-    if (menuX + menuWidth > rect.width) menuX = nodeXPx - menuWidth - 10;
-    if (menuX < 10) menuX = 10;
-    if (menuY < 10) menuY = 10;
-    if (menuY + menuHeight > rect.height) menuY = rect.height - menuHeight - 60;
-
-    setMenuPos({ x: menuX, y: menuY });
     setSelectedCity(city.id);
     setSelectedLocation(null);
     setCitySubmenu(null);
@@ -634,6 +585,7 @@ export default function WorldMap() {
 
   return (
     <div
+      ref={outerRef}
       onMouseDown={handleMapMouseDown}
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
@@ -1405,16 +1357,6 @@ export default function WorldMap() {
             <div key={event.id}
               onClick={(e) => {
                 e.stopPropagation();
-                const rect = mapRef.current?.getBoundingClientRect();
-                if (!rect) return;
-                const nodeXPx = (pos.x / 100) * rect.width;
-                const nodeYPx = (pos.y / 100) * rect.height;
-                let mx = nodeXPx + 40;
-                let my = pos.y > 40 ? nodeYPx - 280 : nodeYPx + 40;
-                if (mx + 260 > rect.width) mx = nodeXPx - 270;
-                if (mx < 10) mx = 10;
-                if (my < 10) my = 10;
-                setMenuPos({ x: mx, y: my });
                 setSelectedEvent(event);
                 setSelectedLocation(null);
                 setSelectedCity(null);
@@ -1486,19 +1428,20 @@ export default function WorldMap() {
         })}
       </div>
 
-        {selectedLoc && (
+        {selectedLoc && outerRef.current && createPortal(
           <div ref={menuRef} style={{
             position: 'absolute',
-            left: menuPos.x, top: menuPos.y,
-            zIndex: 20,
+            right: 16, top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 50,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
             border: `2px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}`,
             borderRadius: 14,
             padding: 0,
-            minWidth: 220,
-            maxHeight: '60vh', overflowY: 'auto',
+            width: 260,
+            maxHeight: '70vh', overflowY: 'auto',
             boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${locationIcons[selectedLoc.id]?.glow || 'rgba(110,231,183,0.2)'}`,
-            animation: 'fadeIn 0.15s ease-out',
+            animation: 'slideInRight 0.2s ease-out',
           }}>
             <div style={{
               padding: '14px 16px 10px',
@@ -1604,29 +1547,31 @@ export default function WorldMap() {
                 Click anywhere to close
               </span>
             </div>
-          </div>
+          </div>,
+          outerRef.current
         )}
 
-        {selectedCity && (() => {
+        {selectedCity && outerRef.current && (() => {
           const city = cities.find(c => c.id === selectedCity);
           if (!city) return null;
 
           const cityMissions = missionTemplates.filter(m => m.cityId === city.id && level >= m.levelRange[0]);
           const cityArenas = arenaTemplates.filter(a => a.cityId === city.id && level >= a.levelRange[0]);
 
-          return (
+          return createPortal(
             <div ref={menuRef} style={{
               position: 'absolute',
-              left: menuPos.x, top: menuPos.y,
-              zIndex: 20,
+              right: 16, top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 50,
               background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
               border: '2px solid #4ade80',
               borderRadius: 14,
               padding: 0,
-              minWidth: 260, maxWidth: 320,
-              maxHeight: '60vh', overflowY: 'auto',
+              width: 280,
+              maxHeight: '70vh', overflowY: 'auto',
               boxShadow: '0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(74,222,128,0.3)',
-              animation: 'fadeIn 0.15s ease-out',
+              animation: 'slideInRight 0.2s ease-out',
             }}>
               <div style={{
                 padding: '14px 16px 10px',
@@ -2084,21 +2029,23 @@ export default function WorldMap() {
                   Click anywhere to close
                 </span>
               </div>
-            </div>
+            </div>,
+            outerRef.current
           );
         })()}
 
-        {selectedEvent && (
+        {selectedEvent && outerRef.current && createPortal(
           <div ref={menuRef} style={{
             position: 'absolute',
-            left: menuPos.x, top: menuPos.y,
-            zIndex: 20,
+            right: 16, top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 50,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
             border: `2px solid ${selectedEvent.color}`,
             borderRadius: 14, padding: 0,
             minWidth: 240, maxHeight: '60vh', overflowY: 'auto',
             boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${selectedEvent.color}40`,
-            animation: 'fadeIn 0.15s ease-out',
+            animation: 'slideInRight 0.2s ease-out',
           }}>
             <div style={{
               padding: '14px 16px 10px',
@@ -2146,7 +2093,8 @@ export default function WorldMap() {
                 Click anywhere to close
               </span>
             </div>
-          </div>
+          </div>,
+          outerRef.current
         )}
 
         <div style={{
@@ -2721,6 +2669,10 @@ export default function WorldMap() {
           @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
+          }
+          @keyframes slideInRight {
+            0% { opacity: 0; transform: translateY(-50%) translateX(30px); }
+            100% { opacity: 1; transform: translateY(-50%) translateX(0); }
           }
           @keyframes bossAppear {
             0% { transform: scale(0.3); opacity: 0; }
