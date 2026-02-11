@@ -5,7 +5,8 @@ import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
+import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 
 const locationBackgrounds = {
@@ -670,6 +671,7 @@ export default function BattleScreen() {
     playerMaxHealth, playerMaxMana, playerMaxStamina,
     inventory, useConsumable, useGrudge,
     autoBattleEnabled, toggleAutoBattle,
+    heroRoster,
   } = useGameStore();
 
   const [unitAnims, setUnitAnims] = useState({});
@@ -687,6 +689,7 @@ export default function BattleScreen() {
   const [iceStormFx, setIceStormFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
+  const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
@@ -2072,6 +2075,143 @@ export default function BattleScreen() {
                       <span style={{ fontSize: '0.4rem', color: '#ef4444', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
                     )}
                   </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{
+            flex: '0 0 auto', width: 44,
+            padding: '4px 2px',
+            display: 'flex', flexDirection: 'column', gap: 2,
+            justifyContent: 'center', alignItems: 'center',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative',
+          }}>
+            {playerTeam.map(unit => {
+              const hero = heroRoster.find(h => h.id === unit.id);
+              const eq = hero?.equipment || {};
+              const weapon = eq.weapon;
+              const weaponSprite = weapon ? getItemSpriteIcon(weapon) : null;
+              const tierDef = weapon ? (TIERS[weapon.tier] || TIERS[1]) : null;
+              const equippedCount = Object.values(eq).filter(Boolean).length;
+              return (
+                <div key={unit.id}
+                  onMouseEnter={() => setHoveredGearUnitId(unit.id)}
+                  onMouseLeave={() => setHoveredGearUnitId(null)}
+                  style={{
+                    width: 36, height: 36,
+                    background: hoveredGearUnitId === unit.id ? 'rgba(139,115,85,0.35)' : 'rgba(0,0,0,0.35)',
+                    border: `1px solid ${tierDef ? tierDef.color + '88' : 'rgba(139,115,85,0.25)'}`,
+                    borderRadius: 4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    opacity: unit.alive ? 1 : 0.35,
+                    position: 'relative',
+                  }}
+                >
+                  {weaponSprite ? (
+                    <img src={weaponSprite} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }} />
+                  ) : (
+                    <span style={{ fontSize: '0.9rem' }}>{weapon?.icon || '⚔️'}</span>
+                  )}
+                  {equippedCount > 0 && (
+                    <div style={{
+                      position: 'absolute', bottom: -1, right: -1,
+                      background: '#1a1a2e', border: '1px solid rgba(139,115,85,0.4)',
+                      borderRadius: '50%', width: 12, height: 12,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.4rem', fontWeight: 700, color: '#d4a96a',
+                    }}>{equippedCount}</div>
+                  )}
+                  {hoveredGearUnitId === unit.id && hero && (() => {
+                    const ps = 1.6;
+                    const pW = 96 * ps;
+                    const pH = 128 * ps;
+                    const sPx = 20 * ps;
+                    const sPos = {
+                      helmet:  { left: 35 * ps, top: 8 * ps },
+                      weapon:  { left: 11 * ps, top: 32 * ps },
+                      armor:   { left: 35 * ps, top: 32 * ps },
+                      offhand: { left: 59 * ps, top: 32 * ps },
+                      feet:    { left: 35 * ps, top: 56 * ps },
+                      ring:    { left: 17 * ps, top: 85 * ps },
+                      relic:   { left: 52 * ps, top: 85 * ps },
+                    };
+                    return (
+                      <div style={{
+                        position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                        marginBottom: 6, zIndex: 100,
+                        background: 'rgba(12,10,8,0.96)',
+                        border: '2px solid #8b7355',
+                        borderRadius: 8,
+                        padding: '8px 10px 10px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 12px rgba(139,115,85,0.2)',
+                        pointerEvents: 'none',
+                        minWidth: pW + 20,
+                      }}>
+                        <div style={{
+                          textAlign: 'center', fontSize: '0.55rem', fontWeight: 700,
+                          color: '#d4a96a', letterSpacing: 1, marginBottom: 5,
+                          textTransform: 'uppercase', fontFamily: 'var(--font-heading)',
+                        }}>{unit.name}</div>
+                        <div style={{
+                          width: pW, height: pH, margin: '0 auto',
+                          backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+                          backgroundSize: `${pW}px ${pH}px`,
+                          imageRendering: 'pixelated',
+                          position: 'relative',
+                        }}>
+                          {Object.entries(sPos).map(([slot, pos]) => {
+                            const item = eq[slot];
+                            const itemSprite = item ? getItemSpriteIcon(item) : null;
+                            const tDef = item ? (TIERS[item.tier] || TIERS[1]) : null;
+                            return (
+                              <div key={slot} style={{
+                                position: 'absolute', left: pos.left, top: pos.top,
+                                width: sPx, height: sPx,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}>
+                                {item ? (
+                                  <>
+                                    {itemSprite ? (
+                                      <img src={itemSprite} alt={item.name} style={{
+                                        width: '75%', height: '75%', objectFit: 'contain',
+                                        imageRendering: 'pixelated',
+                                        filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
+                                      }} />
+                                    ) : (
+                                      <span style={{ fontSize: '0.85rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{item.icon}</span>
+                                    )}
+                                    {tDef && <div style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 2, background: tDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tDef.color}` }} />}
+                                  </>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{
+                          marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: '2px 6px',
+                          justifyContent: 'center',
+                        }}>
+                          {EQUIPMENT_SLOTS.map(slot => {
+                            const item = eq[slot];
+                            if (!item) return null;
+                            const tDef = TIERS[item.tier] || TIERS[1];
+                            return (
+                              <div key={slot} style={{
+                                fontSize: '0.45rem', color: tDef.color,
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {item.name}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
