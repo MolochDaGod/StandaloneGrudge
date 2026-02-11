@@ -308,9 +308,60 @@ export const worgTransformSprite = {
   dwarf: spriteSheets.werebear,
 };
 
+const monsterSprites = {
+  'monster-goblin': {
+    folder: 'monsters/goblin',
+    frameWidth: 150,
+    frameHeight: 150,
+    idle: { src: '/sprites/monsters/goblin/idle.png', frames: 4 },
+    attack1: { src: '/sprites/monsters/goblin/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/monsters/goblin/attack2.png', frames: 8 },
+    attack3: { src: '/sprites/monsters/goblin/attack3.png', frames: 12 },
+    hurt: { src: '/sprites/monsters/goblin/hurt.png', frames: 4 },
+    death: { src: '/sprites/monsters/goblin/death.png', frames: 4 },
+    walk: { src: '/sprites/monsters/goblin/walk.png', frames: 8 },
+  },
+  'monster-skeleton': {
+    folder: 'monsters/skeleton',
+    frameWidth: 150,
+    frameHeight: 150,
+    idle: { src: '/sprites/monsters/skeleton/idle.png', frames: 4 },
+    attack1: { src: '/sprites/monsters/skeleton/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/monsters/skeleton/attack2.png', frames: 8 },
+    attack3: { src: '/sprites/monsters/skeleton/attack3.png', frames: 6 },
+    block: { src: '/sprites/monsters/skeleton/block.png', frames: 4 },
+    hurt: { src: '/sprites/monsters/skeleton/hurt.png', frames: 4 },
+    death: { src: '/sprites/monsters/skeleton/death.png', frames: 4 },
+    walk: { src: '/sprites/monsters/skeleton/walk.png', frames: 4 },
+  },
+  'flying-eye': {
+    folder: 'monsters/flying_eye',
+    frameWidth: 150,
+    frameHeight: 150,
+    idle: { src: '/sprites/monsters/flying_eye/idle.png', frames: 8 },
+    attack1: { src: '/sprites/monsters/flying_eye/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/monsters/flying_eye/attack2.png', frames: 8 },
+    attack3: { src: '/sprites/monsters/flying_eye/attack3.png', frames: 6 },
+    hurt: { src: '/sprites/monsters/flying_eye/hurt.png', frames: 4 },
+    death: { src: '/sprites/monsters/flying_eye/death.png', frames: 4 },
+  },
+  'monster-mushroom': {
+    folder: 'monsters/mushroom',
+    frameWidth: 150,
+    frameHeight: 150,
+    idle: { src: '/sprites/monsters/mushroom/idle.png', frames: 4 },
+    attack1: { src: '/sprites/monsters/mushroom/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/monsters/mushroom/attack2.png', frames: 8 },
+    attack3: { src: '/sprites/monsters/mushroom/attack3.png', frames: 11 },
+    hurt: { src: '/sprites/monsters/mushroom/hurt.png', frames: 4 },
+    death: { src: '/sprites/monsters/mushroom/death.png', frames: 4 },
+    walk: { src: '/sprites/monsters/mushroom/walk.png', frames: 8 },
+  },
+};
+
 export const enemySpriteMap = {
-  goblin: spriteSheets.slime,
-  skeleton: spriteSheets.skeleton,
+  goblin: monsterSprites['monster-goblin'],
+  skeleton: monsterSprites['monster-skeleton'],
   wolf: spriteSheets.werewolf,
   dark_mage: spriteSheets.wizard,
   orc: spriteSheets['armored-orc'],
@@ -323,6 +374,9 @@ export const enemySpriteMap = {
   elite_orc: spriteSheets['elite-orc'],
   forest_guardian: spriteSheets['forest-guardian'],
   corrupted_grove_keeper: spriteSheets.wizard,
+  flying_eye: monsterSprites['flying-eye'],
+  mushroom: monsterSprites['monster-mushroom'],
+  skeleton_knight: monsterSprites['monster-skeleton'],
 };
 
 export const effectSprites = {
@@ -516,6 +570,13 @@ export const enemyAbilityEffects = {
   'Grove Fireball': { effect: 'fireExplosion', beam: 'green' },
   'Resurrect Guardian': { effect: 'healEffect', beam: 'green' },
   'Dark Bloom': { effect: 'felSpell', beam: 'purple' },
+  'Eye Beam': { effect: 'midnight', beam: 'purple' },
+  'Dive Attack': { effect: 'hitEffect1', beam: null },
+  'Spore Slap': { effect: 'hitEffect3', beam: null },
+  'Toxic Spore': { effect: 'windBreath', beam: 'green' },
+  'Sword Slash': { effect: 'slash', beam: null },
+  'Shield Wall': { effect: 'protectionCircle', beam: null },
+  'Bone Breaker': { effect: 'hitEffect2', beam: null },
 };
 
 export const abilityEffectMap = {
