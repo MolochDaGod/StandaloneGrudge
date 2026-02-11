@@ -953,10 +953,10 @@ export default function WorldMap() {
                 transition: 'transform 0.3s',
               }}
             >
-              <div style={{ position: 'relative', width: 56, height: 56 }}>
+              <div style={{ position: 'relative', width: 42, height: 42 }}>
                 {isUnlocked && portalLocations.includes(loc.id) && (
                   <div style={{
-                    position: 'absolute', inset: -6,
+                    position: 'absolute', inset: -5,
                     borderRadius: '50%',
                     background: `conic-gradient(from 0deg, ${icon.color}00, ${icon.color}66, ${icon.color}00, ${icon.color}44, ${icon.color}00)`,
                     animation: 'portalSpin 3s linear infinite',
@@ -969,7 +969,7 @@ export default function WorldMap() {
                   const isHovered = hoveredNode?.type === 'location' && hoveredNode?.id === loc.id;
                   return (
                     <div style={{
-                      width: 56, height: 56,
+                      width: 42, height: 42,
                       borderRadius: '50%',
                       overflow: 'hidden',
                       border: `2px solid ${isUnlocked ? (hasBossActive ? (isHovered ? icon.color + '80' : '#cc0000') : isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : isSelected ? '#fff' : icon.color + '80') : 'rgba(80,80,100,0.4)'}`,
@@ -1034,7 +1034,7 @@ export default function WorldMap() {
                 )}
                 {isUnlocked && conquer > 0 && (
                   <div style={{
-                    position: 'absolute', top: -6, right: -6,
+                    position: 'absolute', top: -5, right: -5,
                     background: isConquered ? 'var(--gold)' : 'rgba(14,22,48,0.95)',
                     border: `1px solid ${isConquered ? 'var(--gold)' : icon.color}`,
                     borderRadius: 6, padding: '1px 4px',
@@ -1122,9 +1122,9 @@ export default function WorldMap() {
                 transition: isCityDragging ? 'none' : 'transform 0.3s',
               }}
             >
-              <div style={{ position: 'relative', width: 58, height: 58 }}>
+              <div style={{ position: 'relative', width: 44, height: 44 }}>
                 <div style={{
-                  width: 52, height: 52, margin: '3px',
+                  width: 40, height: 40, margin: '2px',
                   borderRadius: '50%',
                   overflow: 'hidden',
                   background: isCityUnlocked
@@ -1132,7 +1132,7 @@ export default function WorldMap() {
                     : 'rgba(30,30,50,0.8)',
                   border: `3px solid ${isCityUnlocked ? (isSelected ? '#fff' : '#4ade80') : 'rgba(80,80,100,0.4)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: isCityUnlocked ? '1.4rem' : '1rem',
+                  fontSize: isCityUnlocked ? '1.1rem' : '0.8rem',
                   opacity: isCityUnlocked ? 1 : 0.4,
                   boxShadow: isSelected
                     ? '0 0 20px rgba(74,222,128,0.5), 0 0 40px rgba(74,222,128,0.3)'
