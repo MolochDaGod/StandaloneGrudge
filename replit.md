@@ -17,7 +17,8 @@ The application is a React 19 frontend developed with Vite, with an Express back
 **Technical Implementations:**
 - **Character System:** Supports 24 unique Warlord combinations across 6 races and 4 classes, with 8 attributes and a 0-20 level progression.
 - **Battle System:** Multi-unit tactical combat on a 2D plane with speed-based initiative, supporting up to 3 active heroes against AI enemies. Includes animations for combat actions and damage numbers.
-- **Sprite System:** Employs a `SpriteAnimation` component for 100x100px sprite sheet animations, with dynamic scaling, special handling for transformations, and per-slot equipment hue overlays (weapon/helmet/armor/feet regions with tier-based color, pulse, and shimmer effects).
+- **Sprite System:** Employs a `SpriteAnimation` component for 100x100px sprite sheet animations, with dynamic scaling, special handling for transformations, and per-slot equipment hue overlays (weapon/helmet/armor/feet regions with tier-based color, pulse, and shimmer effects). Necromancer sprite (160x128 frames) used for undead mage enemies.
+- **Custom VFX Effects:** 14 high-quality custom effect sprite sheets in public/effects/custom/ (arcaneslash, beam, crit, flamestrike, frostbolt, frozen, healingregen, healingwave, hit, holyheal, holylight, arcanebolt, arcanelighting, arcanemist). Wired into all class abilities, enemy abilities, buff visuals, weapon skills, and effect layer presets. 3 new presets: arcane_storm, frost_nova, divine_light.
 - **Icon System:** Comprehensive sprite-based icon system (ICON_REGISTRY in uiSprites.jsx) with 80+ pixel art icons. All emojis replaced with InlineIcon/SpriteIcon components. Icons stored in public/sprites/ui/icons/ and public/icons/. Equipment, abilities, skills, HUD elements, harvest nodes, and battle log all use consistent sprite icons.
 - **Game Systems:**
     - **Equipment:** An 8-tier equipment upgrade system across 7 slots, with a paper-doll UI supporting drag-and-drop.
