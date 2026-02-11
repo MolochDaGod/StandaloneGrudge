@@ -682,22 +682,52 @@ export default function WorldMap() {
 
         {/* Decorative landmarks removed for cleaner map */}
 
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <filter id="dotGlowGold" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="dotGlowGray" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.2" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="dotGlowGreen" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            {pathConnections.map(([from, to], idx) => {
+              const a = getNodePos(from);
+              const b = getNodePos(to);
+              return <path key={`pd_${idx}`} id={`path_${idx}`} d={`M${a.x} ${a.y} L${b.x} ${b.y}`} fill="none" />;
+            })}
+            {cityConnections.map(([cityId, locId], idx) => {
+              const cityPos = getNodePos(cityId);
+              const locPos = getNodePos(locId);
+              if (!cityPos || !locPos) return null;
+              return <path key={`cpd_${idx}`} id={`cpath_${idx}`} d={`M${cityPos.x} ${cityPos.y} L${locPos.x} ${locPos.y}`} fill="none" />;
+            })}
+          </defs>
           {pathConnections.map(([from, to], idx) => {
             const a = getNodePos(from);
             const b = getNodePos(to);
             const fromUnlocked = unlockedLocs.some(l => l.id === from);
             const toUnlocked = unlockedLocs.some(l => l.id === to);
             const bothUnlocked = fromUnlocked && toUnlocked;
+            const dotColor = bothUnlocked ? 'rgba(255,215,0,0.6)' : 'rgba(100,100,120,0.3)';
+            const dotFilter = bothUnlocked ? 'url(#dotGlowGold)' : 'url(#dotGlowGray)';
+            const dotR = bothUnlocked ? 0.5 : 0.35;
             return (
-              <line key={idx}
-                x1={`${a.x}%`} y1={`${a.y}%`}
-                x2={`${b.x}%`} y2={`${b.y}%`}
-                stroke={bothUnlocked ? 'rgba(255,215,0,0.35)' : 'rgba(100,100,120,0.2)'}
-                strokeWidth={bothUnlocked ? 2.5 : 1.5}
-                strokeDasharray={bothUnlocked ? 'none' : '6 4'}
-                style={{ filter: bothUnlocked ? 'drop-shadow(0 0 3px rgba(255,215,0,0.3))' : 'none' }}
-              />
+              <g key={idx}>
+                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={0.5} />
+                {[0, 1].map(d => (
+                  <circle key={d} r={dotR} fill={dotColor} filter={dotFilter}>
+                    <animateMotion dur={`${4 + Math.random() * 2}s`} repeatCount="indefinite" begin={`${d * 2.5}s`}>
+                      <mpath href={`#path_${idx}`} />
+                    </animateMotion>
+                  </circle>
+                ))}
+              </g>
             );
           })}
           {cityConnections.map(([cityId, locId], idx) => {
@@ -709,15 +739,20 @@ export default function WorldMap() {
             const isCityUnlocked = city && (city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel));
             const isLocUnlocked = unlockedLocs.some(l => l.id === locId);
             const bothOk = isCityUnlocked && isLocUnlocked;
+            const dotColor = bothOk ? 'rgba(74,222,128,0.5)' : 'rgba(100,100,120,0.25)';
+            const dotFilter = bothOk ? 'url(#dotGlowGreen)' : 'url(#dotGlowGray)';
+            const dotR = bothOk ? 0.45 : 0.3;
             return (
-              <line key={`cc_${idx}`}
-                x1={`${cityPos.x}%`} y1={`${cityPos.y}%`}
-                x2={`${locPos.x}%`} y2={`${locPos.y}%`}
-                stroke={bothOk ? 'rgba(74,222,128,0.3)' : 'rgba(100,100,120,0.15)'}
-                strokeWidth={bothOk ? 2 : 1}
-                strokeDasharray={bothOk ? '6 3' : '4 4'}
-                style={{ filter: bothOk ? 'drop-shadow(0 0 2px rgba(74,222,128,0.2))' : 'none' }}
-              />
+              <g key={`cc_${idx}`}>
+                <line x1={cityPos.x} y1={cityPos.y} x2={locPos.x} y2={locPos.y} stroke="transparent" strokeWidth={0.5} />
+                {[0, 1].map(d => (
+                  <circle key={d} r={dotR} fill={dotColor} filter={dotFilter}>
+                    <animateMotion dur={`${5 + Math.random() * 1.5}s`} repeatCount="indefinite" begin={`${d * 2.8}s`}>
+                      <mpath href={`#cpath_${idx}`} />
+                    </animateMotion>
+                  </circle>
+                ))}
+              </g>
             );
           })}
         </svg>
@@ -1144,7 +1179,7 @@ export default function WorldMap() {
           const footCrop = 0.82;
           const visibleH = Math.round(spriteH * footCrop);
           const heroCount = activeHeroes.length;
-          const containerW = heroCount * (spriteW + 4);
+          const containerW = heroCount * (spriteW * 0.4) + spriteW * 0.6;
           const containerH = visibleH + 20;
           return (
             <div style={{
@@ -1163,9 +1198,9 @@ export default function WorldMap() {
                 const isWalking = walk?.moving;
                 const flipX = walk?.flipX;
                 const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
-                const wanderX = offset.x * 8;
-                const wanderY = offset.y * 6;
-                const baseX = idx * (spriteW + 4);
+                const wanderX = offset.x * 3;
+                const wanderY = offset.y * 2;
+                const baseX = idx * (spriteW * 0.4);
                 return (
                   <div key={hero.id} style={{
                     position: 'absolute',
@@ -2522,64 +2557,95 @@ export default function WorldMap() {
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(0deg, rgba(8,10,24,0.95) 0%, rgba(8,10,24,0.85) 60%, rgba(8,10,24,0.4) 85%, transparent 100%)',
+          background: 'linear-gradient(0deg, rgba(8,10,24,0.97) 0%, rgba(8,10,24,0.9) 70%, rgba(8,10,24,0.5) 90%, transparent 100%)',
           backdropFilter: 'blur(4px)',
-          padding: '16px 20px 10px',
+          padding: '10px 16px 8px',
           borderTop: '1px solid rgba(255,215,0,0.15)',
           zIndex: 15,
+          minHeight: 80,
         }}>
           <div style={{
-            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
           }}>
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'rgba(255,215,0,0.08)', borderRadius: 8, padding: '4px 10px',
-              border: '1px solid rgba(255,215,0,0.2)',
-            }}>
-              <span style={{ fontSize: '0.85rem' }}>🏆</span>
-              <div>
-                <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem' }}>{victories}</div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>VICTORIES</div>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'rgba(251,191,36,0.08)', borderRadius: 8, padding: '4px 10px',
-              border: '1px solid rgba(251,191,36,0.2)',
-            }}>
-              <span style={{ fontSize: '0.85rem' }}>⭐</span>
-              <div>
-                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>{level}</div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>LEVEL</div>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'rgba(251,191,36,0.08)', borderRadius: 8, padding: '4px 10px',
-              border: '1px solid rgba(251,191,36,0.2)',
-            }}>
-              <span style={{ fontSize: '0.85rem' }}>💰</span>
-              <div>
-                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.8rem' }}>{gold}</div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>GOLD</div>
-              </div>
-            </div>
-
-            <div style={{ width: 1, height: 28, background: 'rgba(255,215,0,0.2)' }} />
-
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
+              flex: '1 1 0', minWidth: 0, maxWidth: 280,
+              background: 'rgba(14,22,48,0.7)', borderRadius: 10, padding: '6px 10px',
               border: '1px solid rgba(110,231,183,0.15)',
             }}>
-              <span style={{ fontSize: '0.7rem' }}>📍</span>
-              <div>
-                <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.65rem' }}>
-                  {locations.find(l => l.id === currentZone)?.name || cities.find(c => c.id === currentZone)?.name || 'Unknown'}
+              {currentDialogue && dialoguePhase > 0 ? (
+                <div style={{ fontSize: '0.55rem', lineHeight: 1.5 }}>
+                  {dialoguePhase >= 1 && currentDialogue.speaker1 && (
+                    <div style={{ marginBottom: 3 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--accent)', marginRight: 4 }}>{currentDialogue.speaker1.name}:</span>
+                      <span style={{ color: '#e2e8f0' }}>{currentDialogue.line1}</span>
+                    </div>
+                  )}
+                  {dialoguePhase >= 2 && currentDialogue.speaker2 && (
+                    <div>
+                      <span style={{ fontWeight: 700, color: 'var(--gold)', marginRight: 4 }}>{currentDialogue.speaker2.name}:</span>
+                      <span style={{ color: '#e2e8f0' }}>{currentDialogue.line2}</span>
+                    </div>
+                  )}
                 </div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.45rem', letterSpacing: '0.05em' }}>ZONE</div>
+              ) : (
+                <div style={{ fontSize: '0.5rem', color: 'rgba(148,163,184,0.5)', fontStyle: 'italic' }}>Your party is quiet...</div>
+              )}
+            </div>
+
+            <div style={{
+              flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0,
+            }}>
+              {selectedLoc ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ color: locationIcons[selectedLoc.id]?.color || 'var(--accent)', fontWeight: 700, fontSize: '0.7rem' }}>{selectedLoc.name}</div>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.45rem' }}>Lv.{selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}</div>
+                  </div>
+                  <button onClick={() => handleBattle(selectedLoc.id)} style={{
+                    background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 6,
+                    color: '#f87171', fontWeight: 700, fontSize: '0.55rem', padding: '4px 10px', cursor: 'pointer',
+                  }}>⚔️ Battle</button>
+                  <button onClick={() => enterLocation(selectedLoc.id)} style={{
+                    background: 'rgba(110,231,183,0.15)', border: '1px solid rgba(110,231,183,0.3)', borderRadius: 6,
+                    color: '#6ee7b7', fontWeight: 700, fontSize: '0.55rem', padding: '4px 10px', cursor: 'pointer',
+                  }}>🗺️ Travel</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: '0.65rem' }}>📍</span>
+                  <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.6rem' }}>
+                    {locations.find(l => l.id === currentZone)?.name || cities.find(c => c.id === currentZone)?.name || 'Unknown'}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{
+              flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 3,
+                background: 'rgba(255,215,0,0.08)', borderRadius: 6, padding: '3px 8px',
+                border: '1px solid rgba(255,215,0,0.2)',
+              }}>
+                <span style={{ fontSize: '0.7rem' }}>🏆</span>
+                <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem' }}>{victories}</div>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 3,
+                background: 'rgba(251,191,36,0.08)', borderRadius: 6, padding: '3px 8px',
+                border: '1px solid rgba(251,191,36,0.2)',
+              }}>
+                <span style={{ fontSize: '0.7rem' }}>⭐</span>
+                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem' }}>{level}</div>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 3,
+                background: 'rgba(251,191,36,0.08)', borderRadius: 6, padding: '3px 8px',
+                border: '1px solid rgba(251,191,36,0.2)',
+              }}>
+                <span style={{ fontSize: '0.7rem' }}>💰</span>
+                <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem' }}>{gold}</div>
               </div>
             </div>
           </div>
