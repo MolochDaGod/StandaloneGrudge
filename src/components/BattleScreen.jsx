@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
@@ -961,10 +961,17 @@ function MiniBar({ current, max, color, height = 5, width = 60 }) {
 
 function getUnitSprite(unit) {
   if (unit.classId && unit.classId === 'worge' && unit.bearForm) {
+    if (unit.eliteForm) {
+      return getWorgBearTransformSprite(unit.raceId);
+    }
     return getWorgTransformSprite(unit.raceId);
   }
   if (unit.classId && unit.classId === 'warrior' && unit.demonBlade) {
     return warriorTransformSprite;
+  }
+  if (unit.eliteForm && unit.classId && unit.raceId && unit.team === 'player') {
+    const eliteSprite = getEliteTransformSprite(unit.classId, unit.raceId);
+    if (eliteSprite) return eliteSprite;
   }
   if (unit.classId && unit.raceId) {
     const sprite = getPlayerSprite(unit.classId, unit.raceId);

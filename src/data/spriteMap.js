@@ -398,6 +398,129 @@ const spriteSheets = {
     death: { src: '/sprites/elf-ranger/death.png', frames: 4 },
     walk: { src: '/sprites/elf-ranger/walk.png', frames: 8 },
   },
+  'boss-demon': {
+    folder: 'boss-demon',
+    frameWidth: 288,
+    frameHeight: 160,
+    idle: { src: '/sprites/boss-demon/idle.png', frames: 6 },
+    walk: { src: '/sprites/boss-demon/walk.png', frames: 12 },
+    attack1: { src: '/sprites/boss-demon/cleave.png', frames: 15 },
+    hurt: { src: '/sprites/boss-demon/take_hit.png', frames: 5 },
+    death: { src: '/sprites/boss-demon/death.png', frames: 22 },
+  },
+  'cthulu-boss': {
+    folder: 'cthulu-boss',
+    frameWidth: 192,
+    frameHeight: 112,
+    idle: { src: '/sprites/cthulu-boss/idle.png', frames: 15 },
+    walk: { src: '/sprites/cthulu-boss/walk.png', frames: 12 },
+    attack1: { src: '/sprites/cthulu-boss/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/cthulu-boss/attack2.png', frames: 9 },
+    hurt: { src: '/sprites/cthulu-boss/hurt.png', frames: 5 },
+    death: { src: '/sprites/cthulu-boss/death.png', frames: 11 },
+  },
+  'frost-guardian': {
+    folder: 'frost-guardian',
+    frameWidth: 192,
+    frameHeight: 128,
+    idle: { src: '/sprites/frost-guardian/idle.png', frames: 6 },
+    walk: { src: '/sprites/frost-guardian/walk.png', frames: 10 },
+    attack1: { src: '/sprites/frost-guardian/attack1.png', frames: 14 },
+    hurt: { src: '/sprites/frost-guardian/take_hit.png', frames: 7 },
+    death: { src: '/sprites/frost-guardian/death.png', frames: 16 },
+  },
+  'arcane-archer': {
+    folder: 'arcane-archer',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/arcane-archer/idle.png', frames: 8 },
+    walk: { src: '/sprites/arcane-archer/walk.png', frames: 8 },
+    attack1: { src: '/sprites/arcane-archer/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/arcane-archer/attack2.png', frames: 8 },
+    cast: { src: '/sprites/arcane-archer/cast.png', frames: 8 },
+    block: { src: '/sprites/arcane-archer/block.png', frames: 8 },
+    hurt: { src: '/sprites/arcane-archer/hurt.png', frames: 8 },
+    death: { src: '/sprites/arcane-archer/death.png', frames: 8 },
+  },
+  'wind-hashashin': {
+    folder: 'wind-hashashin',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/wind-hashashin/idle.png', frames: 8 },
+    walk: { src: '/sprites/wind-hashashin/run.png', frames: 8 },
+    attack1: { src: '/sprites/wind-hashashin/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/wind-hashashin/attack2.png', frames: 18 },
+    attack3: { src: '/sprites/wind-hashashin/attack3.png', frames: 26 },
+    cast: { src: '/sprites/wind-hashashin/special.png', frames: 30 },
+    block: { src: '/sprites/wind-hashashin/defend.png', frames: 8 },
+    hurt: { src: '/sprites/wind-hashashin/take_hit.png', frames: 6 },
+    death: { src: '/sprites/wind-hashashin/death.png', frames: 19 },
+  },
+  'crystal-mauler': {
+    folder: 'crystal-mauler',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/crystal-mauler/idle.png', frames: 8 },
+    walk: { src: '/sprites/crystal-mauler/run.png', frames: 8 },
+    attack1: { src: '/sprites/crystal-mauler/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/crystal-mauler/attack2.png', frames: 7 },
+    attack3: { src: '/sprites/crystal-mauler/attack3.png', frames: 17 },
+    cast: { src: '/sprites/crystal-mauler/special.png', frames: 15 },
+    block: { src: '/sprites/crystal-mauler/defend.png', frames: 9 },
+    hurt: { src: '/sprites/crystal-mauler/take_hit.png', frames: 6 },
+    death: { src: '/sprites/crystal-mauler/death.png', frames: 15 },
+  },
+  'leaf-ranger': {
+    folder: 'leaf-ranger',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/leaf-ranger/idle.png', frames: 12 },
+    walk: { src: '/sprites/leaf-ranger/run.png', frames: 10 },
+    attack1: { src: '/sprites/leaf-ranger/attack1.png', frames: 10 },
+    attack2: { src: '/sprites/leaf-ranger/attack2.png', frames: 15 },
+    attack3: { src: '/sprites/leaf-ranger/attack3.png', frames: 12 },
+    cast: { src: '/sprites/leaf-ranger/special.png', frames: 17 },
+    block: { src: '/sprites/leaf-ranger/defend.png', frames: 19 },
+    hurt: { src: '/sprites/leaf-ranger/take_hit.png', frames: 6 },
+    death: { src: '/sprites/leaf-ranger/death.png', frames: 19 },
+  },
+  'fire-knight': {
+    folder: 'fire-knight',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/fire-knight/idle.png', frames: 8 },
+    walk: { src: '/sprites/fire-knight/run.png', frames: 8 },
+    attack1: { src: '/sprites/fire-knight/attack1.png', frames: 11 },
+    attack2: { src: '/sprites/fire-knight/attack2.png', frames: 19 },
+    attack3: { src: '/sprites/fire-knight/attack3.png', frames: 28 },
+    cast: { src: '/sprites/fire-knight/special.png', frames: 18 },
+    block: { src: '/sprites/fire-knight/block.png', frames: 10 },
+    hurt: { src: '/sprites/fire-knight/hurt.png', frames: 6 },
+    death: { src: '/sprites/fire-knight/death.png', frames: 13 },
+  },
+  'martial-hero': {
+    folder: 'martial-hero',
+    frameWidth: 200,
+    frameHeight: 200,
+    idle: { src: '/sprites/martial-hero/idle.png', frames: 8 },
+    walk: { src: '/sprites/martial-hero/walk.png', frames: 8 },
+    attack1: { src: '/sprites/martial-hero/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/martial-hero/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/martial-hero/hurt.png', frames: 4 },
+    death: { src: '/sprites/martial-hero/death.png', frames: 6 },
+  },
+  'loreon-knight': {
+    folder: 'loreon-knight',
+    frameWidth: 100,
+    frameHeight: 65,
+    idle: { src: '/sprites/loreon-knight/idle.png', frames: 3 },
+    walk: { src: '/sprites/loreon-knight/walk.png', frames: 6 },
+    attack1: { src: '/sprites/loreon-knight/attack1.png', frames: 6 },
+    attack2: { src: '/sprites/loreon-knight/attack2.png', frames: 6 },
+    block: { src: '/sprites/loreon-knight/block.png', frames: 5 },
+    hurt: { src: '/sprites/loreon-knight/hurt.png', frames: 3 },
+    death: { src: '/sprites/loreon-knight/death.png', frames: 5 },
+  },
 };
 
 export const raceClassSpriteMap = {
@@ -458,13 +581,60 @@ export const nightborneSprite = {
   heal: { src: '/sprites/nightborne/cast.png', frames: 6 },
 };
 
+export const leafRangerSprite = spriteSheets['leaf-ranger'];
+export const crystalMaulerSprite = spriteSheets['crystal-mauler'];
+
 export const worgTransformSprite = {
-  human: nightborneSprite,
-  orc: nightborneSprite,
-  elf: nightborneSprite,
-  undead: nightborneSprite,
-  barbarian: nightborneSprite,
-  dwarf: nightborneSprite,
+  human: leafRangerSprite,
+  orc: leafRangerSprite,
+  elf: leafRangerSprite,
+  undead: { ...leafRangerSprite, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  barbarian: leafRangerSprite,
+  dwarf: leafRangerSprite,
+};
+
+export const worgBearTransformSprite = {
+  human: crystalMaulerSprite,
+  orc: crystalMaulerSprite,
+  elf: crystalMaulerSprite,
+  undead: { ...crystalMaulerSprite, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  barbarian: crystalMaulerSprite,
+  dwarf: crystalMaulerSprite,
+};
+
+export const eliteTransformSprites = {
+  warrior: {
+    human: spriteSheets['fire-knight'],
+    elf: spriteSheets['fire-knight'],
+    dwarf: spriteSheets['fire-knight'],
+    barbarian: spriteSheets['fire-knight'],
+    orc: { ...spriteSheets['fire-knight'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    undead: { ...spriteSheets['fire-knight'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  },
+  mage: {
+    human: spriteSheets['water-priestess'],
+    elf: spriteSheets['water-priestess'],
+    dwarf: spriteSheets['water-priestess'],
+    barbarian: spriteSheets['water-priestess'],
+    orc: { ...spriteSheets['water-priestess'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    undead: { ...spriteSheets['water-priestess'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  },
+  ranger: {
+    human: spriteSheets['wind-hashashin'],
+    elf: spriteSheets['wind-hashashin'],
+    dwarf: spriteSheets['wind-hashashin'],
+    barbarian: spriteSheets['martial-hero'],
+    orc: { ...spriteSheets['wind-hashashin'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    undead: spriteSheets['arcane-archer'],
+  },
+  worge: {
+    human: nightborneSprite,
+    elf: nightborneSprite,
+    dwarf: nightborneSprite,
+    barbarian: nightborneSprite,
+    orc: nightborneSprite,
+    undead: { ...nightborneSprite, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  },
 };
 
 const monsterSprites = {
@@ -599,6 +769,10 @@ export const enemySpriteMap = {
   mimic: monsterSprites['mimic'],
   crow_knight: monsterSprites['crow-knight'],
   stone_guardian: monsterSprites['stone-guardian'],
+  abyssal_demon: spriteSheets['boss-demon'],
+  eldritch_horror: spriteSheets['cthulu-boss'],
+  frost_titan: spriteSheets['frost-guardian'],
+  loreon_knight: spriteSheets['loreon-knight'],
 };
 
 export const effectSprites = {
@@ -1010,6 +1184,16 @@ export function getPlayerSprite(classId, raceId) {
 
 export function getWorgTransformSprite(raceId) {
   return worgTransformSprite[raceId] || spriteSheets.werewolf;
+}
+
+export function getWorgBearTransformSprite(raceId) {
+  return worgBearTransformSprite[raceId] || crystalMaulerSprite;
+}
+
+export function getEliteTransformSprite(classId, raceId) {
+  const classMap = eliteTransformSprites[classId];
+  if (!classMap) return null;
+  return classMap[raceId] || null;
 }
 
 export function getEnemySprite(templateId) {

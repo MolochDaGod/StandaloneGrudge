@@ -326,6 +326,55 @@ export const enemyTemplates = {
       { id: 'null_burst', name: 'Null Burst', icon: 'bomb', type: 'magical', damage: 3.5, cooldown: 6, description: 'Unleashes a burst of pure nothingness' },
     ]
   },
+  abyssal_demon: {
+    name: 'Abyssal Demon Lord', icon: 'fire', color: '#dc2626',
+    baseHealth: 1600, baseDamage: 72, baseDefense: 40, baseMana: 400,
+    xpReward: 400, goldReward: 300, speed: 15,
+    isBoss: true,
+    bossScale: 2.2,
+    abilities: [
+      { id: 'demon_cleave', name: 'Abyssal Cleave', icon: 'axe', type: 'physical', damage: 2.0, description: 'A massive cleave from the abyss' },
+      { id: 'hellfire_eruption', name: 'Hellfire Eruption', icon: 'fire', type: 'magical', damage: 3.5, cooldown: 4, description: 'Fire erupts from the ground under all heroes' },
+      { id: 'demon_roar', name: 'Demon Roar', icon: 'skull', type: 'buff', damage: 0, cooldown: 5, description: 'Roars with demonic fury, boosting damage', effect: { stat: 'damage', multiplier: 2.0, duration: 3 } },
+      { id: 'soul_crush', name: 'Soul Crush', icon: 'skull', type: 'physical', damage: 4.0, cooldown: 6, description: 'Crushes the soul of a single hero' },
+      { id: 'abyssal_drain', name: 'Abyssal Drain', icon: 'skull', type: 'magical', damage: 2.0, cooldown: 4, description: 'Drains life through dark magic', drainPercent: 0.5 },
+      { id: 'infernal_shield', name: 'Infernal Shield', icon: 'shield', type: 'buff', damage: 0, cooldown: 6, description: 'Wraps in hellfire armor', effect: { stat: 'defense', flat: 55, duration: 3 } },
+      { id: 'demon_stun', name: 'Abyssal Gaze', icon: 'crystal', type: 'magical', damage: 1.0, cooldown: 5, description: 'Paralyzes a hero with demonic gaze', effect: { type: 'stun', duration: 2 } },
+    ]
+  },
+  eldritch_horror: {
+    name: 'The Eldritch Horror', icon: 'chaos', color: '#065f46',
+    baseHealth: 1800, baseDamage: 68, baseDefense: 35, baseMana: 500,
+    xpReward: 450, goldReward: 350, speed: 12,
+    isBoss: true,
+    bossScale: 2.5,
+    abilities: [
+      { id: 'tentacle_lash', name: 'Tentacle Lash', icon: 'skull', type: 'physical', damage: 1.8, description: 'Lashes out with eldritch tentacles' },
+      { id: 'madness_wave', name: 'Madness Wave', icon: 'chaos', type: 'magical', damage: 3.0, cooldown: 4, description: 'A wave of madness washes over all heroes', effect: { type: 'dot', damage: 0.16, duration: 4 } },
+      { id: 'eldritch_scream', name: 'Eldritch Scream', icon: 'skull', type: 'magical', damage: 1.2, cooldown: 5, description: 'A scream from beyond that stuns with terror', effect: { type: 'stun', duration: 2 } },
+      { id: 'void_consumption', name: 'Void Consumption', icon: 'chaos', type: 'magical', damage: 2.5, cooldown: 3, description: 'Consumes a hero with void energy', drainPercent: 0.6 },
+      { id: 'cosmic_regeneration', name: 'Cosmic Regeneration', icon: 'heart', type: 'heal', damage: 0, cooldown: 5, description: 'Regenerates through cosmic energy', healPercent: 0.16 },
+      { id: 'reality_shatter', name: 'Reality Shatter', icon: 'bomb', type: 'magical', damage: 4.5, cooldown: 7, description: 'Shatters the fabric of reality itself' },
+      { id: 'abyssal_armor', name: 'Abyssal Armor', icon: 'shield', type: 'buff', damage: 0, cooldown: 6, description: 'Encases in otherworldly armor', effect: { stat: 'defense', flat: 60, duration: 3 } },
+      { id: 'mind_flay', name: 'Mind Flay', icon: 'crystal', type: 'magical', damage: 2.2, cooldown: 4, description: 'Flays the mind with psychic torment' },
+    ]
+  },
+  frost_titan: {
+    name: 'Frost Titan', icon: 'ice', color: '#67e8f9',
+    baseHealth: 1500, baseDamage: 65, baseDefense: 50, baseMana: 350,
+    xpReward: 380, goldReward: 280, speed: 10,
+    isBoss: true,
+    bossScale: 2.0,
+    abilities: [
+      { id: 'frost_smash', name: 'Frost Smash', icon: 'ice', type: 'physical', damage: 2.2, description: 'A devastating icy smash' },
+      { id: 'absolute_zero', name: 'Absolute Zero', icon: 'ice', type: 'magical', damage: 3.8, cooldown: 5, description: 'Drops temperature to absolute zero on all heroes' },
+      { id: 'ice_prison', name: 'Ice Prison', icon: 'ice', type: 'magical', damage: 1.0, cooldown: 4, description: 'Encases a hero in unbreakable ice', effect: { type: 'stun', duration: 2 } },
+      { id: 'glacial_armor', name: 'Glacial Armor', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Hardens into impenetrable glacial armor', effect: { stat: 'defense', flat: 65, duration: 3 } },
+      { id: 'frost_breath', name: 'Frost Breath', icon: 'ice', type: 'magical', damage: 2.5, cooldown: 3, description: 'Breathes devastating frost energy', effect: { type: 'dot', damage: 0.14, duration: 3 } },
+      { id: 'permafrost_heal', name: 'Permafrost', icon: 'heart', type: 'heal', damage: 0, cooldown: 6, description: 'Draws power from eternal ice to heal', healPercent: 0.14 },
+      { id: 'avalanche', name: 'Avalanche', icon: 'bomb', type: 'physical', damage: 4.0, cooldown: 6, description: 'Summons an avalanche to crush all heroes' },
+    ]
+  },
   flying_eye: {
     name: 'Flying Eye', icon: 'crystal', color: '#e879f9',
     baseHealth: 70, baseDamage: 16, baseDefense: 4, baseMana: 40,

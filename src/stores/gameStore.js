@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { calculateStats, TOTAL_POINTS_AT_LEVEL, POINTS_PER_LEVEL, calculateCombatPower } from '../data/attributes';
+import { calculateStats, TOTAL_POINTS_AT_LEVEL, POINTS_PER_LEVEL, calculateCombatPower, getBuildClassification } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
@@ -72,6 +72,7 @@ function createHeroBattleUnit(hero) {
   if (!cls) return null;
   const stats = getHeroStatsWithBonuses(hero);
   const heroWeaponType = hero.equipment?.weapon?.weaponType || null;
+  const buildInfo = getBuildClassification(stats, hero.attributePoints);
   const unit = {
     id: hero.id,
     name: hero.name,
@@ -83,6 +84,7 @@ function createHeroBattleUnit(hero) {
     weaponType: heroWeaponType,
     bearForm: false,
     demonBlade: false,
+    eliteForm: buildInfo.rank <= 100,
     health: Math.min(hero.currentHealth, Math.floor(stats.health)),
     maxHealth: Math.floor(stats.health),
     mana: Math.min(hero.currentMana, Math.floor(stats.mana)),
