@@ -720,7 +720,34 @@ const useGameStore = create(persist((set, get) => ({
   },
 
   enterLocation: (locationId) => {
+    // Connection info for grudgeplatform.com
+    const syncWithPlatform = async () => {
+      const state = get();
+      const platformData = {
+        playerName: state.playerName,
+        level: state.level,
+        gold: state.gold,
+        heroRoster: state.heroRoster,
+        inventory: state.inventory,
+        conquerProgress: state.zoneConquer,
+        timestamp: Date.now()
+      };
+
+      try {
+        await fetch('https://grudgeplatform.com/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(platformData)
+        });
+      } catch (err) {
+        console.warn('Platform sync deferred:', err.message);
+      }
+    };
+
     set({ currentLocation: locationId, screen: 'location' });
+
+    // Auto-sync on location change
+    syncWithPlatform();
   },
 
   startBattle: (locationId) => {
