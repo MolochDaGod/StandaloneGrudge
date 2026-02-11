@@ -926,23 +926,27 @@ export default function WorldMap() {
                       animation: isSelected ? 'pulse 1.5s infinite' : hasBossActive && !isHovered ? 'bossNodePulse 2s ease-in-out infinite' : 'none',
                       position: 'relative',
                     }}>
-                      {isUnlocked && icon.img ? (<>
-                        <img src={hasBossActive ? '/images/bosslogo.png' : icon.img} alt={loc.name} style={{
-                          width: '100%', height: '100%', objectFit: 'cover',
-                          filter: cleared ? 'saturate(0.7) brightness(0.8)' : 'none',
-                          position: 'absolute', top: 0, left: 0,
-                          opacity: hasBossActive && isHovered ? 0 : 1,
-                          transition: 'opacity 0.35s ease-in-out',
-                        }} />
-                        {hasBossActive && (
-                          <img src={icon.img} alt={loc.name} style={{
+                      {isUnlocked && icon.img ? (() => {
+                        const showOverlay = hasBossActive || isConquered;
+                        const overlayImg = hasBossActive ? '/images/bosslogo.png' : '/images/conquered_logo.png';
+                        return (<>
+                          <img src={showOverlay ? overlayImg : icon.img} alt={loc.name} style={{
                             width: '100%', height: '100%', objectFit: 'cover',
+                            filter: !showOverlay && cleared ? 'saturate(0.7) brightness(0.8)' : 'none',
                             position: 'absolute', top: 0, left: 0,
-                            opacity: isHovered ? 1 : 0,
+                            opacity: showOverlay && isHovered ? 0 : 1,
                             transition: 'opacity 0.35s ease-in-out',
                           }} />
-                        )}
-                      </>) : (
+                          {showOverlay && (
+                            <img src={icon.img} alt={loc.name} style={{
+                              width: '100%', height: '100%', objectFit: 'cover',
+                              position: 'absolute', top: 0, left: 0,
+                              opacity: isHovered ? 1 : 0,
+                              transition: 'opacity 0.35s ease-in-out',
+                            }} />
+                          )}
+                        </>);
+                      })() : (
                         <div style={{
                           width: '100%', height: '100%',
                           background: 'rgba(30,30,50,0.8)',
@@ -1063,6 +1067,7 @@ export default function WorldMap() {
                 <div style={{
                   width: 52, height: 52, margin: '3px',
                   borderRadius: '50%',
+                  overflow: 'hidden',
                   background: isCityUnlocked
                     ? 'radial-gradient(circle, rgba(74,222,128,0.25), rgba(20,26,43,0.9))'
                     : 'rgba(30,30,50,0.8)',
@@ -1078,7 +1083,11 @@ export default function WorldMap() {
                   transition: 'all 0.3s',
                   animation: isSelected ? 'pulse 1.5s infinite' : (isCityUnlocked ? 'glow 3s infinite' : 'none'),
                 }}>
-                  {isCityUnlocked ? city.icon : '🔒'}
+                  {isCityUnlocked ? (
+                    <img src="/images/conquered_logo.png" alt={city.name} style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                    }} />
+                  ) : '🔒'}
                 </div>
               </div>
               <div style={{
