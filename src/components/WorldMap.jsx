@@ -2126,6 +2126,7 @@ export default function WorldMap() {
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
                 <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
                   Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {Math.floor(conquer)}% conquered
+                  {conquer >= 100 && <div style={{ color: 'var(--gold)', fontWeight: 700, marginTop: 2 }}>🏆 100% CONQUERED</div>}
                 </div>
                 {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
                 {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
@@ -2336,16 +2337,22 @@ export default function WorldMap() {
                       <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>Conquered</span>
                       <span style={{ fontSize: '0.6rem', fontWeight: 700, color: selConquer >= 100 ? 'var(--gold)' : locationIcons[selectedLoc.id]?.color }}>{selConquer}%</span>
                     </div>
-                    <div style={{ height: 6, background: 'rgba(0,0,0,0.4)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: 'rgba(0,0,0,0.4)', borderRadius: 3, overflow: 'visible', position: 'relative' }}>
+                    <div style={{
+                      height: '100%', width: `${selConquer}%`, borderRadius: 3,
+                      background: selConquer >= 100
+                        ? 'linear-gradient(90deg, var(--gold), #ffed4a)'
+                        : `linear-gradient(90deg, ${locationIcons[selectedLoc.id]?.color}, ${locationIcons[selectedLoc.id]?.glow})`,
+                      transition: 'width 0.3s',
+                      boxShadow: selConquer >= 100 ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
+                    }} />
+                    {selConquer >= 100 && (
                       <div style={{
-                        height: '100%', width: `${selConquer}%`, borderRadius: 3,
-                        background: selConquer >= 100
-                          ? 'linear-gradient(90deg, var(--gold), #ffed4a)'
-                          : `linear-gradient(90deg, ${locationIcons[selectedLoc.id]?.color}, ${locationIcons[selectedLoc.id]?.glow})`,
-                        transition: 'width 0.3s',
-                        boxShadow: selConquer >= 100 ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
-                      }} />
-                    </div>
+                        position: 'absolute', right: -15, top: '50%', transform: 'translateY(-50%)',
+                        fontSize: '1rem', animation: 'pulse 1.5s infinite', zIndex: 10
+                      }}>✨</div>
+                    )}
+                  </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
                       <span style={{ fontSize: '0.5rem', color: '#ef4444' }}>XP -{xpMod}%</span>
                       <span style={{ fontSize: '0.5rem', color: '#22c55e' }}>Harvest +{harvestMod}%</span>
@@ -2402,6 +2409,19 @@ export default function WorldMap() {
                     color: '#6ee7b3', onClick: () => {
                       setSelectedLocation(null);
                       enterScene('field', selectedLoc.id);
+                    },
+                  }});
+                }
+
+                if (isConquered) {
+                  menuItems.push({ key: idx++, props: {
+                    icon: 'gold', label: 'Trade Goods', sublabel: 'Buy/Sell items here',
+                    color: '#fbbf24', onClick: () => setCitySubmenu('trade'),
+                  }});
+                  menuItems.push({ key: idx++, props: {
+                    icon: 'scroll', label: 'Unlock Weapon', sublabel: 'Rare weapon master unlock',
+                    color: '#f59e0b', onClick: () => {
+                      setGameMessage(`The masters of ${selectedLoc.name} have unlocked a legendary weapon path for you!`);
                     },
                   }});
                 }
