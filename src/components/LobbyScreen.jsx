@@ -345,6 +345,81 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
 }
 
 function DiscordTab({ panelStyle }) {
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminToken, setAdminToken] = useState('');
+  const [adminVerified, setAdminVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [webhookType, setWebhookType] = useState('update');
+  const [webhookFields, setWebhookFields] = useState({});
+  const [sending, setSending] = useState(false);
+  const [webhookResult, setWebhookResult] = useState(null);
+
+  const verifyAdmin = async () => {
+    setVerifying(true);
+    try {
+      const res = await fetch('/api/discord/webhook/verify', {
+        headers: { 'x-admin-token': adminToken },
+      });
+      const data = await res.json();
+      setAdminVerified(data.authorized === true);
+      if (!data.authorized) setWebhookResult({ ok: false, msg: 'Invalid admin token' });
+    } catch { setAdminVerified(false); }
+    setVerifying(false);
+  };
+
+  const WEBHOOK_TYPES = {
+    update: { label: 'Game Update', icon: 'battle', fields: ['title', 'description', 'version', 'features'] },
+    patch: { label: 'Patch Notes', icon: 'scroll', fields: ['version', 'changes', 'bugfixes'] },
+    challenge: { label: 'Community Challenge', icon: 'trophy', fields: ['title', 'description', 'reward', 'deadline'] },
+    event: { label: 'Live Event', icon: 'fire', fields: ['title', 'description', 'startTime', 'endTime'] },
+    lore: { label: 'Lore Drop', icon: 'crystal', fields: ['title', 'story', 'character'] },
+    tip: { label: 'Tip of the Day', icon: 'target', fields: ['title', 'tip', 'category'] },
+    custom: { label: 'Custom Message', icon: 'sparkle', fields: ['content', 'title', 'description'] },
+  };
+
+  const FIELD_LABELS = {
+    title: 'Title', description: 'Description', version: 'Version', features: 'Features (one per line)',
+    changes: 'Changes (one per line)', bugfixes: 'Bug Fixes (one per line)', reward: 'Reward',
+    deadline: 'Deadline', startTime: 'Start Time', endTime: 'End Time', story: 'Story / Lore Text',
+    character: 'Featured Character', tip: 'Tip Content', category: 'Category', content: 'Message Content',
+  };
+
+  const MULTILINE_FIELDS = ['features', 'changes', 'bugfixes', 'description', 'story', 'tip', 'content'];
+
+  const sendWebhook = async () => {
+    setSending(true);
+    setWebhookResult(null);
+    try {
+      const payload = { ...webhookFields };
+      ['features', 'changes', 'bugfixes'].forEach(key => {
+        if (payload[key] && typeof payload[key] === 'string') {
+          payload[key] = payload[key].split('\n').filter(l => l.trim());
+        }
+      });
+      const res = await fetch(`/api/discord/webhook/${webhookType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWebhookResult({ ok: true, msg: 'Message sent to OG channel!' });
+        setWebhookFields({});
+      } else {
+        setWebhookResult({ ok: false, msg: data.error || 'Failed to send' });
+      }
+    } catch (err) {
+      setWebhookResult({ ok: false, msg: err.message });
+    }
+    setSending(false);
+  };
+
+  const inputStyle = {
+    width: '100%', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(88,101,242,0.3)',
+    borderRadius: 6, padding: '8px 12px', color: '#e2e8f0', fontSize: '0.75rem',
+    fontFamily: "'Jost', sans-serif", outline: 'none', resize: 'vertical',
+  };
+
   return (
     <div style={{ maxWidth: 700 }}>
       <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
@@ -400,6 +475,119 @@ function DiscordTab({ panelStyle }) {
           Our Discord bot provides character lookups, battle stats, and community events.
           Use <span style={{ color: '#fff', fontFamily: 'monospace' }}>/grudge help</span> in any channel to get started.
         </div>
+      </div>
+
+      <div style={{ ...panelStyle, marginTop: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showAdmin ? 16 : 0 }}>
+          <div className="font-cinzel" style={{ color: '#f59e0b', fontSize: '0.9rem' }}>
+            OG Channel Broadcaster
+          </div>
+          <button onClick={() => setShowAdmin(!showAdmin)} style={{
+            background: showAdmin ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(245,158,11,0.4)', borderRadius: 6,
+            padding: '4px 14px', color: '#f59e0b', cursor: 'pointer',
+            fontSize: '0.65rem', fontWeight: 700, fontFamily: "'Cinzel', serif",
+          }}>
+            {showAdmin ? 'CLOSE' : 'OPEN'}
+          </button>
+        </div>
+
+        {showAdmin && !adminVerified && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+            <input
+              type="password"
+              value={adminToken}
+              onChange={e => { setAdminToken(e.target.value); setWebhookResult(null); }}
+              placeholder="Enter admin token..."
+              style={{
+                flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(245,158,11,0.3)',
+                borderRadius: 6, padding: '8px 12px', color: '#e2e8f0', fontSize: '0.75rem',
+                fontFamily: "'Jost', sans-serif", outline: 'none',
+              }}
+            />
+            <button onClick={verifyAdmin} disabled={verifying || !adminToken} style={{
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', borderRadius: 6,
+              padding: '8px 18px', color: '#fff', fontSize: '0.7rem', fontWeight: 700,
+              fontFamily: "'Cinzel', serif", cursor: verifying ? 'wait' : 'pointer',
+              opacity: verifying || !adminToken ? 0.5 : 1,
+            }}>
+              {verifying ? 'VERIFYING...' : 'LOGIN'}
+            </button>
+            {webhookResult && !webhookResult.ok && (
+              <span style={{ color: '#ef4444', fontSize: '0.65rem' }}>{webhookResult.msg}</span>
+            )}
+          </div>
+        )}
+
+        {showAdmin && adminVerified && (
+          <div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+              {Object.entries(WEBHOOK_TYPES).map(([key, { label, icon }]) => (
+                <button key={key} onClick={() => { setWebhookType(key); setWebhookFields({}); setWebhookResult(null); }} style={{
+                  background: webhookType === key ? 'rgba(88,101,242,0.3)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${webhookType === key ? '#5865F2' : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
+                  color: webhookType === key ? '#fff' : 'var(--muted)', fontSize: '0.65rem',
+                  fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  <InlineIcon name={icon} size={12} /> {label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+              {WEBHOOK_TYPES[webhookType].fields.map(field => (
+                <div key={field}>
+                  <label style={{ color: 'var(--muted)', fontSize: '0.65rem', fontWeight: 600, marginBottom: 4, display: 'block' }}>
+                    {FIELD_LABELS[field] || field}
+                  </label>
+                  {MULTILINE_FIELDS.includes(field) ? (
+                    <textarea
+                      value={webhookFields[field] || ''}
+                      onChange={e => setWebhookFields(f => ({ ...f, [field]: e.target.value }))}
+                      rows={field === 'description' || field === 'story' || field === 'tip' || field === 'content' ? 4 : 3}
+                      style={inputStyle}
+                      placeholder={`Enter ${FIELD_LABELS[field] || field}...`}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={webhookFields[field] || ''}
+                      onChange={e => setWebhookFields(f => ({ ...f, [field]: e.target.value }))}
+                      style={inputStyle}
+                      placeholder={`Enter ${FIELD_LABELS[field] || field}...`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button
+                onClick={sendWebhook}
+                disabled={sending}
+                style={{
+                  background: sending ? 'rgba(88,101,242,0.2)' : 'linear-gradient(135deg, #5865F2, #7c3aed)',
+                  border: 'none', borderRadius: 8, padding: '10px 28px',
+                  color: '#fff', fontSize: '0.8rem', fontWeight: 700,
+                  fontFamily: "'Cinzel', serif", letterSpacing: 1,
+                  cursor: sending ? 'wait' : 'pointer',
+                  opacity: sending ? 0.6 : 1,
+                }}
+              >
+                {sending ? 'SENDING...' : 'BROADCAST TO OG'}
+              </button>
+              {webhookResult && (
+                <div style={{
+                  color: webhookResult.ok ? '#4ade80' : '#ef4444',
+                  fontSize: '0.7rem', fontWeight: 600,
+                }}>
+                  {webhookResult.msg}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

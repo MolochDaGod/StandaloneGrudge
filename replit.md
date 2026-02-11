@@ -52,6 +52,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 - **Tactical Movement UI:** Battle action bar includes row position arrows (left/right) showing current row name, icon, and active modifiers (buffs/debuffs). Uses `moveRow('forward'/'back')` from gameStore with row data from `battleRows.js`.
 - **Discord OAuth:** `/discordauth` route handles Discord login with CSRF state protection. Backend server (server.js on port 3001 dev, server.prod.js on port 5000 prod) exchanges codes for tokens and creates beta channel invites.
+- **Discord Webhook Broadcaster:** Admin-authenticated webhook system (`DISCORD_GRUDGE_WEBHOOK` secret) for sending rich embed messages to the OG channel (1381760000946470987). Supports 7 message types: Game Update, Patch Notes, Community Challenge, Live Event, Lore Drop, Tip of the Day, Custom Message. Protected by `GAME_API_GRUDA` admin token via `x-admin-token` header. Frontend admin panel in Discord tab of War Council with token-gated login.
 - **Beta Tester System:** Uses `GAME_API_GRUDA` bot token to create one-time invite links to Discord channel `1381760000946470987`. Invites expire after 24 hours.
 
 ## External Dependencies
