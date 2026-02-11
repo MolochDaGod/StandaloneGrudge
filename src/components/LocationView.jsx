@@ -7,10 +7,11 @@ import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { getQuestsForZone, checkQuestProgress } from '../data/quests';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import { InlineIcon } from '../data/uiSprites';
 
 const SLOT_ICONS = {
-  weapon: '⚔️', offhand: '🛡️', helmet: '🪖', armor: '🛡️',
-  feet: '👢', ring: '💍', relic: '🔮',
+  weapon: 'crossed_swords', offhand: 'shield', helmet: 'helm', armor: 'shield',
+  feet: 'boots', ring: 'ring', relic: 'crystal',
 };
 const SLOT_LABELS = {
   weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Armor',
@@ -122,7 +123,7 @@ function HeroCard({ hero, isLeader, conquer }) {
               border: `1px solid ${item ? tierDef.color + '25' : 'rgba(255,255,255,0.03)'}`,
               opacity: is2HLocked ? 0.3 : 1,
             }}>
-              <span style={{ fontSize: '0.5rem', width: 12, textAlign: 'center' }}>{SLOT_ICONS[slot]}</span>
+              <span style={{ fontSize: '0.5rem', width: 12, textAlign: 'center' }}><InlineIcon name={SLOT_ICONS[slot]} size={12} /></span>
               {item ? (
                 <>
                   <span style={{ fontSize: '0.5rem', color: tierDef.color, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

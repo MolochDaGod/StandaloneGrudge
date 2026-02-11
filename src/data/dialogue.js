@@ -106,44 +106,44 @@ const GOAL_CHATTER = [
 
 export const QUICK_RESPONSES = {
   low_health: [
-    { label: 'Rest', icon: '🏨', action: 'rest' },
-    { label: 'Use Potion', icon: '🧪', action: 'use_potion' },
+    { label: 'Rest', icon: 'heart', action: 'rest' },
+    { label: 'Use Potion', icon: 'crystal', action: 'use_potion' },
   ],
   high_gold: [
-    { label: 'Trade', icon: '🛒', action: 'open_trade' },
-    { label: 'Upgrade', icon: '🔧', action: 'open_upgrades' },
+    { label: 'Trade', icon: 'gold', action: 'open_trade' },
+    { label: 'Upgrade', icon: 'hammer', action: 'open_upgrades' },
   ],
   low_gold: [
-    { label: 'Hunt!', icon: '⚔️', action: 'hunt' },
-    { label: 'Sell Loot', icon: '💰', action: 'open_trade' },
+    { label: 'Hunt!', icon: 'crossed_swords', action: 'hunt' },
+    { label: 'Sell Loot', icon: 'gold', action: 'open_trade' },
   ],
   boss_nearby: [
-    { label: 'Fight Boss', icon: '👑', action: 'fight_boss' },
-    { label: 'Prepare', icon: '🛡️', action: 'open_gear' },
+    { label: 'Fight Boss', icon: 'crown', action: 'fight_boss' },
+    { label: 'Prepare', icon: 'shield', action: 'open_gear' },
   ],
   boss_defeated: [
-    { label: 'Celebrate!', icon: '🎉', action: 'rest' },
-    { label: 'Move On', icon: '🗺️', action: 'dismiss' },
+    { label: 'Celebrate!', icon: 'sparkle', action: 'rest' },
+    { label: 'Move On', icon: 'scroll', action: 'dismiss' },
   ],
   high_conquer: [
-    { label: 'Push Forward', icon: '➡️', action: 'dismiss' },
-    { label: 'Harvest', icon: '⛏️', action: 'open_harvest' },
+    { label: 'Push Forward', icon: 'energy', action: 'dismiss' },
+    { label: 'Harvest', icon: 'hammer', action: 'open_harvest' },
   ],
   new_zone: [
-    { label: 'Explore', icon: '🔍', action: 'hunt' },
-    { label: 'Be Careful', icon: '🛡️', action: 'dismiss' },
+    { label: 'Explore', icon: 'crystal', action: 'hunt' },
+    { label: 'Be Careful', icon: 'shield', action: 'dismiss' },
   ],
   suggest_trade: [
-    { label: 'Let\'s Shop', icon: '🛒', action: 'open_trade' },
-    { label: 'Later', icon: '✋', action: 'dismiss' },
+    { label: 'Let\'s Shop', icon: 'gold', action: 'open_trade' },
+    { label: 'Later', icon: 'shield', action: 'dismiss' },
   ],
   suggest_hunt: [
-    { label: 'Hunt!', icon: '⚔️', action: 'hunt' },
-    { label: 'Not Yet', icon: '✋', action: 'dismiss' },
+    { label: 'Hunt!', icon: 'crossed_swords', action: 'hunt' },
+    { label: 'Not Yet', icon: 'shield', action: 'dismiss' },
   ],
   suggest_recruit: [
-    { label: 'Recruit', icon: '➕', action: 'recruit' },
-    { label: 'We\'re Good', icon: '✋', action: 'dismiss' },
+    { label: 'Recruit', icon: 'sparkle', action: 'recruit' },
+    { label: 'We\'re Good', icon: 'shield', action: 'dismiss' },
   ],
 };
 

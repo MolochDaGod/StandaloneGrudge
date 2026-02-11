@@ -118,7 +118,7 @@ export function getAllAbilityMap(classId, weaponType, unlockedSkills = {}) {
       map[ab.id] = ab;
     }
     map['revert_form'] = {
-      id: 'revert_form', name: 'Revert Form', icon: '🔄',
+      id: 'revert_form', name: 'Revert Form', icon: 'wolf',
       description: 'Revert to your normal form',
       type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self'
     };

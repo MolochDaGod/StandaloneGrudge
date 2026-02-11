@@ -3,22 +3,23 @@ import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { getItemPrice, getSellPrice, generateShopInventory } from '../data/equipment';
+import { InlineIcon } from '../data/uiSprites';
 
 const PORTAL_NODES = [
-  { id: 'forge', name: 'Void Forge', icon: '🔨', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
-  { id: 'enchanter', name: 'Arcane Enchanter', icon: '🔮', x: 75, y: 30, color: '#a78bfa', description: 'Enchant gear with harvested materials' },
-  { id: 'soul_shop', name: 'Soul Vendor', icon: '💀', x: 50, y: 20, color: '#ef4444', description: 'Trade for endgame equipment' },
-  { id: 'salvage', name: 'Salvage Pit', icon: '⚒️', x: 25, y: 60, color: '#fbbf24', description: 'Break down equipment for resources' },
-  { id: 'void_dungeon', name: 'Void Rift', icon: '🌀', x: 75, y: 60, color: '#c026d3', description: 'Enter the Void Dungeon' },
-  { id: 'lava_dungeon', name: 'Infernal Gate', icon: '🔥', x: 50, y: 50, color: '#dc2626', description: 'Descend into the Lava Depths' },
+  { id: 'forge', name: 'Void Forge', icon: 'hammer', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
+  { id: 'enchanter', name: 'Arcane Enchanter', icon: 'crystal', x: 75, y: 30, color: '#a78bfa', description: 'Enchant gear with harvested materials' },
+  { id: 'soul_shop', name: 'Soul Vendor', icon: 'skull', x: 50, y: 20, color: '#ef4444', description: 'Trade for endgame equipment' },
+  { id: 'salvage', name: 'Salvage Pit', icon: 'gold', x: 25, y: 60, color: '#fbbf24', description: 'Break down equipment for resources' },
+  { id: 'void_dungeon', name: 'Void Rift', icon: 'portal', x: 75, y: 60, color: '#c026d3', description: 'Enter the Void Dungeon' },
+  { id: 'lava_dungeon', name: 'Infernal Gate', icon: 'fire', x: 50, y: 50, color: '#dc2626', description: 'Descend into the Lava Depths' },
 ];
 
 const ENCHANT_RECIPES = [
-  { id: 'sharpen', name: 'Sharpen Weapon', stat: 'damage', bonus: 5, cost: { ore: 10, crystals: 3 }, icon: '⚔️' },
-  { id: 'reinforce', name: 'Reinforce Armor', stat: 'defense', bonus: 5, cost: { ore: 8, wood: 5 }, icon: '🛡️' },
-  { id: 'empower', name: 'Empower Magic', stat: 'mana', bonus: 20, cost: { crystals: 8, herbs: 5 }, icon: '🔮' },
-  { id: 'vitalize', name: 'Vitalize', stat: 'health', bonus: 30, cost: { herbs: 10, wood: 5 }, icon: '❤️' },
-  { id: 'quicken', name: 'Quicken', stat: 'speed', bonus: 3, cost: { crystals: 5, herbs: 3 }, icon: '⚡' },
+  { id: 'sharpen', name: 'Sharpen Weapon', stat: 'damage', bonus: 5, cost: { ore: 10, crystals: 3 }, icon: 'crossed_swords' },
+  { id: 'reinforce', name: 'Reinforce Armor', stat: 'defense', bonus: 5, cost: { ore: 8, wood: 5 }, icon: 'shield' },
+  { id: 'empower', name: 'Empower Magic', stat: 'mana', bonus: 20, cost: { crystals: 8, herbs: 5 }, icon: 'crystal' },
+  { id: 'vitalize', name: 'Vitalize', stat: 'health', bonus: 30, cost: { herbs: 10, wood: 5 }, icon: 'heart' },
+  { id: 'quicken', name: 'Quicken', stat: 'speed', bonus: 3, cost: { crystals: 5, herbs: 3 }, icon: 'lightning' },
 ];
 
 export default function PortalScene() {
@@ -235,7 +236,7 @@ export default function PortalScene() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
                 <div>
-                  <span style={{ fontSize: '0.6rem' }}>{recipe.icon} </span>
+                  <InlineIcon name={recipe.icon} /> 
                   <span style={{ color: '#e2e8f0', fontSize: '0.55rem', fontWeight: 600 }}>{recipe.name}</span>
                   <span style={{ color: '#6ee7b3', fontSize: '0.45rem', marginLeft: 6 }}>+{recipe.bonus} {recipe.stat}</span>
                 </div>
@@ -348,7 +349,7 @@ export default function PortalScene() {
             boxShadow: `0 0 20px ${node.color}50`,
             animation: 'pulse 2s infinite',
           }}>
-            {node.icon}
+            <InlineIcon name={node.icon} />
           </div>
           <div style={{
             color: node.color, fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
@@ -410,7 +411,7 @@ export default function PortalScene() {
           fontSize: '1.2rem', boxShadow: '0 0 20px rgba(192,38,211,0.4)',
           animation: 'pulse 2s infinite',
         }}>
-          🌀
+          <InlineIcon name="portal" />
         </div>
         <div style={{
           color: '#c026d3', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,

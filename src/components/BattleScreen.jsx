@@ -2,10 +2,10 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import SpriteAnimation from './SpriteAnimation';
+import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, warriorTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
@@ -1990,6 +1990,7 @@ export default function BattleScreen() {
                   flip={flipSprite}
                   speed={autoBattleEnabled ? 150 : 188}
                   loop={anim === 'idle' || anim === 'walk'}
+                  equipmentOverlays={unit.team === 'player' ? buildEquipmentOverlays(heroRoster.find(h => h.id === unit.id), TIERS) : null}
                 />
               </div>
 
@@ -2120,7 +2121,7 @@ export default function BattleScreen() {
                       <span style={{
                         fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(239,68,68,0.3)', color: '#ef4444',
-                      }}>🎯{unit.focusStacks}</span>
+                      }}><InlineIcon name="target" size={10} />{unit.focusStacks}</span>
                     )}
                     {(unit.buffs || []).slice(0, 3).map((b, i) => (
                       <span key={i} style={{
@@ -2343,7 +2344,7 @@ export default function BattleScreen() {
           display: 'flex', alignItems: 'center', gap: 6,
           animation: autoBattleEnabled ? 'pulse 2s infinite' : 'none',
         }}>
-          <span style={{ fontSize: '1rem' }}>{autoBattleEnabled ? '⚔️' : '🤖'}</span>
+          <span style={{ fontSize: '1rem' }}>{autoBattleEnabled ? <InlineIcon name="battle" size={14} /> : <InlineIcon name="target" size={14} />}</span>
           AUTO {autoBattleEnabled ? 'ON' : 'OFF'}
         </button>
       </div>
@@ -2410,7 +2411,7 @@ export default function BattleScreen() {
           }} style={{
             width: '100%', background: 'rgba(251,191,36,0.15)', border: '1px solid #f59e0b',
             color: '#f59e0b', borderRadius: 4, padding: '3px 0', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer', marginTop: 4,
-          }}>📋 Copy Values</button>
+          }}><InlineIcon name="scroll" size={12} /> Copy Values</button>
           <div style={{ fontSize: '0.4rem', color: '#666', marginTop: 4, textAlign: 'center' }}>Press ~ to toggle admin mode</div>
         </div>
       )}
@@ -2495,7 +2496,7 @@ export default function BattleScreen() {
                   {weaponSprite ? (
                     <img src={weaponSprite} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }} />
                   ) : (
-                    <span style={{ fontSize: '0.9rem' }}>{weapon?.icon || '⚔️'}</span>
+                    <span style={{ fontSize: '0.9rem' }}><InlineIcon name={weapon?.icon || 'battle'} size={14} /></span>
                   )}
                   {equippedCount > 0 && (
                     <div style={{
@@ -2563,7 +2564,7 @@ export default function BattleScreen() {
                                         filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
                                       }} />
                                     ) : (
-                                      <span style={{ fontSize: '0.85rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{item.icon}</span>
+                                      <InlineIcon name={item.icon} size={14} style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }} />
                                     )}
                                     {tDef && <div style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 2, background: tDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tDef.color}` }} />}
                                   </>
@@ -2660,7 +2661,7 @@ export default function BattleScreen() {
                     }}
                     onMouseEnter={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(74,222,128,0.15)'; }}
                     onMouseLeave={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
-                    >🧪 Items ({consumables.length})</button>
+                    ><InlineIcon name="crystal" size={12} /> Items ({consumables.length})</button>
                   );
                 })()}
                 {(currentUnit.grudge || 0) >= 100 && (
@@ -2674,7 +2675,7 @@ export default function BattleScreen() {
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.7), rgba(239,68,68,0.5))'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(239,68,68,0.3))'; }}
-                  >🔥 REVENGE</button>
+                  ><InlineIcon name="fire" size={12} /> REVENGE</button>
                 )}
               </div>
               {showItemsPanel && (() => {
@@ -2721,7 +2722,7 @@ export default function BattleScreen() {
                       onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
                       onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
                       >
-                        <span>{group.icon}</span>
+                        <InlineIcon name={group.icon} size={14} />
                         <span>{group.name}</span>
                         <span style={{ color: '#4ade80', fontSize: '0.55rem' }}>x{group.count}</span>
                       </button>
@@ -2736,7 +2737,7 @@ export default function BattleScreen() {
                     textAlign: 'center', marginBottom: 6, color: '#22c55e',
                     fontSize: '0.65rem', letterSpacing: 1, fontWeight: 700,
                   }}>
-                    💚 Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(Press 1-{playerTeam.filter(u => u.alive).length} or Esc to cancel)</span>
+                    <InlineIcon name="heart" size={12} /> Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(Press 1-{playerTeam.filter(u => u.alive).length} or Esc to cancel)</span>
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                     {playerTeam.filter(u => u.alive).map((ally, idx) => {

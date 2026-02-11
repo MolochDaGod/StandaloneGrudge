@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { locations } from '../data/enemies';
+import { InlineIcon } from '../data/uiSprites';
 
 const allBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -682,7 +683,7 @@ export default function AdminBattle() {
                       justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700,
                       color: '#2a1a0a',
                     }}>{i + 1}</div>
-                    <div style={{ fontSize: '0.9rem' }}>{['⚔️', '🛡️', '📯', '🌀', '💀'][i]}</div>
+                    <div style={{ fontSize: '0.9rem' }}><InlineIcon name={['crossed_swords', 'shield', 'battle', 'portal', 'skull'][i]} size={14} /></div>
                     <div style={{ fontWeight: 600, fontSize: '0.6rem', color: '#e8dcc8' }}>{label}</div>
                   </div>
                 ))}

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import { TIERS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
+import { InlineIcon } from '../data/uiSprites';
 
 export default function LootPopup() {
   const pendingLoot = useGameStore(s => s.pendingLoot);
@@ -47,7 +48,7 @@ export default function LootPopup() {
                 marginBottom: 8, border: `1px solid ${tierDef.color}40`,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}>
-                <span style={{ fontSize: '1.5rem' }}>{item.icon}</span>
+                <InlineIcon name={item.icon} size={20} />
                 <div style={{ flex: 1 }}>
                   <div style={{ color: tierDef.color, fontWeight: 'bold', fontSize: '0.9rem' }}>
                     {item.name}

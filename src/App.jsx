@@ -19,6 +19,7 @@ import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
 import SceneView from './components/SceneView';
+import { InlineIcon } from './data/uiSprites';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -119,7 +120,7 @@ function GameApp() {
               border: '2px solid var(--gold)', borderRadius: 16, padding: '30px 50px',
               textAlign: 'center', maxWidth: 400, animation: 'slideUp 0.3s ease'
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: 10 }}>🎉</div>
+              <div style={{ fontSize: '2rem', marginBottom: 10 }}><InlineIcon name="sparkle" size={24} /></div>
               <div className="font-cinzel" style={{ fontSize: '1.2rem', color: 'var(--gold)', marginBottom: 10 }}>
                 {gameMessage}
               </div>

@@ -3,6 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
+import { InlineIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 
@@ -19,12 +20,12 @@ export default function CharacterSheet() {
   const cp = calculateCombatPower(stats);
 
   const mainStats = [
-    { key: 'health', label: 'Health', icon: '❤️', color: '#22c55e' },
-    { key: 'mana', label: 'Mana', icon: '💧', color: '#3b82f6' },
-    { key: 'stamina', label: 'Stamina', icon: '⚡', color: '#f59e0b' },
-    { key: 'physicalDamage', label: 'Phys DMG', icon: '⚔️', color: '#ef4444' },
-    { key: 'magicDamage', label: 'Magic DMG', icon: '🔮', color: '#8b5cf6' },
-    { key: 'defense', label: 'Defense', icon: '🛡️', color: '#6b7280' },
+    { key: 'health', label: 'Health', icon: 'heart', color: '#22c55e' },
+    { key: 'mana', label: 'Mana', icon: 'mana', color: '#3b82f6' },
+    { key: 'stamina', label: 'Stamina', icon: 'lightning', color: '#f59e0b' },
+    { key: 'physicalDamage', label: 'Phys DMG', icon: 'crossed_swords', color: '#ef4444' },
+    { key: 'magicDamage', label: 'Magic DMG', icon: 'crystal', color: '#8b5cf6' },
+    { key: 'defense', label: 'Defense', icon: 'shield', color: '#6b7280' },
   ];
 
   const combatStats = [
@@ -90,7 +91,7 @@ export default function CharacterSheet() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.03)'
               }}>
-                <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{s.icon} {s.label}</span>
+                <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}><InlineIcon name={s.icon} size={12} /> {s.label}</span>
                 <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace' }}>
                   {Math.floor(stats[s.key])}
                 </span>

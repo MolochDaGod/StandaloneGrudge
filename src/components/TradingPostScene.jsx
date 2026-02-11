@@ -3,12 +3,13 @@ import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { getItemPrice, getSellPrice } from '../data/equipment';
+import { InlineIcon } from '../data/uiSprites';
 
 const TRADER_NODES = [
-  { id: 'weapons', name: 'Weapons', icon: '⚔️', x: 18, y: 42, color: '#ef4444', filter: 'weapon' },
-  { id: 'armor', name: 'Armor', icon: '🛡️', x: 82, y: 42, color: '#3b82f6', filter: 'armor' },
-  { id: 'potions', name: 'Potions', icon: '🧪', x: 22, y: 68, color: '#a78bfa', filter: 'consumable' },
-  { id: 'relics', name: 'Relics', icon: '💍', x: 78, y: 68, color: '#fbbf24', filter: 'accessory' },
+  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon' },
+  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor' },
+  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable' },
+  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory' },
 ];
 
 export default function TradingPostScene() {
@@ -99,7 +100,7 @@ export default function TradingPostScene() {
             fontSize: '1.4rem', boxShadow: `0 0 14px ${trader.color}50`,
             animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
           }}>
-            {trader.icon}
+            <InlineIcon name={trader.icon} />
           </div>
           <div style={{
             color: trader.color, fontSize: '0.55rem', fontWeight: 700, marginTop: 2,
@@ -169,7 +170,7 @@ export default function TradingPostScene() {
                     }}>
                       <div>
                         <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.55rem', fontWeight: 600 }}>
-                          {item.icon || '📦'} {item.name}
+                          {item.icon ? <InlineIcon name={item.icon} /> : <InlineIcon name="bag" />} {item.name}
                         </span>
                         <span style={{ color: '#666', fontSize: '0.4rem', marginLeft: 4 }}>T{item.tier}</span>
                       </div>
@@ -196,7 +197,7 @@ export default function TradingPostScene() {
                     }}>
                       <div>
                         <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.55rem', fontWeight: 600 }}>
-                          {item.icon || '📦'} {item.name}
+                          {item.icon ? <InlineIcon name={item.icon} /> : <InlineIcon name="bag" />} {item.name}
                         </span>
                       </div>
                       <button onClick={() => sellItem(item.id)} style={{
@@ -233,7 +234,7 @@ export default function TradingPostScene() {
           fontSize: '1.4rem', boxShadow: '0 0 20px rgba(251,191,36,0.4)',
           animation: 'pulse 2s infinite',
         }}>
-          🌀
+          <InlineIcon name="portal" />
         </div>
         <div style={{
           color: '#fbbf24', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,

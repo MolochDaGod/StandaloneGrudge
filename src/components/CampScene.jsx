@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import { InlineIcon } from '../data/uiSprites';
 
 const RESOURCE_NODES = [
-  { id: 'gold_mine', name: 'Gold Mine', icon: '⛏️', resource: 'gold', x: 18, y: 30, color: '#fbbf24' },
-  { id: 'herb_garden', name: 'Herb Garden', icon: '🌿', resource: 'herbs', x: 72, y: 28, color: '#4ade80' },
-  { id: 'lumber_yard', name: 'Lumber Yard', icon: '🪵', resource: 'wood', x: 12, y: 58, color: '#a3764a' },
-  { id: 'ore_vein', name: 'Ore Vein', icon: '🪨', resource: 'ore', x: 80, y: 55, color: '#94a3b8' },
-  { id: 'crystal_cave', name: 'Crystal Cave', icon: '💎', resource: 'crystals', x: 50, y: 22, color: '#a78bfa' },
+  { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24' },
+  { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', x: 72, y: 28, color: '#4ade80' },
+  { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', x: 12, y: 58, color: '#a3764a' },
+  { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', x: 80, y: 55, color: '#94a3b8' },
+  { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', x: 50, y: 22, color: '#a78bfa' },
 ];
 
 const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
@@ -108,7 +109,7 @@ export default function CampScene() {
               fontSize: '1.2rem', boxShadow: `0 0 12px ${node.color}60`,
               animation: assignedHero ? 'pulse 2s infinite' : 'none',
             }}>
-              {node.icon}
+              <InlineIcon name={node.icon} />
             </div>
             <div style={{
               color: node.color, fontSize: '0.5rem', fontWeight: 700, marginTop: 2,
@@ -236,7 +237,7 @@ export default function CampScene() {
           fontSize: '1.4rem', boxShadow: '0 0 20px rgba(110,231,183,0.4)',
           animation: 'pulse 2s infinite',
         }}>
-          🌀
+          <InlineIcon name="portal" />
         </div>
         <div style={{
           color: '#6ee7b3', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,

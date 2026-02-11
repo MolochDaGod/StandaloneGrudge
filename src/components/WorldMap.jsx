@@ -6,7 +6,7 @@ import { cities, cityPositions, cityConnections } from '../data/cities';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import SpriteAnimation from './SpriteAnimation';
+import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { setBgm } from '../utils/audioManager';
 import { TIERS, UPGRADE_COSTS, EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES, getItemPrice, getSellPrice } from '../data/equipment';
@@ -15,6 +15,7 @@ import ChatBubbleSystem from './ChatBubble';
 import { generateRandomEvent, getRewardDescription } from '../data/randomEvents';
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverStyle, nodeScale as calcNodeScale } from './mapConstants';
+import { InlineIcon, getIconSrc } from '../data/uiSprites';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -1859,7 +1860,7 @@ export default function WorldMap() {
                           background: 'rgba(30,30,50,0.8)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '1.2rem',
-                        }}>🔒</div>
+                        }}><InlineIcon name="lock" size={12} /></div>
                       )}
                     </div>
                   );
@@ -1990,7 +1991,7 @@ export default function WorldMap() {
                     <img src="/images/conquered_logo.png" alt={city.name} style={{
                       width: '100%', height: '100%', objectFit: 'cover',
                     }} />
-                  ) : '🔒'}
+                  ) : <InlineIcon name="lock" size={12} />}
                 </div>
               </div>
               <div style={{
@@ -2011,7 +2012,7 @@ export default function WorldMap() {
                 )}
                 {!isCityUnlocked && (city.unlockLevel || city.unlockBoss) && (
                   <div style={{ fontSize: '0.45rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-                    {city.unlockBoss ? '🔒 Boss' : `Lv.${city.unlockLevel}`}
+                    {city.unlockBoss ? <><InlineIcon name="lock" size={12} /> Boss</> : `Lv.${city.unlockLevel}`}
                   </div>
                 )}
               </div>
@@ -2082,6 +2083,7 @@ export default function WorldMap() {
                           flip={isWalking && flipX}
                           scale={mapSpriteScale}
                           speed={isWalking ? 100 : (150 + idx * 30)}
+                          equipmentOverlays={buildEquipmentOverlays(hero, TIERS)}
                         />
                       </div>
                     </div>
@@ -2383,7 +2385,7 @@ export default function WorldMap() {
 
                 if (selectedLoc.levelRange && selectedLoc.levelRange[0] >= 8) {
                   menuItems.push({ key: idx++, props: {
-                    icon: '🏰', label: 'Enter Dungeon', sublabel: 'Multi-fight challenge',
+                    icon: 'castle', label: 'Enter Dungeon', sublabel: 'Multi-fight challenge',
                     color: '#f97316', onClick: () => {
                       setSelectedLocation(null);
                       useGameStore.getState().startDungeon(selectedLoc.id);
@@ -2450,7 +2452,7 @@ export default function WorldMap() {
               borderRadius: '16px 16px 0 0',
               textAlign: 'center',
             }}>
-              <div style={{ fontSize: '1.2rem', marginBottom: 4 }}>🌀</div>
+              <div style={{ fontSize: '1.2rem', marginBottom: 4 }}><InlineIcon name="portal" size={16} /></div>
               <div className="font-cinzel" style={{ color: '#a78bfa', fontSize: '1rem', fontWeight: 700 }}>
                 Portal Network
               </div>
@@ -2510,10 +2512,10 @@ export default function WorldMap() {
                         {destLoc?.name || destId.replace(/_/g, ' ')}
                       </div>
                       <div style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: 400 }}>
-                        {destUnlocked ? `Lv.${destLoc?.levelRange?.[0]}-${destLoc?.levelRange?.[1]}` : '🔒 Locked'}
+                        {destUnlocked ? `Lv.${destLoc?.levelRange?.[0]}-${destLoc?.levelRange?.[1]}` : <><InlineIcon name="lock" size={12} /> Locked</>}
                       </div>
                     </div>
-                    {destUnlocked && <div style={{ marginLeft: 'auto', fontSize: '0.9rem', opacity: 0.6 }}>🌀</div>}
+                    {destUnlocked && <div style={{ marginLeft: 'auto', fontSize: '0.9rem', opacity: 0.6 }}><InlineIcon name="portal" size={16} /></div>}
                   </button>
                 );
               })}
@@ -2598,12 +2600,12 @@ export default function WorldMap() {
                     disabled={cityArenas.length === 0}
                   />
                   <MenuButton
-                    icon="📜" label="Missions" sublabel={`${cityMissions.length} mission${cityMissions.length !== 1 ? 's' : ''} available`}
+                    icon="scroll" label="Missions" sublabel={`${cityMissions.length} mission${cityMissions.length !== 1 ? 's' : ''} available`}
                     color="#c084fc" onClick={() => setCitySubmenu('missions')}
                     disabled={cityMissions.length === 0}
                   />
                   <MenuButton
-                    icon="🛒" label="Trading Post" sublabel="Visit the marketplace"
+                    icon="gold" label="Trading Post" sublabel="Visit the marketplace"
                     color="var(--gold)" onClick={() => {
                       setSelectedCity(null);
                       setCitySubmenu(null);
@@ -2619,7 +2621,7 @@ export default function WorldMap() {
                     }}
                   />
                   <MenuButton
-                    icon="🔧" label="Upgrade" sublabel="Enhance equipment tiers"
+                    icon="hammer" label="Upgrade" sublabel="Enhance equipment tiers"
                     color="#22d3ee" onClick={() => { setCitySubmenu('upgrade'); setUpgradeHeroId(null); setUpgradeMsg(null); }}
                   />
                 </div>
@@ -2657,8 +2659,8 @@ export default function WorldMap() {
                       </div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6 }}>{arena.description}</div>
                       <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem' }}>
-                        <span style={{ color: 'var(--gold)' }}>💰 {arena.rewards.gold}g</span>
-                        <span style={{ color: 'var(--accent)' }}>✨ {arena.rewards.xp} XP</span>
+                        <span style={{ color: 'var(--gold)' }}><InlineIcon name="gold" size={12} /> {arena.rewards.gold}g</span>
+                        <span style={{ color: 'var(--accent)' }}><InlineIcon name="sparkle" size={12} /> {arena.rewards.xp} XP</span>
                         <span style={{ color: 'var(--muted)' }}>👹 {arena.enemies.length} enemies</span>
                       </div>
                     </div>
@@ -2697,15 +2699,15 @@ export default function WorldMap() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                           <span style={{ color: isCompleted ? '#22c55e' : '#c084fc', fontWeight: 700, fontSize: '0.75rem' }}>
-                            📜 {mission.title}
+                            <InlineIcon name="scroll" size={12} /> {mission.title}
                           </span>
                           {isCompleted && <span style={{ color: '#22c55e', fontSize: '0.55rem', fontWeight: 600 }}>✓ Done</span>}
                         </div>
                         <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6, lineHeight: 1.3 }}>{mission.description}</div>
                         <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem', flexWrap: 'wrap' }}>
-                          <span style={{ color: 'var(--gold)' }}>💰 {mission.rewards.gold}g</span>
-                          <span style={{ color: 'var(--accent)' }}>✨ {mission.rewards.xp} XP</span>
-                          <span style={{ color: 'var(--muted)' }}>⚔ {mission.rounds.length} round{mission.rounds.length > 1 ? 's' : ''}</span>
+                          <span style={{ color: 'var(--gold)' }}><InlineIcon name="gold" size={12} /> {mission.rewards.gold}g</span>
+                          <span style={{ color: 'var(--accent)' }}><InlineIcon name="sparkle" size={12} /> {mission.rewards.xp} XP</span>
+                          <span style={{ color: 'var(--muted)' }}><InlineIcon name="battle" size={12} /> {mission.rounds.length} round{mission.rounds.length > 1 ? 's' : ''}</span>
                           <span style={{ color: 'var(--muted)' }}>Lv.{mission.levelRange[0]}-{mission.levelRange[1]}</span>
                         </div>
                       </div>
@@ -2798,7 +2800,7 @@ export default function WorldMap() {
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                                 <div>
-                                  <span style={{ fontSize: '1rem', marginRight: 6 }}>{item.icon}</span>
+                                  <InlineIcon name={item.icon} size={14} style={{ marginRight: 6 }} />
                                   <span style={{ color: tierDef.color, fontWeight: 700, fontSize: '0.72rem' }}>
                                     {item.name}
                                   </span>
@@ -2914,7 +2916,7 @@ export default function WorldMap() {
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
-                                  {item.icon} {item.name}
+                                  <InlineIcon name={item.icon} size={12} /> {item.name}
                                 </span>
                                 {!isConsumable && (
                                   <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
@@ -2975,7 +2977,7 @@ export default function WorldMap() {
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                                 <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tierDef.color }}>
-                                  {item.icon} {item.name}
+                                  <InlineIcon name={item.icon} size={12} /> {item.name}
                                 </span>
                                 {!isConsumable && (
                                   <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
@@ -3078,12 +3080,12 @@ export default function WorldMap() {
                 {getRewardDescription(selectedEvent)}
               </div>
               <div style={{ marginTop: 6, fontSize: '0.55rem', color: 'var(--muted)' }}>
-                ⚔ {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
+                <InlineIcon name="battle" size={12} /> {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
               </div>
             </div>
             <div style={{ padding: 8 }}>
               <MenuButton
-                icon="⚔️" label="Challenge" sublabel={`Fight Lv.${selectedEvent.level} event`}
+                icon="battle" label="Challenge" sublabel={`Fight Lv.${selectedEvent.level} event`}
                 color={selectedEvent.color}
                 onClick={() => { startEventBattle(selectedEvent.id); setSelectedEvent(null); }}
                 glow
@@ -3148,7 +3150,7 @@ export default function WorldMap() {
               background: 'rgba(0,0,0,0.4)', borderRadius: 8, padding: '4px 10px',
               border: '1px solid rgba(255,215,0,0.2)',
             }}>
-              <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.8rem' }}>💰 {gold}</span>
+              <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.8rem' }}><InlineIcon name="gold" size={12} /> {gold}</span>
               <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>XP: {xp}/{xpToNext}</span>
             </div>
 
@@ -3157,7 +3159,7 @@ export default function WorldMap() {
               borderRadius: 8, padding: '4px 10px', color: '#4ade80',
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             }}>
-              ⛺ Camp
+              <InlineIcon name="camp" size={12} /> Camp
             </button>
 
             {level >= 15 && (
@@ -3166,7 +3168,7 @@ export default function WorldMap() {
                 borderRadius: 8, padding: '4px 10px', color: '#c026d3',
                 cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
               }}>
-                🌀 Nexus
+                <InlineIcon name="portal" size={12} /> Nexus
               </button>
             )}
 
@@ -3184,7 +3186,7 @@ export default function WorldMap() {
               background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))',
               border: '1px solid var(--gold)', borderRadius: 8,
               padding: '4px 10px', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>⚔ Council</button>
+            }}><InlineIcon name="battle" size={12} /> Council</button>
 
             <button onClick={() => { setShowWarParty(!showWarParty); setShowGruda(false); }} style={{
               background: showWarParty ? 'rgba(110,231,183,0.2)' : 'rgba(110,231,183,0.08)',
@@ -3193,10 +3195,10 @@ export default function WorldMap() {
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
-              🛡 Party
+              <InlineIcon name="shield" size={12} /> Party
               {Object.keys(activeHarvests).length > 0 && (
                 <span style={{ background: 'rgba(251,191,36,0.3)', color: 'var(--gold)', borderRadius: 4, padding: '0 4px', fontSize: '0.5rem' }}>
-                  ⛏{Object.keys(activeHarvests).length}
+                  <InlineIcon name="pickaxe" size={12} />{Object.keys(activeHarvests).length}
                 </span>
               )}
             </button>
@@ -3206,7 +3208,7 @@ export default function WorldMap() {
               border: `1px solid ${showGruda ? 'var(--danger)' : 'rgba(239,68,68,0.3)'}`,
               borderRadius: 8, padding: '4px 10px', color: showGruda ? '#f87171' : '#fca5a5',
               cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
-            }}>💀 Gruda</button>
+            }}><InlineIcon name="skull" size={12} /> Gruda</button>
             <button onClick={() => {
               setMarkerMode(m => !m);
               setDevSubMode('marker');
@@ -3308,13 +3310,13 @@ export default function WorldMap() {
 
             <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.55rem', color: 'var(--accent)', background: 'rgba(110,231,183,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
-                ⚔ {activeHeroIds.length}/3 Active
+                <InlineIcon name="battle" size={12} /> {activeHeroIds.length}/3 Active
               </span>
               <span style={{ fontSize: '0.55rem', color: 'var(--gold)', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(251,191,36,0.2)' }}>
-                ⛏ {harvestingHeroIds.length} Harvesting
+                <InlineIcon name="pickaxe" size={12} /> {harvestingHeroIds.length} Harvesting
               </span>
               <span style={{ fontSize: '0.55rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
-                💤 {idleHeroes.length} Idle
+                <InlineIcon name="moon" size={12} /> {idleHeroes.length} Idle
               </span>
             </div>
 
@@ -3371,7 +3373,7 @@ export default function WorldMap() {
                       fontSize: '0.45rem', marginTop: 2, fontWeight: 600,
                       color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)',
                     }}>
-                      {isActive ? '⚔ ACTIVE' : isHarvesting ? `${harvestInfo?.[2] || '⛏'} ${harvestInfo?.[1] || 'Harvesting'}` : '💤 IDLE'}
+                      {isActive ? <><InlineIcon name="battle" size={12} /> ACTIVE</> : isHarvesting ? <>{harvestInfo?.[2] ? <InlineIcon name="pickaxe" size={12} /> : <InlineIcon name="pickaxe" size={12} />} {harvestInfo?.[1] || 'Harvesting'}</> : <><InlineIcon name="moon" size={12} /> IDLE</>}
                     </div>
                     {isHarvesting && (
                       <div style={{
@@ -3405,12 +3407,12 @@ export default function WorldMap() {
                 }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div className="font-cinzel" style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700 }}>
-                    ⛏ Harvest Sites
+                    <InlineIcon name="pickaxe" size={12} /> Harvest Sites
                   </div>
                   <div style={{ display: 'flex', gap: 4, fontSize: '0.5rem', flexWrap: 'wrap' }}>
                     {Object.entries(harvestResources).filter(([, v]) => v > 0).map(([k, v]) => (
                       <span key={k} style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(251,191,36,0.15)', color: 'var(--gold)' }}>
-                        {k === 'gold' ? '💰' : k === 'herbs' ? '🌿' : k === 'wood' ? '🪵' : k === 'ore' ? '🪨' : '💎'} {Math.floor(v)}
+                        {k === 'gold' ? <InlineIcon name="gold" size={12} /> : k === 'herbs' ? <InlineIcon name="nature" size={12} /> : k === 'wood' ? <InlineIcon name="wood" size={12} /> : k === 'ore' ? <InlineIcon name="ore" size={12} /> : <InlineIcon name="diamond" size={12} />} {Math.floor(v)}
                       </span>
                     ))}
                   </div>
@@ -3488,7 +3490,7 @@ export default function WorldMap() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <h4 className="font-cinzel" style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
-                💀 Gruda Arena
+                <InlineIcon name="skull" size={12} /> Gruda Arena
               </h4>
               <button onClick={() => setShowGruda(false)} style={{
                 background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.9rem',
@@ -3564,7 +3566,7 @@ export default function WorldMap() {
                 borderRadius: 6, padding: '6px 12px', color: 'var(--gold)',
                 cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
               }}>
-                ⚔ Play Gruda
+                <InlineIcon name="battle" size={12} /> Play Gruda
               </button>
 
               <button onClick={async () => {
@@ -3659,7 +3661,7 @@ export default function WorldMap() {
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.25)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
-                  >⚔️ Battle</button>
+                  ><InlineIcon name="battle" size={12} /> Battle</button>
                   <button onClick={() => enterLocation(selectedLoc.id)} style={{
                     background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.25)', borderRadius: 8,
                     color: '#6ee7b7', fontWeight: 700, fontSize: '0.6rem', padding: '5px 12px', cursor: 'pointer',
@@ -3667,7 +3669,7 @@ export default function WorldMap() {
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.2)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.1)'; }}
-                  >🗺️ Travel</button>
+                  ><InlineIcon name="world" size={12} /> Travel</button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -3688,7 +3690,7 @@ export default function WorldMap() {
                   background: 'rgba(110,231,183,0.06)', borderRadius: 8, padding: '4px 10px',
                   border: '1px solid rgba(110,231,183,0.15)',
                 }}>
-                  <span style={{ fontSize: '0.65rem' }}>🏆</span>
+                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="trophy" size={12} /></span>
                   <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{victories}</div>
                 </div>
                 <div style={{
@@ -3696,7 +3698,7 @@ export default function WorldMap() {
                   background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
                   border: '1px solid rgba(255,215,0,0.15)',
                 }}>
-                  <span style={{ fontSize: '0.65rem' }}>⭐</span>
+                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="star" size={12} /></span>
                   <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{level}</div>
                 </div>
                 <div style={{
@@ -3704,7 +3706,7 @@ export default function WorldMap() {
                   background: 'rgba(255,215,0,0.06)', borderRadius: 8, padding: '4px 10px',
                   border: '1px solid rgba(255,215,0,0.15)',
                 }}>
-                  <span style={{ fontSize: '0.65rem' }}>💰</span>
+                  <span style={{ fontSize: '0.65rem' }}><InlineIcon name="gold" size={12} /></span>
                   <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{gold}</div>
                 </div>
               </div>

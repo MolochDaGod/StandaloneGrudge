@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import { InlineIcon } from '../data/uiSprites';
 
 const FIELD_EVENTS = [
-  { id: 'patrol', name: 'Wandering Foe', icon: '⚔️', x: 65, y: 40, type: 'battle', color: '#ef4444' },
-  { id: 'chest', name: 'Treasure Chest', icon: '🎁', x: 30, y: 35, type: 'loot', color: '#fbbf24' },
-  { id: 'shrine', name: 'Healing Shrine', icon: '✨', x: 75, y: 65, type: 'heal', color: '#6ee7b3' },
-  { id: 'camp_rest', name: 'Rest Spot', icon: '🔥', x: 40, y: 70, type: 'rest', color: '#f97316' },
+  { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444' },
+  { id: 'chest', name: 'Treasure Chest', icon: 'gift', x: 30, y: 35, type: 'loot', color: '#fbbf24' },
+  { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3' },
+  { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316' },
 ];
 
 export default function OpenFieldScene() {
@@ -122,7 +123,7 @@ export default function OpenFieldScene() {
               boxShadow: !done ? `0 0 12px ${evt.color}40` : 'none',
               animation: !done ? 'pulse 2s infinite' : 'none',
             }}>
-              {done ? '✓' : evt.icon}
+              {done ? '✓' : <InlineIcon name={evt.icon} />}
             </div>
             <div style={{
               color: done ? '#666' : evt.color,
@@ -178,7 +179,7 @@ export default function OpenFieldScene() {
           fontSize: '1.4rem', boxShadow: '0 0 20px rgba(110,231,183,0.4)',
           animation: 'pulse 2s infinite',
         }}>
-          🌀
+          <InlineIcon name="portal" />
         </div>
         <div style={{
           color: '#6ee7b3', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,

@@ -3,6 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { skillTrees } from '../data/skillTrees';
 import { attributeDefinitions } from '../data/attributes';
+import { InlineIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 
 export default function TrainingScreen() {
@@ -110,9 +111,9 @@ export default function TrainingScreen() {
 
   if (trainingPhase === 'skill_tutorial') {
     const tutorialSteps = [
-      { title: 'Attribute Points', icon: '📊' },
-      { title: 'Skill Tree', icon: '🌳' },
-      { title: 'Action Bar', icon: '⚔️' },
+      { title: 'Attribute Points', icon: 'chart' },
+      { title: 'Skill Tree', icon: 'nature' },
+      { title: 'Action Bar', icon: 'crossed_swords' },
     ];
 
     return (
@@ -123,7 +124,7 @@ export default function TrainingScreen() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: '1.5rem' }}>📖</span>
+            <span style={{ fontSize: '1.5rem' }}><InlineIcon name="scroll" size={20} /></span>
             <div>
               <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.1rem', margin: 0 }}>Warlord Training</h2>
               <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Learn to grow stronger</div>
@@ -137,7 +138,7 @@ export default function TrainingScreen() {
                 borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s',
               }}>
-                <span style={{ fontSize: '1rem' }}>{s.icon}</span>
+                <span style={{ fontSize: '1rem' }}><InlineIcon name={s.icon} size={14} /></span>
                 <span style={{ color: tutorialStep === i ? 'var(--gold)' : 'var(--muted)', fontSize: '0.75rem', fontWeight: 600 }}>{s.title}</span>
               </div>
             ))}
@@ -290,7 +291,7 @@ export default function TrainingScreen() {
                             animation: available ? 'glow 2s infinite' : 'none',
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                              <span style={{ fontSize: '1.3rem' }}>{skill.icon}</span>
+                              <InlineIcon name={skill.icon} size={20} />
                               <div>
                                 <div style={{ color: current > 0 ? 'var(--gold)' : 'var(--text)', fontSize: '0.8rem', fontWeight: 600 }}>
                                   {skill.name}
@@ -384,7 +385,7 @@ export default function TrainingScreen() {
                       }}>
                         {idx + 1}
                       </div>
-                      <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{ability.icon}</div>
+                      <div style={{ marginBottom: 4 }}><InlineIcon name={ability.icon} size={22} /></div>
                       <div style={{ color: 'var(--text)', fontSize: '0.7rem', fontWeight: 600, marginBottom: 2 }}>
                         {ability.name}
                       </div>

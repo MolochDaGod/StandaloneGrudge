@@ -1,5 +1,6 @@
 import React from 'react';
 import { getAbilityIcon } from '../data/abilityIcons';
+import { InlineIcon } from '../data/uiSprites';
 
 export default function AbilityIcon({ ability, size = 24, style = {} }) {
   if (!ability) return null;
@@ -20,5 +21,5 @@ export default function AbilityIcon({ ability, size = 24, style = {} }) {
       />
     );
   }
-  return <span style={{ fontSize: size * 0.7, lineHeight: 1, ...style }}>{ability.icon}</span>;
+  return <InlineIcon name={ability.icon} size={size * 0.7} style={style} />;
 }

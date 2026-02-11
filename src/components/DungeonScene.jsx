@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import { InlineIcon } from '../data/uiSprites';
 
 const DUNGEON_CONFIGS = {
   default: {
@@ -142,7 +143,7 @@ export default function DungeonScene() {
               boxShadow: isCurrent ? `0 0 16px ${nodeColor}60` : 'none',
               animation: isCurrent ? 'pulse 2s infinite' : 'none',
             }}>
-              {isCompleted ? '✓' : node.type === 'boss' ? '💀' : node.type === 'elite' ? '⚔️' : '👹'}
+              {isCompleted ? '✓' : node.type === 'boss' ? <InlineIcon name="skull" size={12} /> : node.type === 'elite' ? <InlineIcon name="battle" size={12} /> : <InlineIcon name="bomb" size={12} />}
             </div>
             <div style={{
               color: isCompleted ? '#6ee7b3' : nodeColor,
@@ -187,7 +188,7 @@ export default function DungeonScene() {
           borderRadius: 12, padding: 20, textAlign: 'center', zIndex: 50,
           backdropFilter: 'blur(8px)',
         }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>🏆</div>
+          <div style={{ fontSize: '2rem', marginBottom: 8 }}><InlineIcon name="trophy" size={16} /></div>
           <div className="font-cinzel" style={{ color: config.color, fontSize: '0.9rem', marginBottom: 8 }}>
             {config.name} Cleared!
           </div>
@@ -212,7 +213,7 @@ export default function DungeonScene() {
             fontSize: '1.4rem', boxShadow: `0 0 20px ${config.portalColor}40`,
             animation: 'pulse 2s infinite',
           }}>
-            🌀
+            <InlineIcon name="portal" />
           </div>
           <div style={{
             color: config.portalColor, fontSize: '0.5rem', fontWeight: 700, marginTop: 3,

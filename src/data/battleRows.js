@@ -2,7 +2,7 @@ export const PLAYER_ROWS = {
   protection: {
     id: 'protection',
     name: 'Protection Pocket',
-    icon: '🛡️',
+    icon: 'shield',
     index: 0,
     description: 'Defensive stance. +Evasion, +Block, but -Damage, -Crit, -Accuracy.',
     modifiers: {
@@ -16,7 +16,7 @@ export const PLAYER_ROWS = {
   battle: {
     id: 'battle',
     name: 'Battle Line',
-    icon: '⚔️',
+    icon: 'crossed_swords',
     index: 1,
     description: 'Standard combat position. No bonuses or penalties.',
     modifiers: {},
@@ -24,7 +24,7 @@ export const PLAYER_ROWS = {
   back: {
     id: 'back',
     name: 'Back Row',
-    icon: '🏹',
+    icon: 'bow',
     index: 2,
     description: 'Rear position. +Speed, ranged counter vs melee. Melee attacks from here lose accuracy.',
     modifiers: {
@@ -39,7 +39,7 @@ export const ENEMY_ROWS = {
   vanguard: {
     id: 'vanguard',
     name: 'Vanguard',
-    icon: '⚔️',
+    icon: 'crossed_swords',
     index: 0,
     description: 'Front-line enemy position.',
     modifiers: {},
@@ -47,7 +47,7 @@ export const ENEMY_ROWS = {
   formation: {
     id: 'formation',
     name: 'Formation',
-    icon: '🏰',
+    icon: 'shield',
     index: 1,
     description: 'Standard enemy position. Bosses command from here.',
     modifiers: {
@@ -57,7 +57,7 @@ export const ENEMY_ROWS = {
   charge: {
     id: 'charge',
     name: 'Charge',
-    icon: '💀',
+    icon: 'skull',
     index: 2,
     description: 'Aggressive assault. +Damage, +Crit, but -Defense, -Block.',
     modifiers: {

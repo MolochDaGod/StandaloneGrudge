@@ -393,11 +393,11 @@ const useGameStore = create(persist((set, get) => ({
   shopLastRefresh: 0,
   pendingLoot: [],
   harvestNodes: [
-    { id: 'gold_mine', name: 'Gold Mine', icon: '⛏️', resource: 'gold', baseRate: 3, unlockLevel: 1 },
-    { id: 'herb_garden', name: 'Herb Garden', icon: '🌿', resource: 'herbs', baseRate: 2, unlockLevel: 2 },
-    { id: 'lumber_yard', name: 'Lumber Yard', icon: '🪵', resource: 'wood', baseRate: 2, unlockLevel: 3 },
-    { id: 'ore_vein', name: 'Ore Vein', icon: '🪨', resource: 'ore', baseRate: 1, unlockLevel: 5 },
-    { id: 'crystal_cave', name: 'Crystal Cave', icon: '💎', resource: 'crystals', baseRate: 1, unlockLevel: 8 },
+    { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', baseRate: 3, unlockLevel: 1 },
+    { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', baseRate: 2, unlockLevel: 2 },
+    { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', baseRate: 2, unlockLevel: 3 },
+    { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', baseRate: 1, unlockLevel: 5 },
+    { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', baseRate: 1, unlockLevel: 8 },
   ],
   activeHarvests: {},
   harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
@@ -1156,7 +1156,7 @@ const useGameStore = create(persist((set, get) => ({
     const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
     const unit = state.battleUnits.find(u => u.id === currentUnitId);
     if (!unit) return;
-    const log = [...state.battleLog, `⏭️ ${unit.name} skips their turn.`];
+    const log = [...state.battleLog, `${unit.name} skips their turn.`];
     set({
       battleLog: log.slice(-12),
       battleState: { ...bs, phase: 'animating' },
@@ -1177,7 +1177,7 @@ const useGameStore = create(persist((set, get) => ({
     unit.health = Math.min(unit.maxHealth, unit.health + healAmt);
     unit.mana = Math.min(unit.maxMana, unit.mana + 3);
     unit.stamina = Math.min(unit.maxStamina, unit.stamina + 5);
-    const log = [...state.battleLog, `🛡️ ${unit.name} defends! +DEF for 2 turns, recovers ${healAmt} HP.`];
+    const log = [...state.battleLog, `[DEF] ${unit.name} defends! +DEF for 2 turns, recovers ${healAmt} HP.`];
     set({
       battleUnits: units,
       battleLog: log.slice(-12),
@@ -1211,7 +1211,7 @@ const useGameStore = create(persist((set, get) => ({
     unit.row = targetRow;
     const updatedUnits = recalcRowPositions(units);
     const rowCfg = PLAYER_ROWS[targetRow];
-    const log = [...state.battleLog, `${rowCfg?.icon || '➡️'} ${unit.name} moves to ${rowCfg?.name || targetRow}!`];
+    const log = [...state.battleLog, `${unit.name} moves to ${rowCfg?.name || targetRow}!`];
 
     set({
       battleUnits: updatedUnits,
@@ -1255,7 +1255,7 @@ const useGameStore = create(persist((set, get) => ({
     if (!attacker || !attacker.alive) return;
 
     if (attacker.stunned) {
-      const log = [...state.battleLog, `💫 ${attacker.name} is stunned and cannot act!`];
+      const log = [...state.battleLog, `[STUN] ${attacker.name} is stunned and cannot act!`];
       set({
         battleUnits: units,
         battleLog: log.slice(-12),
@@ -1302,40 +1302,40 @@ const useGameStore = create(persist((set, get) => ({
       actionResult = { ...actionResult, ...result };
 
       if (result.absorbed) {
-        log.push(`🛡️ ${actualTarget.name} is INVINCIBLE! ${ability.name} is absorbed!`);
+        log.push(`[DEF] ${actualTarget.name} is INVINCIBLE! ${ability.name} is absorbed!`);
       } else if (result.evaded) {
-        log.push(`💨 ${actualTarget.name} dodges ${attacker.name}'s ${ability.name}!`);
+        log.push(`[DODGE] ${actualTarget.name} dodges ${attacker.name}'s ${ability.name}!`);
       } else if (result.blocked) {
         actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`🛡️ ${actualTarget.name} blocks! ${ability.name} deals ${result.totalDmg} damage.`);
+        log.push(`[DEF] ${actualTarget.name} blocks! ${ability.name} deals ${result.totalDmg} damage.`);
       } else if (result.isCrit) {
         actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`💥 CRIT! ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}!`);
+        log.push(`[CRIT] ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}!`);
       } else {
         actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`⚔️ ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}.`);
+        log.push(`[ATK] ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}.`);
       }
 
       if (actualTarget.team === 'player' && result.totalDmg > 0 && !result.evaded && !result.absorbed) {
         const grudgeGain = Math.min(30, Math.max(5, Math.floor(result.totalDmg / actualTarget.maxHealth * 100)));
         actualTarget.grudge = Math.min(100, (actualTarget.grudge || 0) + grudgeGain);
         if (actualTarget.grudge >= 100) {
-          log.push(`🔥 ${actualTarget.name}'s GRUDGE is full! Revenge awaits!`);
+          log.push(`${actualTarget.name}'s GRUDGE is full! Revenge awaits!`);
         }
       }
 
       if (actualTarget.health <= 0) {
         actualTarget.alive = false;
-        log.push(`☠️ ${actualTarget.name} has been slain!`);
+        log.push(`${actualTarget.name} has been slain!`);
       }
 
       if (ability.effect?.type === 'stun' && actualTarget.alive) {
         actualTarget.stunned = true;
-        log.push(`💫 ${actualTarget.name} is stunned!`);
+        log.push(`[STUN] ${actualTarget.name} is stunned!`);
       }
       if (ability.effect?.type === 'dot' && actualTarget.alive) {
         actualTarget.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name });
-        log.push(`🩸 ${actualTarget.name} is bleeding!`);
+        log.push(`${actualTarget.name} is bleeding!`);
       }
       if (ability.effect?.stat && ability.effect?.multiplier && ability.effect.multiplier < 1 && actualTarget.alive) {
         actualTarget.buffs.push({ ...ability.effect, source: ability.name });
@@ -1343,12 +1343,12 @@ const useGameStore = create(persist((set, get) => ({
 
       if (result.drained > 0) {
         attacker.health = Math.min(attacker.maxHealth, attacker.health + result.drained);
-        log.push(`💜 ${attacker.name} drains ${result.drained} HP!`);
+        log.push(`${attacker.name} drains ${result.drained} HP!`);
       }
       if (ability.drainPercent && result.totalDmg > 0) {
         const heal = Math.floor(result.totalDmg * ability.drainPercent);
         attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
-        log.push(`💜 ${attacker.name} drains ${heal} HP!`);
+        log.push(`${attacker.name} drains ${heal} HP!`);
       }
 
     } else if (ability.type === 'heal') {
@@ -1362,12 +1362,12 @@ const useGameStore = create(persist((set, get) => ({
       healTarget.health = Math.min(healTarget.maxHealth, healTarget.health + healAmt);
       actionResult.targetId = healTarget.id;
       actionResult.healAmt = healAmt;
-      log.push(`💚 ${attacker.name} heals ${healTarget.name} for ${healAmt}!`);
+      log.push(`${attacker.name} heals ${healTarget.name} for ${healAmt}!`);
 
     } else if (ability.type === 'heal_over_time') {
       attacker.dots.push({ heal: true, healPercent: ability.healPercent, duration: ability.duration, source: ability.name });
       actionResult.targetId = currentUnitId;
-      log.push(`💚 ${attacker.name} uses ${ability.name}!`);
+      log.push(`${attacker.name} uses ${ability.name}!`);
 
     } else if (ability.type === 'resurrect' || ability.isResurrect) {
       const deadAlly = units.find(u => u.team === attacker.team && !u.alive && u.id !== attacker.id);
@@ -1379,7 +1379,7 @@ const useGameStore = create(persist((set, get) => ({
         deadAlly.buffs = [];
         actionResult.targetId = deadAlly.id;
         actionResult.healAmt = deadAlly.health;
-        log.push(`💚 ${attacker.name} resurrects ${deadAlly.name} with ${deadAlly.health} HP!`);
+        log.push(`${attacker.name} resurrects ${deadAlly.name} with ${deadAlly.health} HP!`);
         const turnOrder = get().battleTurnOrder;
         if (!turnOrder.includes(deadAlly.id)) {
           const newOrder = [...turnOrder, deadAlly.id];
@@ -1399,19 +1399,19 @@ const useGameStore = create(persist((set, get) => ({
       attacker.bearForm = false;
       attacker.buffs = attacker.buffs.filter(b => b.source !== 'Bear Form');
       actionResult.targetId = currentUnitId;
-      log.push(`🔄 ${attacker.name} reverts to normal form!`);
+      log.push(`${attacker.name} reverts to normal form!`);
 
     } else if (ability.type === 'focus' || ability.isFocus) {
       attacker.focusStacks = Math.min(5, (attacker.focusStacks || 0) * 2);
       if (attacker.focusStacks === 0) attacker.focusStacks = 2;
       attacker.guaranteedCrit = true;
       actionResult.targetId = currentUnitId;
-      log.push(`🎯 ${attacker.name} focuses intensely! (${attacker.focusStacks} stacks, next hit guaranteed crit)`);
+      log.push(`${attacker.name} focuses intensely! (${attacker.focusStacks} stacks, next hit guaranteed crit)`);
     } else if (ability.type === 'buff') {
       if (ability.isInvincible) {
         attacker.buffs.push({ ...ability.effect, source: 'Invincible' });
         actionResult.targetId = currentUnitId;
-        log.push(`🛡️ ${attacker.name} becomes INVINCIBLE!`);
+        log.push(`[DEF] ${attacker.name} becomes INVINCIBLE!`);
       } else if (ability.isBearForm) {
         attacker.bearForm = true;
         attacker.buffs.push({ ...ability.effect, source: ability.name });
@@ -1419,7 +1419,7 @@ const useGameStore = create(persist((set, get) => ({
           attacker.buffs.push({ ...ability.defenseBoost, source: ability.name });
         }
         actionResult.targetId = currentUnitId;
-        log.push(`🐻 ${attacker.name} transforms into beast form!`);
+        log.push(`${attacker.name} transforms into beast form!`);
       } else if (ability.isDemonBlade) {
         attacker.demonBlade = true;
         attacker.buffs.push({ ...ability.effect, source: ability.name });
@@ -1427,11 +1427,11 @@ const useGameStore = create(persist((set, get) => ({
           attacker.buffs.push({ ...ability.defenseBoost, source: ability.name });
         }
         actionResult.targetId = currentUnitId;
-        log.push(`🗡️ ${attacker.name} transforms into a Demon Swordsman!`);
+        log.push(`${attacker.name} transforms into a Demon Swordsman!`);
       } else if (ability.effect) {
         attacker.buffs.push({ ...ability.effect, source: ability.name });
         actionResult.targetId = currentUnitId;
-        log.push(`⬆️ ${attacker.name} uses ${ability.name}!`);
+        log.push(`${attacker.name} uses ${ability.name}!`);
       }
     }
 
@@ -1479,7 +1479,7 @@ const useGameStore = create(persist((set, get) => ({
         const healAmt = Math.floor(target.maxHealth * 0.4);
         target.health = Math.min(target.maxHealth, target.health + healAmt);
         actionResult.healAmt = healAmt;
-        log.push(`❤️ ${attacker.name} uses ${item.name} on ${target.name}! +${healAmt} HP`);
+        log.push(`${attacker.name} uses ${item.name} on ${target.name}! +${healAmt} HP`);
         break;
       }
       case 'mana': {
@@ -1487,7 +1487,7 @@ const useGameStore = create(persist((set, get) => ({
         const manaAmt = Math.floor(target.maxMana * 0.4);
         target.mana = Math.min(target.maxMana, target.mana + manaAmt);
         actionResult.healAmt = manaAmt;
-        log.push(`💙 ${attacker.name} uses ${item.name} on ${target.name}! +${manaAmt} MP`);
+        log.push(`${attacker.name} uses ${item.name} on ${target.name}! +${manaAmt} MP`);
         break;
       }
       case 'stamina': {
@@ -1495,13 +1495,13 @@ const useGameStore = create(persist((set, get) => ({
         const staminaAmt = Math.floor(target.maxStamina * 0.4);
         target.stamina = Math.min(target.maxStamina, target.stamina + staminaAmt);
         actionResult.healAmt = staminaAmt;
-        log.push(`💛 ${attacker.name} uses ${item.name} on ${target.name}! +${staminaAmt} SP`);
+        log.push(`${attacker.name} uses ${item.name} on ${target.name}! +${staminaAmt} SP`);
         break;
       }
       case 'speed': {
         if (!target || !target.alive) return;
         target.buffs.push({ stat: 'speed', multiplier: 1.5, duration: 3, source: 'Speed Potion' });
-        log.push(`⚡ ${attacker.name} uses ${item.name} on ${target.name}! Speed boosted!`);
+        log.push(`${attacker.name} uses ${item.name} on ${target.name}! Speed boosted!`);
         break;
       }
       case 'cure': {
@@ -1509,7 +1509,7 @@ const useGameStore = create(persist((set, get) => ({
         target.dots = [];
         target.buffs = target.buffs.filter(b => !b.multiplier || b.multiplier >= 1);
         target.stunned = false;
-        log.push(`✨ ${attacker.name} uses ${item.name} on ${target.name}! Status cleared!`);
+        log.push(`${attacker.name} uses ${item.name} on ${target.name}! Status cleared!`);
         break;
       }
       case 'resurrect': {
@@ -1524,7 +1524,7 @@ const useGameStore = create(persist((set, get) => ({
         }
         target.alive = true;
         target.health = Math.floor(target.maxHealth * 0.3);
-        log.push(`🔱 ${attacker.name} uses ${item.name}! ${target.name} is revived with ${target.health} HP!`);
+        log.push(`${attacker.name} uses ${item.name}! ${target.name} is revived with ${target.health} HP!`);
         break;
       }
       default:
@@ -1563,16 +1563,16 @@ const useGameStore = create(persist((set, get) => ({
     if (enemies.length === 0) return;
 
     let log = [...state.battleLog];
-    log.push(`🔥💀 ${attacker.name} unleashes GRUDGE REVENGE!`);
+    log.push(`${attacker.name} unleashes GRUDGE REVENGE!`);
 
     const baseDmg = Math.floor((attacker.physicalDamage + attacker.magicDamage) * 2.5 + attacker.level * 5);
     enemies.forEach(enemy => {
       const dmg = Math.max(1, Math.floor(baseDmg * (0.8 + Math.random() * 0.4)));
       enemy.health = Math.max(0, enemy.health - dmg);
-      log.push(`💥 Revenge hits ${enemy.name} for ${dmg}!`);
+      log.push(`[CRIT] Revenge hits ${enemy.name} for ${dmg}!`);
       if (enemy.health <= 0) {
         enemy.alive = false;
-        log.push(`☠️ ${enemy.name} has been slain!`);
+        log.push(`${enemy.name} has been slain!`);
       }
     });
 
@@ -1641,7 +1641,7 @@ const useGameStore = create(persist((set, get) => ({
         aiUnit.row = action.targetRow;
         const updatedUnits = recalcRowPositions(units);
         const rowCfg = ENEMY_ROWS[action.targetRow];
-        const log = [...state.battleLog, `${rowCfg?.icon || '➡️'} ${aiUnit.name} shifts to ${rowCfg?.name || action.targetRow}!`];
+        const log = [...state.battleLog, `${aiUnit.name} shifts to ${rowCfg?.name || action.targetRow}!`];
         set({
           battleUnits: updatedUnits,
           battleLog: log.slice(-12),
@@ -1858,7 +1858,7 @@ const useGameStore = create(persist((set, get) => ({
       newUnspent += POINTS_PER_LEVEL;
       newSkillPoints += 1;
       leveledUp = true;
-      log.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
+      log.push(`LEVEL UP! You are now level ${newLevel}!`);
     }
 
     const zoneStatsMap = { ...state.zoneStats };
@@ -1875,8 +1875,8 @@ const useGameStore = create(persist((set, get) => ({
     }
 
     const newConquer = zoneConquer[locId] || 0;
-    log.push(`✨ Victory! Gained ${adjustedTotalXp} XP and ${totalGold} Gold.${eventBonus ? ' (Event Bonus!)' : ''}`);
-    if (locId) log.push(`📊 Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
+    log.push(`Victory! Gained ${adjustedTotalXp} XP and ${totalGold} Gold.${eventBonus ? ' (Event Bonus!)' : ''}`);
+    if (locId) log.push(`Zone conquered: ${newConquer}%${xpReduction > 0 ? ` (XP -${Math.floor(xpReduction * 100)}%)` : ''}`);
 
     const lootDrops = [];
     enemyUnits.forEach(e => {
@@ -1884,7 +1884,7 @@ const useGameStore = create(persist((set, get) => ({
       lootDrops.push(...drops);
     });
     if (lootDrops.length > 0) {
-      log.push(`🎁 Found ${lootDrops.length} item${lootDrops.length > 1 ? 's' : ''}!`);
+      log.push(`Found ${lootDrops.length} item${lootDrops.length > 1 ? 's' : ''}!`);
     }
 
     const newVictories = state.victories + 1;
@@ -1997,7 +1997,7 @@ const useGameStore = create(persist((set, get) => ({
       battleState: { ...state.battleState, phase: 'defeat' },
       losses: state.losses + 1,
       heroRoster: updatedRoster,
-      battleLog: [...state.battleLog, '💀 Your party has been defeated...'],
+      battleLog: [...state.battleLog, 'Your party has been defeated...'],
     });
   },
 

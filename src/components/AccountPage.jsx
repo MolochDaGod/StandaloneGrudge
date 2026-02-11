@@ -7,9 +7,9 @@ import { getZoneTerrain } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
-import SpriteAnimation from './SpriteAnimation';
+import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 import AbilityIcon from './AbilityIcon';
 
@@ -96,7 +96,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
             transition: 'filter 0.3s',
             marginTop: 20,
           }}>
-            <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.2} speed={150} />
+            <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.2} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
           </div>
 
           <div style={{
@@ -320,7 +320,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                       </div>
                       {altAbility && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1, fontSize: '0.45rem', color: '#d97706' }}>
-                          <span>🐻</span>
+                          <InlineIcon name="wolf" size={12} />
                           <span style={{ fontWeight: 600 }}>{altAbility.name}</span>
                         </div>
                       )}
@@ -329,7 +329,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                 ) : (
                   <div style={{ flex: 1, color: 'var(--muted)', fontSize: '0.6rem', fontStyle: 'italic' }}>Empty</div>
                 )}
-                {locked && <div style={{ fontSize: '0.5rem', color: '#d97706', fontWeight: 600 }}>🔒</div>}
+                {locked && <div style={{ fontSize: '0.5rem', color: '#d97706', fontWeight: 600 }}><InlineIcon name="lock" size={10} /></div>}
               </div>
 
               <div style={{
@@ -352,7 +352,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                     return (
                       <div key={ab.id}
                         onClick={() => !isCurrent && handleSlotSelect(idx, ab.id)}
-                        title={`${ab.name}\n${ab.description}${bearAlt ? `\n🐻 Bear: ${bearAlt.name} — ${bearAlt.description}` : ''}`}
+                        title={`${ab.name}\n${ab.description}${bearAlt ? `\nBear: ${bearAlt.name} — ${bearAlt.description}` : ''}`}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 3,
                           background: isCurrent ? 'rgba(110,231,183,0.12)' : 'rgba(42,49,80,0.3)',
@@ -365,12 +365,12 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                         onMouseEnter={e => { if (!isCurrent) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = cls?.color || 'var(--accent)'; } }}
                         onMouseLeave={e => { if (!isCurrent) { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.borderColor = 'rgba(60,65,90,0.4)'; } }}
                       >
-                        <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>{ab.icon}</span>
+                        <InlineIcon name={ab.icon} size={14} style={{ flexShrink: 0 }} />
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: '0.55rem', fontWeight: 600, color: isCurrent ? 'var(--accent)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ab.name}</div>
                           {bearAlt && (
                             <div style={{ fontSize: '0.4rem', color: '#d97706', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <span>🐻</span>{bearAlt.name}
+                              <InlineIcon name="wolf" size={12} />{bearAlt.name}
                             </div>
                           )}
                         </div>
@@ -405,12 +405,12 @@ function HeroDetailPanel({ hero, onClose }) {
   const isActive = activeHeroIds.includes(hero.id);
 
   const mainStats = [
-    { key: 'health', label: 'Health', icon: '❤️', color: '#22c55e' },
-    { key: 'mana', label: 'Mana', icon: '💧', color: '#3b82f6' },
-    { key: 'stamina', label: 'Stamina', icon: '⚡', color: '#f59e0b' },
-    { key: 'physicalDamage', label: 'Phys DMG', icon: '⚔️', color: '#ef4444' },
-    { key: 'magicDamage', label: 'Magic DMG', icon: '🔮', color: '#8b5cf6' },
-    { key: 'defense', label: 'Defense', icon: '🛡️', color: '#6b7280' },
+    { key: 'health', label: 'Health', icon: 'heart', color: '#22c55e' },
+    { key: 'mana', label: 'Mana', icon: 'mana', color: '#3b82f6' },
+    { key: 'stamina', label: 'Stamina', icon: 'lightning', color: '#f59e0b' },
+    { key: 'physicalDamage', label: 'Phys DMG', icon: 'crossed_swords', color: '#ef4444' },
+    { key: 'magicDamage', label: 'Magic DMG', icon: 'crystal', color: '#8b5cf6' },
+    { key: 'defense', label: 'Defense', icon: 'shield', color: '#6b7280' },
   ];
 
   const combatStats = [
@@ -445,11 +445,11 @@ function HeroDetailPanel({ hero, onClose }) {
   };
 
   const tabs = [
-    { id: 'stats', label: 'Stats', icon: '📊' },
-    { id: 'equipment', label: 'Gear', icon: '🛡️' },
-    { id: 'abilities', label: 'Abilities', icon: '⚔️' },
-    { id: 'skills', label: 'Skills', icon: '🌳' },
-    { id: 'attributes', label: 'Attributes', icon: '📈' },
+    { id: 'stats', label: 'Stats', icon: 'chart' },
+    { id: 'equipment', label: 'Gear', icon: 'shield' },
+    { id: 'abilities', label: 'Abilities', icon: 'crossed_swords' },
+    { id: 'skills', label: 'Skills', icon: 'nature' },
+    { id: 'attributes', label: 'Attributes', icon: 'chart' },
   ];
 
   return (
@@ -466,7 +466,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -506,7 +506,7 @@ function HeroDetailPanel({ hero, onClose }) {
             cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
             transition: 'all 0.2s',
           }}>
-            <span style={{ marginRight: 3 }}>{t.icon}</span>{t.label}
+            <span style={{ marginRight: 3 }}><InlineIcon name={t.icon} size={12} /></span>{t.label}
             {t.id === 'attributes' && (hero.unspentPoints || 0) > 0 && (
               <span style={{ color: 'var(--danger)', marginLeft: 4, fontSize: '0.65rem' }}>({hero.unspentPoints})</span>
             )}
@@ -544,7 +544,7 @@ function HeroDetailPanel({ hero, onClose }) {
                     display: 'flex', justifyContent: 'space-between', padding: '4px 0',
                     borderBottom: '1px solid rgba(255,255,255,0.03)',
                   }}>
-                    <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>{s.icon} {s.label}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}><InlineIcon name={s.icon} size={12} /> {s.label}</span>
                     <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace', fontSize: '0.8rem' }}>{Math.floor(stats[s.key])}</span>
                   </div>
                 ))}
@@ -723,7 +723,7 @@ function HeroDetailPanel({ hero, onClose }) {
           };
           const sectionTitle = (icon, text) => (
             <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#d4a96a', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid rgba(139,115,85,0.2)', paddingBottom: 3 }}>
-              <span style={{ marginRight: 4 }}>{icon}</span>{text}
+              <span style={{ marginRight: 4 }}>{icon ? <InlineIcon name={icon} size={12} /> : null}</span>{text}
             </div>
           );
 
@@ -948,7 +948,7 @@ function HeroDetailPanel({ hero, onClose }) {
                                     filter: `drop-shadow(0 0 2px rgba(0,0,0,0.8))${isHovered ? ' brightness(1.3)' : ''}`,
                                   }} />
                                 ) : item ? (
-                                  <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}>{item.icon}</span>
+                                  <InlineIcon name={item.icon} size={18} style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }} />
                                 ) : null}
                                 {item && r && (
                                   <div style={{
@@ -968,7 +968,7 @@ function HeroDetailPanel({ hero, onClose }) {
               </div>
 
               <div style={sectionStyle}>
-                {sectionTitle('📋', 'Warlord Profile')}
+                {sectionTitle('scroll', 'Warlord Profile')}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem' }}>
                     <span style={{ color: 'var(--muted)' }}>Class</span>
@@ -1002,7 +1002,7 @@ function HeroDetailPanel({ hero, onClose }) {
               </div>
 
               <div style={sectionStyle}>
-                {sectionTitle('⚔️', 'Combat Record')}
+                {sectionTitle('crossed_swords', 'Combat Record')}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, textAlign: 'center' }}>
                   {[
                     { label: 'Victories', val: rec.wins, color: '#22c55e' },
@@ -1025,7 +1025,7 @@ function HeroDetailPanel({ hero, onClose }) {
 
               <div style={{ display: 'flex', gap: 6 }}>
                 <div style={{ ...sectionStyle, flex: 1, marginBottom: 6 }}>
-                  {sectionTitle('🗡️', `Gear (${equippedCount}/7)`)}
+                  {sectionTitle('sword', `Gear (${equippedCount}/7)`)}
                   {equippedCount === 0 ? (
                     <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic' }}>No gear equipped</div>
                   ) : (
@@ -1034,7 +1034,7 @@ function HeroDetailPanel({ hero, onClose }) {
                         const t = TIERS[item.tier] || TIERS[1];
                         return (
                           <div key={slot} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.6rem' }}>
-                            <span>{item.icon}</span>
+                            <InlineIcon name={item.icon} size={14} />
                             <span style={{ color: t.color, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                             <span style={{ color: '#7ec87e', fontSize: '0.5rem', whiteSpace: 'nowrap' }}>
                               {Object.entries(item.stats).slice(0, 2).map(([k, v]) => `+${v} ${k}`).join(', ')}
@@ -1047,11 +1047,11 @@ function HeroDetailPanel({ hero, onClose }) {
                 </div>
 
                 <div style={{ ...sectionStyle, flex: 1, marginBottom: 6 }}>
-                  {sectionTitle('📊', 'Core Stats')}
+                  {sectionTitle('chart', 'Core Stats')}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {mainStats.map(s => (
                       <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem' }}>
-                        <span style={{ color: 'var(--muted)' }}>{s.icon} {s.label}</span>
+                        <span style={{ color: 'var(--muted)' }}><InlineIcon name={s.icon} size={10} /> {s.label}</span>
                         <span style={{ color: s.color, fontWeight: 700, fontFamily: 'monospace' }}>{Math.floor(stats[s.key])}</span>
                       </div>
                     ))}
@@ -1060,7 +1060,7 @@ function HeroDetailPanel({ hero, onClose }) {
               </div>
 
               <div style={sectionStyle}>
-                {sectionTitle('✨', `Ability Loadout`)}
+                {sectionTitle('sparkle', `Ability Loadout`)}
                 <div style={{ display: 'flex', gap: 4 }}>
                   {loadout.map((abilityId, i) => {
                     const ability = abilityMap[abilityId];
@@ -1087,7 +1087,7 @@ function HeroDetailPanel({ hero, onClose }) {
               </div>
 
               <div style={sectionStyle}>
-                {sectionTitle('🌳', `Skills (${totalSkillPoints}/${maxSkillPoints})`)}
+                {sectionTitle('nature', `Skills (${totalSkillPoints}/${maxSkillPoints})`)}
                 {totalSkillPoints === 0 ? (
                   <div style={{ fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic' }}>No skills unlocked yet</div>
                 ) : (
@@ -1110,7 +1110,7 @@ function HeroDetailPanel({ hero, onClose }) {
               </div>
 
               <div style={sectionStyle}>
-                {sectionTitle('📈', 'Attribute Spread')}
+                {sectionTitle('chart', 'Attribute Spread')}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px 6px' }}>
                   {ATTRIBUTES.map(attr => {
                     const pts = (hero.attributePoints || {})[attr] || 0;
@@ -1137,7 +1137,7 @@ function HeroDetailPanel({ hero, onClose }) {
 
               {race && (
                 <div style={sectionStyle}>
-                  {sectionTitle(race.icon ? '' : '🏷️', `Racial Trait — ${race.name}`)}
+                  {sectionTitle(race.icon ? '' : 'gift', `Racial Trait — ${race.name}`)}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {race.icon && <img src={race.icon} alt={race.name} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />}
                     <div>
@@ -1192,7 +1192,7 @@ function HeroDetailPanel({ hero, onClose }) {
           const maxY = posValues.length > 0 ? Math.max(...posValues.map(p => p.y)) + NODE_H + 20 : 100;
 
           const effectTypeLabel = (t) => {
-            const labels = { bleed: '🩸 Bleed', burn: '🔥 Burn', poison: '☠️ Poison', stun: '💫 Stun', sleep: '😴 Sleep', confuse: '🌀 Confuse', lower_attack: '📉 Lower Attack', lower_defense: '📉 Lower Defense', dot: '💀 DOT', extra_attack: '⚡ Bonus Attack', random_debuff: '🎲 Random Debuff', multi_dot: '💢 Multi-DOT' };
+            const labels = { bleed: 'Bleed', burn: 'Burn', poison: 'Poison', stun: 'Stun', sleep: 'Sleep', confuse: 'Confuse', lower_attack: 'Lower Attack', lower_defense: 'Lower Defense', dot: 'DOT', extra_attack: 'Bonus Attack', random_debuff: 'Random Debuff', multi_dot: 'Multi-DOT' };
             return labels[t] || t;
           };
 
@@ -1309,7 +1309,7 @@ function HeroDetailPanel({ hero, onClose }) {
                                 <div style={{
                                   fontSize: '1.2rem', lineHeight: 1,
                                   filter: maxed ? `drop-shadow(0 0 5px ${tree.color})` : unlocked ? 'drop-shadow(0 0 3px rgba(255,215,0,0.4))' : 'none',
-                                }}>{skill.icon}</div>
+                                }}><InlineIcon name={skill.icon} size={16} /></div>
                                 <div style={{
                                   fontWeight: 700, fontSize: '0.55rem', marginTop: 2,
                                   color: maxed ? tree.color : unlocked ? 'var(--gold)' : 'var(--text)',
@@ -1369,7 +1369,7 @@ function HeroDetailPanel({ hero, onClose }) {
               }}>
                 {!hSkill ? (
                   <div style={{ textAlign: 'center', padding: '30px 5px' }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: 8, opacity: 0.3 }}>🌳</div>
+                    <div style={{ fontSize: '1.5rem', marginBottom: 8, opacity: 0.3 }}><InlineIcon name="nature" size={20} /></div>
                     <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                       Hover over a skill to see details
                     </div>

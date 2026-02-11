@@ -1,49 +1,49 @@
 const EVENT_TEMPLATES = [
   {
     id: 'treasure_goblin', name: 'Treasure Goblin',
-    icon: '💰', description: 'A treasure-hoarding goblin has appeared!',
+    icon: 'gold', description: 'A treasure-hoarding goblin has appeared!',
     rewardType: 'gold', rewardMultiplier: 3.0,
     enemyCount: 1, color: '#fbbf24',
   },
   {
     id: 'elite_patrol', name: 'Elite Patrol',
-    icon: '⚔️', description: 'An elite enemy patrol is passing through.',
+    icon: 'crossed_swords', description: 'An elite enemy patrol is passing through.',
     rewardType: 'xp', rewardMultiplier: 2.5,
     enemyCount: 2, color: '#ef4444',
   },
   {
     id: 'wandering_merchant', name: 'Ambushed Merchant',
-    icon: '📦', description: 'A merchant is under attack! Save them for bonus loot.',
+    icon: 'shield', description: 'A merchant is under attack! Save them for bonus loot.',
     rewardType: 'loot', rewardMultiplier: 2.0,
     enemyCount: 2, color: '#a78bfa',
   },
   {
     id: 'dark_rift', name: 'Dark Rift',
-    icon: '🌀', description: 'A dark rift has torn open, spewing enemies!',
+    icon: 'chaos', description: 'A dark rift has torn open, spewing enemies!',
     rewardType: 'xp', rewardMultiplier: 3.0,
     enemyCount: 3, color: '#c084fc',
   },
   {
     id: 'bounty_target', name: 'Bounty Target',
-    icon: '🎯', description: 'A wanted criminal has been spotted nearby!',
+    icon: 'target', description: 'A wanted criminal has been spotted nearby!',
     rewardType: 'gold', rewardMultiplier: 2.5,
     enemyCount: 1, color: '#f97316',
   },
   {
     id: 'crystal_formation', name: 'Crystal Formation',
-    icon: '💎', description: 'Rare crystals are growing here... but guarded!',
+    icon: 'crystal', description: 'Rare crystals are growing here... but guarded!',
     rewardType: 'materials', rewardMultiplier: 4.0,
     enemyCount: 2, color: '#22d3ee',
   },
   {
     id: 'ancient_chest', name: 'Ancient Chest',
-    icon: '🗝️', description: 'An ancient chest has surfaced, guarded by spirits.',
+    icon: 'gold', description: 'An ancient chest has surfaced, guarded by spirits.',
     rewardType: 'loot', rewardMultiplier: 3.0,
     enemyCount: 2, color: '#fcd34d',
   },
   {
     id: 'herb_patch', name: 'Rare Herb Patch',
-    icon: '🌿', description: 'Rare healing herbs are blooming, but creatures lurk!',
+    icon: 'nature', description: 'Rare healing herbs are blooming, but creatures lurk!',
     rewardType: 'potions', rewardMultiplier: 2.0,
     enemyCount: 1, color: '#4ade80',
   },
@@ -107,11 +107,11 @@ export function generateRandomEvent(playerLevel, unlockedLocationIds, existingEv
 
 export function getRewardDescription(event) {
   const parts = [];
-  if (event.rewards.gold) parts.push(`💰 ${event.rewards.gold}g`);
-  if (event.rewards.xp) parts.push(`✨ ${event.rewards.xp} XP`);
-  if (event.rewards.bonusLootTier) parts.push('📦 Bonus Loot');
-  if (event.rewards.materials) parts.push(`💎 ${event.rewards.materials} Materials`);
-  if (event.rewards.potions) parts.push(`🧪 ${event.rewards.potions} Potions`);
+  if (event.rewards.gold) parts.push(`${event.rewards.gold}g`);
+  if (event.rewards.xp) parts.push(`${event.rewards.xp} XP`);
+  if (event.rewards.bonusLootTier) parts.push('Bonus Loot');
+  if (event.rewards.materials) parts.push(`${event.rewards.materials} Materials`);
+  if (event.rewards.potions) parts.push(`${event.rewards.potions} Potions`);
   return parts.join('  ');
 }
 

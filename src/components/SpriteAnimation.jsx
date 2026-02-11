@@ -1,4 +1,88 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+
+const EQUIPMENT_OVERLAY_REGIONS = {
+  weapon: { top: '45%', left: '0%', width: '40%', height: '35%', label: 'Weapon' },
+  helmet: { top: '0%', left: '15%', width: '70%', height: '28%', label: 'Helm' },
+  armor: { top: '28%', left: '10%', width: '80%', height: '35%', label: 'Chest' },
+  feet: { top: '75%', left: '10%', width: '80%', height: '25%', label: 'Feet' },
+};
+
+const TIER_OVERLAY_CONFIG = {
+  1: { opacity: 0, pulse: false },
+  2: { opacity: 0.12, pulse: false },
+  3: { opacity: 0.18, pulse: false },
+  4: { opacity: 0.22, pulse: true, pulseSpeed: '3s' },
+  5: { opacity: 0.28, pulse: true, pulseSpeed: '2.5s' },
+  6: { opacity: 0.32, pulse: true, pulseSpeed: '2s' },
+  7: { opacity: 0.38, pulse: true, pulseSpeed: '1.5s' },
+  8: { opacity: 0.44, pulse: true, pulseSpeed: '1.2s' },
+};
+
+let overlayStyleInjected = false;
+function injectOverlayStyles() {
+  if (overlayStyleInjected) return;
+  overlayStyleInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes equipOverlayPulse {
+      0%, 100% { opacity: var(--overlay-base-opacity, 0.2); }
+      50% { opacity: calc(var(--overlay-base-opacity, 0.2) + 0.15); }
+    }
+    @keyframes equipOverlayShimmer {
+      0% { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function EquipmentOverlay({ slot, color, tier, displayWidth, displayHeight }) {
+  const region = EQUIPMENT_OVERLAY_REGIONS[slot];
+  const config = TIER_OVERLAY_CONFIG[tier] || TIER_OVERLAY_CONFIG[1];
+  if (!region || config.opacity <= 0) return null;
+
+  injectOverlayStyles();
+
+  const baseStyle = {
+    position: 'absolute',
+    top: region.top,
+    left: region.left,
+    width: region.width,
+    height: region.height,
+    background: color,
+    mixBlendMode: 'color',
+    pointerEvents: 'none',
+    borderRadius: '30%',
+    '--overlay-base-opacity': config.opacity,
+    opacity: config.opacity,
+  };
+
+  if (config.pulse) {
+    baseStyle.animation = `equipOverlayPulse ${config.pulseSpeed} ease-in-out infinite`;
+  }
+
+  const shimmerStyle = tier >= 5 ? {
+    position: 'absolute',
+    top: region.top,
+    left: region.left,
+    width: region.width,
+    height: region.height,
+    background: `linear-gradient(90deg, transparent 0%, ${color}44 40%, ${color}88 50%, ${color}44 60%, transparent 100%)`,
+    backgroundSize: '200% 100%',
+    mixBlendMode: 'screen',
+    pointerEvents: 'none',
+    borderRadius: '30%',
+    opacity: 0.3,
+    animation: `equipOverlayShimmer ${tier >= 7 ? '1.5s' : '2.5s'} linear infinite`,
+  } : null;
+
+  return (
+    <>
+      <div style={baseStyle} />
+      {shimmerStyle && <div style={shimmerStyle} />}
+    </>
+  );
+}
 
 export default function SpriteAnimation({
   spriteData,
@@ -8,6 +92,7 @@ export default function SpriteAnimation({
   onAnimationEnd = null,
   loop = true,
   speed = 120,
+  equipmentOverlays = null,
 }) {
   const [frame, setFrame] = useState(0);
   const intervalRef = useRef(null);
@@ -56,6 +141,22 @@ export default function SpriteAnimation({
   const tintColor = spriteData?.tint || '';
   const blendMode = spriteData?.blendMode || 'normal';
 
+  const overlayElements = useMemo(() => {
+    if (!equipmentOverlays || !Array.isArray(equipmentOverlays)) return null;
+    return equipmentOverlays
+      .filter(o => o && o.color && o.slot && EQUIPMENT_OVERLAY_REGIONS[o.slot])
+      .map((overlay, i) => (
+        <EquipmentOverlay
+          key={overlay.slot}
+          slot={overlay.slot}
+          color={overlay.color}
+          tier={overlay.tier || 1}
+          displayWidth={displayWidth}
+          displayHeight={displayHeight}
+        />
+      ));
+  }, [equipmentOverlays, displayWidth, displayHeight]);
+
   return (
     <div style={{
       width: displayWidth,
@@ -89,6 +190,34 @@ export default function SpriteAnimation({
           pointerEvents: 'none',
         }} />
       )}
+      {overlayElements}
     </div>
   );
+}
+
+export function buildEquipmentOverlays(hero, TIERS) {
+  if (!hero?.equipment || !TIERS) return null;
+  const overlays = [];
+  const slotMapping = {
+    weapon: 'weapon',
+    helmet: 'helmet',
+    armor: 'armor',
+    feet: 'feet',
+  };
+
+  for (const [eqSlot, overlaySlot] of Object.entries(slotMapping)) {
+    const item = hero.equipment[eqSlot];
+    if (item && item.tier && item.tier >= 2) {
+      const tierInfo = TIERS[item.tier];
+      if (tierInfo) {
+        overlays.push({
+          slot: overlaySlot,
+          color: tierInfo.color,
+          tier: item.tier,
+        });
+      }
+    }
+  }
+
+  return overlays.length > 0 ? overlays : null;
 }
