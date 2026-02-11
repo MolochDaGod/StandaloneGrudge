@@ -7,5 +7,6 @@ dependencies = [
     "node==1.2.2",
     "nodeenv==1.9.1",
     "pillow>=12.1.0",
-    "spriteworld",
+    "pygame-spritesheet>=0.2.0",
+    "spriteworld>=1.0.2",
 ]
