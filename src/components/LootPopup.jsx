@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useGameStore from '../stores/gameStore';
 import { TIERS, WEAPON_TYPES, ARMOR_TYPES } from '../data/equipment';
 
@@ -6,6 +6,18 @@ export default function LootPopup() {
   const pendingLoot = useGameStore(s => s.pendingLoot);
   const clearPendingLoot = useGameStore(s => s.clearPendingLoot);
   const discardPendingLoot = useGameStore(s => s.discardPendingLoot);
+
+  useEffect(() => {
+    if (!pendingLoot || pendingLoot.length === 0) return;
+    const handler = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        clearPendingLoot();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [pendingLoot, clearPendingLoot]);
 
   if (!pendingLoot || pendingLoot.length === 0) return null;
 
@@ -74,7 +86,7 @@ export default function LootPopup() {
               fontFamily: "'Cinzel', serif", fontWeight: 'bold', cursor: 'pointer',
             }}
           >
-            Take All
+            Take All <span style={{ fontSize: '0.6rem', opacity: 0.6, marginLeft: 4 }}>[Space]</span>
           </button>
           <button
             onClick={discardPendingLoot}

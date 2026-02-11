@@ -1759,9 +1759,29 @@ export default function BattleScreen() {
   }, [healTargetMode, useAbility]);
 
   useEffect(() => {
-    if (phase !== 'player_turn') return;
     const handleKey = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') {
+        const loot = useGameStore.getState().pendingLoot;
+        if (loot && loot.length > 0) {
+          e.preventDefault();
+          useGameStore.getState().clearPendingLoot();
+          return;
+        }
+        if (phase === 'victory' || phase === 'defeat') {
+          e.preventDefault();
+          if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+          else returnToWorld();
+          return;
+        }
+        if (phase === 'missionRoundComplete') {
+          e.preventDefault();
+          useGameStore.getState().advanceMissionRound();
+          return;
+        }
+        return;
+      }
+      if (phase !== 'player_turn') return;
       const num = parseInt(e.key);
       if (healTargetMode) {
         const aliveAllies = playerTeam.filter(u => u.alive);
@@ -1783,7 +1803,7 @@ export default function BattleScreen() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam]);
+  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam, battleState, returnToWorld, returnFromTraining]);
 
   if (!battleState || battleUnits.length === 0) return null;
 
@@ -1862,7 +1882,7 @@ export default function BattleScreen() {
                 border: '1px solid #c084fc', borderRadius: 8,
                 padding: '3px 10px', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700,
                 animation: 'glow 2s infinite',
-              }}>Next Round</button>
+              }}>Next Round <span style={{ opacity: 0.5, fontSize: '0.5rem' }}>[Space]</span></button>
             )}
             {(isVictory || isDefeat) && (
               <button onClick={() => {
@@ -1871,7 +1891,7 @@ export default function BattleScreen() {
               }} style={{
                 background: 'var(--border)', border: 'none', borderRadius: 8,
                 padding: '3px 10px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.65rem'
-              }}>Return</button>
+              }}>Return <span style={{ opacity: 0.5, fontSize: '0.5rem' }}>[Space]</span></button>
             )}
           </div>
         </div>
@@ -2296,6 +2316,7 @@ export default function BattleScreen() {
                 fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem'
               }}>
                 {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
+                <span style={{ fontSize: '0.55rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
               </button>
             </div>
           </div>
