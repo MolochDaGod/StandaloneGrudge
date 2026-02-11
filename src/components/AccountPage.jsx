@@ -1092,7 +1092,7 @@ function HeroDetailPanel({ hero, onClose }) {
                     const pct = maxPts > 0 ? (pts / maxPts) * 100 : 0;
                     return (
                       <div key={attr} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.5rem', color: def.color, fontWeight: 600 }}>{def.icon}</div>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><img src={def.icon} alt={attr} style={{ width: 16, height: 16, imageRendering: 'pixelated' }} /></div>
                         <div style={{ height: 3, background: 'rgba(0,0,0,0.4)', borderRadius: 2, overflow: 'hidden', margin: '1px 0' }}>
                           <div style={{ height: '100%', width: `${pct}%`, background: def.color, borderRadius: 2 }} />
                         </div>
@@ -1505,7 +1505,7 @@ function HeroDetailPanel({ hero, onClose }) {
                 <div key={attr} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <span style={{ fontWeight: 600, fontSize: '0.8rem', color: def.color }}>
-                      {def.icon} {attr}
+                      <img src={def.icon} alt={attr} style={{ width: 20, height: 20, imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: 4 }} />{attr}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <button onClick={() => deallocateHeroPoint(hero.id, attr)} disabled={val <= 0} style={{

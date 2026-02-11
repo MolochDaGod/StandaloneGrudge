@@ -394,7 +394,7 @@ export default function CharacterCreate() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                      {def.icon} {name}
+                      <img src={def.icon} alt={name} style={{ width: 22, height: 22, imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: 4 }} />{name}
                     </span>
                     <span style={{ fontFamily: 'monospace', fontSize: '1.05rem' }}>
                       <span style={{ color: 'var(--muted)' }}>{base}</span>

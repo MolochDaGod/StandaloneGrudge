@@ -8,7 +8,7 @@ export const attributeDefinitions = {
     description: "Physical might and raw power.",
     fullDescription: "Increases raw damage output, physical defense, and health. Warriors and melee builds scale heavily with Strength.",
     color: '#ef4444',
-    icon: '💪',
+    icon: '/images/attributes/strength.png',
     gains: {
       health: { label: "Health", value: 5 },
       physicalDamage: { label: "Physical Damage", value: 1.25 },
@@ -27,7 +27,7 @@ export const attributeDefinitions = {
     description: "Mental acuity and spellcasting power.",
     fullDescription: "Powers magical damage, mana regeneration, and ability cooldown reduction. Casters scale directly with Intellect.",
     color: '#3b82f6',
-    icon: '🧠',
+    icon: '/images/attributes/intellect.png',
     gains: {
       mana: { label: "Mana Pool", value: 9 },
       magicDamage: { label: "Magic Damage", value: 1.5 },
@@ -45,7 +45,7 @@ export const attributeDefinitions = {
     description: "Physical endurance and life force.",
     fullDescription: "Maximizes health pool and provides passive health regeneration. Vital for tanks and sustained damage builds.",
     color: '#22c55e',
-    icon: '❤️',
+    icon: '/images/attributes/vitality.png',
     gains: {
       health: { label: "Health", value: 25 },
       defense: { label: "Physical Defense", value: 1.5 },
@@ -62,7 +62,7 @@ export const attributeDefinitions = {
     description: "Hand-eye coordination and finesse.",
     fullDescription: "Dominates critical chance, attack speed, and accuracy. Rogues and archers scale with Dexterity.",
     color: '#f59e0b',
-    icon: '🎯',
+    icon: '/images/attributes/dexterity.png',
     gains: {
       physicalDamage: { label: "Physical Damage", value: 0.9 },
       criticalChance: { label: "Critical Chance", value: 0.3 },
@@ -80,7 +80,7 @@ export const attributeDefinitions = {
     description: "Stamina reserves and physical resistance.",
     fullDescription: "Builds stamina for abilities and provides armor scaling. High Endurance enables higher block effectiveness.",
     color: '#6b7280',
-    icon: '🛡️',
+    icon: '/images/attributes/endurance.png',
     gains: {
       stamina: { label: "Stamina", value: 6 },
       defense: { label: "Physical Defense", value: 5 },
@@ -98,7 +98,7 @@ export const attributeDefinitions = {
     description: "Mental fortitude and magical resilience.",
     fullDescription: "Primary counter to magical damage. Scales resistance and provides magic immunity scaling.",
     color: '#a855f7',
-    icon: '🔮',
+    icon: '/images/attributes/wisdom.png',
     gains: {
       mana: { label: "Mana Pool", value: 6 },
       magicDamage: { label: "Magic Damage", value: 0.8 },
@@ -117,7 +117,7 @@ export const attributeDefinitions = {
     description: "Speed, reflexes, and positioning.",
     fullDescription: "Increases movement speed, dodge chance, and evasion. Synergizes with high-risk playstyles.",
     color: '#06b6d4',
-    icon: '⚡',
+    icon: '/images/attributes/agility.png',
     gains: {
       movementSpeed: { label: "Movement Speed", value: 0.15 },
       evasion: { label: "Evasion Chance", value: 0.225 },
@@ -134,7 +134,7 @@ export const attributeDefinitions = {
     description: "Strategic thinking and ability control.",
     fullDescription: "Expertise in ability execution and resource management. Grants scaling bonus to all stats based on invested points.",
     color: '#64748b',
-    icon: '🎲',
+    icon: '/images/attributes/tactics.png',
     gains: {
       stamina: { label: "Stamina", value: 3 },
       abilityCost: { label: "Ability Cost Reduction", value: 0.075 },

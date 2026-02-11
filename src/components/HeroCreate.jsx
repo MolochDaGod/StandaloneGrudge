@@ -259,7 +259,7 @@ export default function HeroCreate() {
                       display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
                       background: 'rgba(42,49,80,0.3)', borderRadius: 8, padding: '6px 10px',
                     }}>
-                      <span style={{ fontSize: '1rem' }}>{def.icon}</span>
+                      <img src={def.icon} alt={attr} style={{ width: 24, height: 24, imageRendering: 'pixelated' }} />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text)', fontWeight: 600 }}>{attr}</div>
                         <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>{def.description}</div>

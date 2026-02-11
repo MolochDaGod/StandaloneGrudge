@@ -137,7 +137,7 @@ export default function CharacterSheet() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem', color: def.color }}>
-                  {def.icon} {name}
+                  <img src={def.icon} alt={name} style={{ width: 20, height: 20, imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: 4 }} />{name}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button onClick={() => deallocatePoint(name)} disabled={attributePoints[name] <= 0} style={{

@@ -186,7 +186,7 @@ export default function TrainingScreen() {
                       }}>
                         <div>
                           <div style={{ color: 'var(--text)', fontSize: '0.8rem', fontWeight: 600 }}>
-                            {attr.icon} {attrName}
+                            <img src={attr.icon} alt={attrName} style={{ width: 20, height: 20, imageRendering: 'pixelated', verticalAlign: 'middle', marginRight: 4 }} />{attrName}
                           </div>
                           <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>{attr.description}</div>
                         </div>
