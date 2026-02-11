@@ -3,6 +3,7 @@ import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { InlineIcon } from '../data/uiSprites.jsx';
+import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
@@ -429,7 +430,7 @@ export default function MapBottomBar({
             maxWidth: 480,
           }}>
             {buttons.map(btn => (
-              <button key={btn.id} onClick={btn.action} title={btn.label} style={{
+              <button key={btn.id} onClick={btn.action} style={{
                 background: 'rgba(0,0,0,0.35)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: 6,
@@ -441,8 +442,9 @@ export default function MapBottomBar({
                 position: 'relative',
                 animation: btn.pulse ? 'glow 2s infinite' : 'none',
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
                 <InlineIcon name={btn.icon} size={18} />
                 <span style={{ fontSize: '0.45rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif" }}>{btn.label}</span>
@@ -470,7 +472,7 @@ export default function MapBottomBar({
             display: 'flex', gap: 6,
           }}>
             {popupButtons.map(pb => (
-              <button key={pb.id} onClick={() => togglePopup(pb.id)} title={pb.label} style={{
+              <button key={pb.id} onClick={() => togglePopup(pb.id)} style={{
                 width: 30, height: 30, borderRadius: '50%',
                 background: pb.active ? 'rgba(255,215,0,0.25)' : 'rgba(20,24,48,0.9)',
                 border: `2px solid ${pb.active ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
@@ -479,8 +481,9 @@ export default function MapBottomBar({
                 transition: 'all 0.15s',
                 boxShadow: pb.active ? '0 0 10px rgba(255,215,0,0.3)' : 'none',
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.3)'; }}
-                onMouseLeave={e => { if (!pb.active) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.boxShadow = 'none'; } }}
+                onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.3)'; }}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={e => { hideTooltip(); if (!pb.active) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.boxShadow = 'none'; } }}
               >
                 <InlineIcon name={pb.icon} size={14} />
               </button>

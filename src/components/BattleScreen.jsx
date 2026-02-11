@@ -10,6 +10,7 @@ import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIco
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
+import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -3001,7 +3002,6 @@ export default function BattleScreen() {
                     <button
                       disabled={!canForward}
                       onClick={() => canForward && moveRow('forward')}
-                      title={forwardRow ? `Move to ${forwardRow.name}` : ''}
                       style={{
                         width: 32, height: 32, borderRadius: 4,
                         background: canForward ? 'rgba(59,130,246,0.3)' : 'rgba(40,40,50,0.3)',
@@ -3012,8 +3012,9 @@ export default function BattleScreen() {
                         alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.15s', opacity: canForward ? 1 : 0.4,
                       }}
-                      onMouseEnter={e => { if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.5)'; }}
-                      onMouseLeave={e => { if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.3)'; }}
+                      onMouseEnter={e => { if (forwardRow) showTooltip(`Move to ${forwardRow.name}`, e); if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.5)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.3)'; }}
                     >{'\u25C0'}</button>
                     <div style={{
                       background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(212,169,106,0.3)',
@@ -3046,7 +3047,6 @@ export default function BattleScreen() {
                     <button
                       disabled={!canBack}
                       onClick={() => canBack && moveRow('back')}
-                      title={backRow ? `Move to ${backRow.name}` : ''}
                       style={{
                         width: 32, height: 32, borderRadius: 4,
                         background: canBack ? 'rgba(245,158,11,0.3)' : 'rgba(40,40,50,0.3)',
@@ -3057,8 +3057,9 @@ export default function BattleScreen() {
                         alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.15s', opacity: canBack ? 1 : 0.4,
                       }}
-                      onMouseEnter={e => { if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.5)'; }}
-                      onMouseLeave={e => { if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.3)'; }}
+                      onMouseEnter={e => { if (backRow) showTooltip(`Move to ${backRow.name}`, e); if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.5)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.3)'; }}
                     >{'\u25B6'}</button>
                   </div>
                 );
@@ -3157,7 +3158,6 @@ export default function BattleScreen() {
                           setShowItemsPanel(false);
                         }
                       }}
-                      title={disabled ? 'No fallen allies to revive' : group.description}
                       style={{
                         background: disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.1)',
                         border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
@@ -3166,8 +3166,9 @@ export default function BattleScreen() {
                         fontSize: '0.65rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                         transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
                       }}
-                      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
-                      onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
+                      onMouseEnter={e => { showTooltip(disabled ? 'No fallen allies to revive' : group.description, e); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
                       >
                         <InlineIcon name={group.icon} size={14} />
                         <span>{group.name}</span>
@@ -3263,7 +3264,6 @@ export default function BattleScreen() {
                   const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
-                      title={`${ability.description}\n${ability.manaCost ? `MP: ${ability.manaCost}` : ''}${ability.staminaCost ? `SP: ${ability.staminaCost}` : ''}${ability.manaGain ? `+${ability.manaGain} MP` : ''}${ability.staminaGain ? ` +${ability.staminaGain} SP` : ''}`}
                       style={{
                         backgroundImage: disabled ? 'none' : `url(${UI_SLOTS.hotbar})`,
                         backgroundSize: 'cover', imageRendering: 'pixelated',
@@ -3276,8 +3276,9 @@ export default function BattleScreen() {
                         transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
                         position: 'relative',
                       }}
-                      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = '#d4a96a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
-                      onMouseLeave={e => { if (!disabled) { e.currentTarget.style.borderColor = '#8b7355'; e.currentTarget.style.transform = 'none'; }}}
+                      onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.style.borderColor = '#d4a96a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); if (!disabled) { e.currentTarget.style.borderColor = '#8b7355'; e.currentTarget.style.transform = 'none'; }}}
                     >
                       <div style={{
                         position: 'absolute', top: -5, left: -5,

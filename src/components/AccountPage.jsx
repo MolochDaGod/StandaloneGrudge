@@ -12,6 +12,7 @@ import { getPlayerSprite } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 import AbilityIcon from './AbilityIcon';
+import { useTooltip, showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
@@ -406,7 +407,6 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                     return (
                       <div key={ab.id}
                         onClick={() => !isCurrent && handleSlotSelect(idx, ab.id)}
-                        title={`${ab.name}\n${ab.description}${bearAlt ? `\nBear: ${bearAlt.name} — ${bearAlt.description}` : ''}`}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 3,
                           background: isCurrent ? 'rgba(110,231,183,0.12)' : 'rgba(42,49,80,0.3)',
@@ -416,8 +416,9 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                           transition: 'all 0.1s',
                           opacity: isCurrent ? 1 : 0.8,
                         }}
-                        onMouseEnter={e => { if (!isCurrent) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = cls?.color || 'var(--accent)'; } }}
-                        onMouseLeave={e => { if (!isCurrent) { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.borderColor = 'rgba(60,65,90,0.4)'; } }}
+                        onMouseEnter={e => { showTooltip(`${ab.name}\n${ab.description}${bearAlt ? `\nBear: ${bearAlt.name} — ${bearAlt.description}` : ''}`, e); if (!isCurrent) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = cls?.color || 'var(--accent)'; } }}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); if (!isCurrent) { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.borderColor = 'rgba(60,65,90,0.4)'; } }}
                       >
                         <InlineIcon name={ab.icon} size={14} style={{ flexShrink: 0 }} />
                         <div style={{ minWidth: 0 }}>
@@ -979,9 +980,9 @@ function HeroDetailPanel({ hero, onClose }) {
                                     setSelectedItemId(item.id);
                                   }
                                 }}
-                                onMouseEnter={() => item && setHoveredItemId(item.id)}
-                                onMouseLeave={() => item && setHoveredItemId(null)}
-                                title={item ? `${item.name}${item.tier ? ` (T${item.tier})` : ''}` : 'Empty'}
+                                onMouseEnter={e => { if (item) { setHoveredItemId(item.id); showTooltip(`${item.name}${item.tier ? ` (Tier ${item.tier})` : ''}\n${TIERS[item.tier]?.name || ''}\nSlot: ${item.slot}${item.stats ? '\n' + Object.entries(item.stats).map(([k,v]) => `${k}: +${v}`).join(', ') : ''}`, e); } }}
+                                onMouseMove={e => { if (item) updateTooltipPosition(e); }}
+                                onMouseLeave={() => { if (item) { setHoveredItemId(null); hideTooltip(); } }}
                                 style={{
                                   aspectRatio: '1',
                                   background: isSelected ? 'rgba(180,160,100,0.25)' : 'rgba(60,48,30,0.6)',

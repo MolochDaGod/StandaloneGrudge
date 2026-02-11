@@ -17,6 +17,7 @@ import { generateRandomEvent, getRewardDescription } from '../data/randomEvents'
 import { encodeGrudaShare, generateShareUrl, generateShareCode } from '../utils/grudaShare';
 import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverStyle, nodeScale as calcNodeScale } from './mapConstants';
 import { InlineIcon, getIconSrc } from '../data/uiSprites';
+import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -3162,7 +3163,6 @@ export default function WorldMap() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               onClick={() => setScreen('account')}
-              title="War Council"
               style={{
                 width: 44, height: 44, borderRadius: 10, cursor: 'pointer',
                 background: 'rgba(0,0,0,0.4)',
@@ -3172,8 +3172,9 @@ export default function WorldMap() {
                 transition: 'all 0.2s',
                 boxShadow: '0 0 12px rgba(255,215,0,0.1)',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 18px rgba(255,215,0,0.3)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,215,0,0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.1)'; }}
+              onMouseEnter={e => { showTooltip('War Council', e); e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 18px rgba(255,215,0,0.3)'; }}
+              onMouseMove={e => updateTooltipPosition(e)}
+              onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = 'rgba(255,215,0,0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.1)'; }}
             >
               <img src="/images/logo.png" alt="Grudge Warlords" style={{
                 width: 36, height: 36, objectFit: 'contain',

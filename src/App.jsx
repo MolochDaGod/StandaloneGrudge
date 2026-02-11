@@ -25,6 +25,7 @@ import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
 import AdminGizmo from './components/AdminGizmo';
 import { FrameMaskLayer } from './components/FrameEditor';
+import GameTooltipRenderer from './components/GameTooltip';
 
 function GameApp() {
   const screen = useGameStore(s => s.screen);
@@ -120,6 +121,7 @@ function GameApp() {
           {renderScreen()}
         </div>
         <FrameMaskLayer />
+        <GameTooltipRenderer />
         <SettingsMenu />
         <AdminGizmo />
         {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
