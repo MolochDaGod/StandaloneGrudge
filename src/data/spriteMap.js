@@ -68,6 +68,17 @@ const spriteSheets = {
     jump: { src: '/sprites/barbarian-mage/Wizard Pack/Jump.png', frames: 2 },
     fall: { src: '/sprites/barbarian-mage/Wizard Pack/Fall.png', frames: 2 },
   },
+  'hero-knight': {
+    folder: 'heroes/elf_warrior',
+    idle: { src: '/sprites/heroes/elf_warrior/Idle.png', frames: 11 },
+    attack1: { src: '/sprites/heroes/elf_warrior/Attack1.png', frames: 7 },
+    attack2: { src: '/sprites/heroes/elf_warrior/Attack2.png', frames: 7 },
+    hurt: { src: '/sprites/heroes/elf_warrior/Take Hit.png', frames: 4 },
+    death: { src: '/sprites/heroes/elf_warrior/Death.png', frames: 9 },
+    walk: { src: '/sprites/heroes/elf_warrior/Run.png', frames: 8 },
+    jump: { src: '/sprites/heroes/elf_warrior/Jump.png', frames: 3 },
+    fall: { src: '/sprites/heroes/elf_warrior/Fall.png', frames: 3 },
+  },
   archer: classSpriteMap.ranger,
   'human-ranger': {
     folder: 'human-ranger',
@@ -341,7 +352,7 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets['armored-orc'],
   },
   elf: {
-    warrior: spriteSheets.swordsman,
+    warrior: spriteSheets['hero-knight'],
     mage: spriteSheets.wizard,
     worge: { ...spriteSheets.priest, filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.1)' },
     ranger: spriteSheets['elf-ranger'],
@@ -353,7 +364,7 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets['skeleton-archer'],
   },
   barbarian: {
-    warrior: spriteSheets['barbarian-warrior'],
+    warrior: { ...spriteSheets['hero-knight'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)' },
     mage: spriteSheets['barbarian-mage'],
     worge: spriteSheets.soldier,
     ranger: spriteSheets['barbarian-ranger'],
