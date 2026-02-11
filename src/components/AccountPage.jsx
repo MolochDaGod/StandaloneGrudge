@@ -79,6 +79,18 @@ function MiniBar({ current, max, color, height = 6, label }) {
   );
 }
 
+function getCardScale(spriteData) {
+  const fw = spriteData?.frameWidth || 100;
+  const fh = spriteData?.frameHeight || 100;
+  const maxDim = Math.max(fw, fh);
+  const targetPx = 160;
+  const base = targetPx / maxDim;
+  const folder = spriteData?.folder || '';
+  if (folder === 'human-ranger') return base * 1.25;
+  if (folder === 'necromancer') return base * 0.85;
+  return Math.min(Math.max(base, 0.7), 2.2);
+}
+
 function HeroCard({ hero, isSelected, onClick, isActive }) {
   const cls = classDefinitions[hero.classId];
   const race = hero.raceId ? raceDefinitions[hero.raceId] : null;
@@ -87,6 +99,8 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const hasPoints = (hero.unspentPoints || 0) > 0 || (hero.skillPoints || 0) > 0;
 
   const classBg = CLASS_BG[hero.classId] || CLASS_BG.warrior;
+  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+  const cardScale = getCardScale(spriteData);
 
   return (
     <div onClick={onClick} style={{
@@ -120,15 +134,15 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: isActive ? 12 : 0, position: 'relative', minHeight: 260 }}>
         <div style={{
-          width: '100%', height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative',
+          width: '100%', height: 220, position: 'relative',
         }}>
           <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 80,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
             transition: 'filter 0.3s',
-            marginTop: 20,
           }}>
-            <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3.2} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
+            <SpriteAnimation spriteData={spriteData} animation="idle" scale={cardScale} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
           </div>
 
           <div style={{
@@ -498,7 +512,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={3} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
