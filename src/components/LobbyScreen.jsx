@@ -71,10 +71,18 @@ export default function LobbyScreen() {
       transition: 'opacity 0.5s ease',
     }}>
       <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'url(/backgrounds/tavern_bg.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        zIndex: 0,
+      }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0 }} />
+      <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '12px 24px',
         background: 'rgba(0,0,0,0.6)',
         borderBottom: '1px solid rgba(110,231,183,0.1)',
+        position: 'relative', zIndex: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="font-cinzel" style={{
@@ -103,6 +111,7 @@ export default function LobbyScreen() {
 
       <div style={{
         display: 'flex', flex: 1, overflow: 'hidden',
+        position: 'relative', zIndex: 1,
       }}>
         <div style={{
           width: 200,

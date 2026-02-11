@@ -8,10 +8,10 @@ import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 
 const TRADER_NODES = [
-  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon' },
-  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor' },
-  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable' },
-  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory' },
+  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/images/buildings/weapons_shop.png' },
+  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor', img: '/images/buildings/armor_shop.png' },
+  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable', img: '/images/buildings/potions_shop.png' },
+  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory', img: '/images/buildings/relics_shop.png' },
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -112,18 +112,19 @@ export default function TradingPostScene() {
           transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: 15, textAlign: 'center',
         }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 10,
-            background: `radial-gradient(circle, ${trader.color}40, ${trader.color}15)`,
-            border: `2px solid ${trader.color}`,
+            width: 76, height: 76, borderRadius: 10,
+            background: `radial-gradient(circle, ${trader.color}25, rgba(0,0,0,0.3))`,
+            border: `2px solid ${trader.color}80`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.4rem', boxShadow: `0 0 14px ${trader.color}50`,
+            boxShadow: `0 0 16px ${trader.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
             animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
+            overflow: 'hidden',
           }}>
-            <InlineIcon name={trader.icon} />
+            <img src={trader.img} alt={trader.name} style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'auto' }} />
           </div>
-          <div style={{
-            color: trader.color, fontSize: '0.55rem', fontWeight: 700, marginTop: 2,
-            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+          <div className="font-cinzel" style={{
+            color: trader.color, fontSize: '0.9rem', fontWeight: 700, marginTop: 4,
+            textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
           }}>{trader.name}</div>
         </div>
       ))}

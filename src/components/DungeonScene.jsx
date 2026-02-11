@@ -159,23 +159,24 @@ export default function DungeonScene() {
             zIndex: 15, textAlign: 'center', opacity: isLocked ? 0.4 : 1,
           }}>
             <div style={{
-              width: node.type === 'boss' ? 52 : 40, height: node.type === 'boss' ? 52 : 40,
-              borderRadius: node.type === 'boss' ? 8 : '50%',
+              width: node.type === 'boss' ? 80 : 68, height: node.type === 'boss' ? 80 : 68,
+              borderRadius: 10,
               background: isCompleted
-                ? 'rgba(110,231,183,0.2)'
-                : `radial-gradient(circle, ${nodeColor}40, ${nodeColor}15)`,
-              border: `2px solid ${isCompleted ? '#6ee7b3' : nodeColor}`,
+                ? 'rgba(110,231,183,0.15)'
+                : `radial-gradient(circle, ${nodeColor}25, rgba(0,0,0,0.3))`,
+              border: `2px solid ${isCompleted ? '#6ee7b3' : nodeColor}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: node.type === 'boss' ? '1.3rem' : '1rem',
-              boxShadow: isCurrent ? `0 0 16px ${nodeColor}60` : 'none',
+              boxShadow: isCurrent ? `0 0 20px ${nodeColor}60, inset 0 0 20px rgba(0,0,0,0.3)` : 'inset 0 0 20px rgba(0,0,0,0.3)',
               animation: isCurrent ? 'pulse 2s infinite' : 'none',
+              overflow: 'hidden',
+              filter: isCompleted ? 'grayscale(0.5)' : isLocked ? 'grayscale(0.8)' : 'none',
             }}>
-              {isCompleted ? '✓' : node.type === 'boss' ? <InlineIcon name="skull" size={12} /> : node.type === 'elite' ? <InlineIcon name="battle" size={12} /> : <InlineIcon name="bomb" size={12} />}
+              {isCompleted ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={node.type === 'boss' ? '/images/buildings/boss_lair.png' : '/images/buildings/dungeon_gate.png'} alt={node.name} style={{ width: node.type === 'boss' ? 68 : 56, height: node.type === 'boss' ? 68 : 56, objectFit: 'contain', imageRendering: 'auto' }} />}
             </div>
-            <div style={{
+            <div className="font-cinzel" style={{
               color: isCompleted ? '#6ee7b3' : nodeColor,
-              fontSize: '0.5rem', fontWeight: 700, marginTop: 2,
-              textShadow: '0 1px 4px rgba(0,0,0,0.9)', whiteSpace: 'nowrap',
+              fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${nodeColor}40`, whiteSpace: 'nowrap',
             }}>
               {node.name}
             </div>

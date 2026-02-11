@@ -7,10 +7,10 @@ import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 
 const FIELD_EVENTS = [
-  { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444' },
-  { id: 'chest', name: 'Treasure Chest', icon: 'gift', x: 30, y: 35, type: 'loot', color: '#fbbf24' },
-  { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3' },
-  { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316' },
+  { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/buildings/enemy_patrol.png' },
+  { id: 'chest', name: 'Treasure Chest', icon: 'gift', x: 30, y: 35, type: 'loot', color: '#fbbf24', img: '/images/buildings/treasure_chest.png' },
+  { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3', img: '/images/buildings/healing_shrine.png' },
+  { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316', img: '/images/buildings/campfire.png' },
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -124,22 +124,23 @@ export default function OpenFieldScene() {
             transition: 'opacity 0.3s',
           }}>
             <div style={{
-              width: 44, height: 44, borderRadius: '50%',
+              width: 72, height: 72, borderRadius: 10,
               background: done
                 ? 'rgba(100,100,100,0.2)'
-                : `radial-gradient(circle, ${evt.color}40, ${evt.color}15)`,
-              border: `2px solid ${done ? '#555' : evt.color}`,
+                : `radial-gradient(circle, ${evt.color}25, rgba(0,0,0,0.3))`,
+              border: `2px solid ${done ? '#555' : evt.color}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.2rem',
-              boxShadow: !done ? `0 0 12px ${evt.color}40` : 'none',
+              boxShadow: !done ? `0 0 16px ${evt.color}40, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
               animation: !done ? 'pulse 2s infinite' : 'none',
+              overflow: 'hidden',
+              filter: done ? 'grayscale(0.8)' : 'none',
             }}>
-              {done ? '✓' : <InlineIcon name={evt.icon} />}
+              {done ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={evt.img} alt={evt.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />}
             </div>
-            <div style={{
+            <div className="font-cinzel" style={{
               color: done ? '#666' : evt.color,
-              fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
-              textShadow: '0 1px 4px rgba(0,0,0,0.9)', whiteSpace: 'nowrap',
+              fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${evt.color}40`, whiteSpace: 'nowrap',
             }}>
               {evt.name}
             </div>
@@ -198,9 +199,9 @@ export default function OpenFieldScene() {
         }}>
           <InlineIcon name="portal" />
         </div>
-        <div style={{
-          color: '#6ee7b3', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,
-          textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+        <div className="font-cinzel" style={{
+          color: '#6ee7b3', fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+          textShadow: '0 2px 6px rgba(0,0,0,0.95), 0 0 10px rgba(110,231,183,0.4)',
         }}>Return</div>
       </div>
     </div>

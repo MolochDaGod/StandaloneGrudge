@@ -7,11 +7,11 @@ import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 
 const RESOURCE_NODES = [
-  { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24' },
-  { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', x: 72, y: 28, color: '#4ade80' },
-  { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', x: 12, y: 58, color: '#a3764a' },
-  { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', x: 80, y: 55, color: '#94a3b8' },
-  { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', x: 50, y: 22, color: '#a78bfa' },
+  { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24', img: '/images/buildings/gold_mine.png' },
+  { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', x: 72, y: 28, color: '#4ade80', img: '/images/buildings/herb_garden.png' },
+  { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', x: 12, y: 58, color: '#a3764a', img: '/images/buildings/lumber_yard.png' },
+  { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', x: 80, y: 55, color: '#94a3b8', img: '/images/buildings/ore_vein.png' },
+  { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', x: 50, y: 22, color: '#a78bfa', img: '/images/buildings/crystal_cave.png' },
 ];
 
 const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
@@ -138,18 +138,19 @@ export default function CampScene() {
             textAlign: 'center',
           }}>
             <div style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: `radial-gradient(circle, ${node.color}40, ${node.color}15)`,
-              border: `2px solid ${node.color}`,
+              width: 72, height: 72, borderRadius: 10,
+              background: `radial-gradient(circle, ${node.color}25, rgba(0,0,0,0.3))`,
+              border: `2px solid ${node.color}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.2rem', boxShadow: `0 0 12px ${node.color}60`,
+              boxShadow: `0 0 16px ${node.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
               animation: assignedHero ? 'pulse 2s infinite' : 'none',
+              overflow: 'hidden',
             }}>
-              <InlineIcon name={node.icon} />
+              <img src={node.img} alt={node.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
-            <div style={{
-              color: node.color, fontSize: '0.5rem', fontWeight: 700, marginTop: 2,
-              textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            <div className="font-cinzel" style={{
+              color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`,
               whiteSpace: 'nowrap',
             }}>
               {node.name}

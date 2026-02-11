@@ -20,6 +20,7 @@ import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
 import SceneView from './components/SceneView';
+import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
 import AdminGizmo from './components/AdminGizmo';
@@ -52,6 +53,8 @@ function GameApp() {
     const prev = prevScreenRef.current;
     if (screen !== prev) {
       const needsTransition = (
+        (prev === 'title' && screen === 'intro') ||
+        (prev === 'intro' && screen === 'lobby') ||
         (prev === 'title' && screen === 'lobby') ||
         (prev === 'lobby' && screen === 'create') ||
         (prev === 'title' && screen === 'create') ||
@@ -80,13 +83,14 @@ function GameApp() {
     );
   }
 
-  const screensWithOwnBackground = ['world', 'battle', 'location', 'scene'];
+  const screensWithOwnBackground = ['world', 'battle', 'location', 'scene', 'intro'];
   const bgVisible = !screensWithOwnBackground.includes(screen);
-  const bgBlurred = screen !== 'title' && screen !== 'lobby';
+  const bgBlurred = screen !== 'title' && screen !== 'lobby' && screen !== 'intro';
 
   const renderScreen = () => {
     switch (screen) {
       case 'title': return <TitleScreen />;
+      case 'intro': return <IntroCinematic />;
       case 'lobby': return <LobbyScreen />;
       case 'create': return <CharacterCreate />;
       case 'world': return <WorldMap />;

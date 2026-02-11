@@ -353,24 +353,24 @@ export default function PortalScene() {
           zIndex: 15, textAlign: 'center',
         }}>
           <div style={{
-            width: 48, height: 48, borderRadius: node.id.includes('dungeon') ? 8 : '50%',
-            background: `radial-gradient(circle, ${node.color}50, ${node.color}15)`,
-            border: `2px solid ${node.color}`,
+            width: 72, height: 72, borderRadius: 10,
+            background: `radial-gradient(circle, ${node.color}30, rgba(0,0,0,0.3))`,
+            border: `2px solid ${node.color}80`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.3rem',
-            boxShadow: `0 0 20px ${node.color}50`,
+            fontSize: '1.6rem',
+            boxShadow: `0 0 20px ${node.color}50, inset 0 0 20px rgba(0,0,0,0.3)`,
             animation: 'pulse 2s infinite',
           }}>
             <InlineIcon name={node.icon} />
           </div>
-          <div style={{
-            color: node.color, fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
-            textShadow: '0 1px 4px rgba(0,0,0,0.9)', whiteSpace: 'nowrap',
+          <div className="font-cinzel" style={{
+            color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+            textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`, whiteSpace: 'nowrap',
           }}>
             {node.name}
           </div>
           <div style={{
-            color: '#94a3b8', fontSize: '0.35rem', whiteSpace: 'nowrap',
+            color: '#94a3b8', fontSize: '0.55rem', whiteSpace: 'nowrap',
             textShadow: '0 1px 3px rgba(0,0,0,0.8)',
           }}>
             {node.description}

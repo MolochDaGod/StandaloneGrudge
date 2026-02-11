@@ -20,7 +20,7 @@ export default function TitleScreen() {
       loginTime: Date.now(),
     };
     localStorage.setItem('grudge-session', JSON.stringify(session));
-    setScreen('lobby');
+    setScreen('intro');
   };
 
   return (
