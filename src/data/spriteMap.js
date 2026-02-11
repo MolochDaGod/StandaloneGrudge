@@ -5,6 +5,8 @@ export const classSpriteMap = {
     attack1: { src: '/sprites/knight/attack1.png', frames: 7 },
     attack2: { src: '/sprites/knight/attack2.png', frames: 10 },
     attack3: { src: '/sprites/knight/attack3.png', frames: 11 },
+    attack3_effect: { src: '/sprites/knight/attack3_effect.png', frames: 11 },
+    cast: { src: '/sprites/knight/cast.png', frames: 11 },
     hurt: { src: '/sprites/knight/hurt.png', frames: 4 },
     death: { src: '/sprites/knight/death.png', frames: 4 },
     block: { src: '/sprites/knight/block.png', frames: 4 },
@@ -195,6 +197,8 @@ const spriteSheets = {
     attack1: { src: '/sprites/knight-templar/attack1.png', frames: 7 },
     attack2: { src: '/sprites/knight-templar/attack2.png', frames: 8 },
     attack3: { src: '/sprites/knight-templar/attack3.png', frames: 11 },
+    attack3_effect: { src: '/sprites/knight-templar/attack3_effect.png', frames: 11 },
+    cast: { src: '/sprites/knight-templar/cast.png', frames: 11 },
     block: { src: '/sprites/knight-templar/block.png', frames: 4 },
     hurt: { src: '/sprites/knight-templar/hurt.png', frames: 4 },
     death: { src: '/sprites/knight-templar/death.png', frames: 4 },
@@ -524,6 +528,7 @@ export const effectSprites = {
   windProjectile: { src: '/effects/wind_projectile.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
   resurrect: { src: '/effects/resurrect_sprite.png', cols: 6, rows: 4, frameW: 256, frameH: 256, frames: 24 },
   loading: { src: '/effects/pixel/15_loading_spritesheet.png', size: 1100, frames: 121 },
+  slashRanged: { src: '/sprites/effects/slash_ranged.png', cols: 11, rows: 1, frameW: 100, frameH: 100, frames: 11 },
 };
 
 export const projectileSprites = {
@@ -707,12 +712,12 @@ export const enemyAbilityEffects = {
 export const abilityEffectMap = {
   warrior: {
     'Slash': { effect: 'slash', beam: null, anim: 'attack1' },
-    'Power Strike': { effect: 'hitEffect1', beam: null, anim: 'attack3' },
-    'War Cry': { effect: 'holyVfx', beam: null, anim: 'block' },
+    'Power Strike': { effect: 'slashRanged', beam: null, anim: 'attack3' },
+    'War Cry': { effect: 'holyVfx', beam: null, anim: 'cast' },
     'Shield Bash': { effect: 'hitEffect2', beam: null, anim: 'block' },
     'Cleave': { effect: 'fireExplosion2', beam: null, anim: 'attack2', comboAnims: ['attack1', 'attack2', 'attack3'] },
     'Demon Blade': { effect: 'demonSlash3', beam: 'blue', anim: 'attack3' },
-    'Invincible': { effect: 'protectionCircle', beam: null, anim: 'block' },
+    'Invincible': { effect: 'protectionCircle', beam: null, anim: 'cast' },
   },
   mage: {
     'Arcane Bolt': { effect: 'midnight', beam: 'purple', anim: 'attack1' },

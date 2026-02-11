@@ -1273,8 +1273,9 @@ export default function BattleScreen() {
         if (desired === 'block' && spriteData.block) return 'block';
         if (spriteData[desired]) return desired;
       }
-      if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : 'attack1';
-      if (abilityType === 'buff') return spriteData.block ? 'block' : 'attack1';
+      if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : spriteData.cast ? 'cast' : 'attack1';
+      if (abilityType === 'buff') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
+      if (abilityType === 'item' || abilityType === 'stance') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
       const anims = ['attack1', 'attack2', 'attack3'].filter(a => spriteData[a]);
       if (anims.length > 2 && (abilityType === 'physical' || abilityType === 'magical')) return anims[Math.floor(Math.random() * anims.length)];
       if (anims.length > 1) return anims[1];
