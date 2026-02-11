@@ -11,6 +11,7 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
+import AbilityIcon from './AbilityIcon';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
@@ -148,7 +149,7 @@ function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
         border: `1px solid ${isAlt ? '#d97706' : cls?.color || 'var(--border)'}`,
         position: 'relative',
       }}>
-        {ability.icon}
+        <AbilityIcon ability={ability} size={28} />
         {isCurrent && (
           <div style={{
             position: 'absolute', top: -4, left: -4, width: 16, height: 16,
@@ -309,7 +310,7 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
                 }}>{idx + 1}</div>
                 {ability ? (
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{ability.icon}</span>
+                    <span style={{ flexShrink: 0 }}><AbilityIcon ability={ability} size={22} /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: '0.65rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ability.name}</div>
                       <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
@@ -1073,7 +1074,7 @@ function HeroDetailPanel({ hero, onClose }) {
                       }}>
                         {ability ? (
                           <>
-                            <span style={{ fontSize: '1rem' }}>{ability.icon}</span>
+                            <span><AbilityIcon ability={ability} size={22} /></span>
                             <div style={{ fontSize: '0.45rem', color: 'var(--accent)', marginTop: 2, lineHeight: 1.1 }}>{ability.name}</div>
                           </>
                         ) : (

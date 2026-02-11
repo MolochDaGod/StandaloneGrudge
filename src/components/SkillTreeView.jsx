@@ -1,6 +1,7 @@
 import React from 'react';
 import useGameStore from '../stores/gameStore';
 import { skillTrees } from '../data/skillTrees';
+import AbilityIcon from './AbilityIcon';
 
 export default function SkillTreeView() {
   const { setScreen, playerClass, level, skillPoints, unlockedSkills, unlockSkill } = useGameStore();
@@ -100,7 +101,7 @@ export default function SkillTreeView() {
                       onMouseEnter={e => { if (available) e.currentTarget.style.transform = 'translateY(-4px)'; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
                     >
-                      <div style={{ fontSize: '2rem', marginBottom: 8 }}>{skill.icon}</div>
+                      <div style={{ marginBottom: 8 }}><AbilityIcon ability={skill} size={48} /></div>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem', color: unlocked ? 'var(--gold)' : 'var(--text)', marginBottom: 4 }}>
                         {skill.name}
                       </div>

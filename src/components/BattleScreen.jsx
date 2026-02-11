@@ -8,6 +8,7 @@ import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from 
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
+import AbilityIcon from './AbilityIcon';
 
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -2460,7 +2461,7 @@ export default function BattleScreen() {
                         justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700,
                         color: disabled ? '#666' : '#2a1a0a', border: '1px solid rgba(0,0,0,0.3)'
                       }}>{idx + 1}</div>
-                      <div style={{ fontSize: '0.9rem', marginBottom: 0, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))' }}>{ability.icon}</div>
+                      <div style={{ marginBottom: 0, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))' }}><AbilityIcon ability={ability} size={28} /></div>
                       <div style={{ fontWeight: 600, fontSize: '0.65rem', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>{ability.name}</div>
                       <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginTop: 0 }}>
                         {ability.manaCost > 0 && <span style={{ color: '#6b9bd2' }}>{ability.manaCost}MP </span>}
