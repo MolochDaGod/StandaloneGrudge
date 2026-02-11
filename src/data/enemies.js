@@ -40,6 +40,36 @@ export const enemyTemplates = {
       { id: 'drain_life', name: 'Drain Life', icon: 'crystal', type: 'magical', damage: 0.8, cooldown: 4, description: 'Steals life force', drainPercent: 0.5 },
     ]
   },
+  dark_knight: {
+    name: 'Dark Knight', icon: 'skull', color: '#4a1a6b',
+    baseHealth: 160, baseDamage: 26, baseDefense: 22, baseMana: 30,
+    xpReward: 32, goldReward: 18, speed: 10,
+    abilities: [
+      { id: 'dk_slash', name: 'Sword Slash', icon: 'sword', type: 'physical', damage: 1.2, description: 'A heavy dark blade strike' },
+      { id: 'dk_shield', name: 'Shield Wall', icon: 'shield', type: 'buff', damage: 0, cooldown: 4, description: 'Raises a dark shield', effect: { stat: 'defense', flat: 25, duration: 2 } },
+      { id: 'dk_crush', name: 'Bone Breaker', icon: 'sword', type: 'physical', damage: 1.8, cooldown: 3, description: 'A crushing overhead blow' },
+    ]
+  },
+  shadow_warrior: {
+    name: 'Shadow Warrior', icon: 'skull', color: '#1e1b4b',
+    baseHealth: 140, baseDamage: 30, baseDefense: 16, baseMana: 40,
+    xpReward: 35, goldReward: 20, speed: 14,
+    abilities: [
+      { id: 'sw_strike', name: 'Shadow Strike', icon: 'sword', type: 'physical', damage: 1.3, description: 'A swift strike from the shadows' },
+      { id: 'sw_frenzy', name: 'Dark Frenzy', icon: 'fire', type: 'buff', damage: 0, cooldown: 5, description: 'Enters a dark frenzy', effect: { stat: 'damage', multiplier: 1.5, duration: 2 } },
+      { id: 'sw_leap', name: 'Shadow Leap', icon: 'sword', type: 'physical', damage: 2.0, cooldown: 4, description: 'Leaps at the target with dark energy' },
+    ]
+  },
+  water_priestess_mage: {
+    name: 'Water Priestess', icon: 'ice', color: '#0891b2',
+    baseHealth: 110, baseDamage: 20, baseMagicDamage: 32, baseDefense: 12, baseMana: 150,
+    xpReward: 38, goldReward: 24, speed: 12,
+    abilities: [
+      { id: 'wp_bolt', name: 'Tidal Strike', icon: 'ice', type: 'magical', damage: 1.3, description: 'A bolt of pressurized water' },
+      { id: 'wp_heal', name: 'Healing Tide', icon: 'heart', type: 'heal', damage: 0, cooldown: 4, description: 'Heals with tidal energy', healPercent: 0.15 },
+      { id: 'wp_frost', name: 'Frozen Prison', icon: 'ice', type: 'magical', damage: 1.8, cooldown: 3, description: 'Encases in ice', effect: { type: 'stun', duration: 1 } },
+    ]
+  },
   orc: {
     name: 'Orc Berserker', icon: 'sword', color: '#65a30d',
     baseHealth: 180, baseDamage: 28, baseDefense: 20, baseMana: 0,
@@ -479,7 +509,7 @@ export const locations = [
     name: 'Cursed Ruins',
     description: 'The remnants of a fallen kingdom, now haunted by the undead and dark magic.',
     levelRange: [6, 9],
-    enemies: ['skeleton', 'dark_mage', 'skeleton_knight', 'mimic', 'crow_knight'],
+    enemies: ['skeleton', 'dark_mage', 'skeleton_knight', 'mimic', 'crow_knight', 'dark_knight', 'shadow_warrior'],
     bgGradient: 'linear-gradient(135deg, #2d1b69 0%, #1a0a3e 50%, #0d0d2b 100%)',
     icon: 'skull',
     unlocked: false,
@@ -498,7 +528,7 @@ export const locations = [
     name: 'Crystal Caves',
     description: 'Glittering caverns deep beneath the mountains. Dwarven miners carved these halls seeking precious gems.',
     levelRange: [7, 9],
-    enemies: ['skeleton', 'goblin', 'orc', 'skeleton_knight', 'mimic', 'stone_guardian'],
+    enemies: ['skeleton', 'goblin', 'orc', 'skeleton_knight', 'mimic', 'stone_guardian', 'water_priestess_mage'],
     bgGradient: 'linear-gradient(135deg, #164e63 0%, #155e75 50%, #0e7490 100%)',
     icon: 'crystal',
     unlocked: false,
@@ -536,7 +566,7 @@ export const locations = [
     name: 'Sunken Temple',
     description: 'Ancient ruins half-submerged in dark waters. A powerful shaman guards the inner sanctum.',
     levelRange: [7, 9],
-    enemies: ['skeleton', 'dark_mage', 'goblin', 'skeleton_knight', 'flying_eye', 'mimic', 'stone_guardian'],
+    enemies: ['skeleton', 'dark_mage', 'goblin', 'skeleton_knight', 'flying_eye', 'mimic', 'stone_guardian', 'water_priestess_mage'],
     bgGradient: 'linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0369a1 100%)',
     icon: 'shield',
     unlocked: false,
@@ -555,7 +585,7 @@ export const locations = [
     name: 'Iron Peaks',
     description: 'Rugged mountain forges where dwarves and orcs clash over precious ore deposits.',
     levelRange: [8, 11],
-    enemies: ['orc', 'skeleton', 'dark_mage', 'stone_guardian', 'crow_knight'],
+    enemies: ['orc', 'skeleton', 'dark_mage', 'stone_guardian', 'crow_knight', 'dark_knight'],
     bgGradient: 'linear-gradient(135deg, #44403c 0%, #57534e 50%, #292524 100%)',
     icon: 'hammer',
     unlocked: false,
@@ -574,7 +604,7 @@ export const locations = [
     name: 'Blood Canyon',
     description: 'A desolate ravine stained red by centuries of warfare. A brutal warlord commands the orc stronghold.',
     levelRange: [9, 12],
-    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight'],
+    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight', 'dark_knight', 'shadow_warrior'],
     bgGradient: 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 50%, #1c0505 100%)',
     icon: 'shield',
     unlocked: false,
@@ -593,7 +623,7 @@ export const locations = [
     name: 'Frozen Tundra',
     description: 'An endless ice wasteland where blizzards rage and a mighty frost wyrm rules the skies.',
     levelRange: [10, 13],
-    enemies: ['orc', 'skeleton', 'dark_mage', 'shadow_bat'],
+    enemies: ['orc', 'skeleton', 'dark_mage', 'shadow_bat', 'water_priestess_mage'],
     bgGradient: 'linear-gradient(135deg, #0c4a6e 0%, #bae6fd 50%, #e0f2fe 100%)',
     icon: 'ice',
     unlocked: false,

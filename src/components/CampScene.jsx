@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
+import NpcSprite from './NpcSprite';
 
 const RESOURCE_NODES = [
   { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24' },
@@ -259,6 +260,15 @@ export default function CampScene() {
           }}>Close</button>
         </div>
       )}
+
+      {(SCENE_NPCS.camp || []).map(npc => (
+        <div key={npc.id} style={{
+          position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
+          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+        }}>
+          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+        </div>
+      ))}
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',

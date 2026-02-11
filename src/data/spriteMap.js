@@ -216,6 +216,54 @@ const spriteSheets = {
     death: { src: '/sprites/skeleton-archer/death.png', frames: 4 },
     walk: { src: '/sprites/skeleton-archer/walk.png', frames: 8 },
   },
+  'dark-knight': {
+    folder: 'dark-knight',
+    frameWidth: 128,
+    frameHeight: 96,
+    idle: { src: '/sprites/dark-knight/idle.png', frames: 4 },
+    attack1: { src: '/sprites/dark-knight/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/dark-knight/attack2.png', frames: 11 },
+    hurt: { src: '/sprites/dark-knight/hurt.png', frames: 3 },
+    death: { src: '/sprites/dark-knight/death.png', frames: 4 },
+    walk: { src: '/sprites/dark-knight/walk.png', frames: 6 },
+    jump: { src: '/sprites/dark-knight/jump.png', frames: 6 },
+  },
+  'shadow-warrior': {
+    folder: 'shadow-warrior',
+    frameWidth: 128,
+    frameHeight: 96,
+    idle: { src: '/sprites/shadow-warrior/idle.png', frames: 4 },
+    attack1: { src: '/sprites/shadow-warrior/attack1.png', frames: 12 },
+    attack2: { src: '/sprites/shadow-warrior/attack2.png', frames: 7 },
+    hurt: { src: '/sprites/shadow-warrior/hurt.png', frames: 3 },
+    death: { src: '/sprites/shadow-warrior/death.png', frames: 4 },
+    walk: { src: '/sprites/shadow-warrior/walk.png', frames: 6 },
+    jump: { src: '/sprites/shadow-warrior/jump.png', frames: 5 },
+  },
+  'skeleton-enemy': {
+    folder: 'skeleton-enemy',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/skeleton-enemy/idle.png', frames: 13 },
+    walk: { src: '/sprites/skeleton-enemy/walk.png', frames: 13 },
+    attack1: { src: '/sprites/skeleton-enemy/attack1.png', frames: 12 },
+    hurt: { src: '/sprites/skeleton-enemy/hurt.png', frames: 4 },
+    death: { src: '/sprites/skeleton-enemy/death.png', frames: 3 },
+  },
+  'water-priestess': {
+    folder: 'water-priestess',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/water-priestess/idle.png', frames: 8 },
+    walk: { src: '/sprites/water-priestess/walk.png', frames: 10 },
+    attack1: { src: '/sprites/water-priestess/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/water-priestess/attack2.png', frames: 12 },
+    cast: { src: '/sprites/water-priestess/cast.png', frames: 16 },
+    heal: { src: '/sprites/water-priestess/heal.png', frames: 12 },
+    block: { src: '/sprites/water-priestess/block.png', frames: 12 },
+    hurt: { src: '/sprites/water-priestess/hurt.png', frames: 7 },
+    death: { src: '/sprites/water-priestess/death.png', frames: 16 },
+  },
   'armored-orc': {
     folder: 'armored-orc',
     idle: { src: '/sprites/armored-orc/idle.png', frames: 6 },
@@ -526,9 +574,12 @@ const monsterSprites = {
 
 export const enemySpriteMap = {
   goblin: monsterSprites['monster-goblin'],
-  skeleton: monsterSprites['monster-skeleton'],
+  skeleton: spriteSheets['skeleton-enemy'],
   wolf: spriteSheets.werewolf,
   dark_mage: spriteSheets.wizard,
+  dark_knight: spriteSheets['dark-knight'],
+  shadow_warrior: spriteSheets['shadow-warrior'],
+  water_priestess_mage: spriteSheets['water-priestess'],
   orc: spriteSheets['armored-orc'],
   dragon_whelp: spriteSheets.werebear,
   lich: spriteSheets['armored-skeleton'],
@@ -824,6 +875,15 @@ export const enemyAbilityEffects = {
   'Quake Slam': { effect: 'hitEffect2', beam: null },
   'Fortify': { effect: 'protectionCircle', beam: null },
   'Crumble Curse': { effect: 'felSpell', beam: 'purple' },
+  'Sword Slash': { effect: 'slash', beam: null },
+  'Shield Wall': { effect: 'protectionCircle', beam: null },
+  'Bone Breaker': { effect: 'hitEffect2', beam: null },
+  'Shadow Strike': { effect: 'hitEffect1', beam: null },
+  'Dark Frenzy': { effect: 'fireSpin', beam: null },
+  'Shadow Leap': { effect: 'critSlash', beam: 'purple' },
+  'Tidal Strike': { effect: 'freezing', beam: 'blue' },
+  'Healing Tide': { effect: 'healingwave', beam: 'blue' },
+  'Frozen Prison': { effect: 'frozenIce', beam: 'blue' },
 };
 
 export const abilityEffectMap = {
@@ -955,6 +1015,65 @@ export function getWorgTransformSprite(raceId) {
 export function getEnemySprite(templateId) {
   return enemySpriteMap[templateId] || enemySpriteMap.goblin;
 }
+
+export const npcSpriteMap = {
+  merchant: { src: '/sprites/npcs/medieval/merchant.png', frameWidth: 32, frameHeight: 32, frames: 5 },
+  blacksmith: { src: '/sprites/npcs/medieval/blacksmith.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  guard: { src: '/sprites/npcs/medieval/guard.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  barkeep: { src: '/sprites/npcs/medieval/barkeep.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  barmaid: { src: '/sprites/npcs/medieval/barmaid.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  villager_01: { src: '/sprites/npcs/medieval/villager_01.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  villager_02: { src: '/sprites/npcs/medieval/villager_02.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  elder: { src: '/sprites/npcs/medieval/elder.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  beggar: { src: '/sprites/npcs/medieval/beggar.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  farmer_01: { src: '/sprites/npcs/medieval/farmer_01.png', frameWidth: 32, frameHeight: 32, frames: 5 },
+  farmer_02: { src: '/sprites/npcs/medieval/farmer_02.png', frameWidth: 32, frameHeight: 32, frames: 5 },
+  priestess: { src: '/sprites/npcs/medieval/priestess.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  captain: { src: '/sprites/npcs/medieval/captain.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  dwarf: { src: '/sprites/npcs/medieval/dwarf.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  adventurer_01: { src: '/sprites/npcs/medieval/adventurer_01.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  adventurer_02: { src: '/sprites/npcs/medieval/adventurer_02.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  gypsy: { src: '/sprites/npcs/medieval/gypsy.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  jester: { src: '/sprites/npcs/medieval/jester.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  king: { src: '/sprites/npcs/medieval/king.png', frameWidth: 34, frameHeight: 34, frames: 6 },
+  princess: { src: '/sprites/npcs/medieval/princess.png', frameWidth: 32, frameHeight: 32, frames: 5 },
+  stranger: { src: '/sprites/npcs/medieval/stranger.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  shady_guy: { src: '/sprites/npcs/medieval/shady_guy.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  minstrel: { src: '/sprites/npcs/medieval/minstrel.png', frameWidth: 32, frameHeight: 32, frames: 5 },
+  witch: { src: '/sprites/npcs/medieval/witch.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  dog: { src: '/sprites/npcs/medieval/dog.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  fairy: { src: '/sprites/npcs/medieval/fairy.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  water_priestess: { src: '/sprites/npcs/elementals/water_priestess.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  leaf_ranger: { src: '/sprites/npcs/elementals/leaf_ranger.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  fire_knight: { src: '/sprites/npcs/elementals/fire_knight.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  crystal_mauler: { src: '/sprites/npcs/elementals/crystal_mauler.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  wind_hashashin: { src: '/sprites/npcs/elementals/wind_hashashin.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  metal_bladekeeper: { src: '/sprites/npcs/elementals/metal_bladekeeper.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+  ground_monk: { src: '/sprites/npcs/elementals/ground_monk.png', frameWidth: 32, frameHeight: 32, frames: 4 },
+};
+
+export const SCENE_NPCS = {
+  camp: [
+    { id: 'camp_blacksmith', npc: 'blacksmith', name: 'Ironhand', x: 82, y: 38, flip: true },
+    { id: 'camp_elder', npc: 'elder', name: 'Sage Aldor', x: 38, y: 42, flip: false },
+    { id: 'camp_guard', npc: 'guard', name: 'Sentinel', x: 58, y: 32, flip: false },
+    { id: 'camp_dog', npc: 'dog', name: '', x: 64, y: 72, flip: true },
+  ],
+  trading: [
+    { id: 'tp_merchant', npc: 'merchant', name: 'Bazaar Master', x: 50, y: 30, flip: false },
+    { id: 'tp_stranger', npc: 'stranger', name: 'Cloaked Stranger', x: 32, y: 55, flip: true },
+    { id: 'tp_gypsy', npc: 'gypsy', name: 'Fortune Teller', x: 68, y: 58, flip: false },
+    { id: 'tp_beggar', npc: 'beggar', name: 'Beggar', x: 15, y: 75, flip: false },
+  ],
+  field: [
+    { id: 'field_adventurer', npc: 'adventurer_01', name: 'Wanderer', x: 18, y: 55, flip: false },
+    { id: 'field_farmer', npc: 'farmer_01', name: 'Farmer', x: 85, y: 50, flip: true },
+  ],
+  portal: [
+    { id: 'portal_priestess', npc: 'priestess', name: 'Void Acolyte', x: 12, y: 45, flip: false },
+    { id: 'portal_witch', npc: 'witch', name: 'Arcane Weaver', x: 88, y: 45, flip: true },
+  ],
+};
 
 export function getAbilityEffect(classId, abilityName, abilityId) {
   if (abilityId && weaponSkillEffectMap[abilityId]) return weaponSkillEffectMap[abilityId];

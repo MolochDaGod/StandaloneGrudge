@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
 import { getItemPrice, getSellPrice, generateShopInventory } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
+import NpcSprite from './NpcSprite';
 
 const PORTAL_NODES = [
   { id: 'forge', name: 'Void Forge', icon: 'hammer', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
@@ -405,6 +406,15 @@ export default function PortalScene() {
           {message}
         </div>
       )}
+
+      {(SCENE_NPCS.portal || []).map(npc => (
+        <div key={npc.id} style={{
+          position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
+          transform: 'translate(-50%, -50%)', zIndex: 5, pointerEvents: 'none',
+        }}>
+          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+        </div>
+      ))}
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
