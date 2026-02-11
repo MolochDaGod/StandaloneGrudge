@@ -13,6 +13,38 @@ import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 const BAR_HEIGHT = '26.2%';
 const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
 
+function ChatAvatar({ race, heroClass, size = 20 }) {
+  if (!race || !heroClass) return null;
+  const spriteData = getPlayerSprite(heroClass, race);
+  const idleAnim = spriteData?.idle;
+  if (!idleAnim) return null;
+
+  const frameWidth = spriteData?.frameWidth || 100;
+  const frameHeight = spriteData?.frameHeight || 100;
+  const scale = size / Math.min(frameWidth, frameHeight) * 2.4;
+
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', overflow: 'hidden',
+      flexShrink: 0, position: 'relative',
+      border: '1.5px solid rgba(255,215,0,0.4)',
+      background: 'rgba(0,0,0,0.6)',
+      boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+    }}>
+      <div style={{
+        width: frameWidth * scale,
+        height: frameHeight * scale,
+        backgroundImage: `url(${idleAnim.src})`,
+        backgroundSize: `${frameWidth * (idleAnim.frames || 1) * scale}px ${frameHeight * scale}px`,
+        backgroundPosition: `0px -${frameHeight * scale * 0.05}px`,
+        imageRendering: 'pixelated',
+        transform: 'translate(-28%, -12%)',
+        filter: spriteData?.filter || 'none',
+      }} />
+    </div>
+  );
+}
+
 function HarvestingPopup({ onClose }) {
   const {
     harvestNodes, activeHarvests, harvestResources,
@@ -346,6 +378,7 @@ export default function MapBottomBar({
     const name = leader?.name || 'You';
     setChatLog(prev => [...prev.slice(-49), {
       id: Date.now(), speaker: name, line: chatInput.trim(), color: '#a78bfa',
+      race: leader?.race, heroClass: leader?.class,
     }]);
     setChatInput('');
   };
@@ -385,9 +418,12 @@ export default function MapBottomBar({
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
           }}>
             {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
-              <div key={entry.id} style={{ marginBottom: 2 }}>
-                <span style={{ fontWeight: 700, color: entry.color, marginRight: 4, fontSize: '0.6rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
-                <span style={{ color: 'rgba(226,232,240,0.8)', fontWeight: 400 }}>{entry.line}</span>
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 3, padding: '1px 0' }}>
+                <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={20} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontWeight: 700, color: entry.color, marginRight: 4, fontSize: '0.6rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
+                  <span style={{ color: 'rgba(226,232,240,0.8)', fontWeight: 400 }}>{entry.line}</span>
+                </div>
               </div>
             )) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>

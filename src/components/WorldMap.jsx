@@ -1077,13 +1077,13 @@ export default function WorldMap() {
         setCurrentDialogue(dialogue);
         setDialoguePhase(1);
         setChatLog(prev => {
-          const entry = { id: Date.now(), speaker: dialogue.speaker1.name, line: dialogue.line1, color: 'var(--accent)' };
+          const entry = { id: Date.now(), speaker: dialogue.speaker1.name, line: dialogue.line1, color: 'var(--accent)', race: dialogue.speaker1.race, heroClass: dialogue.speaker1.class };
           return [...prev.slice(-49), entry];
         });
         setTimeout(() => {
           setDialoguePhase(2);
           setChatLog(prev => {
-            const entry = { id: Date.now() + 1, speaker: dialogue.speaker2.name, line: dialogue.line2, color: 'var(--gold)' };
+            const entry = { id: Date.now() + 1, speaker: dialogue.speaker2.name, line: dialogue.line2, color: 'var(--gold)', race: dialogue.speaker2.race, heroClass: dialogue.speaker2.class };
             return [...prev.slice(-49), entry];
           });
         }, 2500);
