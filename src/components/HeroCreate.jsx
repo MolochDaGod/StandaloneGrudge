@@ -9,6 +9,15 @@ import { getPlayerSprite } from '../data/spriteMap';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
 
+const RACE_BG = {
+  human: '/backgrounds/card_divine.png',
+  elf: '/backgrounds/card_beach.png',
+  dwarf: '/backgrounds/card_green_hills.png',
+  undead: '/backgrounds/card_dark.png',
+  orc: '/backgrounds/blood_canyon.png',
+  barbarian: '/backgrounds/volcanic_field.png',
+};
+
 export default function HeroCreate() {
   const { addHeroToRoster, setScreen, level, heroRoster } = useGameStore();
 
@@ -221,10 +230,9 @@ export default function HeroCreate() {
               {Object.entries(raceDefinitions).map(([id, race]) => (
                 <div key={id} onClick={() => setSelectedRace(id)}
                   style={{
-                    background: selectedRace === id
-                      ? 'linear-gradient(135deg, rgba(110,231,183,0.15), rgba(110,231,183,0.05))'
-                      : 'rgba(42,49,80,0.3)',
-                    border: `2px solid ${selectedRace === id ? 'var(--accent)' : 'var(--border)'}`,
+                    backgroundImage: `linear-gradient(135deg, ${selectedRace === id ? (race.color || 'var(--accent)') + '35' : 'rgba(20,26,43,0.85)'}, rgba(11,16,32,0.88)), url(${RACE_BG[id] || RACE_BG.human})`,
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    border: `2px solid ${selectedRace === id ? (race.color || 'var(--accent)') : 'var(--border)'}`,
                     borderRadius: 12, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
                   }}>
                   <img src={race.icon} alt={race.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 6 }} />

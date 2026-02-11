@@ -9,6 +9,15 @@ import { getPlayerSprite } from '../data/spriteMap';
 
 const stepLabels = ['Name', 'Race', 'Class', 'Attributes'];
 
+const RACE_BG = {
+  human: '/backgrounds/card_divine.png',
+  elf: '/backgrounds/card_beach.png',
+  dwarf: '/backgrounds/card_green_hills.png',
+  undead: '/backgrounds/card_dark.png',
+  orc: '/backgrounds/blood_canyon.png',
+  barbarian: '/backgrounds/volcanic_field.png',
+};
+
 export default function CharacterCreate() {
   const {
     setScreen, setPlayerName, selectRace, selectClass,
@@ -153,9 +162,8 @@ export default function CharacterCreate() {
                 const isSelected = selectedRace === race.id;
                 return (
                   <div key={race.id} onClick={() => setSelectedRace(race.id)} style={{
-                    background: isSelected
-                      ? `linear-gradient(135deg, ${race.color}22, ${race.color}11)`
-                      : 'linear-gradient(135deg, rgba(20,26,43,0.95), rgba(20,26,43,0.7))',
+                    backgroundImage: `linear-gradient(135deg, ${isSelected ? race.color + '35' : 'rgba(20,26,43,0.85)'}, rgba(11,16,32,0.88)), url(${RACE_BG[race.id] || RACE_BG.human})`,
+                    backgroundSize: 'cover', backgroundPosition: 'center',
                     border: `2px solid ${isSelected ? race.color : race.color + '30'}`,
                     borderRadius: 12, padding: 16, cursor: 'pointer',
                     transition: 'all 0.25s', textAlign: 'center', position: 'relative',

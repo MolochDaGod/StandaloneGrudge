@@ -30,6 +30,15 @@ const CLASS_BG = {
   worge: '/backgrounds/wc_gold.png',
 };
 
+const RACE_BG = {
+  human: '/backgrounds/card_divine.png',
+  elf: '/backgrounds/card_beach.png',
+  dwarf: '/backgrounds/card_green_hills.png',
+  undead: '/backgrounds/card_dark.png',
+  orc: '/backgrounds/blood_canyon.png',
+  barbarian: '/backgrounds/volcanic_field.png',
+};
+
 function MiniBar({ current, max, color, height = 6, label }) {
   const pct = Math.max(0, Math.min(100, (current / max) * 100));
   const barHeight = Math.max(height, 6);
@@ -98,13 +107,13 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const cp = calculateCombatPower(stats);
   const hasPoints = (hero.unspentPoints || 0) > 0 || (hero.skillPoints || 0) > 0;
 
-  const classBg = CLASS_BG[hero.classId] || CLASS_BG.warrior;
+  const raceBg = RACE_BG[hero.raceId] || RACE_BG.human;
   const spriteData = getPlayerSprite(hero.classId, hero.raceId);
   const cardScale = getCardScale(spriteData);
 
   return (
     <div onClick={onClick} style={{
-      backgroundImage: `linear-gradient(135deg, ${isSelected ? 'rgba(110,231,183,0.25)' : 'rgba(14,22,48,0.75)'}, rgba(11,16,32,0.85)), url(${classBg})`,
+      backgroundImage: `linear-gradient(135deg, ${isSelected ? 'rgba(110,231,183,0.25)' : 'rgba(14,22,48,0.70)'}, rgba(11,16,32,0.80)), url(${raceBg})`,
       backgroundSize: 'cover', backgroundPosition: 'center',
       border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
       borderRadius: 14, padding: 16, cursor: 'pointer',
@@ -505,7 +514,7 @@ function HeroDetailPanel({ hero, onClose }) {
       height: '100%',
     }}>
       <div style={{
-        backgroundImage: `linear-gradient(135deg, ${cls?.color || 'var(--accent)'}40, rgba(14,22,48,0.8)), url(${CLASS_BG[hero.classId] || CLASS_BG.warrior})`,
+        backgroundImage: `linear-gradient(135deg, ${cls?.color || 'var(--accent)'}40, rgba(14,22,48,0.8)), url(${RACE_BG[hero.raceId] || RACE_BG.human})`,
         backgroundSize: 'cover', backgroundPosition: 'center',
         borderBottom: `2px solid ${cls?.color || 'var(--border)'}`,
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,

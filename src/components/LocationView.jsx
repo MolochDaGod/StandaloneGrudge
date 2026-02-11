@@ -26,6 +26,15 @@ const CLASS_BG = {
   worge: 'linear-gradient(135deg, rgba(217,119,6,0.15) 0%, rgba(146,64,14,0.10) 50%, rgba(20,26,43,0.95) 100%)',
 };
 
+const RACE_BG = {
+  human: '/backgrounds/card_divine.png',
+  elf: '/backgrounds/card_beach.png',
+  dwarf: '/backgrounds/card_green_hills.png',
+  undead: '/backgrounds/card_dark.png',
+  orc: '/backgrounds/blood_canyon.png',
+  barbarian: '/backgrounds/volcanic_field.png',
+};
+
 const CLASS_BORDER = {
   warrior: 'rgba(239,68,68,0.3)',
   mage: 'rgba(139,92,246,0.3)',
@@ -54,9 +63,12 @@ function HeroCard({ hero, isLeader, conquer }) {
     { label: 'Dodge', value: `${Math.floor(stats.dodge)}%` },
   ];
 
+  const raceBg = RACE_BG[hero.raceId] || RACE_BG.human;
+
   return (
     <div style={{
-      background: CLASS_BG[hero.classId] || CLASS_BG.warrior,
+      backgroundImage: `linear-gradient(135deg, rgba(14,22,48,0.75), rgba(20,26,43,0.85)), url(${raceBg})`,
+      backgroundSize: 'cover', backgroundPosition: 'center',
       border: `1px solid ${CLASS_BORDER[hero.classId] || CLASS_BORDER.warrior}`,
       borderRadius: 12,
       padding: 10,
