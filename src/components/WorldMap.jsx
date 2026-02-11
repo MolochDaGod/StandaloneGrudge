@@ -308,6 +308,11 @@ export default function WorldMap() {
     try { return JSON.parse(localStorage.getItem('mapEditEffects') || '[]'); } catch { return []; }
   });
   const [placingEffect, setPlacingEffect] = useState(null);
+  const [labelPositions, setLabelPositions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mapLabelPositions') || '{}'); } catch { return {}; }
+  });
+  const [draggingLabel, setDraggingLabel] = useState(null);
+  const dragLabelStart = useRef(null);
 
   useEffect(() => {
     if (camInitRef.current) return;
@@ -848,22 +853,66 @@ export default function WorldMap() {
           ))}
         </svg>
 
-        {terrainRegions.map((region, idx) => (
-          <div key={`rl_${idx}`} className="font-cinzel" style={{
-            position: 'absolute',
-            left: `${region.labelX}%`, top: `${region.labelY}%`,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none', zIndex: 1,
-            fontSize: '0.75rem', fontWeight: 700,
-            color: region.stroke.replace('0.2', '0.35'),
-            textTransform: 'uppercase',
-            letterSpacing: '0.15em',
-            textShadow: `0 0 10px ${region.fill}, 0 2px 6px rgba(0,0,0,0.8)`,
-            opacity: 0.6,
-          }}>
-            {region.name}
-          </div>
-        ))}
+        {terrainRegions.map((region, idx) => {
+          const lp = labelPositions[idx];
+          const lx = lp ? lp.x : region.labelX;
+          const ly = lp ? lp.y : region.labelY;
+          return (
+            <div key={`rl_${idx}`} style={{
+              position: 'absolute',
+              left: `${lx}%`, top: `${ly}%`,
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'auto', zIndex: 2,
+              cursor: 'default',
+              userSelect: 'none',
+              fontFamily: "'MedievalSharp', cursive",
+              fontSize: '0.9rem', fontWeight: 400,
+              color: region.stroke.replace('0.2', '0.45'),
+              letterSpacing: '0.12em',
+              textShadow: `0 0 14px ${region.fill}, 0 0 6px ${region.fill}, 0 2px 8px rgba(0,0,0,0.9)`,
+              opacity: draggingLabel === idx ? 0.9 : 0.55,
+              whiteSpace: 'nowrap',
+              transition: draggingLabel === idx ? 'none' : 'opacity 0.2s',
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraggingLabel(idx);
+              dragLabelStart.current = { x: e.clientX, y: e.clientY, origX: lx, origY: ly };
+              const onMove = (me) => {
+                me.preventDefault();
+                if (!dragLabelStart.current || !mapRef.current) return;
+                const rect = mapRef.current.getBoundingClientRect();
+                const dx = ((me.clientX - dragLabelStart.current.x) / rect.width) * 100;
+                const dy = ((me.clientY - dragLabelStart.current.y) / rect.height) * 100;
+                const nx = Math.max(2, Math.min(98, dragLabelStart.current.origX + dx));
+                const ny = Math.max(2, Math.min(98, dragLabelStart.current.origY + dy));
+                setLabelPositions(prev => {
+                  const next = { ...prev, [idx]: { x: Math.round(nx * 100) / 100, y: Math.round(ny * 100) / 100 } };
+                  return next;
+                });
+              };
+              const onUp = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('contextmenu', onCtx);
+                setDraggingLabel(null);
+                dragLabelStart.current = null;
+                setLabelPositions(prev => {
+                  localStorage.setItem('mapLabelPositions', JSON.stringify(prev));
+                  return prev;
+                });
+              };
+              const onCtx = (ce) => ce.preventDefault();
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+              window.addEventListener('contextmenu', onCtx);
+            }}
+            >
+              {region.name}
+            </div>
+          );
+        })}
 
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
           {mapLandmarks.filter(l => l.type === 'river').map((river, idx) => {
