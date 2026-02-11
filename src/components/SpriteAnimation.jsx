@@ -65,6 +65,8 @@ export default function SpriteAnimation({
       transform: flip ? 'scaleX(-1)' : 'none',
       position: 'relative',
       mixBlendMode: blendMode,
+      outline: 'none',
+      border: 'none',
     }}>
       <div style={{
         width: displayWidth,

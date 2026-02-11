@@ -995,7 +995,7 @@ export default function BattleScreen() {
 
       if (abilityType === 'magical' && attacker.position) {
         addParticle('cast', attacker.position.x, attacker.position.y, getProjectileColor(attacker, abilityName));
-        spawnCastingFx(attacker.position.x, attacker.position.y);
+        spawnCastingFx(attacker.position.x, attacker.position.y - 12);
         playMagicCast();
       }
 
@@ -1495,6 +1495,8 @@ export default function BattleScreen() {
                 width: spriteSize,
                 height: footY,
                 overflow: 'visible',
+                outline: 'none',
+                border: 'none',
               }}
             >
               {isCurrentTurnUnit && unit.alive && (
