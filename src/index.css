@@ -114,6 +114,12 @@ body {
   50% { opacity: 1; transform: scale(1.1); }
 }
 
+@keyframes footprintFade {
+  0% { opacity: 0.6; }
+  60% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
 @keyframes glow {
   0%, 100% { box-shadow: 0 0 5px rgba(110, 231, 183, 0.3); }
   50% { box-shadow: 0 0 20px rgba(110, 231, 183, 0.6); }

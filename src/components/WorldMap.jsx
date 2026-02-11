@@ -307,6 +307,9 @@ export default function WorldMap() {
   const [portalMenu, setPortalMenu] = useState(null);
   const [portalTransition, setPortalTransition] = useState(false);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
+  const [walkFootprints, setWalkFootprints] = useState([]);
+  const footprintIdRef = useRef(0);
+  const footprintCleanupRef = useRef([]);
   const [camZoom, setCamZoom] = useState(3);
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
   const [devUnlocked, setDevUnlocked] = useState({});
@@ -647,11 +650,42 @@ export default function WorldMap() {
       y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
     });
 
+    const footprintCount = Math.max(3, Math.round(dist / 1.8));
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    const footprintTimers = [];
+    for (let i = 1; i <= footprintCount; i++) {
+      const delay = (i / footprintCount) * duration;
+      const t = i / footprintCount;
+      const fpTimer = setTimeout(() => {
+        const isLeft = i % 2 === 0;
+        const perpX = -Math.sin(angle * Math.PI / 180) * 0.2;
+        const perpY = Math.cos(angle * Math.PI / 180) * 0.2;
+        const fpId = footprintIdRef.current++;
+        setWalkFootprints(prev => [...prev, {
+          id: fpId,
+          x: from.x + dx * t + (isLeft ? perpX : -perpX),
+          y: from.y + dy * t + (isLeft ? perpY : -perpY),
+          angle: angle + (isLeft ? -15 : 15),
+          born: Date.now(),
+        }]);
+        const cleanupTimer = setTimeout(() => {
+          setWalkFootprints(prev => prev.filter(fp => fp.id !== fpId));
+        }, 3000);
+        footprintCleanupRef.current.push(cleanupTimer);
+      }, delay);
+      footprintTimers.push(fpTimer);
+    }
+
     const timer = setTimeout(() => {
       setMoveStep(prev => prev + 1);
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      footprintTimers.forEach(t => clearTimeout(t));
+      footprintCleanupRef.current.forEach(t => clearTimeout(t));
+      footprintCleanupRef.current = [];
+    };
   }, [movePath, moveStep]);
 
   useEffect(() => { setBgm('ambient'); }, []);
@@ -1098,75 +1132,26 @@ export default function WorldMap() {
 
         {/* Decorative landmarks removed for cleaner map */}
 
-        {(() => {
-          const allConns = [
-            ...pathConnections.map(([from, to]) => {
-              const a = getNodePos(from);
-              const b = getNodePos(to);
-              const fromOk = unlockedLocs.some(l => l.id === from);
-              const toOk = unlockedLocs.some(l => l.id === to);
-              return { a, b, active: fromOk && toOk, type: 'path', key: `${from}_${to}` };
-            }),
-            ...cityConnections.map(([cityId, locId]) => {
-              const a = getNodePos(cityId);
-              const b = getNodePos(locId);
-              if (!a || !b) return null;
-              const city = cities.find(c => c.id === cityId);
-              const bossOk = !city?.unlockBoss || bossesDefeated.includes(city.unlockBoss);
-              const cityOk = city && (city.unlocked || (bossOk && city.unlockLevel && level >= city.unlockLevel));
-              const locOk = unlockedLocs.some(l => l.id === locId);
-              return { a, b, active: cityOk && locOk, type: 'city', key: `c_${cityId}_${locId}` };
-            }).filter(Boolean),
-          ];
-          return allConns.map((conn, idx) => {
-            const { a, b, active, key } = conn;
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const stepCount = Math.max(3, Math.round(dist / 2.2));
-            const steps = [];
-            for (let i = 1; i < stepCount; i++) {
-              const t = i / stepCount;
-              const x = a.x + dx * t;
-              const y = a.y + dy * t;
-              const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-              const isLeft = i % 2 === 0;
-              const perpX = -Math.sin(angle * Math.PI / 180) * 0.25;
-              const perpY = Math.cos(angle * Math.PI / 180) * 0.25;
-              steps.push({
-                x: x + (isLeft ? perpX : -perpX),
-                y: y + (isLeft ? perpY : -perpY),
-                angle: angle + (isLeft ? -15 : 15),
-                delay: i * 0.15,
-              });
-            }
-            const dotScale = Math.max(0.4, 0.8 / camZoom);
-            return steps.map((step, si) => (
-              <div key={`${key}_${si}`} style={{
-                position: 'absolute',
-                left: `${step.x}%`, top: `${step.y}%`,
-                width: 8, height: 12,
-                transform: `translate(-50%, -50%) rotate(${step.angle + 90}deg) scale(${dotScale})`,
-                pointerEvents: 'none',
-                zIndex: 1,
-                opacity: active ? 0.5 : 0.1,
-                transition: 'opacity 0.5s',
-              }}>
-                <div style={{
-                  width: '100%', height: '100%',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                }}>
-                  <div style={{
-                    width: 5, height: 7, borderRadius: '45% 45% 35% 35%',
-                    background: active ? 'rgba(255,215,0,0.7)' : 'rgba(150,150,170,0.4)',
-                    boxShadow: active ? '0 0 4px rgba(255,215,0,0.4)' : 'none',
-                    animation: active ? `footstepPulse ${2 + (si % 4) * 0.5}s ease-in-out infinite ${step.delay}s` : 'none',
-                  }} />
-                </div>
-              </div>
-            ));
-          });
-        })()}
+        {walkFootprints.map(fp => {
+          const dotScale = Math.max(0.4, 0.8 / camZoom);
+          return (
+            <div key={fp.id} style={{
+              position: 'absolute',
+              left: `${fp.x}%`, top: `${fp.y}%`,
+              width: 8, height: 12,
+              transform: `translate(-50%, -50%) rotate(${fp.angle + 90}deg) scale(${dotScale})`,
+              pointerEvents: 'none',
+              zIndex: MAP_LAYERS.HERO - 1,
+              animation: 'footprintFade 3s ease-out forwards',
+            }}>
+              <div style={{
+                width: 5, height: 7, borderRadius: '45% 45% 35% 35%',
+                background: 'rgba(255,215,0,0.7)',
+                boxShadow: '0 0 4px rgba(255,215,0,0.4)',
+              }} />
+            </div>
+          );
+        })}
 
         {markerMode && (
           <svg {...svgOverlayProps(MAP_LAYERS.LANDMARKS)}>
@@ -1611,6 +1596,10 @@ export default function WorldMap() {
           const heroCount = activeHeroes.length;
           const containerW = heroCount * (spriteW * 0.4) + spriteW * 0.6;
           const containerH = visibleH + 20;
+          const hitOffsetX = 0;
+          const hitOffsetY = -10 * mapSpriteScale;
+          const hitAnchorX = containerW / 2 + hitOffsetX;
+          const hitAnchorY = visibleH / 2 + hitOffsetY;
           return (
             <div style={{
               position: 'absolute',
@@ -1618,7 +1607,7 @@ export default function WorldMap() {
               top: `${zonePos.y}%`,
               width: containerW,
               height: containerH,
-              transform: `translate(-50%, -65%) scale(${heroScale})`,
+              transform: `translate(-${hitAnchorX}px, -${hitAnchorY}px) scale(${heroScale})`,
               zIndex: MAP_LAYERS.HERO,
               transition: 'left 1.8s ease-in-out, top 1.8s ease-in-out, transform 0.3s',
               pointerEvents: 'none',
