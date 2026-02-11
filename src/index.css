@@ -67,6 +67,9 @@ body {
   background-repeat: no-repeat;
   pointer-events: none;
   z-index: 10500;
+  clip-path: inset(var(--frame-crop-top, 0%) var(--frame-crop-right, 0%) var(--frame-crop-bottom, 0%) var(--frame-crop-left, 0%));
+  opacity: var(--frame-opacity, 1);
+  display: var(--frame-display, block);
 }
 
 @media (max-width: 768px) {
