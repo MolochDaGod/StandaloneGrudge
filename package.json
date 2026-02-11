@@ -2,18 +2,18 @@
   "name": "grudge-warlords",
   "version": "1.0.0",
   "type": "module",
+  "description": "Final Fantasy 7-inspired turn-based RPG with multi-hero tactical combat",
+  "author": "Grudge Studio",
+  "license": "UNLICENSED",
+  "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5000",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@pixi/sprite": "^7.4.3",
-    "@pixi/sprite-animated": "^7.4.3",
-    "@pixi/sprite-tiling": "^7.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sharp": "^0.34.5",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

@@ -1,5 +1,49 @@
+# Dependencies
 node_modules/
+package-lock.json
+
+# Build output
 dist/
 .vite/
+*.local
+
+# Replit
+.replit
+.cache/
+.config/
+.upm/
+
+# Uploaded raw assets (not game assets)
+attached_assets/
+public/icons/Icons_Essential/
+
+# Python artifacts (tooling only)
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+venv/
+.venv/
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS files
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment
+.env
+.env.local
+.env.*.local
