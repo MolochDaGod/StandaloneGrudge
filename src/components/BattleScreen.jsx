@@ -1149,6 +1149,69 @@ export default function BattleScreen() {
         }, 250 * spd);
         setTimeout(() => advanceTurn(), 1300 * spd);
       } else {
+        const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
+        const isLeap = effectMapping?.moveType === 'leap';
+
+        if (isLeap && attacker.position && target.position) {
+          const frontX = target.position.x + (attacker.team === 'player' ? -8 : 8);
+          const frontY = target.position.y;
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: frontY } }));
+
+          setTimeout(() => {
+            const arcX = (frontX + target.position.x) / 2;
+            const arcY = target.position.y - 18;
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: arcX, y: arcY } }));
+          }, 250 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: target.position.x, y: target.position.y } }));
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+            playSwordHit();
+            if (target.position) {
+              addParticle('hit', target.position.x - 3, target.position.y + 2, '#8B4513');
+              addParticle('hit', target.position.x + 3, target.position.y + 2, '#8B4513');
+              addParticle('hit', target.position.x, target.position.y + 4, '#a0522d');
+            }
+          }, 450 * spd);
+
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, target.position.y, '#ef4444');
+              const hfxLeap = getHitEffect(attacker, abilityName, false);
+              if (hfxLeap.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: target.position.y + 2, sprite: hfxLeap.sprite, filter: hfxLeap.filter }]);
+                const effectDur = (hfxLeap.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              }
+              if (isCrit) {
+                playCrit();
+                if (target.position) {
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: target.position.y, type: 'melee' }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+              }
+              if (target.position) spawnWeaponContact(target.position.x, target.position.y, 2);
+            } else {
+              playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, target.position.y);
+            }
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+          }, 650 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          }, 1000 * spd);
+          setTimeout(() => advanceTurn(), 1400 * spd);
+          return;
+        }
+
         if (abilityType === 'physical') playSwordHit();
         if (attacker.position && target.position) {
           const dashX = target.position.x + (attacker.team === 'player' ? -8 : 8);

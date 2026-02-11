@@ -441,7 +441,7 @@ export const weaponSkillEffectMap = {
   ws_mortal_wound: { effect: 'hitEffect3', beam: 'red', anim: 'attack3' },
   ws_axe_chop: { effect: 'hitEffect1', beam: null, anim: 'attack1' },
   ws_axe_hack: { effect: 'hitEffect2', beam: null, anim: 'attack2' },
-  ws_rend: { effect: 'hitEffect3', beam: 'red', anim: 'attack3' },
+  ws_rend: { effect: 'hitEffect3', beam: 'red', anim: 'attack3', moveType: 'leap' },
   ws_whirlwind: { effect: 'vortex', beam: null, anim: 'attack2', comboAnims: ['attack1', 'attack2', 'attack3'] },
   ws_sunder_armor: { effect: 'hitEffect2', beam: null, anim: 'attack3' },
   ws_gs_sweep: { effect: 'slash', beam: null, anim: 'attack1' },
