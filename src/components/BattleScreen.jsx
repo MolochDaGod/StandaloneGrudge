@@ -143,7 +143,7 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
   }, []);
 
   return (
-    <div style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: 260, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`, transform: 'translate(-50%, -50%)', zIndex: 260, pointerEvents: 'none' }}>
       {layers.map((layer, i) => {
         const sprite = effectSprites[layer.key];
         if (!sprite) return null;
@@ -211,7 +211,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp }) {
   return (
     <div style={{
       position: 'absolute',
-      left: `${x}%`, top: `${y}%`,
+      left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
@@ -268,7 +268,7 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
   return (
     <div style={{
       position: 'absolute',
-      left: `${x}%`, top: `${y}%`,
+      left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
@@ -354,7 +354,7 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
       position: 'absolute', top: offsetY, left: '50%',
       transform: 'translateX(-50%)', pointerEvents: 'none',
       width: displaySize, height: displaySize, overflow: 'hidden', opacity,
-      zIndex: 10,
+      zIndex: 25,
       ...EFFECT_BLEND,
     }}>
       <div style={{
@@ -394,7 +394,7 @@ function DodgeFlashSprite({ x, y }) {
   const col = frame % cols;
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 210, opacity: 0.9,
@@ -436,7 +436,7 @@ function CastingSpriteEffect({ x, y }) {
   const row = Math.floor(frame / cols);
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.8,
@@ -487,7 +487,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
   const row = Math.floor(frame / cols);
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: 205, opacity: 0.9,
@@ -692,7 +692,7 @@ function ResurrectEffect({ x, y, onComplete }) {
     <div style={{
       position: 'absolute',
       left: `${x}%`,
-      top: `${y}%`,
+      top: `calc(${y}% - 45px)`,
       transform: 'translate(-50%, -70%)',
       zIndex: 220, pointerEvents: 'none',
       animation: 'resurrectGlow 1.1s ease-out forwards',
