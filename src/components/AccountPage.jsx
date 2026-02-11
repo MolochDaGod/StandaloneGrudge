@@ -746,63 +746,109 @@ function HeroDetailPanel({ hero, onClose }) {
                   flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
                 }}>
                   <div style={{
-                    width: panelW, height: panelH,
-                    backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
-                    backgroundSize: `${panelW}px ${panelH}px`,
-                    imageRendering: 'pixelated',
+                    background: 'linear-gradient(180deg, rgba(45,35,20,0.95) 0%, rgba(30,22,14,0.98) 100%)',
+                    border: '2px solid #8b7355',
+                    borderRadius: 8,
+                    padding: 8,
+                    boxShadow: 'inset 0 0 12px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.6), 0 0 1px 1px rgba(139,115,85,0.2)',
                     position: 'relative',
                   }}>
-                    {Object.entries(slotPositions).map(([slot, pos]) => (
-                      <div key={slot} style={{
-                        position: 'absolute',
-                        left: pos.left, top: pos.top,
-                        width: slotPx, height: slotPx,
-                      }}>
-                        {renderEquipSlot(slot, slot === 'offhand' && is2H)}
-                      </div>
-                    ))}
-                    {is2H && (
-                      <div style={{
-                        position: 'absolute', bottom: 8, left: 0, right: 0,
-                        textAlign: 'center', fontSize: '0.45rem', color: '#f59e0b', fontWeight: 600,
-                      }}>
-                        2H — off-hand locked
-                      </div>
-                    )}
-                  </div>
+                    <div style={{
+                      position: 'absolute', inset: 3,
+                      border: '1px solid rgba(212,169,106,0.15)',
+                      borderRadius: 6,
+                      pointerEvents: 'none',
+                    }} />
 
-                  <div style={{
-                    marginTop: 6,
-                    width: panelW,
-                    background: 'rgba(20,16,10,0.6)',
-                    border: '1px solid rgba(139,115,85,0.25)',
-                    borderRadius: 6,
-                    padding: '6px 8px',
-                    minHeight: 50,
-                  }}>
-                    {displayItem ? (
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-                          <span style={{ fontSize: '0.9rem' }}>{displayItem.icon}</span>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: displayTier.color, fontFamily: 'var(--font-heading)' }}>
-                            {displayItem.name}
-                          </span>
+                    <div className="font-cinzel" style={{
+                      textAlign: 'center', fontSize: '0.55rem', color: '#d4a96a',
+                      letterSpacing: 2, marginBottom: 6, textTransform: 'uppercase',
+                      textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                    }}>EQUIPMENT</div>
+
+                    <div style={{
+                      width: panelW, height: panelH,
+                      backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
+                      backgroundSize: `${panelW}px ${panelH}px`,
+                      imageRendering: 'pixelated',
+                      position: 'relative',
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                    }}>
+                      {Object.entries(slotPositions).map(([slot, pos]) => (
+                        <div key={slot} style={{
+                          position: 'absolute',
+                          left: pos.left, top: pos.top,
+                          width: slotPx, height: slotPx,
+                        }}>
+                          {renderEquipSlot(slot, slot === 'offhand' && is2H)}
                         </div>
-                        <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginBottom: 3 }}>
-                          T{displayItem.tier} {displayTier.name} · {FULL_SLOT_LABELS[displayItem.slot] || displayItem.slot}
-                          {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
+                      ))}
+                      {is2H && (
+                        <div style={{
+                          position: 'absolute', bottom: 6, left: 0, right: 0,
+                          textAlign: 'center', fontSize: '0.45rem', color: '#f59e0b', fontWeight: 600,
+                          textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                        }}>
+                          2H — off-hand locked
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
-                          {Object.entries(displayItem.stats).map(([k, v]) => (
-                            <span key={k} style={{ fontSize: '0.55rem', color: '#7ec87e' }}>+{v} {k}</span>
-                          ))}
+                      )}
+                    </div>
+
+                    <div style={{
+                      marginTop: 8,
+                      width: panelW,
+                      background: 'rgba(15,12,8,0.7)',
+                      border: '1px solid rgba(139,115,85,0.3)',
+                      borderRadius: 5,
+                      padding: '8px 10px',
+                      minHeight: 54,
+                      boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.4)',
+                    }}>
+                      {displayItem ? (
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                            {(() => {
+                              const tipSprite = getItemSpriteIcon(displayItem);
+                              return tipSprite ? (
+                                <img src={tipSprite} alt="" style={{ width: 20, height: 20, imageRendering: 'pixelated', flexShrink: 0 }} />
+                              ) : (
+                                <span style={{ fontSize: '1rem', flexShrink: 0 }}>{displayItem.icon}</span>
+                              );
+                            })()}
+                            <span style={{
+                              fontSize: '0.7rem', fontWeight: 700, color: displayTier.color,
+                              fontFamily: 'var(--font-heading)', lineHeight: 1.2,
+                              wordBreak: 'break-word', textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                            }}>
+                              {displayItem.name}
+                            </span>
+                          </div>
+                          <div style={{
+                            fontSize: '0.55rem', color: '#a08b6d', marginBottom: 4,
+                            lineHeight: 1.3, whiteSpace: 'normal', wordBreak: 'break-word',
+                          }}>
+                            T{displayItem.tier} {displayTier.name} · {FULL_SLOT_LABELS[displayItem.slot] || displayItem.slot}
+                            {displayItem.weaponType ? ` · ${WEAPON_TYPES[displayItem.weaponType]?.name || displayItem.weaponType}` : ''}
+                          </div>
+                          <div style={{
+                            display: 'flex', flexWrap: 'wrap', gap: '3px 8px',
+                            borderTop: '1px solid rgba(139,115,85,0.15)', paddingTop: 4,
+                          }}>
+                            {Object.entries(displayItem.stats).map(([k, v]) => (
+                              <span key={k} style={{ fontSize: '0.6rem', color: '#7ec87e', whiteSpace: 'nowrap' }}>+{v} {k}</span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.5rem', color: '#6b5c47', fontStyle: 'italic', textAlign: 'center', paddingTop: 4 }}>
-                        Hover item for details
-                      </div>
-                    )}
+                      ) : (
+                        <div style={{
+                          fontSize: '0.55rem', color: '#6b5c47', fontStyle: 'italic',
+                          textAlign: 'center', paddingTop: 8,
+                        }}>
+                          Hover item for details
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
