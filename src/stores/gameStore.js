@@ -1589,7 +1589,7 @@ const useGameStore = create(persist((set, get) => ({
       const missionRewards = mission ? mission.rewards : { xp: 0, gold: 0 };
       const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
       const totalXp = missionRewards.xp + enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
-      const totalGold = missionRewards.gold + enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0);
+      const totalGold = Math.floor((missionRewards.gold + enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0)) * 0.1);
 
       let newXp = state.xp + totalXp;
       let newLevel = state.level;
@@ -1663,7 +1663,7 @@ const useGameStore = create(persist((set, get) => ({
       const arena = arenaTemplates.find(a => a.id === state.battleState.arenaId);
       const arenaRewards = arena ? arena.rewards : { xp: 0, gold: 0 };
       const totalXp = arenaRewards.xp;
-      const totalGold = arenaRewards.gold;
+      const totalGold = Math.floor(arenaRewards.gold * 0.1);
 
       let newXp = state.xp + totalXp;
       let newLevel = state.level;
@@ -1742,7 +1742,7 @@ const useGameStore = create(persist((set, get) => ({
     const eventBonus = state.eventBonusRewards || null;
     const bonusGold = eventBonus?.gold || 0;
     const bonusXp = eventBonus?.xp || 0;
-    const totalGold = enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0) + bonusGold;
+    const totalGold = Math.floor(enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0) * 0.1) + bonusGold;
     const adjustedTotalXp = totalXp + bonusXp;
 
     let newXp = state.xp + adjustedTotalXp;
@@ -2185,7 +2185,6 @@ const useGameStore = create(persist((set, get) => ({
     if (!hero) return;
     const alreadyHarvesting = Object.values(state.activeHarvests).includes(heroId);
     if (alreadyHarvesting) return;
-    if (state.activeHeroIds.includes(heroId)) return;
     set({
       activeHarvests: { ...state.activeHarvests, [nodeId]: heroId },
       lastHarvestTick: Date.now(),

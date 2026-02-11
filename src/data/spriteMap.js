@@ -357,6 +357,50 @@ const monsterSprites = {
     death: { src: '/sprites/monsters/mushroom/death.png', frames: 4 },
     walk: { src: '/sprites/monsters/mushroom/walk.png', frames: 8 },
   },
+  'shadow-bat': {
+    folder: 'monsters/shadow_bat',
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/monsters/shadow_bat/idle.png', frames: 7 },
+    attack1: { src: '/sprites/monsters/shadow_bat/attack1.png', frames: 10 },
+    hurt: { src: '/sprites/monsters/shadow_bat/hurt.png', frames: 3 },
+  },
+  'imp': {
+    folder: 'monsters/imp',
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/monsters/imp/idle.png', frames: 11 },
+    attack1: { src: '/sprites/monsters/imp/attack1.png', frames: 8 },
+    hurt: { src: '/sprites/monsters/imp/hurt.png', frames: 3 },
+    walk: { src: '/sprites/monsters/imp/walk.png', frames: 8 },
+  },
+  'mimic': {
+    folder: 'monsters/mimic',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/monsters/mimic/idle.png', frames: 8 },
+    attack1: { src: '/sprites/monsters/mimic/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/monsters/mimic/attack2.png', frames: 8 },
+    hurt: { src: '/sprites/monsters/mimic/hurt.png', frames: 3 },
+  },
+  'crow-knight': {
+    folder: 'monsters/crow_knight',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/monsters/crow_knight/idle.png', frames: 7 },
+    attack1: { src: '/sprites/monsters/crow_knight/attack1.png', frames: 7 },
+    hurt: { src: '/sprites/monsters/crow_knight/hurt.png', frames: 3 },
+    walk: { src: '/sprites/monsters/crow_knight/walk.png', frames: 6 },
+  },
+  'stone-guardian': {
+    folder: 'monsters/stone_guardian',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/monsters/stone_guardian/idle.png', frames: 9 },
+    attack1: { src: '/sprites/monsters/stone_guardian/attack1.png', frames: 6 },
+    hurt: { src: '/sprites/monsters/stone_guardian/hurt.png', frames: 3 },
+    walk: { src: '/sprites/monsters/stone_guardian/walk.png', frames: 6 },
+  },
 };
 
 export const enemySpriteMap = {
@@ -377,6 +421,11 @@ export const enemySpriteMap = {
   flying_eye: monsterSprites['flying-eye'],
   mushroom: monsterSprites['monster-mushroom'],
   skeleton_knight: monsterSprites['monster-skeleton'],
+  shadow_bat: monsterSprites['shadow-bat'],
+  imp: monsterSprites['imp'],
+  mimic: monsterSprites['mimic'],
+  crow_knight: monsterSprites['crow-knight'],
+  stone_guardian: monsterSprites['stone-guardian'],
 };
 
 export const effectSprites = {

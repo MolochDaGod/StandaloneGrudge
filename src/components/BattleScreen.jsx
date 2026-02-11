@@ -2235,7 +2235,7 @@ export default function BattleScreen() {
             {isVictory && (
               <div style={{ color: 'var(--accent)', marginTop: 8, fontSize: '0.8rem' }}>
                 +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)} XP |
-                +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0)} Gold
+                +{Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)} Gold
               </div>
             )}
             {isDefeat && (

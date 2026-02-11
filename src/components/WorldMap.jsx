@@ -3456,6 +3456,20 @@ export default function WorldMap() {
               }}>
                 ⚔ Play Gruda
               </button>
+
+              <button onClick={async () => {
+                const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+                const token = await encodeGrudaShare(activeHeroes);
+                const url = `https://grudgewarlords.com/arena?s=${token}`;
+                window.open(url, '_blank');
+              }} style={{
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(239,68,68,0.15))',
+                border: '1px solid rgba(168,85,247,0.4)',
+                borderRadius: 6, padding: '6px 12px', color: '#c084fc',
+                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+              }}>
+                🌐 Deploy to Arena
+              </button>
             </div>
 
             <div style={{ marginTop: 10, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
