@@ -567,6 +567,55 @@ function FireballExplosion({ x, y, angles }) {
   );
 }
 
+function ResurrectEffect({ x, y, onComplete }) {
+  const [frame, setFrame] = React.useState(0);
+  const displayW = 180;
+  const displayH = 120;
+  const totalFrames = 3;
+  const frameW = 1024 / 3;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames * 3) {
+        clearInterval(interval);
+        if (onComplete) onComplete();
+        return;
+      }
+      setFrame(f % totalFrames);
+    }, 120);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`,
+      top: `${y}%`,
+      transform: 'translate(-50%, -70%)',
+      zIndex: 220, pointerEvents: 'none',
+      animation: 'resurrectGlow 1.1s ease-out forwards',
+    }}>
+      <div style={{
+        width: displayW, height: displayH, overflow: 'hidden',
+      }}>
+        <img
+          src="/effects/resurrect_sprite.png"
+          alt=""
+          style={{
+            width: displayW * totalFrames,
+            height: displayH,
+            marginLeft: -frame * displayW,
+            imageRendering: 'auto',
+            filter: 'drop-shadow(0 0 16px #22c55e) drop-shadow(0 0 32px #16a34a) brightness(1.3)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function WaterArrowProjectile({ startX, startY, endX, endY, phase }) {
   const [frame, setFrame] = React.useState(0);
   const displaySize = 64;
@@ -902,6 +951,7 @@ export default function BattleScreen() {
   const [iceStormFx, setIceStormFx] = useState([]);
   const [waterArrowFx, setWaterArrowFx] = useState([]);
   const [waterSplashFx, setWaterSplashFx] = useState([]);
+  const [resurrectFx, setResurrectFx] = useState([]);
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
@@ -1091,7 +1141,7 @@ export default function BattleScreen() {
     if (!lastAction || lastAction === actionProcessed.current) return;
     actionProcessed.current = lastAction;
 
-    const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type } = lastAction;
+    const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type, consumableType } = lastAction;
 
     if (type === 'stunned' || type === 'skip') {
       setTimeout(() => advanceTurn(), 500 * spd);
@@ -1589,7 +1639,20 @@ export default function BattleScreen() {
     } else {
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
       const hfxR6 = getHitEffect(attacker, abilityName, false);
-      if (healAmt && target) {
+      if ((consumableType === 'resurrect' || abilityType === 'resurrect') && target && target.position) {
+        const rezId = Date.now() + Math.random();
+        setResurrectFx(prev => [...prev, { id: rezId, x: target.position.x, y: target.position.y }]);
+        setTimeout(() => {
+          setUnitAnims(prev => ({ ...prev, [targetId]: 'idle' }));
+        }, 400);
+        setTimeout(() => {
+          setResurrectFx(prev => prev.filter(r => r.id !== rezId));
+        }, 1200);
+        if (healAmt) showHealFloat(target, healAmt);
+        addParticle('heal', target.position.x, target.position.y);
+        addParticle('cast', target.position.x, target.position.y, '#22c55e');
+        playHeal();
+      } else if (healAmt && target) {
         showHealFloat(target, healAmt);
         if (target.position) addParticle('heal', target.position.x, target.position.y);
         if (hfxR6.sprite && target.position) {
@@ -1832,10 +1895,10 @@ export default function BattleScreen() {
                 transform: 'translate(-50%, -100%)',
                 transition: dash ? 'left 0.3s ease-out, top 0.3s ease-out' : 'left 0.5s ease, top 0.5s ease',
                 cursor: isEnemyClickable ? 'pointer' : 'default',
-                opacity: introComplete ? (unit.alive ? 1 : 0.4) : 0,
+                opacity: introComplete ? (anim === 'death' ? 0 : 1) : 0,
                 animation: introComplete ? 'none' : `unitSlideIn 0.6s ease ${introDelay}ms forwards`,
                 zIndex: Math.floor(posY),
-                pointerEvents: unit.alive ? 'auto' : 'none',
+                pointerEvents: (unit.alive && anim !== 'death') ? 'auto' : 'none',
                 width: spriteSize,
                 height: footY,
                 overflow: 'visible',
@@ -1858,10 +1921,13 @@ export default function BattleScreen() {
               <div style={{
                 position: 'absolute', top: 0, left: 0,
                 width: spriteSize, height: spriteSize,
-                filter: isCurrentTurnUnit && unit.alive
-                  ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
-                  : 'none',
-                transition: 'filter 0.3s',
+                filter: anim === 'hurt'
+                  ? 'brightness(2) sepia(1) saturate(10) hue-rotate(-10deg) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
+                  : isCurrentTurnUnit && unit.alive
+                    ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
+                    : 'none',
+                transition: 'filter 0.15s',
+                animation: anim === 'hurt' ? 'hurtBlink 0.15s ease-in-out 3' : 'none',
               }}>
                 <SpriteAnimation
                   spriteData={spriteData}
@@ -2127,6 +2193,10 @@ export default function BattleScreen() {
 
         {waterSplashFx.map(s => (
           <WaterSplashExplosion key={s.id} x={s.x} y={s.y} angles={s.angles} />
+        ))}
+
+        {resurrectFx.map(r => (
+          <ResurrectEffect key={r.id} x={r.x} y={r.y} />
         ))}
 
         {floatingDmg.map(f => (
