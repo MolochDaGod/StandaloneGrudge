@@ -327,41 +327,55 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
             position: 'relative',
             width: compact ? 150 : 180,
             height: compact ? 190 : 220,
+            display: 'grid',
+            gridTemplateColumns: '40px 1fr 40px',
+            gridTemplateRows: '40px 1fr 40px',
+            gap: compact ? 2 : 4,
+            alignItems: 'center',
+            justifyItems: 'center',
           }}>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 64,
-              height: 64,
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-            }}>
-              <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85} speed={200} />
-            </div>
-
-            <div style={{ position: 'absolute', top: compact ? 0 : 4, left: '50%', transform: 'translateX(-50%)' }}>
+            <div style={{ gridColumn: '2', gridRow: '1' }}>
               <EquipSlot slotDef={SLOT_MAP[0]} item={hero.equipment?.helmet} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', marginTop: compact ? 8 : 12 }}>
-              <EquipSlot slotDef={SLOT_MAP[1]} item={hero.equipment?.armor} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
-            </div>
-            <div style={{ position: 'absolute', top: '50%', right: compact ? 4 : 8, transform: 'translateY(-50%)' }}>
+
+            <div style={{ gridColumn: '1', gridRow: '2' }}>
               <EquipSlot slotDef={SLOT_MAP[2]} item={hero.equipment?.weapon} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
-            <div style={{ position: 'absolute', top: '50%', left: compact ? 4 : 8, transform: 'translateY(-50%)' }}>
+
+            <div style={{
+              gridColumn: '2', gridRow: '2',
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div style={{
+                width: 56, height: 56,
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+                <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85} speed={200} />
+              </div>
+              <div style={{
+                position: 'absolute', bottom: 2, right: 2, zIndex: 2,
+              }}>
+                <EquipSlot slotDef={SLOT_MAP[1]} item={hero.equipment?.armor} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
+              </div>
+            </div>
+
+            <div style={{ gridColumn: '3', gridRow: '2' }}>
               <EquipSlot slotDef={SLOT_MAP[3]} item={hero.equipment?.offhand} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
-            <div style={{ position: 'absolute', bottom: compact ? 18 : 22, left: '50%', transform: 'translateX(-50%)' }}>
-              <EquipSlot slotDef={SLOT_MAP[4]} item={hero.equipment?.feet} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
-            </div>
-            <div style={{ position: 'absolute', bottom: compact ? 0 : 2, left: compact ? 14 : 20, }}>
+
+            <div style={{ gridColumn: '1', gridRow: '3' }}>
               <EquipSlot slotDef={SLOT_MAP[5]} item={hero.equipment?.ring} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
-            <div style={{ position: 'absolute', bottom: compact ? 0 : 2, right: compact ? 14 : 20, }}>
+            <div style={{ gridColumn: '2', gridRow: '3' }}>
+              <EquipSlot slotDef={SLOT_MAP[4]} item={hero.equipment?.feet} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
+            </div>
+            <div style={{ gridColumn: '3', gridRow: '3' }}>
               <EquipSlot slotDef={SLOT_MAP[6]} item={hero.equipment?.relic} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
           </div>
