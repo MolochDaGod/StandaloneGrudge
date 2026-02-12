@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 import { getRaceClassSprite } from '../data/spriteMap';
+import { raceDefinitions } from '../data/races';
+import { classDefinitions } from '../data/classes';
 import { setBgm } from '../utils/audioManager';
 
 export default function LobbyScreen() {
@@ -234,24 +236,122 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
         </div>
       </div>
 
-      <div style={{ ...panelStyle, marginTop: 16 }}>
-        <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: 12 }}>
-          Game Features
+      <HeroSlideshow panelStyle={panelStyle} />
+    </div>
+  );
+}
+
+const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
+  Object.keys(classDefinitions).map(classId => ({ raceId, classId }))
+);
+
+const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3'];
+
+function HeroSlideshow({ panelStyle }) {
+  const [index, setIndex] = useState(0);
+  const [anim, setAnim] = useState('idle');
+  const [fade, setFade] = useState(true);
+
+  const combo = ALL_COMBOS[index];
+  const race = raceDefinitions[combo.raceId];
+  const cls = classDefinitions[combo.classId];
+  const spriteData = getRaceClassSprite(combo.raceId, combo.classId);
+
+  const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
+  const chosenAttack = availableAttacks.length > 0
+    ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
+    : 'idle';
+
+  useEffect(() => {
+    setFade(true);
+    setAnim(chosenAttack);
+
+    const idleTimer = setTimeout(() => {
+      setAnim('idle');
+    }, 1200);
+
+    const nextTimer = setTimeout(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex(prev => (prev + 1) % ALL_COMBOS.length);
+      }, 400);
+    }, 4200);
+
+    return () => {
+      clearTimeout(idleTimer);
+      clearTimeout(nextTimer);
+    };
+  }, [index]);
+
+  return (
+    <div style={{ ...panelStyle, marginTop: 16, overflow: 'hidden' }}>
+      <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: 8, textAlign: 'center' }}>
+        24 Warlord Combinations
+      </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 20,
+        opacity: fade ? 1 : 0,
+        transition: 'opacity 0.4s ease',
+        minHeight: 130,
+      }}>
+        <div style={{
+          width: 120, height: 120, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'radial-gradient(circle, rgba(110,231,183,0.08) 0%, transparent 70%)',
+          borderRadius: 12,
+        }}>
+          <SpriteAnimation
+            spriteData={spriteData}
+            animation={anim}
+            scale={1.1}
+            loop={anim === 'idle'}
+            speed={anim === 'idle' ? 140 : 100}
+            onAnimationEnd={anim !== 'idle' ? () => setAnim('idle') : null}
+          />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {[
-            { essentialIcon: 'Hammer', text: '24 Warlord Combinations' },
-            { essentialIcon: 'Skull', text: 'Tactical Turn-Based Combat' },
-            { essentialIcon: 'Book', text: 'Deep Skill Trees' },
-            { essentialIcon: 'ChestTreasure', text: 'Endgame Boss Fights' },
-            { essentialIcon: 'Trophy', text: 'Zone Conquest System' },
-            { essentialIcon: 'Key', text: 'Void Nexus Portal Hub' },
-          ].map(f => (
-            <div key={f.text} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted)', fontSize: '0.8rem' }}>
-              <EssentialIcon name={f.essentialIcon} size={14} /> {f.text}
-            </div>
-          ))}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="font-cinzel" style={{
+            fontSize: '1.1rem', marginBottom: 4,
+            color: race.color,
+          }}>
+            {race.name} {cls.name}
+          </div>
+          <div style={{
+            fontSize: '0.75rem', color: 'var(--muted)', marginBottom: 6, lineHeight: 1.4,
+          }}>
+            {race.description}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4,
+              background: `${race.color}22`, color: race.color,
+              border: `1px solid ${race.color}44`,
+            }}>
+              {race.trait}
+            </span>
+            <span style={{
+              fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4,
+              background: `${cls.color}22`, color: cls.color,
+              border: `1px solid ${cls.color}44`,
+            }}>
+              {cls.name}
+            </span>
+          </div>
+          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
+            {race.passive}
+          </div>
         </div>
+      </div>
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: 4, marginTop: 8,
+      }}>
+        {ALL_COMBOS.map((_, i) => (
+          <div key={i} style={{
+            width: 5, height: 5, borderRadius: '50%',
+            background: i === index ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
+            transition: 'background 0.3s ease',
+          }} />
+        ))}
       </div>
     </div>
   );
