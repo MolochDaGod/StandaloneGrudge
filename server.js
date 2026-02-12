@@ -5,6 +5,20 @@ import { registerDbRoutes } from './src/server/dbRoutes.js';
 import { startBot, addUserToGuild } from './src/server/discordBot.js';
 
 const app = express();
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
+  if (origin && allowed.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json());
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -385,6 +399,93 @@ app.post('/api/discord/webhook/custom', requireAdmin, async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
+});
+
+const ALLOWED_RETURN_ORIGINS = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
+
+app.get('/api/external/login', (req, res) => {
+  let returnUrl = req.query.returnUrl || 'https://grudgewarlords.com/dungeon';
+  try {
+    const parsed = new URL(returnUrl);
+    if (!ALLOWED_RETURN_ORIGINS.includes(parsed.origin)) {
+      returnUrl = 'https://grudgewarlords.com/dungeon';
+    }
+  } catch (e) {
+    returnUrl = 'https://grudgewarlords.com/dungeon';
+  }
+  const state = crypto.randomBytes(16).toString('hex');
+  pendingStates.set(state, { ts: Date.now(), returnUrl });
+  const origin = getPublicOrigin(req);
+  const redirectUri = `${origin}/api/external/callback`;
+  const scope = 'identify email guilds.join';
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}`;
+  res.redirect(url);
+});
+
+app.get('/api/external/callback', async (req, res) => {
+  const { code, state } = req.query;
+  if (!code || !state || !pendingStates.has(state)) {
+    return res.status(403).send('Invalid or expired login attempt. Please try again.');
+  }
+  const stateData = pendingStates.get(state);
+  pendingStates.delete(state);
+  const returnUrl = (typeof stateData === 'object' ? stateData.returnUrl : null) || 'https://grudgewarlords.com/dungeon';
+
+  try {
+    const origin = getPublicOrigin(req);
+    const redirectUri = `${origin}/api/external/callback`;
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) {
+      return res.status(400).send('Discord login failed. Please try again.');
+    }
+
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
+
+    try {
+      await addUserToGuild(user.id, tokenData.access_token);
+    } catch (e) {}
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    activeSessions.set(sessionToken, {
+      discordId: user.id,
+      username: user.username,
+      createdAt: Date.now(),
+    });
+
+    const returnOrigin = new URL(returnUrl).origin;
+    res.send(`<!DOCTYPE html><html><head><title>Grudge Login</title></head><body>
+<script>
+  try {
+    var data = ${JSON.stringify({ sessionToken, user: { id: user.id, username: user.username, avatar: user.avatar, email: user.email } })};
+    localStorage.setItem('grudge_studio_session', data.sessionToken);
+    localStorage.setItem('grudge_studio_user', JSON.stringify(data.user));
+    if (window.opener) {
+      window.opener.postMessage({ type: 'grudge_login', data: data }, ${JSON.stringify(returnOrigin)});
+      window.close();
+    } else {
+      window.location.href = ${JSON.stringify(returnUrl)};
+    }
+  } catch(e) {
+    window.location.href = ${JSON.stringify(returnUrl)};
+  }
+</script></body></html>`);
+  } catch (err) {
+    res.status(500).send('Login error: ' + err.message);
+  }
 });
 
 const arenaTeams = new Map();
@@ -783,6 +884,131 @@ app.post('/api/auth/extension', async (req, res) => {
     username: session.username,
     expiresIn: '7d',
   });
+});
+
+function requireSession(req, res, next) {
+  const token = req.headers['x-session-token'] || req.body?.sessionToken;
+  if (!token) return res.status(401).json({ error: 'Session token required' });
+  const session = activeSessions.get(token);
+  if (!session) return res.status(401).json({ error: 'Invalid session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(token);
+    return res.status(401).json({ error: 'Session expired' });
+  }
+  req.session = session;
+  next();
+}
+
+app.get('/api/public/profile', requireSession, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const account = await dbQuery('SELECT * FROM accounts WHERE discord_id = $1', [req.session.discordId]);
+    if (!account.rows[0]) return res.json({ found: false });
+    const acc = account.rows[0];
+    const chars = await dbQuery('SELECT * FROM characters WHERE account_id = $1 ORDER BY slot_index', [acc.id]);
+    res.json({
+      found: true,
+      account: {
+        id: acc.id, discordId: acc.discord_id, username: acc.username,
+        gold: acc.gold, resources: acc.resources, premium: acc.premium,
+        avatarUrl: acc.avatar_url,
+      },
+      heroes: chars.rows.map(c => ({
+        name: c.name, raceId: c.race_id, classId: c.class_id,
+        level: c.level, experience: c.experience, isActive: c.is_active,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/public/leaderboard', async (req, res) => {
+  try {
+    const entries = [];
+    for (const [, team] of arenaTeams) {
+      entries.push({
+        ownerName: team.ownerName, rank: team.rank || 0,
+        wins: team.wins || 0, losses: team.losses || 0,
+        heroCount: team.heroes?.length || 0,
+      });
+    }
+    entries.sort((a, b) => b.rank - a.rank);
+    res.json({ leaderboard: entries.slice(0, 50) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/public/stats', async (req, res) => {
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const accountCount = await dbQuery('SELECT COUNT(*) as count FROM accounts');
+    const charCount = await dbQuery('SELECT COUNT(*) as count FROM characters');
+    res.json({
+      totalPlayers: parseInt(accountCount.rows[0]?.count || 0),
+      totalHeroes: parseInt(charCount.rows[0]?.count || 0),
+      arenaTeams: arenaTeams.size,
+      arenaBattles: arenaBattles.length,
+      serverTime: Date.now(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/public/sync', requireSession, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const discordId = req.session.discordId;
+
+    const accountResult = await dbQuery('SELECT * FROM accounts WHERE discord_id = $1', [discordId]);
+    if (!accountResult.rows[0]) return res.json({ found: false });
+    const account = accountResult.rows[0];
+
+    const charsResult = await dbQuery('SELECT * FROM characters WHERE account_id = $1 ORDER BY slot_index', [account.id]);
+    const heroes = [];
+    for (const c of charsResult.rows) {
+      const invResult = await dbQuery('SELECT * FROM inventory_items WHERE character_id = $1', [c.id]);
+      heroes.push({
+        name: c.name, raceId: c.race_id, classId: c.class_id,
+        level: c.level, experience: c.experience,
+        attributePoints: c.attribute_points || {},
+        abilities: c.abilities || [],
+        skillTree: c.skill_tree || {},
+        currentHealth: c.current_health,
+        currentMana: c.current_mana,
+        currentStamina: c.current_stamina,
+        isActive: c.is_active,
+        inventory: invResult.rows.map(i => ({
+          itemKey: i.item_key, itemType: i.item_type, tier: i.tier,
+          slot: i.slot, stats: i.stats || {}, equipped: i.equipped, quantity: i.quantity,
+        })),
+      });
+    }
+
+    const islandResult = await dbQuery('SELECT * FROM islands WHERE account_id = $1 LIMIT 1', [account.id]);
+    const island = islandResult.rows[0] ? {
+      name: islandResult.rows[0].name,
+      zoneData: islandResult.rows[0].zone_data || {},
+      conquerProgress: islandResult.rows[0].conquer_progress || {},
+      questProgress: islandResult.rows[0].quest_progress || {},
+      unlockedLocations: islandResult.rows[0].unlocked_locations || [],
+    } : null;
+
+    res.json({
+      found: true,
+      account: {
+        id: account.id, discordId: account.discord_id, username: account.username,
+        gold: account.gold, resources: account.resources, premium: account.premium,
+      },
+      heroes,
+      island,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 registerDbRoutes(app);
