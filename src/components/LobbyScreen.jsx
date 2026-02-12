@@ -5,7 +5,9 @@ import SpriteAnimation from './SpriteAnimation';
 import { getRaceClassSprite, worgTransformSprite, effectSprites } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
-import { setBgm } from '../utils/audioManager';
+import {
+  setBgm, getMusicMuted, setMusicMuted, getSfxMuted, setSfxMuted,
+} from '../utils/audioManager';
 import GrudgeOnlinePage from './GrudgeOnlinePage';
 
 export default function LobbyScreen() {
@@ -20,6 +22,7 @@ export default function LobbyScreen() {
 
   const [activeTab, setActiveTab] = useState('main');
   const [fadeIn, setFadeIn] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => getMusicMuted() && getSfxMuted());
 
   const session = useMemo(() => {
     try {
@@ -55,6 +58,13 @@ export default function LobbyScreen() {
   const handleLogout = () => {
     localStorage.removeItem('grudge-session');
     setScreen('title');
+  };
+
+  const handleMuteToggle = () => {
+    const next = !isMuted;
+    setIsMuted(next);
+    setMusicMuted(next);
+    setSfxMuted(next);
   };
 
   const panelStyle = {
@@ -96,10 +106,29 @@ export default function LobbyScreen() {
             GRUDGE WARLORDS
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
-            {session.type === 'discord' ? 'Discord' : 'Guest'}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={() => window.dispatchEvent(new Event('toggleSettings'))} style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 6, padding: '4px 14px',
+            color: 'var(--muted)', fontSize: '0.75rem',
+            cursor: 'pointer', fontFamily: "'Cinzel', serif",
+            display: 'flex', alignItems: 'center', gap: 6,
+            transition: 'all 0.2s',
+          }}>
+            <EssentialIcon name="Gear" size={14} />
+            SETTINGS
+          </button>
+          <button onClick={handleMuteToggle} style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 6, padding: '4px 12px',
+            color: isMuted ? '#ef4444' : 'var(--muted)', fontSize: '0.75rem',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            transition: 'all 0.2s',
+          }} title={isMuted ? 'Unmute' : 'Mute'}>
+            <EssentialIcon name={isMuted ? 'SpeakerMute' : 'SpeakerOn'} size={14} />
+          </button>
           <button onClick={handleLogout} style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.1)',
