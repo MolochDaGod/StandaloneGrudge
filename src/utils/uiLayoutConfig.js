@@ -1,11 +1,14 @@
 const STORAGE_KEY = 'grudge_ui_layouts';
 
+const CANVAS_W = 1280;
+const CANVAS_H = 720;
+
 const UI_ELEMENTS = {
   world: [
-    { id: 'bottomBar', label: 'Bottom Bar Container', defaultRect: { x: 13, y: 546, w: 1254, h: 160 } },
-    { id: 'chatPanel', label: 'Chat Panel (Left)', defaultRect: { x: 13, y: 546, w: 282, h: 173 } },
-    { id: 'hotbar', label: 'Hotbar (Center)', defaultRect: { x: 295, y: 633, w: 690, h: 86 } },
-    { id: 'warParty', label: 'War Party (Right)', defaultRect: { x: 985, y: 546, w: 282, h: 173 } },
+    { id: 'bottomBar', label: 'Bottom Bar Container', defaultRect: { x: 0, y: 546, w: 1280, h: 174 } },
+    { id: 'chatPanel', label: 'Chat Panel (Left)', defaultRect: { x: 0, y: 0, w: 282, h: 174 } },
+    { id: 'hotbar', label: 'Hotbar (Center)', defaultRect: { x: 282, y: 88, w: 716, h: 86 } },
+    { id: 'warParty', label: 'War Party (Right)', defaultRect: { x: 998, y: 0, w: 282, h: 174 } },
     { id: 'minimap', label: 'Minimap', defaultRect: { x: 1090, y: 10, w: 180, h: 140 } },
     { id: 'zoneLabel', label: 'Zone Label', defaultRect: { x: 490, y: 8, w: 300, h: 40 } },
   ],
@@ -79,21 +82,34 @@ export function resetAllLayouts() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export function getElementStyle(screen, elementId) {
+export function getElementRect(screen, elementId) {
   const layout = loadLayout(screen);
   const config = layout[elementId];
-  if (!config) return {};
+  const elements = UI_ELEMENTS[screen] || [];
+  const el = elements.find(e => e.id === elementId);
+  if (!config || !el) return null;
 
-  if (config.visible === false) {
-    return { display: 'none' };
-  }
+  if (config.visible === false) return null;
 
-  const style = {};
-  if (config.customWidth !== null) style.width = config.customWidth + 'px';
-  if (config.customHeight !== null) style.height = config.customHeight + 'px';
-  if (config.locked) style.pointerEvents = undefined;
+  const def = el.defaultRect;
+  return {
+    x: config.customX !== null ? config.customX : def.x,
+    y: config.customY !== null ? config.customY : def.y,
+    w: config.customWidth !== null ? config.customWidth : def.w,
+    h: config.customHeight !== null ? config.customHeight : def.h,
+  };
+}
 
-  return style;
+export function getElementStyle(screen, elementId) {
+  const rect = getElementRect(screen, elementId);
+  if (!rect) return { display: 'none' };
+
+  return {
+    left: ((rect.x / CANVAS_W) * 100).toFixed(2) + '%',
+    top: ((rect.y / CANVAS_H) * 100).toFixed(2) + '%',
+    width: ((rect.w / CANVAS_W) * 100).toFixed(2) + '%',
+    height: ((rect.h / CANVAS_H) * 100).toFixed(2) + '%',
+  };
 }
 
 export function exportLayouts() {

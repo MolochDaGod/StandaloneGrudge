@@ -5,15 +5,15 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { InlineIcon } from '../data/uiSprites.jsx';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
+import { showContextMenu } from './GameContextMenu';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
-import { getElementStyle } from '../utils/uiLayoutConfig';
+import { getElementStyle, getElementRect } from '../utils/uiLayoutConfig';
 
-const BAR_HEIGHT = '12vh';
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
 function ChatAvatar({ race, heroClass, size = 20 }) {
@@ -374,6 +374,12 @@ export default function MapBottomBar({
   const [showHarvesting, setShowHarvesting] = useState(false);
   const [showGear, setShowGear] = useState(false);
   const [showCharacter, setShowCharacter] = useState(false);
+  const [hotbarAssignments, setHotbarAssignments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('grudge_hotbar_assignments');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
   const activePartyHeroes = heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id));
   const [selectedPartyHero, setSelectedPartyHeroState] = useState(() => activePartyHeroes[0]?.id || null);
 
@@ -427,6 +433,42 @@ export default function MapBottomBar({
     { id: 'quests', label: 'Quests', icon: 'scroll', color: '#fbbf24', action: () => setScreen('account') },
   ];
 
+  const allActions = buttons;
+
+  const resolvedSlots = Array.from({ length: 8 }, (_, i) => {
+    const assignedId = hotbarAssignments[i];
+    if (assignedId) {
+      const found = allActions.find(a => a.id === assignedId);
+      if (found) return { ...found, slotIndex: i };
+    }
+    return allActions[i] ? { ...allActions[i], slotIndex: i } : { id: `empty_${i}`, label: 'Empty', icon: null, img: null, action: null, slotIndex: i };
+  });
+
+  const assignSlot = (slotIndex, actionId) => {
+    const next = { ...hotbarAssignments, [slotIndex]: actionId };
+    setHotbarAssignments(next);
+    localStorage.setItem('grudge_hotbar_assignments', JSON.stringify(next));
+  };
+
+  const handleSlotRightClick = (e, slotIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const items = [
+      ...allActions.map(act => ({
+        label: act.label,
+        icon: act.icon || null,
+        action: () => assignSlot(slotIndex, act.id),
+      })),
+      { label: 'Clear Slot', icon: 'cancel', action: () => {
+        const next = { ...hotbarAssignments };
+        delete next[slotIndex];
+        setHotbarAssignments(next);
+        localStorage.setItem('grudge_hotbar_assignments', JSON.stringify(next));
+      }},
+    ];
+    showContextMenu(e.clientX, e.clientY, items);
+  };
+
   const popupButtons = [
     { id: 'harvest', icon: 'pickaxe', color: 'var(--gold)', label: 'Harvest', active: showHarvesting },
     { id: 'gear', icon: 'shield', color: 'var(--accent)', label: 'Gear', active: showGear },
@@ -446,26 +488,24 @@ export default function MapBottomBar({
 
   const portalTarget = document.getElementById('game-ui-portal');
 
-  const barLayout = getElementStyle('world', 'bottomBar');
-  const chatLayout = getElementStyle('world', 'chatPanel');
-  const hotbarLayout = getElementStyle('world', 'hotbar');
-  const warPartyLayout = getElementStyle('world', 'warParty');
+  const barStyle = getElementStyle('world', 'bottomBar');
+  const chatStyle = getElementStyle('world', 'chatPanel');
+  const hotbarStyle = getElementStyle('world', 'hotbar');
+  const warPartyStyle = getElementStyle('world', 'warParty');
 
   const stopWheelPropagation = (e) => {
     e.stopPropagation();
   };
 
+  const activeTab = showHarvesting ? 'harvest' : showGear ? 'gear' : showCharacter ? 'character' : null;
+
   const overlayContent = (
     <div id="game-ui-overlay" data-ui-id="bottomBar" style={{
-      position: 'fixed',
-      bottom: '2%',
-      left: '1%',
-      right: '1%',
+      position: 'absolute',
+      ...barStyle,
       zIndex: 99999,
-      display: 'flex',
-      alignItems: 'flex-end',
       pointerEvents: 'auto',
-      ...barLayout,
+      overflow: 'visible',
     }}
     onWheel={stopWheelPropagation}
     onMouseDown={e => e.stopPropagation()}
@@ -476,19 +516,16 @@ export default function MapBottomBar({
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
       {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
 
-        {/* LEFT PANEL: Party Log / Chat */}
         <div data-ui-id="chatPanel" style={{
-          flex: '0 0 22%',
-          height: '24vh',
+          position: 'absolute',
+          ...chatStyle,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          position: 'relative',
           backgroundImage: 'url(/ui/chat-background.png)',
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
-          ...chatLayout,
         }}>
           <div ref={chatLogRef} style={{
             flex: 1, overflowY: 'auto',
@@ -552,16 +589,13 @@ export default function MapBottomBar({
           </div>
         </div>
 
-        {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
         <div data-ui-id="hotbar" style={{
-          flex: '1 1 0',
-          height: '12vh',
-          position: 'relative',
+          position: 'absolute',
+          ...hotbarStyle,
           backgroundImage: 'url(/ui/hotbar-background.png)',
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
-          ...hotbarLayout,
         }}>
           <div style={{
             position: 'absolute',
@@ -573,29 +607,33 @@ export default function MapBottomBar({
             gridTemplateColumns: 'repeat(8, 1fr)',
             gap: '2%',
           }}>
-            {buttons.map(btn => (
-              <button key={btn.id} onClick={btn.action} style={{
-                background: 'transparent',
-                border: 'none',
-                borderRadius: 2,
-                padding: 0,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-                position: 'relative',
-                animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                width: '100%',
-                height: '100%',
-                overflow: 'hidden',
-              }}
-                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; }}
+            {resolvedSlots.map(btn => (
+              <button key={btn.slotIndex} onClick={btn.action || undefined}
+                onContextMenu={e => handleSlotRightClick(e, btn.slotIndex)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: 2,
+                  padding: 0,
+                  cursor: btn.action ? 'pointer' : 'default',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                  position: 'relative',
+                  animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={e => { showTooltip(btn.label + (btn.action ? '' : ' (right-click to assign)'), e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; }}
                 onMouseMove={e => updateTooltipPosition(e)}
                 onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'transparent'; }}
               >
                 {btn.img ? (
                   <img src={btn.img} alt={btn.label} style={{ width: '85%', height: '85%', objectFit: 'contain', imageRendering: 'auto' }} />
-                ) : (
+                ) : btn.icon ? (
                   <InlineIcon name={btn.icon} size={24} />
+                ) : (
+                  <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)' }}>{btn.slotIndex + 1}</span>
                 )}
                 {btn.badge && (
                   <span style={{
@@ -610,34 +648,55 @@ export default function MapBottomBar({
           </div>
         </div>
 
-        {/* RIGHT PANEL: War Party Status */}
         <div data-ui-id="warParty" style={{
-          flex: '0 0 22%',
-          height: '24vh',
+          position: 'absolute',
+          ...warPartyStyle,
           display: 'flex',
           flexDirection: 'column',
-          padding: '6px 8px 4px 6px',
-          position: 'relative',
           backgroundImage: 'url(/ui/bar-background.png)',
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
           borderRadius: '0 4px 4px 0',
-          ...warPartyLayout,
+          overflow: 'visible',
         }}>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
-            {popupButtons.map(pb => (
-              <div
-                key={pb.id}
-                className={`circle-btn ${pb.active ? 'active' : ''}`}
-                onClick={() => togglePopup(pb.id)}
-                onMouseEnter={e => showTooltip(pb.label, e)}
-                onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={() => hideTooltip()}
-              >
-                <InlineIcon name={pb.icon} size={14} />
-              </div>
-            ))}
+          <div style={{
+            position: 'absolute',
+            top: -24, left: 0, right: 0,
+            display: 'flex', gap: 0, justifyContent: 'center',
+            pointerEvents: 'auto',
+          }}>
+            {popupButtons.map(pb => {
+              const isActive = activeTab === pb.id;
+              return (
+                <button
+                  key={pb.id}
+                  onClick={() => togglePopup(pb.id)}
+                  onMouseEnter={e => showTooltip(pb.label, e)}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={() => hideTooltip()}
+                  style={{
+                    background: isActive
+                      ? 'linear-gradient(180deg, rgba(255,215,0,0.25) 0%, rgba(20,15,30,0.95) 100%)'
+                      : 'linear-gradient(180deg, rgba(60,50,35,0.7) 0%, rgba(20,15,30,0.85) 100%)',
+                    border: `1px solid ${isActive ? 'rgba(255,215,0,0.5)' : 'rgba(180,150,90,0.25)'}`,
+                    borderBottom: isActive ? '1px solid transparent' : '1px solid rgba(180,150,90,0.25)',
+                    borderRadius: '6px 6px 0 0',
+                    padding: '3px 12px',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    color: isActive ? '#ffd700' : 'rgba(180,150,90,0.6)',
+                    fontSize: '0.5rem', fontWeight: 700,
+                    fontFamily: "'Cinzel', serif",
+                    transition: 'all 0.15s',
+                    letterSpacing: '0.03em',
+                  }}
+                >
+                  <InlineIcon name={pb.icon} size={12} />
+                  {pb.label}
+                </button>
+              );
+            })}
           </div>
 
           <div style={{
@@ -645,6 +704,7 @@ export default function MapBottomBar({
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            padding: '6px 8px 4px 6px',
           }}>
             <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
