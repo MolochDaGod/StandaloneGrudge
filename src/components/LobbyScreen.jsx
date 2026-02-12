@@ -788,7 +788,7 @@ function HeroSlideshow() {
                     left: '50%', bottom: 0,
                     transform: 'translateX(-50%)',
                     transformOrigin: 'bottom center',
-                    animation: 'ssTransformFlash 0.4s ease-out',
+                    animation: 'ssTransformFlash 0.4s ease-out forwards',
                   }}>
                     <SpriteAnimation
                       spriteData={worgeTransformData}
@@ -870,9 +870,9 @@ function HeroSlideshow() {
           50% { transform: translate(-50%, 20%) scale(1.08); opacity: 1; }
         }
         @keyframes ssTransformFlash {
-          0% { opacity: 0; transform: translateX(-50%) scale(1.3); filter: brightness(3); }
+          0% { opacity: 0; transform: translateX(-50%) scaleX(1.3); filter: brightness(3); }
           50% { opacity: 1; filter: brightness(1.5); }
-          100% { opacity: 1; transform: translateX(-50%) scale(1); filter: brightness(1); }
+          100% { opacity: 1; transform: translateX(-50%) scaleX(1); filter: brightness(1); }
         }
         @keyframes bubblePop {
           0% { transform: translateY(-50%) scale(0.3); opacity: 0; }
