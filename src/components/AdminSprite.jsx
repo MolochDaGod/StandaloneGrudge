@@ -520,6 +520,10 @@ export default function AdminSprite() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #0d0d1a 100%)', color: '#e0d6c2', fontFamily: "'Jost', sans-serif", padding: 20 }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 8 }}>
+          <a href="/admin" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '0.75rem', padding: '3px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>Admin Hub</a>
+          <a href="/" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600, fontSize: '0.75rem', padding: '3px 8px', background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.15)', borderRadius: 4 }}>Back to Game</a>
+        </div>
         <h1 style={{ fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: 28, textAlign: 'center', marginBottom: 8, textShadow: '0 0 10px rgba(255,215,0,0.3)' }}>Admin Sprite Editor</h1>
         <p style={{ textAlign: 'center', color: '#8a7d65', fontSize: 12, marginBottom: 16 }}>Configure how sprites appear on the map and in battles for attacks, buffs, projectiles, and effects</p>
 

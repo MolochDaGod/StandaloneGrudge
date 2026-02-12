@@ -274,6 +274,9 @@ export default function AdminBattle() {
         flexWrap: 'wrap', gap: 6,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <a href="/admin" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '0.75rem', padding: '3px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
+            Admin Hub
+          </a>
           <a href="/" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 700, fontSize: '0.8rem' }}>
             Back to Game
           </a>

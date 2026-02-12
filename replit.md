@@ -70,6 +70,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Web Audio API:** For in-game sound effects and music.
 
 ## Admin Tools
+- **Admin Dashboard (`/admin`):** Central hub linking all admin tools with game system info, player/hero data viewer, world progress tracker, and game systems reference. All admin pages link back here.
 - **Admin UI Layout Editor (`/adminui`):** Visual drag-and-drop editor for positioning, sizing, and locking UI elements across game screens (world, battle, scene). Saves layouts to localStorage via `src/utils/uiLayoutConfig.js`. Game components read saved configs via `getElementStyle()`. Supports export/import of layout JSON.
 - **Admin Sprite Editor (`/adminsprite`):** Dev tool for configuring character sprites, projectiles, buffs/effects, weapons, and effect layers.
 - **Admin Map (`/adminmap`):** Dev tool for map configuration.

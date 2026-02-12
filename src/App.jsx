@@ -20,6 +20,7 @@ import AdminMap from './components/AdminMap';
 import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
 import AdminUI from './components/AdminUI';
+import AdminDashboard from './components/AdminDashboard';
 import SceneView from './components/SceneView';
 import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
@@ -214,6 +215,7 @@ function GameApp() {
 export default function App() {
   const path = window.location.pathname;
 
+  if (path === '/admin') return <AdminDashboard />;
   if (path === '/adminmap') return <AdminMap />;
   if (path === '/adminbattle') return <AdminBattle />;
   if (path === '/adminsprite') return <AdminSprite />;

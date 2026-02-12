@@ -385,6 +385,12 @@ export default function MapBottomBar({
     }
   }, [heroRoster, activeHeroIds]);
 
+  useEffect(() => {
+    if (chatLogRef?.current) {
+      chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
+    }
+  }, [chatLog?.length]);
+
   const setSelectedPartyHero = (id) => {
     setSelectedPartyHeroState(id);
     if (onSelectPartyHero) onSelectPartyHero(id);
@@ -445,6 +451,10 @@ export default function MapBottomBar({
   const hotbarLayout = getElementStyle('world', 'hotbar');
   const warPartyLayout = getElementStyle('world', 'warParty');
 
+  const stopWheelPropagation = (e) => {
+    e.stopPropagation();
+  };
+
   const overlayContent = (
     <div id="game-ui-overlay" data-ui-id="bottomBar" style={{
       position: 'fixed',
@@ -454,8 +464,14 @@ export default function MapBottomBar({
       zIndex: 99999,
       display: 'flex',
       alignItems: 'flex-end',
+      pointerEvents: 'auto',
       ...barLayout,
-    }}>
+    }}
+    onWheel={stopWheelPropagation}
+    onMouseDown={e => e.stopPropagation()}
+    onClick={e => e.stopPropagation()}
+    onContextMenu={e => e.stopPropagation()}
+    >
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
       {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
@@ -481,7 +497,7 @@ export default function MapBottomBar({
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
           }}>
-            {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
+            {chatLog.length > 0 ? chatLog.map(entry => (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2, padding: '1px 0' }}>
                 <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={18} />
                 <div style={{ flex: 1, minWidth: 0 }}>

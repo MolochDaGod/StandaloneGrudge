@@ -343,6 +343,14 @@ export default function AdminUI() {
             }}>
               Export / Import
             </button>
+            <a href="/admin" style={{
+              flex: 1, padding: '6px 0', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.03)', color: '#94a3b8', cursor: 'pointer',
+              fontSize: '0.65rem', textDecoration: 'none', textAlign: 'center',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              Admin Hub
+            </a>
             <a href="/" style={{
               flex: 1, padding: '6px 0', borderRadius: 6, border: '1px solid rgba(255,215,0,0.2)',
               background: 'rgba(255,215,0,0.05)', color: '#ffd700', cursor: 'pointer',
