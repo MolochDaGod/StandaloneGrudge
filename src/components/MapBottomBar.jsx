@@ -459,38 +459,37 @@ export default function MapBottomBar({
           flex: '0 0 22%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '6px 6px 4px 8px',
           overflow: 'hidden',
-          background: 'rgba(15,15,25,0.85)',
-          borderRadius: '4px 0 0 4px',
-          border: '1px solid rgba(255,215,0,0.12)',
-          borderRight: 'none',
+          position: 'relative',
+          backgroundImage: 'url(/ui/chat-background.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
         }}>
-          <div style={{
-            padding: '1px 6px 1px',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}>
-            <span className="font-cinzel" style={{ fontSize: '0.45rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
-          </div>
           <div ref={chatLogRef} style={{
-            flex: 1, overflowY: 'auto', padding: '2px 8px',
-            fontSize: '0.65rem', lineHeight: 1.5,
+            flex: 1, overflowY: 'auto',
+            padding: '8% 8% 2% 8%',
+            fontSize: '0.6rem', lineHeight: 1.4,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
           }}>
             {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
-              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 2, padding: '1px 0' }}>
-                <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={20} />
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2, padding: '1px 0' }}>
+                <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={18} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontWeight: 700, color: entry.color, marginRight: 4, fontSize: '0.6rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
-                  <span style={{ color: 'rgba(226,232,240,0.8)', fontWeight: 400 }}>{entry.line}</span>
+                  <span style={{ fontWeight: 700, color: entry.color, marginRight: 3, fontSize: '0.5rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
+                  <span style={{ color: 'rgba(226,232,240,0.75)', fontWeight: 400, fontSize: '0.5rem' }}>{entry.line}</span>
                 </div>
               </div>
             )) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.5rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex', gap: 0, alignItems: 'stretch',
+            padding: '0 7% 8% 7%',
+            height: '22%', minHeight: 0,
+          }}>
             <input
               type="text"
               value={chatInput}
@@ -498,20 +497,34 @@ export default function MapBottomBar({
               onKeyDown={(e) => { if (e.key === 'Enter') sendChat(); }}
               placeholder="Say something..."
               style={{
-                flex: 1, background: 'rgba(0,0,0,0.4)',
-                border: '1px solid rgba(255,215,0,0.1)',
-                borderRadius: 4, padding: '3px 6px',
-                color: 'rgba(226,232,240,0.9)', fontSize: '0.6rem',
+                flex: 1, background: 'rgba(0,0,0,0.3)',
+                border: 'none',
+                borderRadius: 0, padding: '2px 6px',
+                color: 'rgba(226,232,240,0.9)', fontSize: '0.55rem',
                 fontFamily: "'Jost', sans-serif", outline: 'none', minWidth: 0,
               }}
-              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.3)'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.1)'}
             />
-            <button onClick={sendChat} style={{
-              background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.15)',
-              borderRadius: 4, padding: '2px 6px', color: 'var(--gold)', fontSize: '0.55rem',
-              fontFamily: "'Cinzel', serif", fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-            }}>Send</button>
+            <button
+              onClick={sendChat}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.92)'; e.currentTarget.style.filter = 'brightness(1.4)'; }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
+              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                height: '100%',
+                transition: 'transform 0.1s, filter 0.15s',
+              }}
+            >
+              <img src="/ui/send-button.png" alt="Send" style={{
+                height: '100%',
+                width: 'auto',
+                display: 'block',
+              }} />
+            </button>
           </div>
         </div>
 
