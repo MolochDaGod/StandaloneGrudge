@@ -175,6 +175,10 @@ function GameApp() {
         <div style={contentStyle}>
           {renderScreen()}
         </div>
+        <div id="game-ui-portal" style={{
+          position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+          pointerEvents: 'none', zIndex: 10600,
+        }} />
         <FrameMaskLayer />
         <GameTooltipRenderer />
         <SettingsMenu />

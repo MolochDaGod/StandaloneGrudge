@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
@@ -434,7 +435,9 @@ export default function MapBottomBar({
     setChatInput('');
   };
 
-  return (
+  const portalTarget = document.getElementById('game-ui-portal');
+
+  const overlayContent = (
     <div id="game-ui-overlay">
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
@@ -673,4 +676,6 @@ export default function MapBottomBar({
       </div>
     </div>
   );
+
+  return portalTarget ? createPortal(overlayContent, portalTarget) : overlayContent;
 }

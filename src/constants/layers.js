@@ -135,10 +135,9 @@ export const ADMIN_GIZMO_PANEL = 10516;
 export const ADMIN_GIZMO_BUTTON = 10518;
 
 // ─── LAYER 14: MAP BOTTOM BAR & POPUPS (10600–10700) ───────
-// Inside WorldMap (content wrapper stacking context).
-// High values ensure bottom bar is above all map elements.
-// Sibling overlays (Settings, Loot, Admin) render outside
-// the content wrapper at 10510+ and naturally appear above.
+// MapBottomBar portals into #game-ui-portal (z-index 10600),
+// rendering OUTSIDE the content wrapper so it sits ABOVE the
+// frame border. Internal z-indices are relative within that portal.
 export const BOTTOM_BAR = 10600;
 export const BOTTOM_BAR_POPUPS = 10700;
 
