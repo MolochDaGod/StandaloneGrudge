@@ -445,10 +445,9 @@ export default function MapBottomBar({
       bottom: '2%',
       left: '1%',
       right: '1%',
-      height: BAR_HEIGHT,
       zIndex: 99999,
       display: 'flex',
-      alignItems: 'stretch',
+      alignItems: 'flex-end',
     }}>
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
@@ -457,6 +456,7 @@ export default function MapBottomBar({
         {/* LEFT PANEL: Party Log / Chat */}
         <div style={{
           flex: '0 0 22%',
+          height: '24vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -533,6 +533,7 @@ export default function MapBottomBar({
         {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
         <div style={{
           flex: '1 1 0',
+          height: '12vh',
           position: 'relative',
           backgroundImage: 'url(/ui/hotbar-background.png)',
           backgroundSize: '100% 100%',
@@ -589,6 +590,7 @@ export default function MapBottomBar({
         {/* RIGHT PANEL: War Party Status */}
         <div style={{
           flex: '0 0 22%',
+          height: '24vh',
           display: 'flex',
           flexDirection: 'column',
           padding: '6px 8px 4px 6px',
