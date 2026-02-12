@@ -12,7 +12,7 @@ import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
 
-const BAR_HEIGHT = '26.2%';
+const BAR_HEIGHT = '12vh';
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
 function ChatAvatar({ race, heroClass, size = 20 }) {
@@ -442,18 +442,13 @@ export default function MapBottomBar({
   const overlayContent = (
     <div id="game-ui-overlay" style={{
       position: 'fixed',
-      bottom: '12%',
-      left: '5%',
-      right: '5%',
+      bottom: '2%',
+      left: '1%',
+      right: '1%',
       height: BAR_HEIGHT,
       zIndex: 99999,
       display: 'flex',
       alignItems: 'stretch',
-      backgroundImage: 'url(/ui/bar-background.png)',
-      backgroundSize: '100% 100%',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center center',
-      borderRadius: 4,
     }}>
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
@@ -461,17 +456,21 @@ export default function MapBottomBar({
 
         {/* LEFT PANEL: Party Log / Chat */}
         <div style={{
-          flex: '0 0 28%',
+          flex: '0 0 22%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 8px 8px 12px',
+          padding: '6px 6px 4px 8px',
           overflow: 'hidden',
+          background: 'rgba(15,15,25,0.85)',
+          borderRadius: '4px 0 0 4px',
+          border: '1px solid rgba(255,215,0,0.12)',
+          borderRight: 'none',
         }}>
           <div style={{
-            padding: '3px 8px 2px',
+            padding: '1px 6px 1px',
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
-            <span className="font-cinzel" style={{ fontSize: '0.55rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+            <span className="font-cinzel" style={{ fontSize: '0.45rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
           </div>
           <div ref={chatLogRef} style={{
             flex: 1, overflowY: 'auto', padding: '2px 8px',
@@ -519,49 +518,51 @@ export default function MapBottomBar({
         {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
         <div style={{
           flex: '1 1 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '8px 4px 8px',
+          position: 'relative',
           backgroundImage: 'url(/ui/hotbar-background.png)',
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
         }}>
           <div style={{
+            position: 'absolute',
+            top: '48%',
+            left: '5.5%',
+            right: '5.5%',
+            height: '48%',
             display: 'grid',
             gridTemplateColumns: 'repeat(8, 1fr)',
-            gap: 3,
-            width: '100%',
-            maxWidth: 480,
+            gap: '2%',
           }}>
             {buttons.map(btn => (
               <button key={btn.id} onClick={btn.action} style={{
                 background: 'transparent',
                 border: 'none',
-                borderRadius: 4,
-                padding: '2px',
+                borderRadius: 2,
+                padding: 0,
                 cursor: 'pointer',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.15s',
                 position: 'relative',
                 animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                aspectRatio: '1',
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
               }}
-                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.12)'; }}
+                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; }}
                 onMouseMove={e => updateTooltipPosition(e)}
                 onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'transparent'; }}
               >
                 {btn.img ? (
-                  <img src={btn.img} alt={btn.label} style={{ width: '80%', height: '80%', objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
+                  <img src={btn.img} alt={btn.label} style={{ width: '85%', height: '85%', objectFit: 'contain', imageRendering: 'auto' }} />
                 ) : (
-                  <InlineIcon name={btn.icon} size={28} />
+                  <InlineIcon name={btn.icon} size={24} />
                 )}
-                <span style={{ fontSize: '0.4rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1 }}>{btn.label}</span>
                 {btn.badge && (
                   <span style={{
-                    position: 'absolute', top: -2, right: -2,
-                    background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
-                    fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
+                    position: 'absolute', top: -1, right: -1,
+                    background: 'var(--gold)', color: '#000', fontSize: '0.35rem',
+                    fontWeight: 800, borderRadius: '50%', width: 12, height: 12,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>{btn.badge}</span>
                 )}
@@ -572,11 +573,16 @@ export default function MapBottomBar({
 
         {/* RIGHT PANEL: War Party Status */}
         <div style={{
-          flex: '0 0 20%',
+          flex: '0 0 22%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 12px 8px 8px',
+          padding: '6px 8px 4px 6px',
           position: 'relative',
+          backgroundImage: 'url(/ui/bar-background.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
+          borderRadius: '0 4px 4px 0',
         }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
             {popupButtons.map(pb => (
@@ -610,7 +616,7 @@ export default function MapBottomBar({
                   const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
                   const isSelected = selectedPartyHero === hero.id;
                   const spriteData = getPlayerSprite(hero.classId, hero.raceId);
-                  const circleSize = 44;
+                  const circleSize = 32;
                   const fw = spriteData?.frameWidth || 100;
                   const spriteScale = (circleSize / fw) * 1.1;
                   const build = heroStats ? getBuildClassification(heroStats, hero.attributes || {}) : null;
