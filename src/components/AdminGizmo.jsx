@@ -232,7 +232,7 @@ function AdminGizmo() {
           F
         </button>
         <button
-          onClick={() => setEnabled(e => !e)}
+          onClick={() => setEnabled(e => { const next = !e; window.__adminGizmoEnabled = next; window.dispatchEvent(new Event('adminModeChange')); return next; })}
           style={{
             width: 44, height: 44, borderRadius: '50%',
             background: enabled

@@ -6,6 +6,7 @@ import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
+import { useDraggableNodes } from '../hooks/useSceneDrag';
 
 const RESOURCE_NODES = [
   { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24', img: '/images/buildings/gold_mine.png' },
@@ -44,6 +45,12 @@ export default function CampScene() {
   const [facingLeft, setFacingLeft] = useState(false);
   const walkTimeout = useRef(null);
 
+  const allNodes = [
+    ...RESOURCE_NODES.map(n => ({ id: n.id, x: n.x, y: n.y })),
+    ...(SCENE_NPCS.camp || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
+  ];
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
+
   React.useEffect(() => {
     const interval = setInterval(() => tickHarvests(), 1000);
     return () => clearInterval(interval);
@@ -81,7 +88,7 @@ export default function CampScene() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div ref={sceneRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/backgrounds/scene_camp.png)',
@@ -131,13 +138,20 @@ export default function CampScene() {
         const assignedHeroId = activeHarvests[node.id];
         const assignedHero = assignedHeroId ? heroRoster.find(h => h.id === assignedHeroId) : null;
         const resourceAmount = Math.floor(harvestResources[node.resource] || 0);
+        const pos = positions[node.id] || { x: node.x, y: node.y };
 
         return (
-          <div key={node.id} onClick={() => handleNodeClick(node)} style={{
-            position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
-            transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: SCENE.NODES,
-            textAlign: 'center',
-          }}>
+          <div key={node.id}
+            onClick={() => !adminMode && handleNodeClick(node)}
+            onMouseDown={(e) => onNodeDragStart(node.id, e)}
+            style={{
+              position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
+              transform: 'translate(-50%, -50%)',
+              cursor: adminMode ? 'grab' : 'pointer',
+              zIndex: SCENE.NODES,
+              textAlign: 'center',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
             <div style={{
               width: 72, height: 72, borderRadius: 10,
               background: `radial-gradient(circle, ${node.color}25, rgba(0,0,0,0.3))`,
@@ -172,6 +186,12 @@ export default function CampScene() {
               }}>
                 {assignedHero.name}
               </div>
+            )}
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3,
+              }}>x:{pos.x} y:{pos.y}</div>
             )}
 
             {selectedNode === node.id && (
@@ -263,14 +283,28 @@ export default function CampScene() {
         </div>
       )}
 
-      {(SCENE_NPCS.camp || []).map(npc => (
-        <div key={npc.id} style={{
-          position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
-        }}>
-          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
-        </div>
-      ))}
+      {(SCENE_NPCS.camp || []).map(npc => {
+        const npcPos = positions[npc.id] || { x: npc.x, y: npc.y };
+        return (
+          <div key={npc.id}
+            onMouseDown={(e) => onNodeDragStart(npc.id, e)}
+            style={{
+              position: 'absolute', left: `${npcPos.x}%`, top: `${npcPos.y}%`,
+              transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX,
+              pointerEvents: adminMode ? 'auto' : 'none',
+              cursor: adminMode ? 'grab' : 'default',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
+            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3, marginTop: 2,
+              }}>x:{npcPos.x} y:{npcPos.y}</div>
+            )}
+          </div>
+        );
+      })}
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',

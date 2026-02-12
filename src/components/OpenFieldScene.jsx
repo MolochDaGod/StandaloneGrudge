@@ -6,6 +6,7 @@ import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
+import { useDraggableNodes } from '../hooks/useSceneDrag';
 
 const FIELD_EVENTS = [
   { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/hunt_battle.png' },
@@ -38,6 +39,12 @@ export default function OpenFieldScene() {
   const [interacted, setInteracted] = useState([]);
   const [message, setMessage] = useState(null);
   const walkTimeout = useRef(null);
+
+  const allNodes = [
+    ...FIELD_EVENTS.map(n => ({ id: n.id, x: n.x, y: n.y })),
+    ...(SCENE_NPCS.field || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
+  ];
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
@@ -85,7 +92,7 @@ export default function OpenFieldScene() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div ref={sceneRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/backgrounds/scene_field.png)',
@@ -117,13 +124,19 @@ export default function OpenFieldScene() {
 
       {FIELD_EVENTS.map(evt => {
         const done = interacted.includes(evt.id);
+        const pos = positions[evt.id] || { x: evt.x, y: evt.y };
         return (
-          <div key={evt.id} onClick={() => handleEventClick(evt)} style={{
-            position: 'absolute', left: `${evt.x}%`, top: `${evt.y}%`,
-            transform: 'translate(-50%, -50%)', cursor: done ? 'default' : 'pointer',
-            zIndex: SCENE.NODES, textAlign: 'center', opacity: done ? 0.3 : 1,
-            transition: 'opacity 0.3s',
-          }}>
+          <div key={evt.id}
+            onClick={() => !adminMode && handleEventClick(evt)}
+            onMouseDown={(e) => onNodeDragStart(evt.id, e)}
+            style={{
+              position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
+              transform: 'translate(-50%, -50%)',
+              cursor: adminMode ? 'grab' : (done ? 'default' : 'pointer'),
+              zIndex: SCENE.NODES, textAlign: 'center', opacity: done ? 0.3 : 1,
+              transition: 'opacity 0.3s',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
             <div style={{
               width: 72, height: 72, borderRadius: 10,
               background: done
@@ -145,6 +158,12 @@ export default function OpenFieldScene() {
             }}>
               {evt.name}
             </div>
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3,
+              }}>x:{pos.x} y:{pos.y}</div>
+            )}
           </div>
         );
       })}
@@ -177,14 +196,28 @@ export default function OpenFieldScene() {
         </div>
       )}
 
-      {(SCENE_NPCS.field || []).map(npc => (
-        <div key={npc.id} style={{
-          position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
-        }}>
-          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
-        </div>
-      ))}
+      {(SCENE_NPCS.field || []).map(npc => {
+        const npcPos = positions[npc.id] || { x: npc.x, y: npc.y };
+        return (
+          <div key={npc.id}
+            onMouseDown={(e) => onNodeDragStart(npc.id, e)}
+            style={{
+              position: 'absolute', left: `${npcPos.x}%`, top: `${npcPos.y}%`,
+              transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX,
+              pointerEvents: adminMode ? 'auto' : 'none',
+              cursor: adminMode ? 'grab' : 'default',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
+            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3, marginTop: 2,
+              }}>x:{npcPos.x} y:{npcPos.y}</div>
+            )}
+          </div>
+        );
+      })}
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',

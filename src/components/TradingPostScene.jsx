@@ -7,6 +7,7 @@ import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
+import { useDraggableNodes } from '../hooks/useSceneDrag';
 
 const TRADER_NODES = [
   { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/images/buildings/weapons_shop.png' },
@@ -37,6 +38,12 @@ export default function TradingPostScene() {
   const [facingLeft, setFacingLeft] = useState(false);
   const [tab, setTab] = useState('buy');
   const walkTimeout = useRef(null);
+
+  const allNodes = [
+    ...TRADER_NODES.map(n => ({ id: n.id, x: n.x, y: n.y })),
+    ...(SCENE_NPCS.trading || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
+  ];
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
 
   useEffect(() => {
     if (shopInventory.length === 0) refreshShop();
@@ -87,7 +94,7 @@ export default function TradingPostScene() {
   const tierColors = { 1: '#9ca3af', 2: '#4ade80', 3: '#3b82f6', 4: '#a78bfa', 5: '#f59e0b', 6: '#ef4444', 7: '#ec4899', 8: '#fbbf24' };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div ref={sceneRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/backgrounds/scene_trading.png)',
@@ -107,28 +114,43 @@ export default function TradingPostScene() {
         </span>
       </div>
 
-      {TRADER_NODES.map(trader => (
-        <div key={trader.id} onClick={() => handleTraderClick(trader.id)} style={{
-          position: 'absolute', left: `${trader.x}%`, top: `${trader.y}%`,
-          transform: 'translate(-50%, -50%)', cursor: 'pointer', zIndex: SCENE.NODES, textAlign: 'center',
-        }}>
-          <div style={{
-            width: 76, height: 76, borderRadius: 10,
-            background: `radial-gradient(circle, ${trader.color}25, rgba(0,0,0,0.3))`,
-            border: `2px solid ${trader.color}80`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 16px ${trader.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
-            animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
-            overflow: 'hidden',
-          }}>
-            <img src={trader.img} alt={trader.name} style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'auto' }} />
+      {TRADER_NODES.map(trader => {
+        const pos = positions[trader.id] || { x: trader.x, y: trader.y };
+        return (
+          <div key={trader.id}
+            onClick={() => !adminMode && handleTraderClick(trader.id)}
+            onMouseDown={(e) => onNodeDragStart(trader.id, e)}
+            style={{
+              position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
+              transform: 'translate(-50%, -50%)',
+              cursor: adminMode ? 'grab' : 'pointer',
+              zIndex: SCENE.NODES, textAlign: 'center',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
+            <div style={{
+              width: 76, height: 76, borderRadius: 10,
+              background: `radial-gradient(circle, ${trader.color}25, rgba(0,0,0,0.3))`,
+              border: `2px solid ${trader.color}80`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 16px ${trader.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
+              animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
+              overflow: 'hidden',
+            }}>
+              <img src={trader.img} alt={trader.name} style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'auto' }} />
+            </div>
+            <div className="font-cinzel" style={{
+              color: trader.color, fontSize: '0.9rem', fontWeight: 700, marginTop: 4,
+              textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
+            }}>{trader.name}</div>
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3,
+              }}>x:{pos.x} y:{pos.y}</div>
+            )}
           </div>
-          <div className="font-cinzel" style={{
-            color: trader.color, fontSize: '0.9rem', fontWeight: 700, marginTop: 4,
-            textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
-          }}>{trader.name}</div>
-        </div>
-      ))}
+        );
+      })}
 
       {primarySprite && (
         <div style={{
@@ -241,14 +263,28 @@ export default function TradingPostScene() {
         </div>
       )}
 
-      {(SCENE_NPCS.trading || []).map(npc => (
-        <div key={npc.id} style={{
-          position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
-          transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
-        }}>
-          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
-        </div>
-      ))}
+      {(SCENE_NPCS.trading || []).map(npc => {
+        const npcPos = positions[npc.id] || { x: npc.x, y: npc.y };
+        return (
+          <div key={npc.id}
+            onMouseDown={(e) => onNodeDragStart(npc.id, e)}
+            style={{
+              position: 'absolute', left: `${npcPos.x}%`, top: `${npcPos.y}%`,
+              transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX,
+              pointerEvents: adminMode ? 'auto' : 'none',
+              cursor: adminMode ? 'grab' : 'default',
+              outline: adminMode ? '2px dashed #f59e0b' : 'none',
+            }}>
+            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            {adminMode && (
+              <div style={{
+                color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
+                background: 'rgba(0,0,0,0.8)', padding: '1px 4px', borderRadius: 3, marginTop: 2,
+              }}>x:{npcPos.x} y:{npcPos.y}</div>
+            )}
+          </div>
+        );
+      })}
 
       <div onClick={exitScene} style={{
         position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',

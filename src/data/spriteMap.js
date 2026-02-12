@@ -1245,7 +1245,7 @@ export const npcSpriteMap = {
   barmaid: { src: '/sprites/npcs/medieval/barmaid.png', frameWidth: 34, frameHeight: 34, frames: 5 },
   villager_01: { src: '/sprites/npcs/medieval/villager_01.png', frameWidth: 34, frameHeight: 34, frames: 5 },
   villager_02: { src: '/sprites/npcs/medieval/villager_02.png', frameWidth: 34, frameHeight: 34, frames: 5 },
-  elder: { src: '/sprites/npcs/medieval/elder.png', frameWidth: 34, frameHeight: 34, frames: 5 },
+  elder: { src: '/sprites/npcs/medieval/elder.png', frameWidth: 32, frameHeight: 32, frames: 4 },
   beggar: { src: '/sprites/npcs/medieval/beggar.png', frameWidth: 32, frameHeight: 32, frames: 4 },
   farmer_01: { src: '/sprites/npcs/medieval/farmer_01.png', frameWidth: 32, frameHeight: 32, frames: 5 },
   farmer_02: { src: '/sprites/npcs/medieval/farmer_02.png', frameWidth: 32, frameHeight: 32, frames: 5 },
