@@ -1248,7 +1248,7 @@ export default function BattleScreen() {
     if (dungeonTheme === 'void') return isDungeonBoss ? '/backgrounds/portal_arena.png' : '/backgrounds/purple_dungeon.png';
     return isDungeonBoss ? '/backgrounds/scene_field.png' : '/backgrounds/scene_dungeon.png';
   };
-  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : null));
+  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : '/backgrounds/battle_arena_default.png'));
   const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];
