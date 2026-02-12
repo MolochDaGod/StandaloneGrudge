@@ -549,7 +549,6 @@ function HeroSlideshow() {
     human_warrior: 2,
     undead_ranger: 0.75,
     dwarf_worge: 0.5,
-    barbarian_mage: 0.7,
   };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
@@ -558,11 +557,13 @@ function HeroSlideshow() {
     human_worge: -50,
     orc_mage: 20,
     orc_worge: 50,
-    barbarian_mage: 20,
+    orc_ranger: 70,
   };
   const SPRITE_X_OFFSETS = {
     human_warrior: -30,
     orc_mage: -70,
+    orc_ranger: -30,
+    elf_mage: -30,
   };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
   const spriteXOffset = SPRITE_X_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
