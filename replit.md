@@ -68,3 +68,10 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **discord.js:** Discord API client library.
 - **Google Fonts:** For Cinzel and Jost fonts.
 - **Web Audio API:** For in-game sound effects and music.
+
+## Admin Tools
+- **Admin UI Layout Editor (`/adminui`):** Visual drag-and-drop editor for positioning, sizing, and locking UI elements across game screens (world, battle, scene). Saves layouts to localStorage via `src/utils/uiLayoutConfig.js`. Game components read saved configs via `getElementStyle()`. Supports export/import of layout JSON.
+- **Admin Sprite Editor (`/adminsprite`):** Dev tool for configuring character sprites, projectiles, buffs/effects, weapons, and effect layers.
+- **Admin Map (`/adminmap`):** Dev tool for map configuration.
+- **Admin Battle (`/adminbattle`):** Dev tool for battle testing.
+- **Admin Gizmo:** In-game DOM element inspector with drag/resize (toggled via gear button).

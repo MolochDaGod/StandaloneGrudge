@@ -11,6 +11,7 @@ import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
+import { getElementStyle } from '../utils/uiLayoutConfig';
 
 const BAR_HEIGHT = '12vh';
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
@@ -439,8 +440,13 @@ export default function MapBottomBar({
 
   const portalTarget = document.getElementById('game-ui-portal');
 
+  const barLayout = getElementStyle('world', 'bottomBar');
+  const chatLayout = getElementStyle('world', 'chatPanel');
+  const hotbarLayout = getElementStyle('world', 'hotbar');
+  const warPartyLayout = getElementStyle('world', 'warParty');
+
   const overlayContent = (
-    <div id="game-ui-overlay" style={{
+    <div id="game-ui-overlay" data-ui-id="bottomBar" style={{
       position: 'fixed',
       bottom: '2%',
       left: '1%',
@@ -448,13 +454,14 @@ export default function MapBottomBar({
       zIndex: 99999,
       display: 'flex',
       alignItems: 'flex-end',
+      ...barLayout,
     }}>
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
       {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
 
         {/* LEFT PANEL: Party Log / Chat */}
-        <div style={{
+        <div data-ui-id="chatPanel" style={{
           flex: '0 0 22%',
           height: '24vh',
           display: 'flex',
@@ -465,6 +472,7 @@ export default function MapBottomBar({
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
+          ...chatLayout,
         }}>
           <div ref={chatLogRef} style={{
             flex: 1, overflowY: 'auto',
@@ -529,7 +537,7 @@ export default function MapBottomBar({
         </div>
 
         {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
-        <div style={{
+        <div data-ui-id="hotbar" style={{
           flex: '1 1 0',
           height: '12vh',
           position: 'relative',
@@ -537,6 +545,7 @@ export default function MapBottomBar({
           backgroundSize: '100% 100%',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
+          ...hotbarLayout,
         }}>
           <div style={{
             position: 'absolute',
@@ -586,7 +595,7 @@ export default function MapBottomBar({
         </div>
 
         {/* RIGHT PANEL: War Party Status */}
-        <div style={{
+        <div data-ui-id="warParty" style={{
           flex: '0 0 22%',
           height: '24vh',
           display: 'flex',
@@ -598,6 +607,7 @@ export default function MapBottomBar({
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
           borderRadius: '0 4px 4px 0',
+          ...warPartyLayout,
         }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
             {popupButtons.map(pb => (
