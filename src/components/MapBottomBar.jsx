@@ -13,7 +13,7 @@ import RadarChart from './RadarChart';
 import InventoryModal from './InventoryModal';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
-import { getBuildClassification } from '../data/attributes';
+import { getBuildClassification, attributeDefinitions, TOTAL_POINTS_AT_LEVEL, calculateCombatPower } from '../data/attributes';
 import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/uiLayoutConfig';
 
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
@@ -221,6 +221,19 @@ function GearPopup({ onClose }) {
   );
 }
 
+const ATTR_KEYS = ['Strength', 'Intellect', 'Vitality', 'Dexterity', 'Endurance', 'Wisdom', 'Agility', 'Tactics'];
+const ATTR_ABBREV = { Strength: 'STR', Intellect: 'INT', Vitality: 'VIT', Dexterity: 'DEX', Endurance: 'END', Wisdom: 'WIS', Agility: 'AGI', Tactics: 'TAC' };
+
+function getStatTierColor(value, maxPoints) {
+  const ratio = maxPoints > 0 ? value / maxPoints : 0;
+  if (ratio >= 0.50) return { bar: 'linear-gradient(90deg, #89f7fe, #b0f0ff)', label: '#89f7fe', name: 'Mythical' };
+  if (ratio >= 0.35) return { bar: 'linear-gradient(90deg, #ea580c, #f97316)', label: '#f97316', name: 'Legendary' };
+  if (ratio >= 0.25) return { bar: 'linear-gradient(90deg, #7c3aed, #a855f7)', label: '#a855f7', name: 'Epic' };
+  if (ratio >= 0.15) return { bar: 'linear-gradient(90deg, #2563eb, #3b82f6)', label: '#3b82f6', name: 'Rare' };
+  if (ratio >= 0.05) return { bar: 'linear-gradient(90deg, #16a34a, #22c55e)', label: '#22c55e', name: 'Uncommon' };
+  return { bar: 'linear-gradient(90deg, #6b7280, #9ca3af)', label: '#9ca3af', name: 'Common' };
+}
+
 function CharacterPopup({ onClose }) {
   const { heroRoster, activeHeroIds } = useGameStore();
   const [selectedHero, setSelectedHero] = useState(() => {
@@ -231,19 +244,19 @@ function CharacterPopup({ onClose }) {
   const stats = hero ? getHeroStatsWithBonuses(hero) : null;
   const cls = hero ? classDefinitions[hero.classId] : null;
   const race = hero ? raceDefinitions[hero.raceId] : null;
+  const attrs = hero?.attributePoints || {};
+  const maxPoints = hero ? TOTAL_POINTS_AT_LEVEL(hero.level || 0) : 1;
+  const combatPower = stats ? calculateCombatPower(stats) : 0;
+  const buildInfo = stats ? getBuildClassification(stats, attrs) : null;
 
-  const statLabels = ['STR', 'AGI', 'INT', 'VIT', 'LCK', 'DEF', 'SPD', 'CHA'];
-  const statKeys = ['strength', 'agility', 'intellect', 'vitality', 'luck', 'defense', 'speed', 'charisma'];
-  const maxStat = 100;
-
-  const radarValues = stats ? statKeys.map(k => Math.min(100, ((stats[k] || 0) / maxStat) * 100)) : [];
-
-  const totalPower = stats ? statKeys.reduce((sum, k) => sum + (stats[k] || 0), 0) + (hero.level || 1) * 10 : 0;
+  const radarLabels = ATTR_KEYS.map(k => ATTR_ABBREV[k]);
+  const radarValues = ATTR_KEYS.map(k => Math.min(100, ((attrs[k] || 0) / Math.max(maxPoints * 0.5, 1)) * 100));
+  const radarPointColors = ATTR_KEYS.map(k => attributeDefinitions[k]?.color || '#a5b4d0');
 
   return (
     <div className="ui-element panel-style" style={{
       position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-      padding: 16, width: 400, maxHeight: 500, overflowY: 'auto',
+      padding: 16, width: 420, maxHeight: 520, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -276,36 +289,51 @@ function CharacterPopup({ onClose }) {
               <div style={{ color: 'var(--muted)', fontSize: '0.55rem' }}>
                 Lv.{hero.level} {race?.name} {cls?.name}
               </div>
-              <div style={{
-                marginTop: 4, background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(251,191,36,0.1))',
-                border: '1px solid rgba(168,85,247,0.3)', borderRadius: 6, padding: '3px 8px',
-                display: 'inline-block',
-              }}>
-                <span style={{ color: '#c084fc', fontSize: '0.7rem', fontWeight: 700 }}>Power: {totalPower}</span>
+              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(251,191,36,0.1))',
+                  border: '1px solid rgba(168,85,247,0.3)', borderRadius: 6, padding: '3px 8px',
+                }}>
+                  <span style={{ color: '#c084fc', fontSize: '0.65rem', fontWeight: 700 }}>CP: {combatPower}</span>
+                </div>
+                {buildInfo && (
+                  <div style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    border: `1px solid ${buildInfo.tierColor}44`, borderRadius: 6, padding: '3px 8px',
+                  }}>
+                    <span style={{ color: buildInfo.tierColor, fontSize: '0.65rem', fontWeight: 700 }}>{buildInfo.rating} — {buildInfo.tier}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             <div style={{ flex: '0 0 auto' }}>
-              <RadarChart labels={statLabels} values={radarValues} size={160} color="#a855f7" />
+              <RadarChart labels={radarLabels} values={radarValues} size={160} color="#a855f7" pointColors={radarPointColors} />
             </div>
-            <div style={{ flex: 1, display: 'grid', gap: 4 }}>
-              {statKeys.map((k, i) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 28, fontSize: '0.55rem', color: '#c084fc', fontWeight: 700, textAlign: 'right' }}>{statLabels[i]}</span>
-                  <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${Math.min(100, (stats[k] / maxStat) * 100)}%`,
-                      background: 'linear-gradient(90deg, #7c3aed, #c084fc)',
-                      borderRadius: 3, transition: 'width 0.3s',
-                    }} />
+            <div style={{ flex: 1, display: 'grid', gap: 5 }}>
+              {ATTR_KEYS.map((attrKey) => {
+                const val = attrs[attrKey] || 0;
+                const tier = getStatTierColor(val, maxPoints);
+                const pct = Math.min(100, (val / Math.max(maxPoints * 0.5, 1)) * 100);
+                return (
+                  <div key={attrKey} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 28, fontSize: '0.55rem', color: tier.label, fontWeight: 700, textAlign: 'right' }}>{ATTR_ABBREV[attrKey]}</span>
+                    <div style={{ flex: 1, height: 7, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
+                      <div style={{
+                        height: '100%', width: `${pct}%`,
+                        background: tier.bar,
+                        borderRadius: 3, transition: 'width 0.3s',
+                        boxShadow: val > 0 ? `0 0 4px ${tier.label}44` : 'none',
+                      }} />
+                    </div>
+                    <span style={{ width: 20, fontSize: '0.55rem', color: tier.label, fontWeight: 600, textAlign: 'right' }}>{val}</span>
                   </div>
-                  <span style={{ width: 24, fontSize: '0.55rem', color: 'var(--text)', fontWeight: 600, textAlign: 'right' }}>{stats[k]}</span>
-                </div>
-              ))}
+                );
+              })}
               <div style={{ marginTop: 6, padding: '4px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: 4 }}>
-                <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>HP: {hero.currentHealth}/{stats.health} | MP: {hero.currentMana}/{stats.mana}</div>
+                <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>HP: {Math.floor(hero.currentHealth || 0)}/{Math.floor(stats.health)} | MP: {Math.floor(hero.currentMana || 0)}/{Math.floor(stats.mana)} | SP: {Math.floor(hero.currentStamina || 0)}/{Math.floor(stats.stamina)}</div>
               </div>
             </div>
           </div>

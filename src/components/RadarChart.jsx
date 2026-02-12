@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function RadarChart({ labels, values, size = 180, color = '#6ee7b7' }) {
+export default function RadarChart({ labels, values, size = 180, color = '#6ee7b7', pointColors }) {
   const cx = size / 2;
   const cy = size / 2;
   const radius = size * 0.38;
@@ -59,6 +59,7 @@ export default function RadarChart({ labels, values, size = 180, color = '#6ee7b
     const lx = cx + labelR * Math.cos(angle);
     const ly = cy + labelR * Math.sin(angle);
     const anchor = Math.abs(Math.cos(angle)) < 0.01 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
+    const labelColor = pointColors?.[i] || '#a5b4d0';
     return (
       <text
         key={`label-${i}`}
@@ -66,9 +67,10 @@ export default function RadarChart({ labels, values, size = 180, color = '#6ee7b
         y={ly}
         textAnchor={anchor}
         dominantBaseline="middle"
-        fill="#a5b4d0"
+        fill={labelColor}
         fontSize="9"
         fontFamily="'Jost', sans-serif"
+        fontWeight="600"
       >
         {label}
       </text>
@@ -85,17 +87,20 @@ export default function RadarChart({ labels, values, size = 180, color = '#6ee7b
         stroke={color}
         strokeWidth={2}
       />
-      {dataPoints.map((p, i) => (
-        <circle
-          key={`dot-${i}`}
-          cx={p.x}
-          cy={p.y}
-          r={3}
-          fill={color}
-          stroke="#fff"
-          strokeWidth={1}
-        />
-      ))}
+      {dataPoints.map((p, i) => {
+        const dotColor = pointColors?.[i] || color;
+        return (
+          <circle
+            key={`dot-${i}`}
+            cx={p.x}
+            cy={p.y}
+            r={3}
+            fill={dotColor}
+            stroke="#fff"
+            strokeWidth={1}
+          />
+        );
+      })}
       {labelElements}
     </svg>
   );
