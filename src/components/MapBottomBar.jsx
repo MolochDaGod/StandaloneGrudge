@@ -15,6 +15,7 @@ import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
 import { getElementStyle, getElementRect } from '../utils/uiLayoutConfig';
+import { OrnatePanel, OrnateSlot } from './OrnatePanel';
 
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
@@ -480,23 +481,20 @@ export default function MapBottomBar({
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
       {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
 
-        <div data-ui-id="chatPanel" style={{
+        <OrnatePanel data-ui-id="chatPanel" style={{
           position: 'absolute',
           ...chatStyle,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          backgroundImage: 'url(/ui/chat-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center center',
         }}>
           <div ref={chatLogRef} style={{
             flex: 1, overflowY: 'auto',
-            padding: '8% 8% 2% 8%',
+            padding: '12px 14px 4px 14px',
             fontSize: '0.6rem', lineHeight: 1.4,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
+            position: 'relative', zIndex: 3,
           }}>
             {chatLog.length > 0 ? chatLog.map(entry => (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2, padding: '1px 0' }}>
@@ -512,8 +510,9 @@ export default function MapBottomBar({
           </div>
           <div style={{
             display: 'flex', gap: 0, alignItems: 'stretch',
-            padding: '0 7% 8% 7%',
+            padding: '0 12px 10px 12px',
             height: '22%', minHeight: 0,
+            position: 'relative', zIndex: 3,
           }}>
             <input
               type="text"
@@ -522,9 +521,9 @@ export default function MapBottomBar({
               onKeyDown={(e) => { if (e.key === 'Enter') sendChat(); }}
               placeholder="Say something..."
               style={{
-                flex: 1, background: 'rgba(0,0,0,0.3)',
-                border: 'none',
-                borderRadius: 0, padding: '2px 6px',
+                flex: 1, background: 'rgba(0,0,0,0.4)',
+                border: '1px solid rgba(184,150,62,0.2)',
+                borderRadius: 2, padding: '2px 6px',
                 color: 'rgba(226,232,240,0.9)', fontSize: '0.55rem',
                 fontFamily: "'Jost', sans-serif", outline: 'none', minWidth: 0,
               }}
@@ -536,93 +535,89 @@ export default function MapBottomBar({
               onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
               style={{
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
+                background: 'linear-gradient(180deg, rgba(184,150,62,0.3) 0%, rgba(122,99,40,0.3) 100%)',
+                border: '1px solid rgba(184,150,62,0.35)',
+                borderLeft: 'none',
+                borderRadius: '0 2px 2px 0',
+                padding: '0 8px',
                 cursor: 'pointer',
-                height: '100%',
+                color: '#d4af5a',
+                fontSize: '0.55rem',
+                fontFamily: "'Cinzel', serif",
+                fontWeight: 700,
+                letterSpacing: '0.03em',
                 transition: 'transform 0.1s, filter 0.15s',
               }}
             >
-              <img src="/ui/send-button.png" alt="Send" style={{
-                height: '100%',
-                width: 'auto',
-                display: 'block',
-              }} />
+              Send
             </button>
           </div>
-        </div>
+        </OrnatePanel>
 
-        <div data-ui-id="hotbar" style={{
+        <OrnatePanel data-ui-id="hotbar" style={{
           position: 'absolute',
           ...hotbarStyle,
-          backgroundImage: 'url(/ui/hotbar-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '8px 20px',
         }}>
           <div style={{
-            position: 'absolute',
-            top: '18%',
-            left: '5.5%',
-            right: '5.5%',
-            bottom: '16%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(8, 1fr)',
-            gap: '1.2%',
+            display: 'flex',
+            gap: 5,
             alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            zIndex: 3,
+            width: '100%',
           }}>
             {resolvedSlots.map(btn => (
-              <button key={btn.slotIndex} onClick={btn.action || undefined}
-                onContextMenu={e => handleSlotRightClick(e, btn.slotIndex)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: 2,
-                  padding: 0,
-                  cursor: btn.action ? 'pointer' : 'default',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                  position: 'relative',
-                  animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                  width: '100%',
-                  height: '100%',
-                  overflow: 'hidden',
-                }}
-                onMouseEnter={e => { showTooltip(btn.label + (btn.action ? '' : ' (right-click to assign)'), e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; }}
-                onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'transparent'; }}
+              <OrnateSlot key={btn.slotIndex} empty={!btn.action && !btn.icon && !btn.img}
+                style={{ flex: '1 1 0', maxWidth: 48, aspectRatio: '1', height: 'auto', cursor: btn.action ? 'pointer' : 'default' }}
               >
-                {btn.img ? (
-                  <img src={btn.img} alt={btn.label} style={{ width: '85%', height: '85%', objectFit: 'contain', imageRendering: 'auto' }} />
-                ) : btn.icon ? (
-                  (() => { const ip = getIconPlacement('hotbarIcons'); return <InlineIcon name={btn.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
-                ) : (
-                  <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)' }}>{btn.slotIndex + 1}</span>
-                )}
-                {btn.badge && (
-                  <span style={{
-                    position: 'absolute', top: -1, right: -1,
-                    background: 'var(--gold)', color: '#000', fontSize: '0.35rem',
-                    fontWeight: 800, borderRadius: '50%', width: 12, height: 12,
+                <button onClick={btn.action || undefined}
+                  onContextMenu={e => handleSlotRightClick(e, btn.slotIndex)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'inherit',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{btn.badge}</span>
-                )}
-              </button>
+                    width: '100%', height: '100%',
+                    position: 'relative',
+                    animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                  }}
+                  onMouseEnter={e => { showTooltip(btn.label + (btn.action ? '' : ' (right-click to assign)'), e); e.currentTarget.parentElement.style.borderColor = '#d4af5a'; }}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.borderColor = ''; }}
+                >
+                  {btn.img ? (
+                    <img src={btn.img} alt={btn.label} style={{ width: '80%', height: '80%', objectFit: 'contain', imageRendering: 'auto' }} />
+                  ) : btn.icon ? (
+                    (() => { const ip = getIconPlacement('hotbarIcons'); return <InlineIcon name={btn.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+                  ) : (
+                    <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.12)', fontFamily: "'Cinzel', serif" }}>{btn.slotIndex + 1}</span>
+                  )}
+                  {btn.badge && (
+                    <span style={{
+                      position: 'absolute', top: -3, right: -3,
+                      background: 'var(--gold)', color: '#000', fontSize: '0.35rem',
+                      fontWeight: 800, borderRadius: '50%', width: 12, height: 12,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      zIndex: 4,
+                    }}>{btn.badge}</span>
+                  )}
+                </button>
+              </OrnateSlot>
             ))}
           </div>
-        </div>
+        </OrnatePanel>
 
-        <div data-ui-id="warParty" style={{
+        <OrnatePanel data-ui-id="warParty" style={{
           position: 'absolute',
           ...warPartyStyle,
           display: 'flex',
           flexDirection: 'column',
-          backgroundImage: 'url(/ui/bar-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center center',
-          borderRadius: '0 4px 4px 0',
           overflow: 'visible',
         }}>
           <div style={{
@@ -670,6 +665,7 @@ export default function MapBottomBar({
             flexDirection: 'column',
             overflow: 'hidden',
             padding: '10px 12px 10px 10px',
+            position: 'relative', zIndex: 3,
           }}>
             <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
@@ -771,7 +767,7 @@ export default function MapBottomBar({
               </div>
             </div>
           </div>
-        </div>
+        </OrnatePanel>
 
     </div>
   );
