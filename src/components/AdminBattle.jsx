@@ -162,6 +162,7 @@ export default function AdminBattle() {
   const [enemyClass, setEnemyClass] = useState('warrior');
   const [spriteSize, setSpriteSize] = useState(200);
   const [bossScale, setBossScale] = useState(1.6);
+  const [showOverlays, setShowOverlays] = useState(true);
   const arenaRef = useRef(null);
 
   const playerUnits = (formations.player[playerCount] || formations.player[1]).map((pos, i) => ({
@@ -299,6 +300,12 @@ export default function AdminBattle() {
             {copied === 'layout' ? 'Copied!' : 'Copy Layout'}
           </button>
           <button onClick={reset} style={btnStyle('#ef4444')}>Reset</button>
+          <button onClick={() => setShowOverlays(o => !o)} style={{
+            ...btnStyle(showOverlays ? '#10b981' : '#6b7280'),
+            background: showOverlays ? 'rgba(16,185,129,0.2)' : 'rgba(107,114,128,0.15)',
+          }}>
+            {showOverlays ? 'Overlays ON' : 'Overlays OFF'}
+          </button>
         </div>
       </div>
 
@@ -548,6 +555,12 @@ export default function AdminBattle() {
               const isSelected = selectedUnit === unit.id;
               const isDragging = dragging === unit.id;
 
+              const isEnemy = unit.team === 'enemy';
+              const hitX = unitSpriteSize / 2;
+              const hitY = unitSpriteSize / 2;
+              const fireX = isEnemy ? 4 : unitSpriteSize - 4;
+              const fireY = 8;
+
               return (
                 <div
                   key={unit.id}
@@ -564,6 +577,27 @@ export default function AdminBattle() {
                     overflow: 'visible',
                   }}
                 >
+                  {showOverlays && (
+                    <div style={{
+                      position: 'absolute', top: 0, left: 0,
+                      width: unitSpriteSize, height: unitSpriteSize,
+                      border: `2px dashed ${isEnemy ? 'rgba(239,68,68,0.6)' : 'rgba(96,165,250,0.6)'}`,
+                      borderRadius: 4,
+                      background: isEnemy ? 'rgba(239,68,68,0.04)' : 'rgba(96,165,250,0.04)',
+                      pointerEvents: 'none', zIndex: 50,
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0,
+                        fontSize: '0.4rem', color: isEnemy ? '#fca5a5' : '#93c5fd',
+                        textAlign: 'center', background: isEnemy ? 'rgba(239,68,68,0.25)' : 'rgba(96,165,250,0.25)',
+                        padding: '0 2px', lineHeight: '12px', fontWeight: 600,
+                        borderRadius: '2px 2px 0 0',
+                      }}>
+                        {unitSpriteSize}×{unitSpriteSize}px
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{
                     position: 'absolute', top: 0, left: 0,
                     width: unitSpriteSize, height: unitSpriteSize,
@@ -585,6 +619,46 @@ export default function AdminBattle() {
                     )}
                   </div>
 
+                  {showOverlays && (
+                    <>
+                      <div style={{
+                        position: 'absolute',
+                        left: hitX - 6, top: hitY - 6,
+                        width: 12, height: 12,
+                        pointerEvents: 'none', zIndex: 55,
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12">
+                          <line x1="6" y1="0" x2="6" y2="12" stroke="#ffd700" strokeWidth="1" opacity="0.8" />
+                          <line x1="0" y1="6" x2="12" y2="6" stroke="#ffd700" strokeWidth="1" opacity="0.8" />
+                          <circle cx="6" cy="6" r="3" fill="none" stroke="#ffd700" strokeWidth="1" opacity="0.8" />
+                          <circle cx="6" cy="6" r="1.5" fill="#ffd700" opacity="0.9" />
+                        </svg>
+                        <div style={{
+                          position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
+                          fontSize: '0.35rem', color: '#ffd700', fontWeight: 700, whiteSpace: 'nowrap',
+                          background: 'rgba(0,0,0,0.7)', padding: '0 3px', borderRadius: 2,
+                        }}>HIT</div>
+                      </div>
+
+                      <div style={{
+                        position: 'absolute',
+                        left: fireX - 5, top: fireY - 5,
+                        width: 10, height: 10,
+                        pointerEvents: 'none', zIndex: 55,
+                      }}>
+                        <svg width="10" height="10" viewBox="0 0 10 10">
+                          <polygon points="5,0 6.5,3 10,3.5 7.5,6 8,10 5,8 2,10 2.5,6 0,3.5 3.5,3"
+                            fill="#ff6b35" stroke="#ffd700" strokeWidth="0.5" opacity="0.9" />
+                        </svg>
+                        <div style={{
+                          position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
+                          fontSize: '0.35rem', color: '#ff6b35', fontWeight: 700, whiteSpace: 'nowrap',
+                          background: 'rgba(0,0,0,0.7)', padding: '0 3px', borderRadius: 2,
+                        }}>FIRE</div>
+                      </div>
+                    </>
+                  )}
+
                   <div style={{
                     position: 'absolute',
                     top: unitSpriteSize - 4 + spriteLayout.shadow.offsetY,
@@ -594,7 +668,16 @@ export default function AdminBattle() {
                     borderRadius: '50%',
                     background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
                     zIndex: 1,
-                  }} />
+                  }}>
+                    {showOverlays && (
+                      <div style={{
+                        position: 'absolute', inset: -1,
+                        border: '1px dashed rgba(255,255,255,0.35)',
+                        borderRadius: '50%',
+                        pointerEvents: 'none',
+                      }} />
+                    )}
+                  </div>
 
                   <div style={{
                     position: 'absolute',
