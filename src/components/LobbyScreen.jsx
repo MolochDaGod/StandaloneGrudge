@@ -658,6 +658,8 @@ function HeroSlideshow() {
   const [textVisible, setTextVisible] = useState(false);
   const [auraIntensity, setAuraIntensity] = useState(0);
   const [spriteX, setSpriteX] = useState(-30);
+  const [spriteY, setSpriteY] = useState(0);
+  const [spriteRotation, setSpriteRotation] = useState(0);
   const [showBubble, setShowBubble] = useState(false);
 
   const [editorMode, setEditorMode] = useState(false);
@@ -844,6 +846,8 @@ function HeroSlideshow() {
       setTextVisible(true);
       setAuraIntensity(1);
       setSpriteX(22);
+      setSpriteY(0);
+      setSpriteRotation(0);
       setShowVfx(false);
       setShowTransform(false);
       setShowBubble(false);
@@ -857,8 +861,10 @@ function HeroSlideshow() {
     setShowBubble(false);
     setAuraIntensity(0);
     setSpriteX(-30);
+    setSpriteY(0);
+    setSpriteRotation(0);
 
-    const IDLE_ENTER_COMBOS = ['undead_ranger', 'human_ranger'];
+    const IDLE_ENTER_COMBOS = ['undead_ranger'];
     const comboId = `${combo.raceId}_${combo.classId}`;
     const forceIdle = IDLE_ENTER_COMBOS.includes(comboId);
     const enterAnim = forceIdle ? 'idle' : (spriteData?.walk ? 'walk' : (spriteData?.run ? 'run' : 'idle'));
@@ -886,7 +892,7 @@ function HeroSlideshow() {
 
     const PREFERRED_ATTACKS = {
       human_warrior: 'attack2',
-      human_ranger: 'attack2',
+      human_ranger: 'attack1',
     };
     const comboKey = `${combo.raceId}_${combo.classId}`;
     const preferredAttack = PREFERRED_ATTACKS[comboKey];
@@ -903,67 +909,179 @@ function HeroSlideshow() {
     const attackFrames = Math.min(spriteData?.[chosenAttack]?.frames || 8, maxFrames);
     const attackDuration = attackFrames * 80;
 
-    addTimer(() => {
-      setAnim('idle');
-      setTextVisible(true);
-      setAuraIntensity(1);
-    }, walkDuration);
+    const isArcaneArcher = comboId === 'human_ranger';
 
-    addTimer(() => {
-      setAnim(chosenAttack);
-      addTimer(() => setShowVfx(true), 200);
-    }, walkDuration + 800);
-
-    addTimer(() => {
-      setAnim('idle');
-      setShowVfx(false);
-    }, walkDuration + 800 + attackDuration + 200);
-
-    addTimer(() => {
-      setShowBubble(true);
-    }, walkDuration + 800 + attackDuration + 400);
-
-    if (isWorge) {
-      const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
-      const tAtk = transformAttacks.length > 0
-        ? transformAttacks[Math.floor(Math.random() * transformAttacks.length)]
-        : 'attack1';
-      const tAtkFrames = worgeTransformData?.[tAtk]?.frames || 8;
-      const tAtkDuration = tAtkFrames * 80;
-
+    if (isArcaneArcher && spriteData?.jump && spriteData?.doublejump && spriteData?.wallslide) {
       addTimer(() => {
-        setShowBubble(false);
-        setShowTransform(true);
         setAnim('idle');
-        setTransformAnim('idle');
+        setTextVisible(true);
+        setAuraIntensity(1);
+      }, walkDuration);
+
+      const seqStart = walkDuration + 800;
+
+      const runDuration = 600;
+      const runStep = 16;
+      const runStartX = 22;
+      const runTargetX = 45;
+      addTimer(() => {
+        setAnim('run');
+        let runElapsed = 0;
+        const runInterval = setInterval(() => {
+          runElapsed += runStep;
+          const p = Math.min(runElapsed / runDuration, 1);
+          setSpriteX(runStartX + (runTargetX - runStartX) * p);
+          if (p >= 1) clearInterval(runInterval);
+        }, runStep);
+        intervalRefs.current.push(runInterval);
+      }, seqStart);
+
+      const jumpStart = seqStart + runDuration;
+      const jumpDuration = 400;
+      addTimer(() => {
+        setAnim('jump');
+        let jElapsed = 0;
+        const jInterval = setInterval(() => {
+          jElapsed += runStep;
+          if (jElapsed <= jumpDuration) {
+            const jp = jElapsed / jumpDuration;
+            const arcY = Math.sin(jp * Math.PI) * 120;
+            setSpriteY(arcY);
+            setSpriteX(runTargetX + (55 - runTargetX) * jp);
+          }
+          if (jElapsed >= jumpDuration) clearInterval(jInterval);
+        }, runStep);
+        intervalRefs.current.push(jInterval);
+      }, jumpStart);
+
+      const djStart = jumpStart + jumpDuration;
+      const djDuration = 600;
+      addTimer(() => {
+        setAnim('doublejump');
+        setSpriteRotation(-15);
+        let dElapsed = 0;
+        const dInterval = setInterval(() => {
+          dElapsed += runStep;
+          if (dElapsed <= djDuration) {
+            const dp = dElapsed / djDuration;
+            const arcY = Math.sin(dp * Math.PI) * 200;
+            setSpriteY(arcY);
+            setSpriteX(55 + (70 - 55) * dp);
+            setSpriteRotation(-15 + (-30 - (-15)) * dp * 0.5);
+          }
+          if (dElapsed >= djDuration) clearInterval(dInterval);
+        }, runStep);
+        intervalRefs.current.push(dInterval);
+      }, djStart);
+
+      const wsStart = djStart + djDuration;
+      const wsDuration = 500;
+      addTimer(() => {
+        setAnim('wallslide');
+        setSpriteRotation(0);
+        let wElapsed = 0;
+        const wInterval = setInterval(() => {
+          wElapsed += runStep;
+          if (wElapsed <= wsDuration) {
+            const wp = wElapsed / wsDuration;
+            const eased = wp * wp;
+            setSpriteY(200 * (1 - eased));
+            setSpriteX(70 + (65 - 70) * wp);
+          }
+          if (wElapsed >= wsDuration) clearInterval(wInterval);
+        }, runStep);
+        intervalRefs.current.push(wInterval);
+      }, wsStart);
+
+      const attackStart = wsStart + wsDuration;
+      addTimer(() => {
+        setSpriteY(0);
+        setSpriteRotation(0);
+        setAnim('attack1');
+        addTimer(() => setShowVfx(true), 150);
+      }, attackStart);
+
+      const atkDuration = (spriteData?.attack1?.frames || 7) * 80;
+      addTimer(() => {
+        setAnim('idle');
         setShowVfx(false);
-      }, walkDuration + 800 + attackDuration + 1400);
+        setSpriteX(65);
+      }, attackStart + atkDuration + 100);
 
       addTimer(() => {
-        setTransformAnim(tAtk);
-        addTimer(() => setShowVfx(true), 200);
-      }, walkDuration + 800 + attackDuration + 2000);
-
-      addTimer(() => {
-        setTransformAnim('idle');
-        setShowVfx(false);
         setShowBubble(true);
-      }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 200);
+      }, attackStart + atkDuration + 300);
 
       addTimer(() => {
         setPhase('exit');
         setShowBubble(false);
-        addTimer(() => {
-          setIndex(prev => (prev + 1) % ALL_COMBOS.length);
-          setShowTransform(false);
-        }, 600);
-      }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 2000);
+        setSpriteY(0);
+        setSpriteRotation(0);
+        addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
+      }, attackStart + atkDuration + 3000);
     } else {
       addTimer(() => {
-        setPhase('exit');
-        setShowBubble(false);
-        addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
-      }, walkDuration + 800 + attackDuration + 3000);
+        setAnim('idle');
+        setTextVisible(true);
+        setAuraIntensity(1);
+      }, walkDuration);
+
+      addTimer(() => {
+        setAnim(chosenAttack);
+        addTimer(() => setShowVfx(true), 200);
+      }, walkDuration + 800);
+
+      addTimer(() => {
+        setAnim('idle');
+        setShowVfx(false);
+      }, walkDuration + 800 + attackDuration + 200);
+
+      addTimer(() => {
+        setShowBubble(true);
+      }, walkDuration + 800 + attackDuration + 400);
+
+      if (isWorge) {
+        const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
+        const tAtk = transformAttacks.length > 0
+          ? transformAttacks[Math.floor(Math.random() * transformAttacks.length)]
+          : 'attack1';
+        const tAtkFrames = worgeTransformData?.[tAtk]?.frames || 8;
+        const tAtkDuration = tAtkFrames * 80;
+
+        addTimer(() => {
+          setShowBubble(false);
+          setShowTransform(true);
+          setAnim('idle');
+          setTransformAnim('idle');
+          setShowVfx(false);
+        }, walkDuration + 800 + attackDuration + 1400);
+
+        addTimer(() => {
+          setTransformAnim(tAtk);
+          addTimer(() => setShowVfx(true), 200);
+        }, walkDuration + 800 + attackDuration + 2000);
+
+        addTimer(() => {
+          setTransformAnim('idle');
+          setShowVfx(false);
+          setShowBubble(true);
+        }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 200);
+
+        addTimer(() => {
+          setPhase('exit');
+          setShowBubble(false);
+          addTimer(() => {
+            setIndex(prev => (prev + 1) % ALL_COMBOS.length);
+            setShowTransform(false);
+          }, 600);
+        }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 2000);
+      } else {
+        addTimer(() => {
+          setPhase('exit');
+          setShowBubble(false);
+          addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
+        }, walkDuration + 800 + attackDuration + 3000);
+      }
     }
 
     return clearTimers;
@@ -1100,9 +1218,11 @@ function HeroSlideshow() {
             <div style={{
               position: 'absolute',
               left: `calc(${spriteX}% + ${spriteXOffset + (editorMode ? editorX : 0)}px)`,
-              bottom: 60 - spriteYOffset + (editorMode ? editorY : 0),
-              willChange: 'left',
+              bottom: 60 - spriteYOffset + (editorMode ? editorY : 0) + spriteY,
+              willChange: 'left, bottom',
               cursor: editorMode ? 'grab' : undefined,
+              transform: spriteRotation ? `rotate(${spriteRotation}deg)` : undefined,
+              transformOrigin: 'bottom center',
             }}
             onMouseDown={handleEditorMouseDown}>
               <div style={{
@@ -1135,9 +1255,9 @@ function HeroSlideshow() {
                     animation={anim}
                     scale={spriteScale * (editorMode ? editorScale : 1)}
                     flip={!!spriteData?.facesLeft}
-                    loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
+                    loop={['idle', 'walk', 'run', 'wallslide'].includes(anim)}
                     speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
-                    onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
+                    onAnimationEnd={!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null}
                   />
                 </div>
 
