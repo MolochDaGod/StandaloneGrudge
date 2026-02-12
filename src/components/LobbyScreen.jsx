@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, effectSprites } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import { setBgm } from '../utils/audioManager';
@@ -196,7 +196,7 @@ function NavItem({ essentialIcon, label, active, onClick }) {
 
 function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLevel, playerRace, playerClass, gold, heroRoster, panelStyle }) {
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div>
       <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
         War Room
       </h2>
@@ -236,7 +236,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
         </div>
       </div>
 
-      <HeroSlideshow panelStyle={panelStyle} />
+      <HeroSlideshow />
     </div>
   );
 }
@@ -247,112 +247,393 @@ const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
 
 const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3'];
 
-function HeroSlideshow({ panelStyle }) {
+const BATTLE_BGS = [
+  '/backgrounds/dark_forest.png',
+  '/backgrounds/blood_canyon.png',
+  '/backgrounds/crystal_caves.png',
+  '/backgrounds/storm_ruins.png',
+  '/backgrounds/volcanic_field.png',
+  '/backgrounds/shadow_citadel.png',
+  '/backgrounds/infernal_arena.png',
+  '/backgrounds/dragon_peaks.png',
+  '/backgrounds/corrupted_spire.png',
+  '/backgrounds/haunted_marsh.png',
+  '/backgrounds/mystic_grove.png',
+  '/backgrounds/void_throne.png',
+];
+
+const CLASS_EFFECTS = {
+  warrior: { effect: 'critSlash', aura: '#ef4444', effectKey: 'flamestrike' },
+  mage: { effect: 'arcanebolt', aura: '#8b5cf6', effectKey: 'arcanelighting' },
+  worge: { effect: 'hitBurst', aura: '#d97706', effectKey: 'arcanemist' },
+  ranger: { effect: 'slashGreenLg', aura: '#22c55e', effectKey: 'frostbolt' },
+};
+
+const CLASS_DESCRIPTIONS = {
+  warrior: 'Frontline powerhouse with devastating physical attacks. Wields swords and shields with lethal precision. Signature: Invincible — absorbs all damage.',
+  mage: 'Arcane scholar channeling destructive spells and divine healing. Masters fire, ice, and holy magic. Signature: Mana Shield — converts magic to armor.',
+  worge: 'Dual-natured shapeshifter. Casts storm and root magic in human form, then transforms into a savage beast. Signature: Bear Form — permanent transformation.',
+  ranger: 'Deadly marksman with precise long-range attacks and crippling poison. Masters of evasion and critical strikes. Signature: Focus — stacking crit mastery.',
+};
+
+function SlideshowVFX({ effectKey, playing }) {
+  const [frame, setFrame] = useState(0);
+  const sprite = effectSprites[effectKey];
+
+  const hasCustomLayout = sprite ? sprite.cols !== undefined : false;
+  const cols = hasCustomLayout ? sprite.cols : (sprite ? Math.round(Math.sqrt(sprite.frames)) : 1);
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite ? (sprite.size / cols) : 100);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite ? (sprite.size / cols) : 100);
+  const totalFrames = sprite ? sprite.frames : 1;
+
+  useEffect(() => {
+    if (!playing || !sprite) return;
+    let f = 0;
+    setFrame(0);
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [playing, effectKey, totalFrames]);
+
+  if (!sprite || !playing) return null;
+
+  const displaySize = 200;
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: '50%', top: '50%',
+      transform: 'translate(-50%, -55%)',
+      width: displaySize, height: displaySize,
+      overflow: 'hidden', pointerEvents: 'none',
+      zIndex: 5, mixBlendMode: 'screen', opacity: 0.9,
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }} />
+    </div>
+  );
+}
+
+function HeroSlideshow() {
   const [index, setIndex] = useState(0);
   const [anim, setAnim] = useState('idle');
-  const [fade, setFade] = useState(true);
+  const [phase, setPhase] = useState('enter');
+  const [bgIndex, setBgIndex] = useState(0);
+  const [prevBgIndex, setPrevBgIndex] = useState(0);
+  const [bgFade, setBgFade] = useState(1);
+  const [showVfx, setShowVfx] = useState(false);
+  const [showTransform, setShowTransform] = useState(false);
+  const [transformAnim, setTransformAnim] = useState('idle');
+  const [textVisible, setTextVisible] = useState(false);
+  const [auraIntensity, setAuraIntensity] = useState(0);
+  const attackRef = useRef('attack1');
+  const timerRefs = useRef([]);
 
   const combo = ALL_COMBOS[index];
   const race = raceDefinitions[combo.raceId];
   const cls = classDefinitions[combo.classId];
   const spriteData = getRaceClassSprite(combo.raceId, combo.classId);
+  const isWorge = combo.classId === 'worge';
+  const classEffect = CLASS_EFFECTS[combo.classId] || CLASS_EFFECTS.warrior;
 
-  const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
-  const chosenAttack = availableAttacks.length > 0
-    ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
-    : 'idle';
+  const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
+
+  const clearTimers = () => {
+    timerRefs.current.forEach(t => clearTimeout(t));
+    timerRefs.current = [];
+  };
+  const addTimer = (fn, ms) => {
+    const t = setTimeout(fn, ms);
+    timerRefs.current.push(t);
+    return t;
+  };
 
   useEffect(() => {
-    setFade(true);
-    setAnim(chosenAttack);
+    clearTimers();
+    setPhase('enter');
+    setTextVisible(false);
+    setShowVfx(false);
+    setShowTransform(false);
+    setAuraIntensity(0);
 
-    const idleTimer = setTimeout(() => {
-      setAnim('idle');
-    }, 1200);
+    const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
+    const chosen = availableAttacks.length > 0
+      ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
+      : 'idle';
+    attackRef.current = chosen;
+    setAnim(chosen);
 
-    const nextTimer = setTimeout(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex(prev => (prev + 1) % ALL_COMBOS.length);
-      }, 400);
-    }, 4200);
+    setPrevBgIndex(bgIndex);
+    const newBg = (bgIndex + 1 + Math.floor(Math.random() * (BATTLE_BGS.length - 1))) % BATTLE_BGS.length;
+    setBgIndex(newBg);
+    setBgFade(0);
 
-    return () => {
-      clearTimeout(idleTimer);
-      clearTimeout(nextTimer);
-    };
+    addTimer(() => setBgFade(1), 50);
+    addTimer(() => setTextVisible(true), 200);
+    addTimer(() => setAuraIntensity(1), 300);
+
+    const attackFrames = spriteData?.[chosen]?.frames || 8;
+    const attackSpeed = 80;
+    const attackDuration = attackFrames * attackSpeed;
+
+    addTimer(() => setShowVfx(true), Math.min(400, attackDuration * 0.3));
+
+    if (isWorge) {
+      addTimer(() => {
+        setShowTransform(true);
+        setAnim('idle');
+        const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
+        const tAtk = transformAttacks.length > 0
+          ? transformAttacks[Math.floor(Math.random() * transformAttacks.length)]
+          : 'idle';
+        setTransformAnim(tAtk);
+        setShowVfx(false);
+        addTimer(() => setShowVfx(true), 200);
+      }, Math.min(attackDuration + 200, 2000));
+
+      addTimer(() => {
+        setTransformAnim('idle');
+        setShowVfx(false);
+      }, 3200);
+
+      addTimer(() => {
+        setPhase('exit');
+        addTimer(() => {
+          setIndex(prev => (prev + 1) % ALL_COMBOS.length);
+          setShowTransform(false);
+        }, 500);
+      }, 4500);
+    } else {
+      const idleAt = attackDuration + 200;
+      addTimer(() => {
+        setAnim('idle');
+        setShowVfx(false);
+      }, idleAt);
+
+      addTimer(() => {
+        setPhase('exit');
+        addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 500);
+      }, Math.max(idleAt + 1500, 4200));
+    }
+
+    return clearTimers;
   }, [index]);
 
+  const abilities = cls.abilities?.slice(0, 3) || [];
+
   return (
-    <div style={{ ...panelStyle, marginTop: 16, overflow: 'hidden' }}>
-      <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: 8, textAlign: 'center' }}>
-        24 Warlord Combinations
-      </div>
+    <div style={{
+      marginTop: 16, position: 'relative', overflow: 'hidden',
+      borderRadius: 12, height: 380,
+      border: '1px solid rgba(255,255,255,0.06)',
+    }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 20,
-        opacity: fade ? 1 : 0,
-        transition: 'opacity 0.4s ease',
-        minHeight: 130,
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${BATTLE_BGS[prevBgIndex]})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${BATTLE_BGS[bgIndex]})`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        zIndex: 1,
+        opacity: bgFade,
+        transition: 'opacity 1.2s ease-in-out',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.75) 100%)',
+      }} />
+
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 3,
+        display: 'flex', flexDirection: 'column',
+        opacity: phase === 'exit' ? 0 : 1,
+        transition: 'opacity 0.5s ease',
       }}>
         <div style={{
-          width: 120, height: 120, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'radial-gradient(circle, rgba(110,231,183,0.08) 0%, transparent 70%)',
-          borderRadius: 12,
+          textAlign: 'center', padding: '18px 20px 0',
+          opacity: textVisible ? 1 : 0,
+          transform: textVisible ? 'translateY(0)' : 'translateY(-15px)',
+          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
-          <SpriteAnimation
-            spriteData={spriteData}
-            animation={anim}
-            scale={1.1}
-            loop={anim === 'idle'}
-            speed={anim === 'idle' ? 140 : 100}
-            onAnimationEnd={anim !== 'idle' ? () => setAnim('idle') : null}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
           <div className="font-cinzel" style={{
-            fontSize: '1.1rem', marginBottom: 4,
-            color: race.color,
+            fontSize: '1.5rem', fontWeight: 700,
+            background: `linear-gradient(135deg, ${race.color}, ${cls.color})`,
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            textShadow: 'none',
+            letterSpacing: 3,
           }}>
             {race.name} {cls.name}
           </div>
+        </div>
+
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'relative',
+        }}>
           <div style={{
-            fontSize: '0.75rem', color: 'var(--muted)', marginBottom: 6, lineHeight: 1.4,
+            position: 'absolute',
+            width: 300, height: 300,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${classEffect.aura}33 0%, ${classEffect.aura}15 30%, transparent 65%)`,
+            opacity: auraIntensity,
+            transition: 'opacity 0.8s ease',
+            animation: auraIntensity > 0 ? 'auraPulse 2s ease-in-out infinite' : 'none',
+            zIndex: 1,
+          }} />
+          <div style={{
+            position: 'absolute',
+            width: 200, height: 200,
+            borderRadius: '50%',
+            border: `1px solid ${classEffect.aura}22`,
+            opacity: auraIntensity * 0.5,
+            animation: auraIntensity > 0 ? 'auraRing 3s linear infinite' : 'none',
+            zIndex: 1,
+          }} />
+
+          <div style={{
+            position: 'relative', zIndex: 3,
+            opacity: showTransform ? 0 : 1,
+            transform: showTransform ? 'scale(0.6)' : 'scale(1)',
+            transition: 'all 0.4s ease',
           }}>
-            {race.description}
+            <SpriteAnimation
+              spriteData={spriteData}
+              animation={anim}
+              scale={5}
+              loop={anim === 'idle'}
+              speed={anim === 'idle' ? 140 : 80}
+              onAnimationEnd={anim !== 'idle' ? () => setAnim('idle') : null}
+            />
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+
+          {isWorge && showTransform && worgeTransformData && (
+            <div style={{
+              position: 'absolute', zIndex: 4,
+              animation: 'transformFlash 0.4s ease-out',
+            }}>
+              <SpriteAnimation
+                spriteData={worgeTransformData}
+                animation={transformAnim}
+                scale={5}
+                loop={transformAnim === 'idle'}
+                speed={transformAnim === 'idle' ? 140 : 80}
+                onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
+              />
+            </div>
+          )}
+
+          <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} />
+        </div>
+
+        <div style={{
+          padding: '0 20px 14px',
+          opacity: textVisible ? 1 : 0,
+          transform: textVisible ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
+        }}>
+          <div style={{
+            display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 8, flexWrap: 'wrap',
+          }}>
             <span style={{
-              fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4,
+              fontSize: '0.6rem', padding: '2px 10px', borderRadius: 20,
               background: `${race.color}22`, color: race.color,
               border: `1px solid ${race.color}44`,
+              backdropFilter: 'blur(4px)',
             }}>
               {race.trait}
             </span>
             <span style={{
-              fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4,
+              fontSize: '0.6rem', padding: '2px 10px', borderRadius: 20,
               background: `${cls.color}22`, color: cls.color,
               border: `1px solid ${cls.color}44`,
+              backdropFilter: 'blur(4px)',
             }}>
               {cls.name}
             </span>
+            <span style={{
+              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
+              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              {race.passive}
+            </span>
           </div>
-          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
-            {race.passive}
+
+          <div style={{
+            fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', textAlign: 'center',
+            lineHeight: 1.5, maxWidth: 500, margin: '0 auto 8px',
+          }}>
+            {CLASS_DESCRIPTIONS[combo.classId] || cls.description}
+          </div>
+
+          <div style={{
+            display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap',
+          }}>
+            {abilities.map((ab, i) => (
+              <span key={ab.id} style={{
+                fontSize: '0.55rem', padding: '1px 8px', borderRadius: 4,
+                background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.45)',
+                border: `1px solid ${cls.color}33`,
+                opacity: textVisible ? 1 : 0,
+                transform: textVisible ? 'translateY(0)' : 'translateY(10px)',
+                transition: `all 0.5s ease ${0.3 + i * 0.1}s`,
+              }}>
+                {ab.name}
+              </span>
+            ))}
           </div>
         </div>
+
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 3, padding: '0 20px 10px',
+        }}>
+          {ALL_COMBOS.map((c, i) => {
+            const r = raceDefinitions[c.raceId];
+            return (
+              <div key={i} style={{
+                width: i === index ? 14 : 4, height: 4, borderRadius: 2,
+                background: i === index ? r.color : 'rgba(255,255,255,0.12)',
+                transition: 'all 0.4s ease',
+                cursor: 'pointer',
+              }}
+              onClick={() => setIndex(i)}
+              />
+            );
+          })}
+        </div>
       </div>
-      <div style={{
-        display: 'flex', justifyContent: 'center', gap: 4, marginTop: 8,
-      }}>
-        {ALL_COMBOS.map((_, i) => (
-          <div key={i} style={{
-            width: 5, height: 5, borderRadius: '50%',
-            background: i === index ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
-            transition: 'background 0.3s ease',
-          }} />
-        ))}
-      </div>
+
+      <style>{`
+        @keyframes auraPulse {
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes auraRing {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes transformFlash {
+          0% { opacity: 0; transform: scale(1.3); filter: brightness(3); }
+          50% { opacity: 1; filter: brightness(1.5); }
+          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+      `}</style>
     </div>
   );
 }

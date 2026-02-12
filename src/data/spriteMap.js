@@ -59,6 +59,8 @@ const spriteSheets = {
   },
   'barbarian-mage': {
     folder: 'barbarian-mage/Wizard Pack',
+    frameWidth: 231,
+    frameHeight: 190,
     idle: { src: '/sprites/barbarian-mage/Wizard Pack/Idle.png', frames: 6 },
     attack1: { src: '/sprites/barbarian-mage/Wizard Pack/Attack1.png', frames: 8 },
     attack2: { src: '/sprites/barbarian-mage/Wizard Pack/Attack2.png', frames: 8 },
@@ -70,6 +72,8 @@ const spriteSheets = {
   },
   'hero-knight': {
     folder: 'heroes/elf_warrior',
+    frameWidth: 180,
+    frameHeight: 180,
     idle: { src: '/sprites/heroes/elf_warrior/Idle.png', frames: 11 },
     attack1: { src: '/sprites/heroes/elf_warrior/Attack1.png', frames: 7 },
     attack2: { src: '/sprites/heroes/elf_warrior/Attack2.png', frames: 7 },
@@ -91,6 +95,8 @@ const spriteSheets = {
   },
   'barbarian-warrior': {
     folder: 'heroes/barbarian_warrior',
+    frameWidth: 180,
+    frameHeight: 180,
     idle: { src: '/sprites/heroes/barbarian_warrior/Idle.png', frames: 11 },
     attack1: { src: '/sprites/heroes/barbarian_warrior/Attack1.png', frames: 7 },
     attack2: { src: '/sprites/heroes/barbarian_warrior/Attack2.png', frames: 7 },
