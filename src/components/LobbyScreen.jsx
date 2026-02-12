@@ -539,6 +539,7 @@ function HeroSlideshow() {
   const SPRITE_SCALE_OVERRIDES = {
     undead_warrior: 2,
     human_warrior: 2,
+    undead_ranger: 0.75,
   };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
