@@ -117,7 +117,7 @@ function GameApp() {
     );
   }
 
-  const screensWithOwnBackground = ['world', 'battle', 'location', 'scene', 'intro'];
+  const screensWithOwnBackground = ['title', 'world', 'battle', 'location', 'scene', 'intro'];
   const bgVisible = !screensWithOwnBackground.includes(screen);
   const bgBlurred = screen !== 'title' && screen !== 'lobby' && screen !== 'intro';
 
