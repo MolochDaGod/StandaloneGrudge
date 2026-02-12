@@ -462,9 +462,11 @@ export default function MapBottomBar({
           overflow: 'hidden',
           position: 'relative',
           backgroundImage: 'url(/ui/chat-background.png)',
-          backgroundSize: '100% 100%',
+          backgroundSize: 'calc(100% + 4px) calc(100% + 4px)',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center center',
+          margin: '-2px',
+          padding: '2px',
         }}>
           <div ref={chatLogRef} style={{
             flex: 1, overflowY: 'auto',
