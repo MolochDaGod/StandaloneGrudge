@@ -7,10 +7,10 @@ import { getPlayerSprite } from '../data/spriteMap';
 import { locations } from '../data/enemies';
 
 const ADMIN_TOOLS = [
-  { id: 'map', label: 'Map Editor', path: '/adminmap', desc: 'Position world map nodes with drag-and-drop', color: '#f59e0b', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z' },
-  { id: 'battle', label: 'Battle Editor', path: '/adminbattle', desc: 'Configure formations, sprites, and action bar layout', color: '#ef4444', icon: 'M6.92 5H5l3.5 10 1.42-4.09L6.92 5zM11.5 1l-1 3h3l-1-3h-1zM17.08 5h-1.92l-3 5.91L13.5 15 17.08 5zM7 21h2v-4H7v4zm4 0h2v-6h-2v6zm4 0h2v-3h-2v3z' },
-  { id: 'sprite', label: 'Sprite Editor', path: '/adminsprite', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z' },
-  { id: 'ui', label: 'UI Layout Editor', path: '/adminui', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z' },
+  { id: 'map', label: 'Map Editor', path: '/adminmap', desc: 'Position world map nodes with drag-and-drop', color: '#f59e0b', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z', bg: '/backgrounds/world_map.png' },
+  { id: 'battle', label: 'Battle Editor', path: '/adminbattle', desc: 'Configure formations, sprites, and action bar layout', color: '#ef4444', icon: 'M6.92 5H5l3.5 10 1.42-4.09L6.92 5zM11.5 1l-1 3h3l-1-3h-1zM17.08 5h-1.92l-3 5.91L13.5 15 17.08 5zM7 21h2v-4H7v4zm4 0h2v-6h-2v6zm4 0h2v-3h-2v3z', bg: '/backgrounds/scene_field.png' },
+  { id: 'sprite', label: 'Sprite Editor', path: '/adminsprite', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z', bg: '/backgrounds/wc_purple.png' },
+  { id: 'ui', label: 'UI Layout Editor', path: '/adminui', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z', bg: '/backgrounds/wc_blue.png' },
 ];
 
 const GAME_SYSTEMS = [
@@ -183,12 +183,26 @@ export default function AdminDashboard() {
   return (
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a14 0%, #141428 50%, #0a0e1a 100%)',
-      color: '#e2e8f0', fontFamily: "'Jost', sans-serif",
+      color: '#e2e8f0', fontFamily: "'Jost', sans-serif", position: 'relative',
     }}>
       <div style={{
-        background: 'rgba(20,15,30,0.8)', borderBottom: '2px solid rgba(255,215,0,0.3)',
+        position: 'fixed', inset: 0,
+        backgroundImage: 'url(/backgrounds/world_map.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        opacity: 0.06, pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'fixed', inset: 0,
+        backgroundImage: 'url(/ui/game-border-frame.png)',
+        backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+        pointerEvents: 'none', zIndex: 100, opacity: 0.35,
+      }} />
+      <div style={{
+        background: 'rgba(20,15,30,0.85)', borderBottom: '2px solid rgba(180,150,90,0.4)',
         padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12,
+        flexWrap: 'wrap', gap: 12, position: 'relative', zIndex: 10,
+        backgroundImage: 'url(/ui/bar-background.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <h1 style={{
@@ -210,7 +224,7 @@ export default function AdminDashboard() {
         </a>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px', position: 'relative', zIndex: 10 }}>
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
           gap: 12, marginBottom: 24,
@@ -220,17 +234,26 @@ export default function AdminDashboard() {
               background: 'rgba(20,15,30,0.6)', border: `1px solid ${tool.color}33`,
               borderRadius: 10, padding: 16, textDecoration: 'none',
               transition: 'all 0.2s', cursor: 'pointer', display: 'block',
+              position: 'relative', overflow: 'hidden',
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.background = `${tool.color}11`; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = `${tool.color}33`; e.currentTarget.style.background = 'rgba(20,15,30,0.6)'; }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill={tool.color}><path d={tool.icon} /></svg>
-                <span style={{ fontFamily: "'Cinzel', serif", color: tool.color, fontWeight: 700, fontSize: '0.9rem' }}>
-                  {tool.label}
-                </span>
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${tool.bg})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                opacity: 0.12, pointerEvents: 'none',
+              }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill={tool.color}><path d={tool.icon} /></svg>
+                  <span style={{ fontFamily: "'Cinzel', serif", color: tool.color, fontWeight: 700, fontSize: '0.9rem' }}>
+                    {tool.label}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.6rem', color: '#94a3b8', lineHeight: 1.4 }}>{tool.desc}</div>
               </div>
-              <div style={{ fontSize: '0.6rem', color: '#94a3b8', lineHeight: 1.4 }}>{tool.desc}</div>
             </a>
           ))}
         </div>
@@ -412,17 +435,25 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 {[
-                  { name: 'Crusade', races: 'Humans, Barbarians', god: 'God of Light', color: '#ffd700' },
-                  { name: 'Legion', races: 'Orcs, Undead', god: 'God of Death', color: '#ef4444' },
-                  { name: 'Fabled', races: 'Elves, Dwarves', god: 'God of Nature', color: '#22c55e' },
+                  { name: 'Crusade', races: 'Humans, Barbarians', god: 'God of Light', color: '#ffd700', bg: '/backgrounds/card_divine.png' },
+                  { name: 'Legion', races: 'Orcs, Undead', god: 'God of Death', color: '#ef4444', bg: '/backgrounds/card_dark.png' },
+                  { name: 'Fabled', races: 'Elves, Dwarves', god: 'God of Nature', color: '#22c55e', bg: '/backgrounds/card_green_hills.png' },
                 ].map(f => (
                   <div key={f.name} style={{
                     background: 'rgba(20,15,30,0.5)', border: `1px solid ${f.color}33`,
-                    borderRadius: 8, padding: 14,
+                    borderRadius: 8, padding: 14, position: 'relative', overflow: 'hidden',
                   }}>
-                    <div style={{ fontFamily: "'Cinzel', serif", color: f.color, fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{f.races}</div>
-                    <div style={{ fontSize: '0.55rem', color: '#6b7280', marginTop: 4 }}>Worships: {f.god}</div>
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `url(${f.bg})`,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: 0.15, pointerEvents: 'none',
+                    }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontFamily: "'Cinzel', serif", color: f.color, fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
+                      <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{f.races}</div>
+                      <div style={{ fontSize: '0.55rem', color: '#6b7280', marginTop: 4 }}>Worships: {f.god}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -433,12 +464,24 @@ export default function AdminDashboard() {
                 Scene Types
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {['Camp', 'Dungeon', 'Trading Post', 'Open Field'].map(s => (
-                  <div key={s} style={{
+                {[
+                  { name: 'Camp', bg: '/backgrounds/scene_camp.png' },
+                  { name: 'Dungeon', bg: '/backgrounds/scene_dungeon.png' },
+                  { name: 'Trading Post', bg: '/backgrounds/scene_trading.png' },
+                  { name: 'Open Field', bg: '/backgrounds/scene_field.png' },
+                ].map(s => (
+                  <div key={s.name} style={{
                     background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,255,255,0.08)',
                     borderRadius: 6, padding: '8px 16px', fontSize: '0.7rem', color: '#e2e8f0',
+                    position: 'relative', overflow: 'hidden', minWidth: 100,
                   }}>
-                    {s}
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `url(${s.bg})`,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: 0.2, pointerEvents: 'none',
+                    }} />
+                    <span style={{ position: 'relative', zIndex: 1 }}>{s.name}</span>
                   </div>
                 ))}
               </div>

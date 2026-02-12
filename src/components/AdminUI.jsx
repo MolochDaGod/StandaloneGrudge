@@ -25,6 +25,23 @@ const SCREEN_BGS = {
   scene: 'linear-gradient(180deg, #0a1a0a 0%, #1a2a1a 40%, #0a1a28 100%)',
 };
 
+const SCREEN_BG_IMAGES = {
+  world: '/backgrounds/world_map.png',
+  battle: '/backgrounds/scene_field.png',
+  scene: '/backgrounds/scene_camp.png',
+};
+
+const PANEL_BG_MAP = {
+  chatPanel: '/ui/chat-background.png',
+  hotbar: '/ui/hotbar-background.png',
+  warParty: '/ui/bar-background.png',
+  battleActionBar: '/ui/hotbar-background.png',
+  battleEnemyInfo: '/ui/bar-background.png',
+  battlePartyInfo: '/ui/bar-background.png',
+  battleLog: '/ui/chat-background.png',
+  sceneNpcPanel: '/ui/chat-background.png',
+};
+
 function MiniBar({ pct, color, width = '100%' }) {
   return (
     <div style={{
@@ -424,7 +441,7 @@ export default function AdminUI() {
       <div style={{
         width: 280, flexShrink: 0, background: 'linear-gradient(180deg, #0f1629, #141d33)',
         borderRight: '1px solid rgba(180,150,90,0.2)', display: 'flex', flexDirection: 'column',
-        overflow: 'hidden',
+        overflow: 'hidden', position: 'relative',
       }}>
         <div style={{
           padding: '16px 16px 12px', borderBottom: '1px solid rgba(180,150,90,0.15)',
@@ -658,6 +675,21 @@ export default function AdminUI() {
           >
             <div style={{
               position: 'absolute', inset: 0,
+              backgroundImage: `url(${SCREEN_BG_IMAGES[activeScreen]})`,
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              opacity: 0.5, pointerEvents: 'none',
+            }} />
+
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: 'url(/ui/game-border-frame.png)',
+              backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center center',
+              pointerEvents: 'none', zIndex: 50, opacity: 0.7,
+            }} />
+
+            <div style={{
+              position: 'absolute', inset: 0,
               backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
               backgroundSize: '40px 40px',
               pointerEvents: 'none',
@@ -682,6 +714,7 @@ export default function AdminUI() {
               const elColor = isLocked ? '#f59e0b' : isSelected ? '#ffd700' : SCREEN_COLORS[activeScreen];
 
               const PreviewComponent = showPreview ? (ELEMENT_PREVIEWS[el.id] || (el.id === 'bottomBar' ? MockBottomBar : null)) : null;
+              const panelBg = PANEL_BG_MAP[el.id];
 
               return (
                 <div
@@ -707,6 +740,15 @@ export default function AdminUI() {
                     overflow: 'hidden',
                   }}
                 >
+                  {panelBg && showPreview && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `url(${panelBg})`,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: 0.6, pointerEvents: 'none',
+                      borderRadius: 3,
+                    }} />
+                  )}
                   {PreviewComponent && (
                     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
                       <PreviewComponent scale={scale} />

@@ -133,23 +133,37 @@ export default function AdminMap() {
     <div style={{
       width: '100vw', height: '100vh', background: '#0a0e1a',
       display: 'flex', flexDirection: 'column', fontFamily: 'Jost, sans-serif',
-      color: '#e2e8f0', overflow: 'hidden',
+      color: '#e2e8f0', overflow: 'hidden', position: 'relative',
     }}>
       <div style={{
-        padding: '8px 16px', background: '#141a2b',
-        borderBottom: '2px solid #f59e0b',
+        position: 'absolute', inset: 0,
+        backgroundImage: 'url(/backgrounds/world_map.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        opacity: 0.08, pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'url(/ui/game-border-frame.png)',
+        backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
+        pointerEvents: 'none', zIndex: 100, opacity: 0.4,
+      }} />
+      <div style={{
+        padding: '8px 16px', background: 'rgba(20,26,43,0.9)',
+        borderBottom: '2px solid rgba(180,150,90,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 8,
+        flexWrap: 'wrap', gap: 8, position: 'relative', zIndex: 10,
+        backgroundImage: 'url(/ui/bar-background.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="/admin" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 600, fontSize: '0.75rem', padding: '3px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>
             Admin Hub
           </a>
-          <a href="/" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
+          <a href="/" style={{ color: '#ffd700', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>
             Back to Game
           </a>
-          <span style={{ fontFamily: 'Cinzel, serif', fontWeight: 800, color: '#f59e0b', fontSize: '1.1rem' }}>
-            ADMIN MAP EDITOR
+          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 800, color: '#ffd700', fontSize: '1.1rem', textShadow: '0 0 12px rgba(255,215,0,0.3)' }}>
+            Admin Map Editor
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -173,10 +187,12 @@ export default function AdminMap() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
         <div style={{
-          width: 200, background: '#141a2b', borderRight: '1px solid #2a3040',
+          width: 200, background: 'rgba(20,26,43,0.92)', borderRight: '1px solid rgba(180,150,90,0.15)',
           overflowY: 'auto', padding: 8,
+          backgroundImage: 'url(/ui/chat-background.png)', backgroundSize: 'cover',
+          backdropFilter: 'blur(4px)',
         }}>
           <div style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
             Nodes ({allNodeIds.length})
@@ -293,8 +309,9 @@ export default function AdminMap() {
 
         {selected && (
           <div style={{
-            width: 220, background: '#141a2b', borderLeft: '1px solid #2a3040',
+            width: 220, background: 'rgba(20,26,43,0.92)', borderLeft: '1px solid rgba(180,150,90,0.15)',
             padding: 12, overflowY: 'auto',
+            backgroundImage: 'url(/ui/bar-background.png)', backgroundSize: 'cover',
           }}>
             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f59e0b', marginBottom: 8 }}>
               {locationList.find(l => l.id === selected)?.name || selected}
