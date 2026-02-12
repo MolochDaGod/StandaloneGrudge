@@ -1165,6 +1165,7 @@ export function createEnemy(templateId, playerLevel) {
   const levelScale = 1 + (playerLevel * 0.15);
   return {
     id: `enemy_${templateId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    grudgeUuid: null,
     templateId,
     name: template.name,
     icon: template.icon,
@@ -1308,6 +1309,7 @@ export function createRaceClassEnemy(raceId, classId, level, options = {}) {
 
   return {
     id: `enemy_${raceId}_${classId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    grudgeUuid: null,
     name,
     icon: classDef.icon,
     color: raceDef.color,

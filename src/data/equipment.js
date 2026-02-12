@@ -502,6 +502,7 @@ export function generateLoot(enemyTemplateId, playerLevel, isBoss = false) {
 
     drops.push({
       id: `${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      grudgeUuid: null,
       templateId: template.id,
       name: template.name,
       slot: template.slot,
@@ -698,6 +699,7 @@ export function createConsumable(templateId) {
   return {
     ...template,
     id: `${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    grudgeUuid: null,
     templateId: template.id,
     stats: {},
     tier: 0,
@@ -731,6 +733,7 @@ export function generateShopInventory(playerLevel, classId) {
     
     const item = {
       id: `shop_${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      grudgeUuid: null,
       templateId: template.id,
       name: template.name,
       slot: template.slot,

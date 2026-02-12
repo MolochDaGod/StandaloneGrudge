@@ -79,9 +79,10 @@ export default function HeroCreate() {
     }, 800);
   }, [addHeroToRoster]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim() || !selectedRace || !selectedClass) return;
-    const heroId = `hero_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const { generateGrudgeUuid } = await import('../utils/grudgeUuid.js');
+    const heroId = generateGrudgeUuid('hero', `${name.trim()}_${selectedRace}_${selectedClass}`);
     const stats = calculateStats(finalAttributes, heroLevel);
     pendingHeroRef.current = {
       id: heroId,

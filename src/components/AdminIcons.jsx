@@ -31,6 +31,13 @@ const CATEGORY_COLORS = {
   Potions: '#22c55e', Weapons: '#fb923c', Resources: '#06b6d4', Misc: '#94a3b8',
 };
 
+const PACK_CATEGORY_COLORS = {
+  armor: '#f59e0b', weapons: '#ef4444', resources: '#06b6d4', potions: '#22c55e',
+  entities: '#c084fc', factions: '#fb923c', misc: '#94a3b8',
+};
+
+const ICONS_PER_PAGE = 60;
+
 const RPG16_SHEETS = [
   { name: 'armours', file: '/icons/rpg16/armours.png', cols: 10, rows: 10 },
   { name: 'books', file: '/icons/rpg16/books.png', cols: 10, rows: 10 },
@@ -95,6 +102,46 @@ function IconCard({ iconKey, onUpload, onReset, override }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1,
           }}
         >✕</button>
+      )}
+    </div>
+  );
+}
+
+function PackIconCard({ icon, onCopyPath }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = () => {
+    navigator.clipboard.writeText(icon.path).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    });
+    if (onCopyPath) onCopyPath(icon);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      style={{
+        background: copied ? 'rgba(110,231,183,0.08)' : 'rgba(15,12,25,0.7)',
+        border: `1px solid ${copied ? 'rgba(110,231,183,0.4)' : 'rgba(255,215,0,0.08)'}`,
+        borderRadius: 6, padding: 6, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: 3, cursor: 'pointer', transition: 'all 0.15s',
+        width: 80, minHeight: 90, position: 'relative',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; e.currentTarget.style.background = 'rgba(255,215,0,0.04)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = copied ? 'rgba(110,231,183,0.4)' : 'rgba(255,215,0,0.08)'; e.currentTarget.style.background = copied ? 'rgba(110,231,183,0.08)' : 'rgba(15,12,25,0.7)'; }}
+      title={`Click to copy path: ${icon.path}`}
+    >
+      <img src={icon.path} alt={icon.file} style={{ width: 48, height: 48, objectFit: 'contain', imageRendering: 'auto' }} loading="lazy" />
+      <div style={{ fontSize: '0.4rem', color: '#94a3b8', textAlign: 'center', wordBreak: 'break-all', lineHeight: 1.1, maxWidth: 76 }}>
+        {icon.file.replace(/\.[^.]+$/, '')}
+      </div>
+      {copied && (
+        <div style={{
+          position: 'absolute', inset: 0, background: 'rgba(110,231,183,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 6, fontSize: '0.5rem', color: '#6ee7b7', fontWeight: 700,
+        }}>Copied!</div>
       )}
     </div>
   );
@@ -183,11 +230,42 @@ function SpriteSheetGrid({ sheet, srcSize, renderSize, maxCols, maxRows }) {
   );
 }
 
+function Pagination({ page, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+      <button disabled={page <= 0} onClick={() => onPageChange(page - 1)} style={{
+        background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)',
+        color: page <= 0 ? '#4b5563' : '#ffd700', padding: '4px 10px', borderRadius: 4,
+        cursor: page <= 0 ? 'default' : 'pointer', fontSize: '0.7rem',
+      }}>Prev</button>
+      <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{page + 1} / {totalPages}</span>
+      <button disabled={page >= totalPages - 1} onClick={() => onPageChange(page + 1)} style={{
+        background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)',
+        color: page >= totalPages - 1 ? '#4b5563' : '#ffd700', padding: '4px 10px', borderRadius: 4,
+        cursor: page >= totalPages - 1 ? 'default' : 'pointer', fontSize: '0.7rem',
+      }}>Next</button>
+    </div>
+  );
+}
+
 export default function AdminIcons() {
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('registry');
+  const [packCategory, setPackCategory] = useState('armor');
+  const [packPage, setPackPage] = useState(0);
+  const [packManifest, setPackManifest] = useState(null);
+  const [packSearch, setPackSearch] = useState('');
   const [overrides, setOverrides] = useState(() => {
     try { return JSON.parse(localStorage.getItem('iconOverrides') || '{}'); } catch { return {}; }
   });
+
+  useEffect(() => {
+    fetch('/icons/pack/manifest.json')
+      .then(r => r.json())
+      .then(data => setPackManifest(data))
+      .catch(() => setPackManifest({}));
+  }, []);
 
   const saveOverrides = (newOverrides) => {
     setOverrides(newOverrides);
@@ -220,6 +298,22 @@ export default function AdminIcons() {
 
   const overrideCount = Object.keys(overrides).length;
 
+  const packCategoryIcons = packManifest && packManifest[packCategory]
+    ? (packSearch
+      ? packManifest[packCategory].filter(i => i.file.toLowerCase().includes(packSearch.toLowerCase()))
+      : packManifest[packCategory])
+    : [];
+  const packTotalPages = Math.ceil(packCategoryIcons.length / ICONS_PER_PAGE);
+  const packPageIcons = packCategoryIcons.slice(packPage * ICONS_PER_PAGE, (packPage + 1) * ICONS_PER_PAGE);
+
+  const totalPackIcons = packManifest ? Object.values(packManifest).reduce((s, a) => s + a.length, 0) : 0;
+
+  const tabs = [
+    { id: 'registry', label: 'Game Icons', count: allKeys.length },
+    { id: 'pack', label: 'Icon Pack', count: totalPackIcons },
+    { id: 'sheets', label: 'Sprite Sheets', count: null },
+  ];
+
   return (
     <div style={{
       minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a14 0%, #141428 50%, #0a0e1a 100%)',
@@ -235,9 +329,6 @@ export default function AdminIcons() {
             fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.5rem', margin: 0,
             textShadow: '0 0 12px rgba(255,215,0,0.3)',
           }}>Icon Manager</h1>
-          <span style={{ fontSize: '0.65rem', color: '#6b7280', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>
-            {allKeys.length} icons
-          </span>
           {overrideCount > 0 && (
             <span style={{ fontSize: '0.6rem', color: '#6ee7b7', padding: '2px 8px', background: 'rgba(110,231,183,0.1)', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
               {overrideCount} override{overrideCount !== 1 ? 's' : ''}
@@ -260,83 +351,166 @@ export default function AdminIcons() {
         </div>
       </div>
 
+      <div style={{
+        display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,215,0,0.1)',
+        background: 'rgba(15,12,25,0.6)', padding: '0 24px',
+      }}>
+        {tabs.map(tab => (
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setPackPage(0); }} style={{
+            background: activeTab === tab.id ? 'rgba(255,215,0,0.1)' : 'transparent',
+            border: 'none', borderBottom: activeTab === tab.id ? '2px solid #ffd700' : '2px solid transparent',
+            color: activeTab === tab.id ? '#ffd700' : '#6b7280',
+            padding: '10px 20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+            fontFamily: "'Cinzel', serif", transition: 'all 0.15s',
+          }}>
+            {tab.label}
+            {tab.count != null && <span style={{ marginLeft: 6, fontSize: '0.6rem', opacity: 0.6 }}>({tab.count})</span>}
+          </button>
+        ))}
+      </div>
+
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 24px' }}>
-        <div style={{ marginBottom: 20 }}>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search icons by name..."
-            style={{
-              width: '100%', maxWidth: 400, padding: '8px 14px',
-              background: 'rgba(20,15,30,0.6)', border: '1px solid rgba(255,215,0,0.15)',
-              borderRadius: 6, color: '#e2e8f0', fontSize: '0.8rem', outline: 'none',
-              fontFamily: "'Jost', sans-serif",
-            }}
-            onFocus={(e) => { e.target.style.borderColor = 'rgba(255,215,0,0.4)'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'rgba(255,215,0,0.15)'; }}
-          />
-        </div>
 
-        {CATEGORY_ORDER.map(cat => {
-          const keys = categorized[cat];
-          if (!keys || keys.length === 0) return null;
-          const color = CATEGORY_COLORS[cat] || '#94a3b8';
-
-          return (
-            <div key={cat} style={{ marginBottom: 24 }}>
-              <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 3 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                  <h2 style={{
-                    fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '0.95rem',
-                    margin: 0, fontWeight: 700,
-                  }}>{cat}</h2>
-                  <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>({keys.length})</span>
-                </div>
-              </OrnatePanel>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {keys.map(key => (
-                  <IconCard
-                    key={key}
-                    iconKey={key}
-                    override={overrides[key]}
-                    onUpload={handleUpload}
-                    onReset={handleReset}
-                  />
-                ))}
-              </div>
+        {activeTab === 'registry' && (
+          <>
+            <div style={{ marginBottom: 20 }}>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search game icons by name..."
+                style={{
+                  width: '100%', maxWidth: 400, padding: '8px 14px',
+                  background: 'rgba(20,15,30,0.6)', border: '1px solid rgba(255,215,0,0.15)',
+                  borderRadius: 6, color: '#e2e8f0', fontSize: '0.8rem', outline: 'none',
+                  fontFamily: "'Jost', sans-serif",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = 'rgba(255,215,0,0.4)'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255,215,0,0.15)'; }}
+              />
             </div>
-          );
-        })}
 
-        <div style={{ marginTop: 40, borderTop: '1px solid rgba(255,215,0,0.1)', paddingTop: 24 }}>
-          <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 16 }}>
-            <h2 style={{
-              fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1rem',
-              margin: 0, fontWeight: 700, position: 'relative', zIndex: 3,
-            }}>RPG 16×16 Icons</h2>
-          </OrnatePanel>
-          {RPG16_SHEETS.map(sheet => (
-            <SpriteSheetGrid key={sheet.name} sheet={sheet} srcSize={16} renderSize={48} />
-          ))}
-        </div>
+            {CATEGORY_ORDER.map(cat => {
+              const keys = categorized[cat];
+              if (!keys || keys.length === 0) return null;
+              const color = CATEGORY_COLORS[cat] || '#94a3b8';
 
-        <div style={{ marginTop: 32 }}>
-          <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 16 }}>
-            <h2 style={{
-              fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1rem',
-              margin: 0, fontWeight: 700, position: 'relative', zIndex: 3,
-            }}>Crafting Materials</h2>
-          </OrnatePanel>
-          <SpriteSheetGrid
-            sheet={{ name: 'resources_basic', file: '/icons/materials/resources_basic.png' }}
-            srcSize={24}
-            renderSize={48}
-            maxCols={11}
-            maxRows={11}
-          />
-        </div>
+              return (
+                <div key={cat} style={{ marginBottom: 24 }}>
+                  <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 3 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                      <h2 style={{
+                        fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '0.95rem',
+                        margin: 0, fontWeight: 700,
+                      }}>{cat}</h2>
+                      <span style={{ fontSize: '0.6rem', color: '#6b7280' }}>({keys.length})</span>
+                    </div>
+                  </OrnatePanel>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {keys.map(key => (
+                      <IconCard
+                        key={key}
+                        iconKey={key}
+                        override={overrides[key]}
+                        onUpload={handleUpload}
+                        onReset={handleReset}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {activeTab === 'pack' && (
+          <>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+              {packManifest && Object.keys(packManifest).map(cat => {
+                const count = packManifest[cat]?.length || 0;
+                const isActive = packCategory === cat;
+                const color = PACK_CATEGORY_COLORS[cat] || '#94a3b8';
+                return (
+                  <button key={cat} onClick={() => { setPackCategory(cat); setPackPage(0); setPackSearch(''); }} style={{
+                    background: isActive ? `${color}20` : 'rgba(20,15,30,0.5)',
+                    border: `1px solid ${isActive ? color : 'rgba(255,215,0,0.12)'}`,
+                    color: isActive ? color : '#94a3b8',
+                    padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 600, fontFamily: "'Cinzel', serif",
+                    textTransform: 'capitalize', transition: 'all 0.15s',
+                  }}>
+                    {cat} <span style={{ opacity: 0.5, fontSize: '0.6rem' }}>({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <input
+                type="text"
+                value={packSearch}
+                onChange={(e) => { setPackSearch(e.target.value); setPackPage(0); }}
+                placeholder={`Search ${packCategory} icons...`}
+                style={{
+                  width: '100%', maxWidth: 400, padding: '8px 14px',
+                  background: 'rgba(20,15,30,0.6)', border: '1px solid rgba(255,215,0,0.15)',
+                  borderRadius: 6, color: '#e2e8f0', fontSize: '0.8rem', outline: 'none',
+                  fontFamily: "'Jost', sans-serif",
+                }}
+              />
+              <span style={{ fontSize: '0.6rem', color: '#6b7280', marginLeft: 12 }}>
+                {packCategoryIcons.length} icons {packSearch && `matching "${packSearch}"`}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {packPageIcons.map(icon => (
+                <PackIconCard key={icon.key} icon={icon} />
+              ))}
+            </div>
+
+            <Pagination page={packPage} totalPages={packTotalPages} onPageChange={setPackPage} />
+
+            {packPageIcons.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 40, color: '#4b5563', fontSize: '0.8rem' }}>
+                {packSearch ? `No icons matching "${packSearch}"` : 'No icons in this category'}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'sheets' && (
+          <>
+            <div style={{ marginBottom: 24 }}>
+              <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 16 }}>
+                <h2 style={{
+                  fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1rem',
+                  margin: 0, fontWeight: 700, position: 'relative', zIndex: 3,
+                }}>RPG 16x16 Icons</h2>
+              </OrnatePanel>
+              {RPG16_SHEETS.map(sheet => (
+                <SpriteSheetGrid key={sheet.name} sheet={sheet} srcSize={16} renderSize={48} />
+              ))}
+            </div>
+
+            <div>
+              <OrnatePanel style={{ borderRadius: 8, padding: '10px 16px', marginBottom: 16 }}>
+                <h2 style={{
+                  fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1rem',
+                  margin: 0, fontWeight: 700, position: 'relative', zIndex: 3,
+                }}>Crafting Materials</h2>
+              </OrnatePanel>
+              <SpriteSheetGrid
+                sheet={{ name: 'resources_basic', file: '/icons/materials/resources_basic.png' }}
+                srcSize={24}
+                renderSize={48}
+                maxCols={11}
+                maxRows={11}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
