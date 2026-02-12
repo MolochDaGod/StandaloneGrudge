@@ -43,7 +43,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Zone Conquer System:** Impacts XP gain and auto-harvest.
 - **Zone Quest System:** 29 zones each with 4 optional quests.
 - **Gruda Arena:** A standalone challenge mode for simplified turn-based battles.
-- **Discord Integration:** Discord OAuth for login, and a Discord Webhook Broadcaster for automatic gameplay broadcasts (arena submissions, relegations, win streaks).
+- **Discord Integration:** Discord OAuth for login with auto-join guild (guilds.join scope). Discord bot (`src/server/discordBot.js`) using discord.js v14 with 7 slash commands: `/profile`, `/characters`, `/leaderboard`, `/stats`, `/play`, `/link`, `/help`. Bot runs alongside Express server. Session token system for extension auth (`/api/auth/verify`, `/api/auth/extension`). Discord Webhook Broadcaster for automatic gameplay broadcasts (arena submissions, relegations, win streaks). Discord invite: `https://discord.gg/KmAC5aXs84`.
 - **GRUDA PvP Arena:** Comprehensive ranked PvP system where players submit team snapshots. Other players challenge AI-controlled opponents. Rewards gold, resources, and equipment. Uses in-memory Map storage for arena data. Leaderboard API at `/api/arena/leaderboard`. Full-screen `GrudaLeaderboard.jsx` UI with rank badges.
 - **Rank Badge System:** `RankBadge.jsx` with 6 tiers (Bronze→Silver→Gold→Platinum→Diamond→Legend). SVG star badges with tier-colored glows. Discord webhooks include rank info.
 - **UI Sprite Sheet:** `pixel_ui_pack.png` (1312x304) provides bar frames, fill textures, rank emblems, visual effects. `PixelBar.jsx` renders sprite-based bars (HP, mana, stamina, grudge, action timer, XP).

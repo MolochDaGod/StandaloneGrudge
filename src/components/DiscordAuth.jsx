@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 export default function DiscordAuth() {
   const [status, setStatus] = useState('loading');
   const [user, setUser] = useState(null);
-  const [invite, setInvite] = useState(null);
+  const [guildJoined, setGuildJoined] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -38,7 +38,11 @@ export default function DiscordAuth() {
           return;
         }
         setUser(data.user);
-        setInvite(data.invite);
+        setGuildJoined(data.guildJoined || false);
+        if (data.sessionToken) {
+          localStorage.setItem('grudge_session_token', data.sessionToken);
+        }
+        localStorage.setItem('discordUser', JSON.stringify(data.user));
         setStatus('success');
         window.history.replaceState({}, '', '/discordauth');
       })
@@ -161,15 +165,16 @@ export default function DiscordAuth() {
               borderRadius: 8, padding: 12, marginBottom: 16,
             }}>
               <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
-                Welcome to the Beta!
+                Welcome to Grudge Warlords!
               </div>
               <div style={{ color: '#86efac', fontSize: '0.8rem' }}>
                 Your Discord account has been verified.
+                {guildJoined && ' You\'ve been added to our Discord server!'}
               </div>
             </div>
 
-            {invite && (
-              <a href={invite} target="_blank" rel="noopener noreferrer" style={{
+            {!guildJoined && (
+              <a href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 background: '#5865F2', border: 'none', borderRadius: 8,
                 padding: '12px 28px', color: '#fff', fontSize: '0.95rem',
@@ -179,7 +184,7 @@ export default function DiscordAuth() {
               onMouseEnter={e => { e.currentTarget.style.background = '#4752C4'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#5865F2'; }}
               >
-                Join Beta Channel
+                Join Our Discord
               </a>
             )}
 

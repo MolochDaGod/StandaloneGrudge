@@ -2,16 +2,19 @@ import express from 'express';
 import crypto from 'crypto';
 import { initDatabase, testConnection } from './src/server/db.js';
 import { registerDbRoutes } from './src/server/dbRoutes.js';
+import { startBot, addUserToGuild } from './src/server/discordBot.js';
 
 const app = express();
 app.use(express.json());
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
 const BETA_CHANNEL_ID = '1381760000946470987';
 const PORT = 3001;
 
 const pendingStates = new Map();
+const activeSessions = new Map();
 
 function getPublicOrigin(req) {
   const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
@@ -39,9 +42,10 @@ app.post('/api/discord/callback', async (req, res) => {
   const { code, state } = req.body;
   if (!code) return res.status(400).json({ error: 'Missing code' });
 
-  if (state && pendingStates.has(state)) {
-    pendingStates.delete(state);
+  if (!state || !pendingStates.has(state)) {
+    return res.status(403).json({ error: 'Invalid or missing state parameter' });
   }
+  pendingStates.delete(state);
 
   for (const [k, v] of pendingStates) {
     if (Date.now() - v > 600000) pendingStates.delete(k);
@@ -82,11 +86,26 @@ app.post('/api/discord/callback', async (req, res) => {
 
     const user = await userRes.json();
 
-    let inviteLink = null;
+    let guildJoined = false;
     try {
-      inviteLink = await createBetaInvite();
-    } catch (inviteErr) {
-      console.error('Invite creation failed:', inviteErr.message);
+      guildJoined = await addUserToGuild(accessToken, user.id);
+    } catch (joinErr) {
+      console.error('Auto guild join failed:', joinErr.message);
+    }
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+
+    activeSessions.set(sessionToken, {
+      discordId: user.id,
+      username: user.username,
+      createdAt: Date.now(),
+    });
+
+    if (activeSessions.size > 5000) {
+      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      for (const [k, v] of activeSessions) {
+        if (v.createdAt < cutoff) activeSessions.delete(k);
+      }
     }
 
     res.json({
@@ -99,7 +118,8 @@ app.post('/api/discord/callback', async (req, res) => {
         email: user.email,
         globalName: user.global_name,
       },
-      invite: inviteLink,
+      guildJoined,
+      sessionToken,
     });
   } catch (err) {
     console.error('Discord callback error:', err);
@@ -108,7 +128,7 @@ app.post('/api/discord/callback', async (req, res) => {
 });
 
 async function createBetaInvite() {
-  const botToken = process.env.GAME_API_GRUDA;
+  const botToken = DISCORD_BOT_TOKEN_VAL || process.env.GAME_API_GRUDA;
   if (!botToken) throw new Error('Bot token not configured');
 
   const inviteRes = await fetch(`https://discord.com/api/v10/channels/${BETA_CHANNEL_ID}/invites`, {
@@ -144,7 +164,7 @@ app.get('/api/discord/invite', async (req, res) => {
 });
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_GRUDGE_WEBHOOK;
-const ADMIN_TOKEN = process.env.GAME_API_GRUDA;
+const ADMIN_TOKEN = process.env.GAME_API_GRUDA || DISCORD_BOT_TOKEN_VAL;
 
 function requireAdmin(req, res, next) {
   const auth = req.headers['x-admin-token'];
@@ -721,11 +741,56 @@ app.get('/api/arena/leaderboard', (req, res) => {
   });
 });
 
+app.post('/api/auth/verify', (req, res) => {
+  const { sessionToken } = req.body;
+  if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
+  const session = activeSessions.get(sessionToken);
+  if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(sessionToken);
+    return res.status(401).json({ error: 'Session expired' });
+  }
+  res.json({
+    valid: true,
+    discordId: session.discordId,
+    username: session.username,
+  });
+});
+
+app.post('/api/auth/extension', async (req, res) => {
+  const { sessionToken } = req.body;
+  if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
+  const session = activeSessions.get(sessionToken);
+  if (!session) return res.status(401).json({ error: 'Invalid session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(sessionToken);
+    return res.status(401).json({ error: 'Session expired' });
+  }
+  const extensionToken = crypto.randomBytes(32).toString('hex');
+
+  activeSessions.set(extensionToken, {
+    discordId: session.discordId,
+    username: session.username,
+    createdAt: Date.now(),
+    isExtension: true,
+  });
+
+  res.json({
+    extensionToken,
+    discordId: session.discordId,
+    username: session.username,
+    expiresIn: '7d',
+  });
+});
+
 registerDbRoutes(app);
 
 (async () => {
   const connected = await testConnection();
   if (connected) await initDatabase();
+  await startBot(arenaTeams, arenaBattles);
 })();
 
 app.listen(PORT, '0.0.0.0', () => {
