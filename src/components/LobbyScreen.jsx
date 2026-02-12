@@ -471,6 +471,12 @@ function HeroSlideshow() {
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
 
+  const targetHeight = 240;
+  const spriteFrameH = spriteData?.frameHeight || 100;
+  const spriteScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
+  const transformFrameH = worgeTransformData?.frameHeight || 128;
+  const transformScale = Math.min(Math.max(targetHeight / transformFrameH, 1.5), 5);
+
   const intervalRefs = useRef([]);
 
   const clearTimers = () => {
@@ -550,37 +556,46 @@ function HeroSlideshow() {
     }, walkDuration + 800 + attackDuration + 400);
 
     if (isWorge) {
+      const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
+      const tAtk = transformAttacks.length > 0
+        ? transformAttacks[Math.floor(Math.random() * transformAttacks.length)]
+        : 'attack1';
+      const tAtkFrames = worgeTransformData?.[tAtk]?.frames || 8;
+      const tAtkDuration = tAtkFrames * 80;
+
       addTimer(() => {
-        setShowTransform(true);
         setShowBubble(false);
+        setShowTransform(true);
         setAnim('idle');
-        const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
-        const tAtk = transformAttacks.length > 0
-          ? transformAttacks[Math.floor(Math.random() * transformAttacks.length)]
-          : 'idle';
-        setTransformAnim(tAtk);
+        setTransformAnim('idle');
         setShowVfx(false);
+      }, walkDuration + 800 + attackDuration + 1400);
+
+      addTimer(() => {
+        setTransformAnim(tAtk);
         addTimer(() => setShowVfx(true), 200);
-      }, walkDuration + 800 + attackDuration + 2200);
+      }, walkDuration + 800 + attackDuration + 2000);
 
       addTimer(() => {
         setTransformAnim('idle');
         setShowVfx(false);
-      }, walkDuration + 800 + attackDuration + 3600);
+        setShowBubble(true);
+      }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 200);
 
       addTimer(() => {
         setPhase('exit');
+        setShowBubble(false);
         addTimer(() => {
           setIndex(prev => (prev + 1) % ALL_COMBOS.length);
           setShowTransform(false);
         }, 600);
-      }, walkDuration + 800 + attackDuration + 5000);
+      }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 2000);
     } else {
       addTimer(() => {
         setPhase('exit');
         setShowBubble(false);
         addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
-      }, walkDuration + 800 + attackDuration + 4200);
+      }, walkDuration + 800 + attackDuration + 3000);
     }
 
     return clearTimers;
@@ -716,18 +731,20 @@ function HeroSlideshow() {
             <div style={{
               position: 'absolute',
               left: `${spriteX}%`,
-              bottom: 40,
+              bottom: 60,
               willChange: 'left',
             }}>
               <div style={{
                 position: 'relative',
-                display: 'inline-block',
+                display: 'inline-flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
               }}>
                 <div style={{
                   position: 'absolute',
-                  width: 300, height: 300,
-                  left: '50%', bottom: '10%',
-                  transform: 'translateX(-50%)',
+                  width: 250, height: 250,
+                  left: '50%', bottom: 0,
+                  transform: 'translate(-50%, 20%)',
                   borderRadius: '50%',
                   background: `radial-gradient(circle, ${classEffect.aura}28 0%, ${classEffect.aura}10 40%, transparent 65%)`,
                   opacity: auraIntensity,
@@ -745,7 +762,7 @@ function HeroSlideshow() {
                   <SpriteAnimation
                     spriteData={spriteData}
                     animation={anim}
-                    scale={5}
+                    scale={spriteScale}
                     loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
                     speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
                     onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
@@ -755,14 +772,15 @@ function HeroSlideshow() {
                 {isWorge && showTransform && worgeTransformData && (
                   <div style={{
                     position: 'absolute',
-                    left: 0, bottom: 0,
+                    left: '50%', bottom: 0,
+                    transform: 'translateX(-50%)',
                     transformOrigin: 'bottom center',
                     animation: 'ssTransformFlash 0.4s ease-out',
                   }}>
                     <SpriteAnimation
                       spriteData={worgeTransformData}
                       animation={transformAnim}
-                      scale={5}
+                      scale={transformScale}
                       loop={transformAnim === 'idle'}
                       speed={transformAnim === 'idle' ? 140 : 80}
                       onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
