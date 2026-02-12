@@ -147,7 +147,7 @@ function AdminGizmo() {
   return (
     <div id="admin-gizmo-root">
       <div style={{
-        position: 'fixed', top: 16, left: 60, zIndex: GIZMO_Z + 10,
+        position: 'fixed', top: 56, left: 56, zIndex: GIZMO_Z + 10,
         display: 'flex', flexDirection: 'row', gap: 8, alignItems: 'center',
       }}>
         <button

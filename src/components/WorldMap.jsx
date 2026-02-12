@@ -3154,12 +3154,11 @@ export default function WorldMap() {
         )}
 
         <div style={{
-          position: 'absolute', top: 10, left: 48, right: 48,
-          background: 'linear-gradient(180deg, rgba(10,14,30,0.85) 0%, rgba(10,14,30,0.5) 70%, transparent 100%)',
-          padding: '8px 12px',
+          position: 'absolute', top: 0, left: 0, right: 0,
+          background: 'linear-gradient(180deg, rgba(10,14,30,0.9) 0%, rgba(10,14,30,0.6) 80%, transparent 100%)',
+          padding: '6px 14px 10px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           flexWrap: 'wrap', gap: 8, zIndex: MAP_LAYERS.HUD_BUTTONS,
-          borderRadius: '0 0 8px 8px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div

@@ -99,7 +99,7 @@ export default function SettingsMenu() {
       <button
         onClick={() => { setOpen(!open); setConfirmReset(false); }}
         style={{
-          position: 'fixed', top: 16, left: 16, zIndex: SETTINGS_BUTTON,
+          position: 'fixed', top: 56, left: 14, zIndex: SETTINGS_BUTTON,
           width: 40, height: 40, borderRadius: '50%',
           background: open ? 'rgba(110,231,183,0.2)' : 'rgba(14,22,48,0.7)',
           border: `1px solid ${open ? 'var(--accent)' : 'rgba(255,255,255,0.12)'}`,
@@ -116,7 +116,7 @@ export default function SettingsMenu() {
 
       {open && (
         <div ref={panelRef} style={{
-          position: 'fixed', top: 64, left: 16, zIndex: SETTINGS_PANEL,
+          position: 'fixed', top: 104, left: 14, zIndex: SETTINGS_PANEL,
           width: 280,
           background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
           border: '1px solid rgba(110,231,183,0.25)',
