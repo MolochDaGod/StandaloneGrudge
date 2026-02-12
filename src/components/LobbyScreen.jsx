@@ -278,12 +278,12 @@ const CLASS_ICON_MAP = {
 };
 
 const FACTION_MAP = {
-  human: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/sprites/ui/icons/icon_crest.png' },
-  barbarian: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/sprites/ui/icons/icon_crest.png' },
-  orc: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/sprites/ui/icons/icon_chaos.png' },
-  undead: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/sprites/ui/icons/icon_chaos.png' },
-  elf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/sprites/ui/icons/icon_star.png' },
-  dwarf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/sprites/ui/icons/icon_star.png' },
+  human: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
+  barbarian: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
+  orc: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
+  undead: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
+  elf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
+  dwarf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
 };
 
 const HERO_SLOGANS = {
@@ -641,14 +641,15 @@ function HeroSlideshow() {
           transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}>
           <div style={{
-            width: 36, height: 36, borderRadius: '50%',
+            width: 48, height: 48, borderRadius: '50%',
             background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
             border: `2px solid ${faction.color}88`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 12px ${faction.color}44`,
+            boxShadow: `0 0 16px ${faction.color}44`,
+            overflow: 'hidden',
           }}>
             <img src={faction.icon} alt={faction.name} style={{
-              width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
+              width: 40, height: 40, objectFit: 'contain', filter: 'brightness(1.2)',
             }} />
           </div>
           <div style={{
