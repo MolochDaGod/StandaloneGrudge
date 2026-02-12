@@ -10,6 +10,7 @@ import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
+import { getBuildClassification } from '../data/attributes';
 
 const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
 
@@ -595,6 +596,8 @@ export default function MapBottomBar({
                   const circleSize = 44;
                   const fw = spriteData?.frameWidth || 100;
                   const spriteScale = (circleSize / fw) * 1.1;
+                  const build = heroStats ? getBuildClassification(heroStats, hero.attributes || {}) : null;
+                  const swirlColor = build?.tierColor || '#9ca3af';
 
                   return (
                     <div
@@ -612,13 +615,21 @@ export default function MapBottomBar({
                     >
                       <div style={{
                         width: circleSize, height: circleSize, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-                        border: isSelected ? '2px solid var(--accent)' : '1.5px solid rgba(255,215,0,0.35)',
+                        border: isSelected ? `2px solid ${swirlColor}` : `1.5px solid ${swirlColor}80`,
                         background: 'rgba(0,0,0,0.7)',
-                        boxShadow: isSelected ? '0 0 8px rgba(110,231,183,0.3)' : '0 0 4px rgba(0,0,0,0.5)',
-                        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                        boxShadow: isSelected ? `0 0 10px ${swirlColor}50` : `0 0 5px ${swirlColor}30`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                         position: 'relative',
                       }}>
-                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} />
+                        <div style={{
+                          position: 'absolute', inset: 0, borderRadius: '50%',
+                          background: `conic-gradient(from 0deg, ${swirlColor}00, ${swirlColor}35, ${swirlColor}00, ${swirlColor}25, ${swirlColor}00)`,
+                          animation: 'swirlSpin 4s linear infinite',
+                          opacity: 0.7,
+                        }} />
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} />
+                        </div>
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>

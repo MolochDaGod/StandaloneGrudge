@@ -417,6 +417,8 @@ const spriteSheets = {
   },
   'dwarf-ranger': {
     folder: 'dwarf-ranger',
+    frameWidth: 100,
+    frameHeight: 100,
     idle: { src: '/sprites/dwarf-ranger/idle.png', frames: 6 },
     attack1: { src: '/sprites/dwarf-ranger/attack1.png', frames: 6 },
     attack2: { src: '/sprites/dwarf-ranger/attack2.png', frames: 6 },

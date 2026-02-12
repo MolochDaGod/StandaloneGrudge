@@ -295,6 +295,11 @@ body {
   100% { opacity: 1; transform: translate(-50%, -50%) translateY(0); filter: blur(0); }
 }
 
+@keyframes swirlSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 @keyframes dmgPop {
   0% { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
   15% { opacity: 1; transform: translate(-50%, -10px) scale(1.3); }
