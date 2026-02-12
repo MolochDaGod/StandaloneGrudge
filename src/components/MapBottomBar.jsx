@@ -13,7 +13,7 @@ import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
 
 const BAR_HEIGHT = '26.2%';
-const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
+const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
 function ChatAvatar({ race, heroClass, size = 20 }) {
   if (!race || !heroClass) return null;
@@ -441,7 +441,11 @@ export default function MapBottomBar({
 
   const overlayContent = (
     <div id="game-ui-overlay" style={{
-      position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
+      position: 'absolute',
+      bottom: 'var(--frame-inset-bottom, 12%)',
+      left: 'var(--frame-inset-side, 4%)',
+      right: 'var(--frame-inset-side, 4%)',
+      height: BAR_HEIGHT,
       zIndex: 10600,
       pointerEvents: 'none',
     }}>
@@ -455,6 +459,10 @@ export default function MapBottomBar({
         display: 'flex',
         alignItems: 'stretch',
         padding: '0',
+        backgroundImage: 'url(/ui/bar-background.png)',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center center',
       }}>
 
         {/* LEFT PANEL: Party Log / Chat */}
@@ -462,7 +470,7 @@ export default function MapBottomBar({
           flex: '0 0 28%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 8px 12px 28px',
+          padding: '16px 8px 8px 12px',
           overflow: 'hidden',
         }}>
           <div style={{
@@ -518,7 +526,7 @@ export default function MapBottomBar({
         <div style={{
           flex: '1 1 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '28px 4px 12px',
+          padding: '16px 4px 8px',
         }}>
           <div style={{
             display: 'grid',
@@ -569,7 +577,7 @@ export default function MapBottomBar({
           flex: '0 0 20%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '20px 28px 14px 8px',
+          padding: '16px 12px 8px 8px',
           position: 'relative',
         }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
