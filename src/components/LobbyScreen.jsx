@@ -371,37 +371,74 @@ function SlideshowVFX({ effectKey, playing, x, y }) {
   );
 }
 
-function ChatBubble({ text, visible }) {
+function ChatBubble({ text, visible, auraColor }) {
   if (!visible || !text) return null;
+  const glowColor = auraColor || '#ffd700';
   return (
     <div style={{
       position: 'absolute',
-      left: '22%', top: '18%',
-      transform: 'translate(-50%, -100%)',
-      background: 'rgba(0,0,0,0.85)',
-      border: '2px solid rgba(255,215,0,0.5)',
-      borderRadius: '12px 12px 12px 2px',
-      padding: '8px 14px',
-      maxWidth: 260,
+      right: '8%', top: '50%',
+      transform: 'translateY(-50%)',
       zIndex: 12,
       opacity: visible ? 1 : 0,
-      transition: 'opacity 0.5s ease',
-      animation: visible ? 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+      animation: visible ? 'bubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+      pointerEvents: 'none',
     }}>
       <div style={{
-        fontSize: '0.7rem', color: '#ffd700',
-        fontStyle: 'italic', lineHeight: 1.4,
-        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+        position: 'relative',
+        background: 'linear-gradient(135deg, rgba(15,10,30,0.92) 0%, rgba(30,20,50,0.95) 100%)',
+        border: `1px solid ${glowColor}55`,
+        borderRadius: 4,
+        padding: '12px 18px',
+        maxWidth: 220,
+        minWidth: 140,
+        boxShadow: `0 0 20px ${glowColor}22, inset 0 0 30px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.6)`,
       }}>
-        "{text}"
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: 4, overflow: 'hidden', pointerEvents: 'none',
+        }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${glowColor}66, transparent)`,
+          }} />
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${glowColor}33, transparent)`,
+          }} />
+        </div>
+
+        <div style={{
+          position: 'absolute', top: -6, left: 12,
+          fontSize: '0.55rem', color: glowColor, letterSpacing: 2,
+          textTransform: 'uppercase', opacity: 0.7,
+          fontFamily: 'Cinzel, serif',
+        }}>&#x2756;</div>
+
+        <div style={{
+          fontSize: '0.72rem', color: '#e8dcc8',
+          fontStyle: 'italic', lineHeight: 1.5,
+          textShadow: `0 0 8px ${glowColor}33, 0 1px 3px rgba(0,0,0,0.9)`,
+          fontFamily: 'Jost, sans-serif',
+          letterSpacing: 0.3,
+        }}>
+          &ldquo;{text}&rdquo;
+        </div>
+
+        <div style={{
+          position: 'absolute', left: -10, top: '50%', transform: 'translateY(-50%)',
+          width: 0, height: 0,
+          borderTop: '6px solid transparent',
+          borderBottom: '6px solid transparent',
+          borderRight: `10px solid rgba(15,10,30,0.92)`,
+        }} />
+        <div style={{
+          position: 'absolute', left: -11, top: '50%', transform: 'translateY(-50%)',
+          width: 0, height: 0,
+          borderTop: '7px solid transparent',
+          borderBottom: '7px solid transparent',
+          borderRight: `11px solid ${glowColor}55`,
+        }} />
       </div>
-      <div style={{
-        position: 'absolute', bottom: -8, left: 12,
-        width: 0, height: 0,
-        borderLeft: '8px solid transparent',
-        borderRight: '8px solid transparent',
-        borderTop: '8px solid rgba(0,0,0,0.85)',
-      }} />
     </div>
   );
 }
@@ -733,13 +770,14 @@ function HeroSlideshow() {
                   </div>
                 )}
 
-                <ChatBubble text={slogan} visible={showBubble} />
               </div>
             </div>
 
             <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="65%" y="45%" />
           </div>
         </div>
+
+        <ChatBubble text={slogan} visible={showBubble} auraColor={classEffect.aura} />
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
