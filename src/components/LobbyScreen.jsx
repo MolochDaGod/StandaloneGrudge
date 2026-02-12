@@ -660,65 +660,86 @@ function HeroSlideshow() {
 
         <div style={{
           position: 'absolute',
-          left: `${spriteX}%`, bottom: '5%',
-          width: 0, height: 0,
+          left: 0, right: 0, bottom: 0,
+          height: '75%',
           zIndex: 7,
-          willChange: 'left',
+          pointerEvents: 'none',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
         }}>
           <div style={{
-            position: 'absolute',
-            width: 300, height: 300,
-            left: '50%', top: '50%',
-            transform: 'translate(-50%, -50%)',
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${classEffect.aura}28 0%, ${classEffect.aura}10 40%, transparent 65%)`,
-            opacity: auraIntensity,
-            transition: 'opacity 0.8s ease',
-            animation: auraIntensity > 0 ? 'ssAuraPulse 2s ease-in-out infinite' : 'none',
-            pointerEvents: 'none',
-          }} />
-
-          <div style={{
-            position: 'absolute',
-            left: '50%', bottom: 0,
-            transform: `translateX(-50%) ${showTransform ? 'scale(0.6)' : 'scale(1)'}`,
-            transformOrigin: 'bottom center',
-            opacity: showTransform ? 0 : 1,
-            transition: 'all 0.4s ease',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            width: '80%',
+            height: '100%',
           }}>
-            <SpriteAnimation
-              spriteData={spriteData}
-              animation={anim}
-              scale={5}
-              loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
-              speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
-              onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
-            />
-          </div>
-
-          {isWorge && showTransform && worgeTransformData && (
             <div style={{
               position: 'absolute',
-              left: '50%', bottom: 0,
-              transform: 'translateX(-50%)',
-              transformOrigin: 'bottom center',
-              animation: 'ssTransformFlash 0.4s ease-out',
+              left: `${spriteX}%`,
+              bottom: 40,
+              willChange: 'left',
             }}>
-              <SpriteAnimation
-                spriteData={worgeTransformData}
-                animation={transformAnim}
-                scale={5}
-                loop={transformAnim === 'idle'}
-                speed={transformAnim === 'idle' ? 140 : 80}
-                onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
-              />
+              <div style={{
+                position: 'relative',
+                display: 'inline-block',
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  width: 300, height: 300,
+                  left: '50%', bottom: '10%',
+                  transform: 'translateX(-50%)',
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${classEffect.aura}28 0%, ${classEffect.aura}10 40%, transparent 65%)`,
+                  opacity: auraIntensity,
+                  transition: 'opacity 0.8s ease',
+                  animation: auraIntensity > 0 ? 'ssAuraPulse 2s ease-in-out infinite' : 'none',
+                  pointerEvents: 'none',
+                }} />
+
+                <div style={{
+                  opacity: showTransform ? 0 : 1,
+                  transform: showTransform ? 'scale(0.6)' : 'scale(1)',
+                  transformOrigin: 'bottom center',
+                  transition: 'all 0.4s ease',
+                }}>
+                  <SpriteAnimation
+                    spriteData={spriteData}
+                    animation={anim}
+                    scale={5}
+                    loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
+                    speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
+                    onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
+                  />
+                </div>
+
+                {isWorge && showTransform && worgeTransformData && (
+                  <div style={{
+                    position: 'absolute',
+                    left: 0, bottom: 0,
+                    transformOrigin: 'bottom center',
+                    animation: 'ssTransformFlash 0.4s ease-out',
+                  }}>
+                    <SpriteAnimation
+                      spriteData={worgeTransformData}
+                      animation={transformAnim}
+                      scale={5}
+                      loop={transformAnim === 'idle'}
+                      speed={transformAnim === 'idle' ? 140 : 80}
+                      onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
+                    />
+                  </div>
+                )}
+
+                <ChatBubble text={slogan} visible={showBubble} />
+              </div>
             </div>
-          )}
 
-          <ChatBubble text={slogan} visible={showBubble} />
+            <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="65%" y="45%" />
+          </div>
         </div>
-
-        <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="70%" y="50%" />
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
