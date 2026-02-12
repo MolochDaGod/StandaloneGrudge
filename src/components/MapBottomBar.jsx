@@ -450,7 +450,7 @@ export default function MapBottomBar({
       {showCharacter && <div style={{ pointerEvents: 'auto' }}><CharacterPopup onClose={() => setShowCharacter(false)} /></div>}
 
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: '100%',
         pointerEvents: 'auto',
         display: 'flex',
         alignItems: 'stretch',
@@ -532,24 +532,25 @@ export default function MapBottomBar({
                 background: 'rgba(0,0,0,0.35)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: 6,
-                padding: '6px 2px 4px',
+                padding: '2px',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: 2,
+                gap: 1,
                 transition: 'all 0.15s',
                 position: 'relative',
                 animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                aspectRatio: '1',
               }}
                 onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
                 onMouseMove={e => updateTooltipPosition(e)}
                 onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
                 {btn.img ? (
-                  <img src={btn.img} alt={btn.label} style={{ width: 22, height: 22, objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
+                  <img src={btn.img} alt={btn.label} style={{ width: '80%', height: '80%', objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
                 ) : (
-                  <InlineIcon name={btn.icon} size={18} />
+                  <InlineIcon name={btn.icon} size={28} />
                 )}
-                <span style={{ fontSize: '0.45rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif" }}>{btn.label}</span>
+                <span style={{ fontSize: '0.4rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1 }}>{btn.label}</span>
                 {btn.badge && (
                   <span style={{
                     position: 'absolute', top: -2, right: -2,
