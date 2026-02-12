@@ -12,6 +12,7 @@ import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
 
+const BAR_HEIGHT = '26.2%';
 const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
 
 function ChatAvatar({ race, heroClass, size = 20 }) {
@@ -439,43 +440,45 @@ export default function MapBottomBar({
   const portalTarget = document.getElementById('game-ui-portal');
 
   const overlayContent = (
-    <div id="game-ui-overlay">
-      {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
-      {showGear && <GearPopup onClose={() => setShowGear(false)} />}
-      {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
+    <div id="game-ui-overlay" style={{
+      position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
+      zIndex: 10600,
+      pointerEvents: 'none',
+    }}>
+      {showHarvesting && <div style={{ pointerEvents: 'auto' }}><HarvestingPopup onClose={() => setShowHarvesting(false)} /></div>}
+      {showGear && <div style={{ pointerEvents: 'auto' }}><GearPopup onClose={() => setShowGear(false)} /></div>}
+      {showCharacter && <div style={{ pointerEvents: 'auto' }}><CharacterPopup onClose={() => setShowCharacter(false)} /></div>}
 
       <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
+        pointerEvents: 'auto',
         display: 'flex',
-        alignItems: 'flex-end',
-        gap: 6,
-        padding: '6px 4px',
-        width: '100%',
-        boxSizing: 'border-box',
+        alignItems: 'stretch',
+        padding: '0',
       }}>
 
         {/* LEFT PANEL: Party Log / Chat */}
-        <div className="ui-element panel-style" style={{
-          width: 260,
-          height: 160,
+        <div style={{
+          flex: '0 0 28%',
           display: 'flex',
           flexDirection: 'column',
-          flexShrink: 0,
+          padding: '24px 8px 12px 28px',
+          overflow: 'hidden',
         }}>
           <div style={{
-            padding: '6px 10px 2px',
+            padding: '3px 8px 2px',
             display: 'flex', alignItems: 'center', gap: 5,
-            borderBottom: '1px solid rgba(197,160,89,0.2)',
           }}>
-            <span className="font-cinzel" style={{ fontSize: '0.55rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+            <span className="font-cinzel" style={{ fontSize: '0.55rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
           </div>
           <div ref={chatLogRef} style={{
-            flex: 1, overflowY: 'auto', padding: '4px 10px',
+            flex: 1, overflowY: 'auto', padding: '2px 8px',
             fontSize: '0.65rem', lineHeight: 1.5,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
           }}>
             {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
-              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 3, padding: '1px 0' }}>
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 2, padding: '1px 0' }}>
                 <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={20} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ fontWeight: 700, color: entry.color, marginRight: 4, fontSize: '0.6rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
@@ -483,87 +486,92 @@ export default function MapBottomBar({
                 </div>
               </div>
             )) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic', fontFamily: "'Jost', sans-serif" }}>Your party is quiet...</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 4, padding: '4px 8px 6px', alignItems: 'center', borderTop: '1px solid rgba(197,160,89,0.15)', background: 'rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center' }}>
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') sendChat(); }}
-              placeholder="Chat..."
+              placeholder="Say something..."
               style={{
-                flex: 1, background: 'rgba(0,0,0,0.5)',
-                border: '1px solid rgba(255,215,0,0.15)',
-                borderRadius: 3, padding: '3px 6px',
+                flex: 1, background: 'rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,215,0,0.1)',
+                borderRadius: 4, padding: '3px 6px',
                 color: 'rgba(226,232,240,0.9)', fontSize: '0.6rem',
                 fontFamily: "'Jost', sans-serif", outline: 'none', minWidth: 0,
               }}
-              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.4)'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.15)'}
+              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.3)'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.1)'}
             />
             <button onClick={sendChat} style={{
-              background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.2)',
-              borderRadius: 3, padding: '2px 8px', color: 'var(--gold)', fontSize: '0.55rem',
+              background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.15)',
+              borderRadius: 4, padding: '2px 6px', color: 'var(--gold)', fontSize: '0.55rem',
               fontFamily: "'Cinzel', serif", fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             }}>Send</button>
           </div>
         </div>
 
         {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
-        <div className="ui-element panel-style" style={{
-          flex: 1,
-          display: 'flex',
-          justifyContent: 'center',
-          padding: '10px 12px',
-          alignItems: 'center',
-          maxWidth: 520,
-          alignSelf: 'flex-end',
+        <div style={{
+          flex: '1 1 0',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '28px 4px 12px',
         }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {buttons.map((btn, idx) => (
-              <div
-                key={btn.id}
-                className="hotbar-slot"
-                onClick={btn.action}
-                onMouseEnter={e => showTooltip(btn.label, e)}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(8, 1fr)',
+            gap: 3,
+            width: '100%',
+            maxWidth: 480,
+          }}>
+            {buttons.map(btn => (
+              <button key={btn.id} onClick={btn.action} style={{
+                background: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 6,
+                padding: '6px 2px 4px',
+                cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 2,
+                transition: 'all 0.15s',
+                position: 'relative',
+                animation: btn.pulse ? 'glow 2s infinite' : 'none',
+              }}
+                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
                 onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={() => hideTooltip()}
-                style={{
-                  animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                }}
+                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
               >
-                <span className="hotbar-num">{idx + 1}</span>
                 {btn.img ? (
-                  <img src={btn.img} alt={btn.label} style={{ width: 26, height: 26, objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
+                  <img src={btn.img} alt={btn.label} style={{ width: 22, height: 22, objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
                 ) : (
-                  <InlineIcon name={btn.icon} size={20} />
+                  <InlineIcon name={btn.icon} size={18} />
                 )}
+                <span style={{ fontSize: '0.45rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif" }}>{btn.label}</span>
                 {btn.badge && (
                   <span style={{
-                    position: 'absolute', top: -4, right: -4,
+                    position: 'absolute', top: -2, right: -2,
                     background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
                     fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 6px rgba(255,215,0,0.5)',
-                    fontFamily: "'Jost', sans-serif",
                   }}>{btn.badge}</span>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
         {/* RIGHT PANEL: War Party Status */}
-        <div className="ui-element" style={{
-          width: 290,
+        <div style={{
+          flex: '0 0 20%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'flex-end',
-          flexShrink: 0,
+          padding: '20px 28px 14px 8px',
+          position: 'relative',
         }}>
-          <div style={{ display: 'flex', gap: 5, marginBottom: -12, zIndex: 10, paddingRight: 10 }}>
+          <div style={{ display: 'flex', gap: 5, marginBottom: 4, justifyContent: 'flex-end', paddingRight: 4 }}>
             {popupButtons.map(pb => (
               <div
                 key={pb.id}
@@ -578,15 +586,13 @@ export default function MapBottomBar({
             ))}
           </div>
 
-          <div className="panel-style" style={{
-            width: '100%',
-            height: 185,
+          <div style={{
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            padding: '14px 10px 8px',
             overflow: 'hidden',
           }}>
-            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em', textAlign: 'center' }}>
+            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
             </div>
             <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent' }}>
