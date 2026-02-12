@@ -335,6 +335,13 @@ const CLASS_ICON_MAP = {
   ranger: '/sprites/ui/icons/icon_ranger.png',
 };
 
+const CLASS_TAG_MAP = {
+  warrior: '/sprites/ui/icons/tag_warrior.png',
+  mage: '/sprites/ui/icons/tag_mage.png',
+  worge: '/sprites/ui/icons/tag_worge.png',
+  ranger: '/sprites/ui/icons/tag_ranger.png',
+};
+
 const FACTION_MAP = {
   human: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
   barbarian: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
@@ -734,22 +741,11 @@ function HeroSlideshow() {
             position: 'absolute', top: 10, right: 12, zIndex: 10,
             animation: 'ssSlideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
           }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: `radial-gradient(circle, ${cls.color}33, rgba(0,0,0,0.6))`,
-              border: `2px solid ${cls.color}88`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 12px ${cls.color}44`,
-            }}>
-              <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
-                width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
-              }} />
-            </div>
-            <div style={{
-              fontSize: '0.5rem', color: cls.color, textAlign: 'center',
-              marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-              letterSpacing: 1,
-            }}>{cls.name}</div>
+            <img src={CLASS_TAG_MAP[combo.classId]} alt={cls.name} style={{
+              height: 36, imageRendering: 'auto',
+              filter: 'brightness(1.2)',
+              dropShadow: '0 2px 8px rgba(0,0,0,0.8)',
+            }} />
           </div>
         )}
 
