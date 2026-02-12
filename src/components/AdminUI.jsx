@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getElementRegistry, getAllScreens, loadLayout, saveLayout,
-  resetLayout, exportLayouts, importLayouts
+  resetLayout, exportLayouts, importLayouts,
+  ICON_GROUPS, getIconPlacement, saveIconPlacement, resetIconPlacement,
 } from '../utils/uiLayoutConfig';
 
 const CANVAS_W = 1280;
@@ -298,6 +299,104 @@ function getElementBox(config, el) {
   return { x: Math.round(x), y: Math.round(y), w: Math.max(40, Math.round(w)), h: Math.max(20, Math.round(h)) };
 }
 
+const ICON_GROUP_SAMPLES = {
+  hotbarIcons: { count: 8, icons: ['sword', 'shield', 'crystal', 'potion', 'sparkle', 'fire', 'ice', 'lightning'], label: 'Hotbar' },
+  battleActionIcons: { count: 5, icons: ['sword', 'crystal', 'shield', 'potion', 'sparkle'], label: 'Actions' },
+  equipIcons: { count: 7, icons: ['helm', 'armor', 'sword', 'shield', 'boots', 'ring', 'crystal'], label: 'Equip' },
+  invGridIcons: { count: 16, icons: ['sword','helm','potion','ring','armor','shield','boots','crystal','wand','bow','dagger','scroll','bomb','herb','gem','staff'], label: 'Inv Grid' },
+  warPartyIcons: { count: 3, icons: ['sword', 'crystal', 'bow'], label: 'Party' },
+};
+
+const ICON_PARAM_LABELS = {
+  offsetX: { label: 'X Offset', unit: 'px', min: -20, max: 20, step: 1 },
+  offsetY: { label: 'Y Offset', unit: 'px', min: -20, max: 20, step: 1 },
+  iconSize: { label: 'Icon Size', unit: 'px', min: 8, max: 48, step: 1 },
+  slotSize: { label: 'Slot Size', unit: 'px', min: 16, max: 64, step: 1 },
+  gap: { label: 'Gap', unit: 'px', min: 0, max: 20, step: 1 },
+};
+
+const SAMPLE_ICON_SRCS = {
+  sword: '/sprites/ui/icons/icon_sword.png',
+  shield: '/sprites/ui/icons/icon_shield_blue.png',
+  crystal: '/sprites/ui/icons/icon_crystal.png',
+  potion: '/sprites/ui/icons/icon_potion_blue.png',
+  sparkle: '/sprites/ui/icons/icon_sparkle.png',
+  fire: '/sprites/ui/icons/icon_fire.png',
+  ice: '/sprites/ui/icons/icon_ice.png',
+  lightning: '/sprites/ui/icons/icon_lightning.png',
+  helm: '/sprites/ui/icons/item_helm.png',
+  armor: '/sprites/ui/icons/item_armor.png',
+  boots: '/sprites/ui/icons/icon_boots.png',
+  ring: '/sprites/ui/icons/item_ring.png',
+  wand: '/sprites/ui/icons/icon_wand.png',
+  bow: '/sprites/ui/icons/icon_bow.png',
+  dagger: '/sprites/ui/icons/icon_dagger.png',
+  scroll: '/sprites/ui/icons/icon_scroll.png',
+  bomb: '/sprites/ui/icons/icon_bomb.png',
+  herb: '/sprites/ui/icons/icon_herb.png',
+  gem: '/sprites/ui/icons/icon_gem_blue.png',
+  staff: '/sprites/ui/icons/item_staff.png',
+};
+
+function IconPlacementPreview({ groupId, config }) {
+  const sample = ICON_GROUP_SAMPLES[groupId];
+  if (!sample) return null;
+  const { iconSize, slotSize, gap, offsetX, offsetY } = config;
+  const isGrid = groupId === 'invGridIcons';
+  const cols = isGrid ? 4 : sample.count;
+  const rows = isGrid ? 4 : 1;
+
+  return (
+    <div style={{
+      background: 'linear-gradient(180deg, rgba(10,14,23,0.95), rgba(20,29,51,0.95))',
+      border: '1px solid rgba(180,150,90,0.25)',
+      borderRadius: 8, padding: 16, position: 'relative',
+    }}>
+      <div style={{
+        fontSize: '0.55rem', color: '#64748b', marginBottom: 8,
+        textAlign: 'center', textTransform: 'uppercase', letterSpacing: 1,
+      }}>
+        {sample.label} Preview — {iconSize}px icons in {slotSize}px slots
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, ${slotSize}px)`,
+        gridTemplateRows: `repeat(${rows}, ${slotSize}px)`,
+        gap: gap, justifyContent: 'center', alignItems: 'center',
+      }}>
+        {sample.icons.slice(0, sample.count).map((icon, i) => (
+          <div key={i} style={{
+            width: slotSize, height: slotSize,
+            border: '1px solid rgba(255,215,0,0.35)',
+            borderRadius: 3,
+            background: 'linear-gradient(180deg, rgba(255,215,0,0.08), rgba(0,0,0,0.3))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative', overflow: 'visible',
+          }}>
+            <img
+              src={SAMPLE_ICON_SRCS[icon] || SAMPLE_ICON_SRCS.sword}
+              alt=""
+              style={{
+                width: iconSize, height: iconSize,
+                imageRendering: 'pixelated', objectFit: 'contain',
+                transform: `translate(${offsetX}px, ${offsetY}px)`,
+                transition: 'all 0.15s',
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 2, marginTop: 8, fontSize: '0.5rem', color: '#475569',
+      }}>
+        <span>Offset: {offsetX},{offsetY}px</span>
+        <span style={{ textAlign: 'right' }}>Gap: {gap}px</span>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUI() {
   const [activeScreen, setActiveScreen] = useState('world');
   const [layout, setLayout] = useState(() => loadLayout('world'));
@@ -308,6 +407,10 @@ export default function AdminUI() {
   const [importText, setImportText] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [editorMode, setEditorMode] = useState('panels');
+  const [activeIconGroup, setActiveIconGroup] = useState('hotbarIcons');
+  const [iconConfig, setIconConfig] = useState(() => getIconPlacement('hotbarIcons'));
+  const [iconSavedFlash, setIconSavedFlash] = useState(false);
   const canvasRef = useRef(null);
   const dragStart = useRef({ mx: 0, my: 0, ex: 0, ey: 0 });
   const resizeStart = useRef({ mx: 0, my: 0, ew: 0, eh: 0, ex: 0, ey: 0 });
@@ -455,6 +558,31 @@ export default function AdminUI() {
           </div>
         </div>
 
+        <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(180,150,90,0.1)' }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[
+              { id: 'panels', label: 'Panels', color: '#3b82f6' },
+              { id: 'icons', label: 'Icons', color: '#f59e0b' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setEditorMode(tab.id)}
+                style={{
+                  flex: 1, padding: '6px 0', borderRadius: 6, cursor: 'pointer',
+                  background: editorMode === tab.id ? `${tab.color}22` : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${editorMode === tab.id ? tab.color + '55' : 'rgba(255,255,255,0.06)'}`,
+                  color: editorMode === tab.id ? tab.color : '#64748b',
+                  fontSize: '0.7rem', fontWeight: editorMode === tab.id ? 700 : 400,
+                  fontFamily: "'Cinzel', serif", transition: 'all 0.2s',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {editorMode === 'panels' && (
         <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(180,150,90,0.1)' }}>
           <div style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>
             Screen Context
@@ -485,7 +613,9 @@ export default function AdminUI() {
             ))}
           </div>
         </div>
+        )}
 
+        {editorMode === 'panels' && (
         <div style={{
           flex: 1, overflowY: 'auto', padding: '8px 16px',
           scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
@@ -559,8 +689,9 @@ export default function AdminUI() {
             );
           })}
         </div>
+        )}
 
-        {selectedId && selectedBox && (
+        {editorMode === 'panels' && selectedId && selectedBox && (
           <div style={{
             padding: '12px 16px', borderTop: '1px solid rgba(180,150,90,0.15)',
             background: 'rgba(0,0,0,0.2)',
@@ -591,6 +722,102 @@ export default function AdminUI() {
               ))}
             </div>
           </div>
+        )}
+
+        {editorMode === 'icons' && (
+        <div style={{
+          flex: 1, overflowY: 'auto', padding: '8px 16px',
+          scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,158,11,0.15) transparent',
+        }}>
+          <div style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>
+            Icon Groups
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+            {Object.entries(ICON_GROUPS).map(([gid, group]) => {
+              const isActive = activeIconGroup === gid;
+              return (
+                <button
+                  key={gid}
+                  onClick={() => { setActiveIconGroup(gid); setIconConfig(getIconPlacement(gid)); }}
+                  style={{
+                    background: isActive ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isActive ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                    borderRadius: 6, padding: '8px 10px', cursor: 'pointer',
+                    color: isActive ? '#f59e0b' : '#94a3b8',
+                    fontSize: '0.72rem', fontWeight: isActive ? 700 : 400,
+                    textAlign: 'left', transition: 'all 0.2s',
+                  }}
+                >
+                  {group.label}
+                  <div style={{ fontSize: '0.5rem', color: '#475569', marginTop: 2, fontWeight: 400 }}>
+                    {group.description}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ fontSize: '0.6rem', color: '#f59e0b', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+            Placement Controls
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(ICON_PARAM_LABELS).map(([key, param]) => (
+              <div key={key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                  <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{param.label}</span>
+                  <span style={{ fontSize: '0.6rem', color: '#f59e0b', fontWeight: 700 }}>{iconConfig[key]}{param.unit}</span>
+                </div>
+                <input
+                  type="range"
+                  min={param.min} max={param.max} step={param.step}
+                  value={iconConfig[key]}
+                  onChange={e => setIconConfig(prev => ({ ...prev, [key]: parseFloat(e.target.value) }))}
+                  style={{
+                    width: '100%', height: 4, appearance: 'auto',
+                    accentColor: '#f59e0b', cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.45rem', color: '#475569' }}>
+                  <span>{param.min}{param.unit}</span>
+                  <span>{param.max}{param.unit}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+            <button
+              onClick={() => {
+                saveIconPlacement(activeIconGroup, iconConfig);
+                setIconSavedFlash(true);
+                setTimeout(() => setIconSavedFlash(false), 1500);
+              }}
+              style={{
+                flex: 1, padding: '7px 0', borderRadius: 6,
+                border: '1px solid rgba(34,197,94,0.4)',
+                background: iconSavedFlash ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.1)',
+                color: '#22c55e', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700,
+                fontFamily: "'Cinzel', serif", transition: 'all 0.3s',
+              }}
+            >
+              {iconSavedFlash ? 'Saved!' : 'Save'}
+            </button>
+            <button
+              onClick={() => {
+                const def = resetIconPlacement(activeIconGroup);
+                setIconConfig(def);
+              }}
+              style={{
+                flex: 1, padding: '7px 0', borderRadius: 6,
+                border: '1px solid rgba(220,38,38,0.3)',
+                background: 'rgba(220,38,38,0.08)', color: '#f87171', cursor: 'pointer',
+                fontSize: '0.68rem', fontWeight: 700, fontFamily: "'Cinzel', serif",
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
         )}
 
         <div style={{
@@ -648,20 +875,77 @@ export default function AdminUI() {
           borderBottom: '1px solid rgba(180,150,90,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            <span style={{ color: SCREEN_COLORS[activeScreen], fontWeight: 700 }}>{SCREEN_LABELS[activeScreen]}</span>
-            <span style={{ margin: '0 8px', color: '#334155' }}>|</span>
-            Canvas {CANVAS_W}x{CANVAS_H}
-          </div>
-          <div style={{ fontSize: '0.6rem', color: '#475569' }}>
-            Click to select, drag to move, corner handles to resize
-          </div>
+          {editorMode === 'panels' ? (
+            <>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                <span style={{ color: SCREEN_COLORS[activeScreen], fontWeight: 700 }}>{SCREEN_LABELS[activeScreen]}</span>
+                <span style={{ margin: '0 8px', color: '#334155' }}>|</span>
+                Canvas {CANVAS_W}x{CANVAS_H}
+              </div>
+              <div style={{ fontSize: '0.6rem', color: '#475569' }}>
+                Click to select, drag to move, corner handles to resize
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700 }}>
+                Icon Placement Preview
+              </div>
+              <div style={{ fontSize: '0.6rem', color: '#475569' }}>
+                Adjust sliders to fine-tune icon alignment within slots
+              </div>
+            </>
+          )}
         </div>
 
         <div style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 24, overflow: 'hidden',
         }}>
+          {editorMode === 'icons' ? (
+            <div style={{
+              width: '100%', maxWidth: 800, display: 'flex', flexDirection: 'column',
+              gap: 24, alignItems: 'center',
+            }}>
+              <div style={{
+                width: '100%', maxWidth: 600,
+                background: 'linear-gradient(180deg, rgba(15,22,41,0.98), rgba(10,14,23,0.98))',
+                border: '2px solid rgba(180,150,90,0.3)', borderRadius: 12,
+                padding: 24, boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+              }}>
+                <div style={{
+                  textAlign: 'center', fontSize: '0.9rem', fontFamily: "'Cinzel', serif",
+                  color: '#f59e0b', fontWeight: 700, marginBottom: 16,
+                }}>
+                  {ICON_GROUPS[activeIconGroup]?.label || activeIconGroup}
+                </div>
+                <IconPlacementPreview groupId={activeIconGroup} config={iconConfig} />
+              </div>
+
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 12, width: '100%',
+              }}>
+                {Object.entries(ICON_GROUPS).filter(([gid]) => gid !== activeIconGroup).map(([gid]) => (
+                  <div key={gid} style={{
+                    background: 'rgba(15,22,41,0.8)', border: '1px solid rgba(180,150,90,0.12)',
+                    borderRadius: 8, padding: 12, cursor: 'pointer', opacity: 0.6,
+                    transition: 'all 0.2s',
+                  }}
+                  onClick={() => { setActiveIconGroup(gid); setIconConfig(getIconPlacement(gid)); }}
+                  >
+                    <div style={{
+                      fontSize: '0.6rem', fontFamily: "'Cinzel', serif",
+                      color: '#94a3b8', fontWeight: 600, marginBottom: 8, textAlign: 'center',
+                    }}>
+                      {ICON_GROUPS[gid]?.label}
+                    </div>
+                    <IconPlacementPreview groupId={gid} config={getIconPlacement(gid)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
           <div
             ref={canvasRef}
             onClick={() => setSelectedId(null)}
@@ -800,6 +1084,7 @@ export default function AdminUI() {
               );
             })}
           </div>
+          )}
         </div>
       </div>
 

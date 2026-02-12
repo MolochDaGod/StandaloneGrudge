@@ -7,6 +7,7 @@ import { getPlayerSprite } from '../data/spriteMap';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
+import { getIconPlacement } from '../utils/uiLayoutConfig';
 
 const BOOK_BG = '/sprites/inventory/book_bg.png';
 
@@ -105,9 +106,9 @@ function EquipSlot({ slotDef, item, onDrop, onUnequip, onHover, heroClassId, dra
       onMouseLeave={() => hideTooltip()}
     >
       {item ? (
-        <InlineIcon name={item.icon || slotDef.icon} size={24} />
+        (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={item.icon || slotDef.icon} size={ip.iconSize} style={{ transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
       ) : (
-        <InlineIcon name={slotDef.icon} size={20} style={{ opacity: 0.3, filter: 'grayscale(1)' }} />
+        (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={slotDef.icon} size={Math.round(ip.iconSize * 0.83)} style={{ opacity: 0.3, filter: 'grayscale(1)', transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
       )}
       {!item && (
         <div style={{
@@ -177,7 +178,7 @@ function InventorySlot({ item, index, onDragStart, onRightClickEquip }) {
         position: 'relative',
       }}
     >
-      {item && <InlineIcon name={item.icon || 'chest'} size={22} />}
+      {item && (() => { const ip = getIconPlacement('invGridIcons'); return <InlineIcon name={item.icon || 'chest'} size={ip.iconSize} style={{ transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
       {item && tier && (
         <div style={{
           position: 'absolute', top: -2, right: -2, width: 7, height: 7,

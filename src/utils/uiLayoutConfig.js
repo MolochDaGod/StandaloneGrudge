@@ -1,7 +1,36 @@
 const STORAGE_KEY = 'grudge_ui_layouts';
+const ICON_STORAGE_KEY = 'grudge_icon_placements';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
+
+export const ICON_GROUPS = {
+  hotbarIcons: {
+    label: 'Hotbar Icons',
+    description: '8 action slots on the world map bottom bar',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 24, slotSize: 40, gap: 6 },
+  },
+  battleActionIcons: {
+    label: 'Battle Action Icons',
+    description: '5 ability slots in the battle action bar',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 26, slotSize: 44, gap: 8 },
+  },
+  equipIcons: {
+    label: 'Equipment Slot Icons',
+    description: '7 equipment slots around the paper doll',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 24, slotSize: 36, gap: 4 },
+  },
+  invGridIcons: {
+    label: 'Inventory Grid Icons',
+    description: '4x4 inventory grid in the book panel',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 22, slotSize: 34, gap: 3 },
+  },
+  warPartyIcons: {
+    label: 'War Party Icons',
+    description: 'Hero status icons in the war party panel',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 16, slotSize: 44, gap: 4 },
+  },
+};
 
 const UI_ELEMENTS = {
   world: [
@@ -112,14 +141,76 @@ export function getElementStyle(screen, elementId) {
   };
 }
 
+export function loadAllIconPlacements() {
+  try {
+    const raw = localStorage.getItem(ICON_STORAGE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+export function getIconPlacement(groupId) {
+  const group = ICON_GROUPS[groupId];
+  if (!group) return { offsetX: 0, offsetY: 0, iconSize: 20, slotSize: 36, gap: 4 };
+  const all = loadAllIconPlacements();
+  const saved = all[groupId];
+  if (!saved) return { ...group.defaults };
+  return {
+    offsetX: saved.offsetX ?? group.defaults.offsetX,
+    offsetY: saved.offsetY ?? group.defaults.offsetY,
+    iconSize: saved.iconSize ?? group.defaults.iconSize,
+    slotSize: saved.slotSize ?? group.defaults.slotSize,
+    gap: saved.gap ?? group.defaults.gap,
+  };
+}
+
+export function saveIconPlacement(groupId, config) {
+  const all = loadAllIconPlacements();
+  all[groupId] = config;
+  localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(all));
+}
+
+export function resetIconPlacement(groupId) {
+  const all = loadAllIconPlacements();
+  delete all[groupId];
+  localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(all));
+  const group = ICON_GROUPS[groupId];
+  return group ? { ...group.defaults } : { offsetX: 0, offsetY: 0, iconSize: 20, slotSize: 36, gap: 4 };
+}
+
+export function resetAllIconPlacements() {
+  localStorage.removeItem(ICON_STORAGE_KEY);
+}
+
+export function getIconStyle(groupId) {
+  const p = getIconPlacement(groupId);
+  return {
+    iconSize: p.iconSize,
+    slotSize: p.slotSize,
+    gap: p.gap,
+    transform: (p.offsetX || p.offsetY) ? `translate(${p.offsetX}px, ${p.offsetY}px)` : undefined,
+  };
+}
+
 export function exportLayouts() {
-  return JSON.stringify(loadAllLayouts(), null, 2);
+  const layouts = loadAllLayouts();
+  const icons = loadAllIconPlacements();
+  return JSON.stringify({ layouts, iconPlacements: icons }, null, 2);
 }
 
 export function importLayouts(jsonStr) {
   try {
     const data = JSON.parse(jsonStr);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (data.layouts) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.layouts));
+      if (data.iconPlacements) {
+        localStorage.setItem(ICON_STORAGE_KEY, JSON.stringify(data.iconPlacements));
+      }
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
     return true;
   } catch {
     return false;

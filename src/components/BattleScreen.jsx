@@ -12,6 +12,7 @@ import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, pl
 import AbilityIcon from './AbilityIcon';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
+import { getIconPlacement } from '../utils/uiLayoutConfig';
 
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
@@ -3220,7 +3221,7 @@ export default function BattleScreen() {
                       onMouseMove={e => updateTooltipPosition(e)}
                       onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
                       >
-                        <InlineIcon name={group.icon} size={14} />
+                        {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
                         <span>{group.name}</span>
                         <span style={{ color: '#4ade80', fontSize: '0.55rem' }}>x{group.count}</span>
                       </button>
