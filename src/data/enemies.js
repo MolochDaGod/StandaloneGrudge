@@ -457,6 +457,65 @@ export const enemyTemplates = {
       { id: 'crumble_curse', name: 'Crumble Curse', icon: 'skull', type: 'magical', damage: 0.8, cooldown: 4, description: 'Curses a hero with decay, eroding their armor', effect: { type: 'dot', damage: 0.10, duration: 4 } },
     ]
   },
+  desert_snake: {
+    name: 'Sand Viper', icon: 'sword', color: '#d4a017',
+    baseHealth: 70, baseDamage: 18, baseDefense: 4, baseMana: 0,
+    xpReward: 14, goldReward: 6, speed: 20,
+    abilities: [
+      { id: 'venom_bite', name: 'Venom Bite', icon: 'sword', type: 'physical', damage: 1.1, description: 'A quick venomous strike' },
+      { id: 'poison_spit', name: 'Poison Spit', icon: 'skull', type: 'physical', damage: 0.8, cooldown: 3, description: 'Spits venom at the target', effect: { type: 'dot', damage: 0.15, duration: 3 } },
+    ]
+  },
+  desert_hyena: {
+    name: 'Desert Hyena', icon: 'wolf', color: '#c2a04e',
+    baseHealth: 110, baseDamage: 20, baseDefense: 8, baseMana: 0,
+    xpReward: 18, goldReward: 8, speed: 17,
+    abilities: [
+      { id: 'savage_bite', name: 'Savage Bite', icon: 'sword', type: 'physical', damage: 1.2, description: 'A crushing bite from powerful jaws' },
+      { id: 'pack_howl', name: 'Pack Howl', icon: 'energy', type: 'buff', damage: 0, cooldown: 5, description: 'Lets out a rallying howl', effect: { stat: 'damage', multiplier: 1.3, duration: 2 } },
+      { id: 'pounce', name: 'Pounce', icon: 'sword', type: 'physical', damage: 1.8, cooldown: 3, description: 'Leaps at the target with ferocity' },
+    ]
+  },
+  desert_scorpio: {
+    name: 'Giant Scorpion', icon: 'shield', color: '#8b4513',
+    baseHealth: 140, baseDamage: 16, baseDefense: 20, baseMana: 0,
+    xpReward: 22, goldReward: 12, speed: 10,
+    abilities: [
+      { id: 'claw_pinch', name: 'Claw Pinch', icon: 'sword', type: 'physical', damage: 1.0, description: 'Grabs and squeezes with its pincers' },
+      { id: 'tail_sting', name: 'Tail Sting', icon: 'skull', type: 'physical', damage: 1.6, cooldown: 3, description: 'Strikes with a venomous tail barb', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'burrow', name: 'Burrow', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Burrows into the sand for protection', effect: { stat: 'defense', flat: 25, duration: 2 } },
+    ]
+  },
+  desert_vulture: {
+    name: 'Carrion Vulture', icon: 'energy', color: '#6b4423',
+    baseHealth: 85, baseDamage: 22, baseDefense: 6, baseMana: 0,
+    xpReward: 16, goldReward: 7, speed: 19,
+    abilities: [
+      { id: 'talon_swipe', name: 'Talon Swipe', icon: 'sword', type: 'physical', damage: 1.1, description: 'Swoops down with razor talons' },
+      { id: 'carrion_dive', name: 'Carrion Dive', icon: 'energy', type: 'physical', damage: 2.0, cooldown: 4, description: 'Dives from above with devastating impact' },
+    ]
+  },
+  desert_mummy: {
+    name: 'Ancient Mummy', icon: 'skull', color: '#8b7355',
+    baseHealth: 180, baseDamage: 22, baseDefense: 18, baseMana: 50,
+    xpReward: 30, goldReward: 20, speed: 8,
+    abilities: [
+      { id: 'bandage_lash', name: 'Bandage Lash', icon: 'sword', type: 'physical', damage: 1.1, description: 'Whips with decayed wrappings' },
+      { id: 'curse_of_ages', name: 'Curse of Ages', icon: 'skull', type: 'magical', damage: 0.6, cooldown: 4, description: 'An ancient curse weakens the target', effect: { type: 'dot', damage: 0.10, duration: 4 } },
+      { id: 'sand_tomb', name: 'Sand Tomb', icon: 'crystal', type: 'magical', damage: 1.8, cooldown: 3, description: 'Entombs the target in swirling sand' },
+      { id: 'unholy_resilience', name: 'Unholy Resilience', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Draws on dark magic to restore vitality', effect: { stat: 'defense', flat: 20, duration: 3 } },
+    ]
+  },
+  desert_deceased: {
+    name: 'Risen Corpse', icon: 'skull', color: '#5a4e3a',
+    baseHealth: 130, baseDamage: 19, baseDefense: 12, baseMana: 30,
+    xpReward: 24, goldReward: 14, speed: 9,
+    abilities: [
+      { id: 'grave_swipe', name: 'Grave Swipe', icon: 'sword', type: 'physical', damage: 1.1, description: 'Swings with bony arms' },
+      { id: 'death_ball', name: 'Death Ball', icon: 'crystal', type: 'magical', damage: 1.6, cooldown: 3, description: 'Hurls a sphere of necrotic energy' },
+      { id: 'life_drain', name: 'Life Drain', icon: 'skull', type: 'magical', damage: 0.8, cooldown: 4, description: 'Siphons life from the target', drainPercent: 0.4 },
+    ]
+  },
 };
 
 export const locations = [
@@ -653,7 +712,7 @@ export const locations = [
     name: 'Blood Canyon',
     description: 'A desolate ravine stained red by centuries of warfare. A brutal warlord commands the orc stronghold.',
     levelRange: [9, 12],
-    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight', 'dark_knight', 'shadow_warrior'],
+    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight', 'dark_knight', 'shadow_warrior', 'desert_snake', 'desert_scorpio'],
     bgGradient: 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 50%, #1c0505 100%)',
     icon: 'shield',
     unlocked: false,
@@ -710,7 +769,7 @@ export const locations = [
     name: 'Ashen Battlefield',
     description: 'War-torn plains littered with the remnants of a great battle. Scavengers and deserters roam freely.',
     levelRange: [10, 13],
-    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight', 'stone_guardian'],
+    enemies: ['orc', 'skeleton', 'dark_mage', 'crow_knight', 'stone_guardian', 'desert_hyena', 'desert_vulture'],
     bgGradient: 'linear-gradient(135deg, #57534e 0%, #78716c 50%, #44403c 100%)',
     icon: 'crossed_swords',
     unlocked: false,
@@ -787,7 +846,7 @@ export const locations = [
     name: 'Obsidian Wastes',
     description: 'A desolate volcanic wasteland of black glass and ash. Nothing grows here but hatred.',
     levelRange: [13, 15],
-    enemies: ['orc', 'dark_mage', 'dragon_whelp'],
+    enemies: ['orc', 'dark_mage', 'dragon_whelp', 'desert_mummy', 'desert_deceased', 'desert_scorpio'],
     bgGradient: 'linear-gradient(135deg, #1c1917 0%, #292524 50%, #0c0a09 100%)',
     icon: 'skull',
     unlocked: false,
@@ -806,7 +865,7 @@ export const locations = [
     name: 'Ruins of Ashenmoor',
     description: 'The charred remains of an ancient city destroyed by dragonfire. Dark spirits haunt the rubble.',
     levelRange: [13, 16],
-    enemies: ['skeleton', 'dark_mage', 'orc', 'skeleton_knight', 'mimic', 'stone_guardian'],
+    enemies: ['skeleton', 'dark_mage', 'orc', 'skeleton_knight', 'mimic', 'stone_guardian', 'desert_mummy', 'desert_deceased'],
     bgGradient: 'linear-gradient(135deg, #451a03 0%, #78350f 50%, #292524 100%)',
     icon: 'skull',
     unlocked: false,

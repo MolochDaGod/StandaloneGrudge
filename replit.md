@@ -46,7 +46,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
     - **Themed Dungeons:** DungeonScene supports 3 themes: default, void, and lava.
     - **Evil Wizard Boss (Malachar the Undying):** Endgame boss with a dedicated sprite sheet and 9 abilities.
     - **Factions:** Crusade (Humans, Barbarians), Legion (Orcs, Undead), Fabled (Elves, Dwarves), each worshiping a specific God.
-- **Enemy System:** `createRaceClassEnemy` generates enemies based on race, class, and level. Bosses have unique abilities.
+- **Enemy System:** `createRaceClassEnemy` generates enemies based on race, class, and level. Bosses have unique abilities. Desert enemy pack includes Sand Viper, Desert Hyena, Giant Scorpion, Carrion Vulture, Ancient Mummy, and Risen Corpse (48x48 pixel art sprites with idle/walk/attack/hurt/death animations).
 - **Economy:** Reduced gold gain from battles, supplemented by a harvest system.
 - **Hero Roster:** Manages multiple heroes with independent progression.
 - **Zone Conquer System:** Each zone has a conquer rating impacting XP gain and auto-harvest output.
