@@ -121,7 +121,7 @@ function GameApp() {
   const bgVisible = !screensWithOwnBackground.includes(screen);
   const bgBlurred = screen !== 'title' && screen !== 'lobby' && screen !== 'intro';
 
-  const fullBleedScreens = ['world', 'battle', 'intro'];
+  const fullBleedScreens = ['title', 'world', 'battle', 'intro'];
   const isFullBleed = fullBleedScreens.includes(screen);
 
   const frameVisibleScreens = ['title', 'lobby', 'create', 'character', 'skills', 'account', 'training', 'heroCreate'];
