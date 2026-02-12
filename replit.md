@@ -34,7 +34,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
     - **Consumables:** 6 types of potions available.
     - **Trading:** Camp merchant system for buying/selling equipment.
     - **Scene System:** 4 interactive scene views accessible from the world map (Camp, Dungeon, Trading Post, Open Field).
-- **Audio System:** Web Audio API for synthesized combat sounds and adaptive background music with four BGM tracks.
+- **Audio System:** Web Audio API for synthesized combat sounds and file-based background music. 7 BGM tracks: intro (youth_thinker.mp3), map/ambient (bgm_harukaze.ogg), camp (bgm_camping.ogg), tavern/trading post (bgm_tavern.ogg), scene/general (elevate_your_mind.mp3), battle (synthesized), dungeon (synthesized battle). `setBgm(type)` accepts: 'intro', 'ambient'/'map', 'camp', 'tavern', 'scene', 'battle', 'dungeon'.
 - **Particle Effects:** CSS-animated particle effects for in-battle actions, canvas-based particles for the title screen, and CSS keyframe animations for UI interactions.
 - **World Map:** An RTS-style 2D map with zoom/pan, a centralized layer system, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle.
     - **Map Node Menus:** Zone popup menus use `MenuButton` components.
@@ -57,7 +57,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Hotkeys:** In-battle ability activation via 1-5 hotkeys.
 - **Tactical Movement UI:** Battle action bar includes row position arrows.
 - **Discord OAuth:** `/discordauth` route handles Discord login with CSRF state protection.
-- **Discord Webhook Broadcaster:** Admin-authenticated webhook system for sending rich embed messages to a Discord channel.
+- **Discord Webhook Broadcaster:** Admin-authenticated webhook system for sending rich embed messages to a Discord channel. Automatic gameplay broadcasts: arena team submissions, 3-loss relegation events, and 5-win streak milestones are posted to Discord via webhook.
 - **Beta Tester System:** Creates one-time invite links to a Discord channel.
 - **GRUDA PvP Arena:** Comprehensive ranked PvP system. Players submit team snapshots via the GRUDA button (WorldMap) or directly at `/arena.html`. Teams are posted to a ranked lobby via 6 API endpoints (`/api/arena/submit`, `/api/arena/lobby`, `/api/arena/team/:id`, `/api/arena/battle/result`, `/api/arena/rewards/:id`, `/api/arena/stats`). Other players challenge posted teams (AI-controlled opponents). 3-loss relegation demotes teams from Ranked to Unranked. Rewards include gold (50 + avgLevel*10 + wins*5), resources (10 + avgLevel*2), and equipment drops every 5 wins. Standalone arena.html is self-contained for external hosting on grudgewarlords.com/arena and grudgestudio.com/arena. Uses in-memory Map storage (arenaTeams, arenaBattles) with server-generated UUIDs and SHA-256 snapshot hashing. Arena routes are implemented in both `server.js` (dev) and `server.prod.js` (production).
 
@@ -72,7 +72,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 
 ## Admin Tools
 - **Admin Dashboard (`/admin`):** Central hub linking all admin tools with game system info, player/hero data viewer, world progress tracker, and game systems reference. All admin pages link back here.
-- **Admin UI Layout Editor (`/adminui`):** Visual drag-and-drop editor for positioning, sizing, and locking UI elements across game screens (world, battle, scene). Saves layouts to localStorage via `src/utils/uiLayoutConfig.js`. Game components read saved configs via `getElementStyle()`. Supports export/import of layout JSON.
+- **Admin UI Layout Editor (`/adminui`):** Visual drag-and-drop editor for positioning, sizing, and locking UI elements across game screens (world, battle, scene). Saves layouts to localStorage via `src/utils/uiLayoutConfig.js`. Game components read saved configs via `getElementStyle()` (for top-level elements) and `getChildElementStyle()` (for child elements positioned relative to a parent). Supports export/import of layout JSON.
 - **Admin Sprite Editor (`/adminsprite`):** Dev tool for configuring character sprites, projectiles, buffs/effects, weapons, and effect layers.
 - **Admin Map (`/adminmap`):** Dev tool for map configuration.
 - **Admin Battle (`/adminbattle`):** Dev tool for battle testing.

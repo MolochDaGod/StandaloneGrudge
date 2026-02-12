@@ -21,7 +21,7 @@ const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
 const SPAWN_POS = { x: 45, y: 75 };
 
 export default function CampScene() {
-  useEffect(() => { setBgm('scene'); }, []);
+  useEffect(() => { setBgm('camp'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const harvestResources = useGameStore(s => s.harvestResources);
   const harvestNodes = useGameStore(s => s.harvestNodes);

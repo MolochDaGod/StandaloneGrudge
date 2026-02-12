@@ -146,6 +146,8 @@ function startIntroMusic() {
 function stopBgm() {
   stopIntroMusic();
   stopSceneMusic();
+  if (bgmNodes._melodyInterval) clearInterval(bgmNodes._melodyInterval);
+  if (bgmNodes._beatInterval) clearInterval(bgmNodes._beatInterval);
   bgmNodes.forEach(n => {
     try { n.stop(); } catch(e) {}
   });
@@ -261,16 +263,16 @@ function stopSceneMusic() {
   }
 }
 
-function startSceneMusic() {
-  if (currentBgm === 'scene') return;
+function startFileMusic(key, src) {
+  if (currentBgm === key) return;
   stopBgm();
-  currentBgm = 'scene';
-  sceneAudio = new Audio('/audio/elevate_your_mind.mp3');
+  currentBgm = key;
+  sceneAudio = new Audio(src);
   sceneAudio.loop = true;
   sceneAudio.volume = musicMuted ? 0 : Math.min(musicVolume, 0.45);
   sceneAudio.play().catch(() => {
     const tryPlay = () => {
-      if (sceneAudio && currentBgm === 'scene') {
+      if (sceneAudio && currentBgm === key) {
         sceneAudio.play().catch(() => {});
       }
       window.removeEventListener('click', tryPlay);
@@ -281,11 +283,31 @@ function startSceneMusic() {
   });
 }
 
+function startSceneMusic() {
+  startFileMusic('scene', '/audio/elevate_your_mind.mp3');
+}
+
+function startMapMusic() {
+  startFileMusic('map', '/audio/bgm_harukaze.ogg');
+}
+
+function startCampMusic() {
+  startFileMusic('camp', '/audio/bgm_camping.ogg');
+}
+
+function startTavernMusic() {
+  startFileMusic('tavern', '/audio/bgm_tavern.ogg');
+}
+
 export function setBgm(type) {
   if (type === 'intro') startIntroMusic();
   else if (type === 'battle') startBattleMusic();
-  else if (type === 'ambient') startAmbientMusic();
+  else if (type === 'ambient') startMapMusic();
+  else if (type === 'map') startMapMusic();
   else if (type === 'scene') startSceneMusic();
+  else if (type === 'camp') startCampMusic();
+  else if (type === 'tavern') startTavernMusic();
+  else if (type === 'dungeon') startBattleMusic();
   else stopBgm();
 }
 

@@ -443,6 +443,21 @@ app.post('/api/arena/submit', (req, res) => {
 
     arenaTeams.set(teamId, team);
 
+    sendWebhookMessage({
+      embeds: [{
+        title: 'New Arena Challenger!',
+        description: `**${team.ownerName}** has entered the Ranked Arena!`,
+        color: EMBED_COLORS.challenge,
+        fields: [
+          { name: 'Team', value: team.heroes.map(h => `${h.name} (Lv.${h.level || 1} ${h.raceId} ${h.classId})`).join('\n'), inline: false },
+          { name: 'Avg Level', value: `${team.avgLevel}`, inline: true },
+          { name: 'Heroes', value: `${team.heroCount}`, inline: true },
+        ],
+        footer: { text: 'GRUDA PvP Arena | grudgewarlords.com/arena' },
+        timestamp: new Date().toISOString(),
+      }],
+    }).catch(err => console.error('Arena webhook error:', err.message));
+
     res.json({
       success: true,
       teamId,
@@ -587,13 +602,45 @@ app.post('/api/arena/battle/result', (req, res) => {
       }
     }
 
+    const demoted = team.status === 'unranked' && team.demoteReason === 'losses' && team.losses === 3;
+
+    if (demoted) {
+      sendWebhookMessage({
+        embeds: [{
+          title: 'Relegation!',
+          description: `**${team.ownerName}**'s team has been relegated to Unranked after 3 defeats!`,
+          color: EMBED_COLORS.event,
+          fields: [
+            { name: 'Record', value: `${team.wins}W / ${team.losses}L`, inline: true },
+            { name: 'Defeated By', value: battle.challengerName, inline: true },
+          ],
+          footer: { text: 'GRUDA PvP Arena' },
+          timestamp: new Date().toISOString(),
+        }],
+      }).catch(err => console.error('Relegation webhook error:', err.message));
+    } else if (team.wins > 0 && team.wins % 5 === 0 && result === 'team_won') {
+      sendWebhookMessage({
+        embeds: [{
+          title: 'Win Streak!',
+          description: `**${team.ownerName}**'s team reached **${team.wins} wins** in the Arena!`,
+          color: EMBED_COLORS.milestone,
+          fields: [
+            { name: 'Record', value: `${team.wins}W / ${team.losses}L`, inline: true },
+            { name: 'Status', value: team.status, inline: true },
+          ],
+          footer: { text: 'GRUDA PvP Arena' },
+          timestamp: new Date().toISOString(),
+        }],
+      }).catch(err => console.error('Win streak webhook error:', err.message));
+    }
+
     res.json({
       success: true,
       battleId,
       teamStatus: team.status,
       wins: team.wins,
       losses: team.losses,
-      demoted: team.status === 'unranked' && team.demoteReason === 'losses' && team.losses === 3,
+      demoted,
       rewards: rewardData,
     });
   } catch (err) {

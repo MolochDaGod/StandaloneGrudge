@@ -141,6 +141,22 @@ export function getElementStyle(screen, elementId) {
   };
 }
 
+export function getChildElementStyle(screen, childId, parentId) {
+  const childRect = getElementRect(screen, childId);
+  const parentRect = getElementRect(screen, parentId);
+  if (!childRect || !parentRect) return { display: 'none' };
+
+  const pw = parentRect.w || 1;
+  const ph = parentRect.h || 1;
+
+  return {
+    left: ((childRect.x / pw) * 100).toFixed(2) + '%',
+    top: ((childRect.y / ph) * 100).toFixed(2) + '%',
+    width: ((childRect.w / pw) * 100).toFixed(2) + '%',
+    height: ((childRect.h / ph) * 100).toFixed(2) + '%',
+  };
+}
+
 export function loadAllIconPlacements() {
   try {
     const raw = localStorage.getItem(ICON_STORAGE_KEY);

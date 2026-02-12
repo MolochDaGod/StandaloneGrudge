@@ -14,7 +14,7 @@ import InventoryModal from './InventoryModal';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
-import { getElementStyle, getElementRect } from '../utils/uiLayoutConfig';
+import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/uiLayoutConfig';
 
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
@@ -453,9 +453,9 @@ export default function MapBottomBar({
   const portalTarget = document.getElementById('game-ui-portal');
 
   const barStyle = getElementStyle('world', 'bottomBar');
-  const chatStyle = getElementStyle('world', 'chatPanel');
-  const hotbarStyle = getElementStyle('world', 'hotbar');
-  const warPartyStyle = getElementStyle('world', 'warParty');
+  const chatStyle = getChildElementStyle('world', 'chatPanel', 'bottomBar');
+  const hotbarStyle = getChildElementStyle('world', 'hotbar', 'bottomBar');
+  const warPartyStyle = getChildElementStyle('world', 'warParty', 'bottomBar');
 
   const stopWheelPropagation = (e) => {
     e.stopPropagation();

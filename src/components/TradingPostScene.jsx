@@ -19,7 +19,7 @@ const TRADER_NODES = [
 const SPAWN_POS = { x: 50, y: 82 };
 
 export default function TradingPostScene() {
-  useEffect(() => { setBgm('scene'); }, []);
+  useEffect(() => { setBgm('tavern'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const gold = useGameStore(s => s.gold);
   const shopInventory = useGameStore(s => s.shopInventory);

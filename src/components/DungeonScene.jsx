@@ -51,7 +51,7 @@ const DUNGEON_CONFIGS = {
 };
 
 export default function DungeonScene() {
-  useEffect(() => { setBgm('scene'); }, []);
+  useEffect(() => { setBgm('dungeon'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
   const dungeonProgress = useGameStore(s => s.dungeonProgress);
   const startBattle = useGameStore(s => s.startBattle);
