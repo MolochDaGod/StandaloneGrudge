@@ -785,7 +785,10 @@ function HeroSlideshow() {
     setAuraIntensity(0);
     setSpriteX(-30);
 
-    const enterAnim = spriteData?.walk ? 'walk' : (spriteData?.run ? 'run' : 'idle');
+    const IDLE_ENTER_COMBOS = ['undead_ranger'];
+    const comboId = `${combo.raceId}_${combo.classId}`;
+    const forceIdle = IDLE_ENTER_COMBOS.includes(comboId);
+    const enterAnim = forceIdle ? 'idle' : (spriteData?.walk ? 'walk' : (spriteData?.run ? 'run' : 'idle'));
     setAnim(enterAnim);
 
     setPrevBgIndex(bgIndex);
