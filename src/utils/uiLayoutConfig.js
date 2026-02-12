@@ -34,7 +34,7 @@ export const ICON_GROUPS = {
 
 const UI_ELEMENTS = {
   world: [
-    { id: 'bottomBar', label: 'Bottom Bar Container', defaultRect: { x: 0, y: 546, w: 1280, h: 174 } },
+    { id: 'bottomBar', label: 'Bottom Bar Container', defaultRect: { x: 0, y: 536, w: 1280, h: 174 } },
     { id: 'chatPanel', label: 'Chat Panel (Left)', defaultRect: { x: 0, y: 0, w: 282, h: 174 } },
     { id: 'hotbar', label: 'Hotbar (Center)', defaultRect: { x: 282, y: 0, w: 716, h: 174 } },
     { id: 'warParty', label: 'War Party (Right)', defaultRect: { x: 998, y: 0, w: 282, h: 174 } },
