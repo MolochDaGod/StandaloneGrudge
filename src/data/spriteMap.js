@@ -743,7 +743,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['greatsword-skeleton'],
     mage: spriteSheets.necromancer,
     worge: spriteSheets.skeleton,
-    ranger: spriteSheets['arcane-archer'],
+    ranger: { ...spriteSheets['arcane-archer'], filter: 'saturate(0) brightness(0.7) contrast(1.2)' },
   },
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', scale: 1.35 },
@@ -824,7 +824,7 @@ export const eliteTransformSprites = {
     dwarf: spriteSheets['wind-hashashin'],
     barbarian: spriteSheets['martial-hero'],
     orc: { ...spriteSheets['wind-hashashin'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
-    undead: spriteSheets['arcane-archer'],
+    undead: { ...spriteSheets['arcane-archer'], filter: 'saturate(0) brightness(0.7) contrast(1.2)' },
   },
   worge: {
     human: nightborneSprite,
