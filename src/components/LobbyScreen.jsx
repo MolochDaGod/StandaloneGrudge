@@ -544,10 +544,14 @@ function HeroSlideshow() {
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
     undead_warrior: 60,
-    human_warrior: 60,
+    human_warrior: 110,
     human_worge: -50,
   };
+  const SPRITE_X_OFFSETS = {
+    human_warrior: -30,
+  };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
+  const spriteXOffset = SPRITE_X_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
   const scaleOverride = SPRITE_SCALE_OVERRIDES[`${combo.raceId}_${combo.classId}`] || null;
 
   const targetHeight = 240;
@@ -604,12 +608,19 @@ function HeroSlideshow() {
     }, walkStep);
     intervalRefs.current.push(walkInterval);
 
+    const PREFERRED_ATTACKS = {
+      human_warrior: 'attack2',
+    };
+    const comboKey = `${combo.raceId}_${combo.classId}`;
+    const preferredAttack = PREFERRED_ATTACKS[comboKey];
     const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
     const shortAttacks = availableAttacks.filter(a => (spriteData?.[a]?.frames || 8) <= 15);
     const attackPool = shortAttacks.length > 0 ? shortAttacks : availableAttacks;
-    const chosenAttack = attackPool.length > 0
-      ? attackPool[Math.floor(Math.random() * attackPool.length)]
-      : 'attack1';
+    const chosenAttack = preferredAttack && spriteData?.[preferredAttack]
+      ? preferredAttack
+      : attackPool.length > 0
+        ? attackPool[Math.floor(Math.random() * attackPool.length)]
+        : 'attack1';
     attackRef.current = chosenAttack;
     const attackFrames = Math.min(spriteData?.[chosenAttack]?.frames || 8, 15);
     const attackDuration = attackFrames * 80;
@@ -801,7 +812,7 @@ function HeroSlideshow() {
           }}>
             <div style={{
               position: 'absolute',
-              left: `${spriteX}%`,
+              left: `calc(${spriteX}% + ${spriteXOffset}px)`,
               bottom: 60 - spriteYOffset,
               willChange: 'left',
             }}>
