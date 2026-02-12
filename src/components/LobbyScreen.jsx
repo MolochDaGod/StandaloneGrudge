@@ -471,14 +471,20 @@ function HeroSlideshow() {
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
 
+  const SPRITE_SCALE_OVERRIDES = {
+    undead_warrior: 2,
+  };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
+    undead_warrior: 60,
   };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
+  const scaleOverride = SPRITE_SCALE_OVERRIDES[`${combo.raceId}_${combo.classId}`] || null;
 
   const targetHeight = 240;
   const spriteFrameH = spriteData?.frameHeight || 100;
-  const spriteScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
+  const baseScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
+  const spriteScale = scaleOverride ? baseScale * scaleOverride : baseScale;
   const transformFrameH = worgeTransformData?.frameHeight || 128;
   const transformScale = Math.min(Math.max(targetHeight / transformFrameH, 1.5), 5);
 
