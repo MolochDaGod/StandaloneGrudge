@@ -245,7 +245,8 @@ const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
   Object.keys(classDefinitions).map(classId => ({ raceId, classId }))
 );
 
-const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3'];
+const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge'];
+const ENTER_ANIMS = ['walk', 'run', 'roll', 'slide', 'charge'];
 
 const BATTLE_BGS = [
   '/backgrounds/dark_forest.png',
@@ -269,14 +270,57 @@ const CLASS_EFFECTS = {
   ranger: { effect: 'slashGreenLg', aura: '#22c55e', effectKey: 'frostbolt' },
 };
 
-const CLASS_DESCRIPTIONS = {
-  warrior: 'Frontline powerhouse with devastating physical attacks. Wields swords and shields with lethal precision. Signature: Invincible — absorbs all damage.',
-  mage: 'Arcane scholar channeling destructive spells and divine healing. Masters fire, ice, and holy magic. Signature: Mana Shield — converts magic to armor.',
-  worge: 'Dual-natured shapeshifter. Casts storm and root magic in human form, then transforms into a savage beast. Signature: Bear Form — permanent transformation.',
-  ranger: 'Deadly marksman with precise long-range attacks and crippling poison. Masters of evasion and critical strikes. Signature: Focus — stacking crit mastery.',
+const CLASS_ICON_MAP = {
+  warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+  mage: '/sprites/ui/icons/icon_crystal.png',
+  worge: '/sprites/ui/icons/icon_wolf.png',
+  ranger: '/sprites/ui/icons/icon_bow.png',
 };
 
-function SlideshowVFX({ effectKey, playing }) {
+const FACTION_MAP = {
+  human: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/sprites/ui/icons/icon_crest.png' },
+  barbarian: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/sprites/ui/icons/icon_crest.png' },
+  orc: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/sprites/ui/icons/icon_chaos.png' },
+  undead: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/sprites/ui/icons/icon_chaos.png' },
+  elf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/sprites/ui/icons/icon_star.png' },
+  dwarf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/sprites/ui/icons/icon_star.png' },
+};
+
+const HERO_SLOGANS = {
+  human_warrior: "My blade is the will of the Crusade.",
+  human_mage: "Knowledge and faith — both are my weapons.",
+  human_worge: "The storm within answers to no one.",
+  human_ranger: "One shot. One kill. Honor demands precision.",
+  orc_warrior: "Blood and iron! I fear nothing!",
+  orc_mage: "Dark power flows through these veins.",
+  orc_worge: "The beast within hungers for war!",
+  orc_ranger: "My arrows carry the Legion's fury.",
+  elf_warrior: "Centuries of discipline forged this blade.",
+  elf_mage: "The arcane speaks — I merely translate.",
+  elf_worge: "Nature's wrath takes many forms.",
+  elf_ranger: "The wind guides every arrow I loose.",
+  undead_warrior: "Death could not stop me. Neither will you.",
+  undead_mage: "I wield the power that destroyed me.",
+  undead_worge: "Between life and death, the beast thrives.",
+  undead_ranger: "The dead have perfect aim.",
+  barbarian_warrior: "RAAAAGH! Come face me, coward!",
+  barbarian_mage: "Primal fury needs no fancy spells!",
+  barbarian_worge: "Two beasts in one body — twice the carnage!",
+  barbarian_ranger: "I hunt what others fear to face.",
+  dwarf_warrior: "Forged in mountain stone. Unbreakable.",
+  dwarf_mage: "Rune magic runs deeper than any ley line.",
+  dwarf_worge: "The mountain's spirit roars through me!",
+  dwarf_ranger: "A steady hand and dwarven steel never miss.",
+};
+
+const LORE_QUOTES = {
+  warrior: "Forged in the crucible of the Grudge Wars — blades drawn, shields raised.",
+  mage: "Channeling ancient ley lines and forgotten gods since the first grudge was spoken.",
+  worge: "Walking between worlds — scholar in mortal guise, predator unleashed.",
+  ranger: "Silent as shadow, deadly as the wind — masters of the killing blow.",
+};
+
+function SlideshowVFX({ effectKey, playing, x, y }) {
   const [frame, setFrame] = useState(0);
   const sprite = effectSprites[effectKey];
 
@@ -300,7 +344,7 @@ function SlideshowVFX({ effectKey, playing }) {
 
   if (!sprite || !playing) return null;
 
-  const displaySize = 200;
+  const displaySize = 180;
   const scaleX = displaySize / frameW;
   const scaleY = displaySize / frameH;
   const col = frame % cols;
@@ -309,11 +353,11 @@ function SlideshowVFX({ effectKey, playing }) {
   return (
     <div style={{
       position: 'absolute',
-      left: '50%', top: '50%',
-      transform: 'translate(-50%, -55%)',
+      left: x ?? '70%', top: y ?? '45%',
+      transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden', pointerEvents: 'none',
-      zIndex: 5, mixBlendMode: 'screen', opacity: 0.9,
+      zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
     }}>
       <div style={{
         width: displaySize, height: displaySize,
@@ -327,9 +371,44 @@ function SlideshowVFX({ effectKey, playing }) {
   );
 }
 
+function ChatBubble({ text, visible }) {
+  if (!visible || !text) return null;
+  return (
+    <div style={{
+      position: 'absolute',
+      left: '22%', top: '18%',
+      transform: 'translate(-50%, -100%)',
+      background: 'rgba(0,0,0,0.85)',
+      border: '2px solid rgba(255,215,0,0.5)',
+      borderRadius: '12px 12px 12px 2px',
+      padding: '8px 14px',
+      maxWidth: 260,
+      zIndex: 12,
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.5s ease',
+      animation: visible ? 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+    }}>
+      <div style={{
+        fontSize: '0.7rem', color: '#ffd700',
+        fontStyle: 'italic', lineHeight: 1.4,
+        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+      }}>
+        "{text}"
+      </div>
+      <div style={{
+        position: 'absolute', bottom: -8, left: 12,
+        width: 0, height: 0,
+        borderLeft: '8px solid transparent',
+        borderRight: '8px solid transparent',
+        borderTop: '8px solid rgba(0,0,0,0.85)',
+      }} />
+    </div>
+  );
+}
+
 function HeroSlideshow() {
   const [index, setIndex] = useState(0);
-  const [anim, setAnim] = useState('idle');
+  const [anim, setAnim] = useState('walk');
   const [phase, setPhase] = useState('enter');
   const [bgIndex, setBgIndex] = useState(0);
   const [prevBgIndex, setPrevBgIndex] = useState(0);
@@ -339,6 +418,8 @@ function HeroSlideshow() {
   const [transformAnim, setTransformAnim] = useState('idle');
   const [textVisible, setTextVisible] = useState(false);
   const [auraIntensity, setAuraIntensity] = useState(0);
+  const [spriteX, setSpriteX] = useState(-30);
+  const [showBubble, setShowBubble] = useState(false);
   const attackRef = useRef('attack1');
   const timerRefs = useRef([]);
 
@@ -348,12 +429,18 @@ function HeroSlideshow() {
   const spriteData = getRaceClassSprite(combo.raceId, combo.classId);
   const isWorge = combo.classId === 'worge';
   const classEffect = CLASS_EFFECTS[combo.classId] || CLASS_EFFECTS.warrior;
+  const faction = FACTION_MAP[combo.raceId];
+  const slogan = HERO_SLOGANS[`${combo.raceId}_${combo.classId}`] || "My grudge runs deeper than any blade.";
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
+
+  const intervalRefs = useRef([]);
 
   const clearTimers = () => {
     timerRefs.current.forEach(t => clearTimeout(t));
     timerRefs.current = [];
+    intervalRefs.current.forEach(i => clearInterval(i));
+    intervalRefs.current = [];
   };
   const addTimer = (fn, ms) => {
     const t = setTimeout(fn, ms);
@@ -367,14 +454,15 @@ function HeroSlideshow() {
     setTextVisible(false);
     setShowVfx(false);
     setShowTransform(false);
+    setShowBubble(false);
     setAuraIntensity(0);
+    setSpriteX(-30);
 
-    const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
-    const chosen = availableAttacks.length > 0
-      ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
+    const enterAnims = ENTER_ANIMS.filter(a => spriteData?.[a]);
+    const enterAnim = enterAnims.length > 0
+      ? enterAnims[Math.floor(Math.random() * enterAnims.length)]
       : 'idle';
-    attackRef.current = chosen;
-    setAnim(chosen);
+    setAnim(enterAnim);
 
     setPrevBgIndex(bgIndex);
     const newBg = (bgIndex + 1 + Math.floor(Math.random() * (BATTLE_BGS.length - 1))) % BATTLE_BGS.length;
@@ -382,18 +470,52 @@ function HeroSlideshow() {
     setBgFade(0);
 
     addTimer(() => setBgFade(1), 50);
-    addTimer(() => setTextVisible(true), 200);
-    addTimer(() => setAuraIntensity(1), 300);
 
-    const attackFrames = spriteData?.[chosen]?.frames || 8;
-    const attackSpeed = 80;
-    const attackDuration = attackFrames * attackSpeed;
+    const walkDuration = 1200;
+    let elapsed = 0;
+    const walkStep = 16;
+    const targetX = 22;
+    const walkInterval = setInterval(() => {
+      elapsed += walkStep;
+      const progress = Math.min(elapsed / walkDuration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setSpriteX(-30 + (targetX - (-30)) * eased);
+      if (progress >= 1) clearInterval(walkInterval);
+    }, walkStep);
+    intervalRefs.current.push(walkInterval);
 
-    addTimer(() => setShowVfx(true), Math.min(400, attackDuration * 0.3));
+    const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
+    const chosenAttack = availableAttacks.length > 0
+      ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
+      : 'attack1';
+    attackRef.current = chosenAttack;
+    const attackFrames = spriteData?.[chosenAttack]?.frames || 8;
+    const attackDuration = attackFrames * 80;
+
+    addTimer(() => {
+      setAnim('idle');
+      setTextVisible(true);
+      setAuraIntensity(1);
+    }, walkDuration);
+
+    addTimer(() => {
+      setAnim(chosenAttack);
+      addTimer(() => setShowVfx(true), 200);
+    }, walkDuration + 800);
+
+    addTimer(() => {
+      setAnim('idle');
+      setShowVfx(false);
+    }, walkDuration + 800 + attackDuration + 200);
+
+    addTimer(() => {
+      setShowBubble(true);
+    }, walkDuration + 800 + attackDuration + 400);
 
     if (isWorge) {
       addTimer(() => {
         setShowTransform(true);
+        setShowBubble(false);
         setAnim('idle');
         const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
         const tAtk = transformAttacks.length > 0
@@ -402,49 +524,44 @@ function HeroSlideshow() {
         setTransformAnim(tAtk);
         setShowVfx(false);
         addTimer(() => setShowVfx(true), 200);
-      }, Math.min(attackDuration + 200, 2000));
+      }, walkDuration + 800 + attackDuration + 2200);
 
       addTimer(() => {
         setTransformAnim('idle');
         setShowVfx(false);
-      }, 3200);
+      }, walkDuration + 800 + attackDuration + 3600);
 
       addTimer(() => {
         setPhase('exit');
         addTimer(() => {
           setIndex(prev => (prev + 1) % ALL_COMBOS.length);
           setShowTransform(false);
-        }, 500);
-      }, 4500);
+        }, 600);
+      }, walkDuration + 800 + attackDuration + 5000);
     } else {
-      const idleAt = attackDuration + 200;
-      addTimer(() => {
-        setAnim('idle');
-        setShowVfx(false);
-      }, idleAt);
-
       addTimer(() => {
         setPhase('exit');
-        addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 500);
-      }, Math.max(idleAt + 1500, 4200));
+        setShowBubble(false);
+        addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
+      }, walkDuration + 800 + attackDuration + 4200);
     }
 
     return clearTimers;
   }, [index]);
 
-  const abilities = cls.abilities?.slice(0, 3) || [];
-
   return (
     <div style={{
       marginTop: 16, position: 'relative', overflow: 'hidden',
-      borderRadius: 12, height: 380,
-      border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: 12, height: 420,
+      border: '1px solid rgba(255,255,255,0.08)',
+      willChange: 'contents',
+      contain: 'layout paint',
     }}>
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: `url(${BATTLE_BGS[prevBgIndex]})`,
         backgroundSize: 'cover', backgroundPosition: 'center',
-        zIndex: 0,
+        zIndex: 0, willChange: 'opacity',
       }} />
       <div style={{
         position: 'absolute', inset: 0,
@@ -453,57 +570,112 @@ function HeroSlideshow() {
         zIndex: 1,
         opacity: bgFade,
         transition: 'opacity 1.2s ease-in-out',
+        willChange: 'opacity',
       }} />
       <div style={{
         position: 'absolute', inset: 0, zIndex: 2,
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.75) 100%)',
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.7) 100%)',
       }} />
 
       <div style={{
         position: 'absolute', inset: 0, zIndex: 3,
-        display: 'flex', flexDirection: 'column',
         opacity: phase === 'exit' ? 0 : 1,
-        transition: 'opacity 0.5s ease',
+        transition: 'opacity 0.6s ease',
       }}>
         <div style={{
-          textAlign: 'center', padding: '18px 20px 0',
+          position: 'absolute', top: 10, left: 12, zIndex: 10,
           opacity: textVisible ? 1 : 0,
-          transform: textVisible ? 'translateY(0)' : 'translateY(-15px)',
-          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: textVisible ? 'scale(1)' : 'scale(0.5)',
+          transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}>
-          <div className="font-cinzel" style={{
-            fontSize: '1.5rem', fontWeight: 700,
-            background: `linear-gradient(135deg, ${race.color}, ${cls.color})`,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            textShadow: 'none',
-            letterSpacing: 3,
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
+            border: `2px solid ${faction.color}88`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 12px ${faction.color}44`,
+          }}>
+            <img src={faction.icon} alt={faction.name} style={{
+              width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
+            }} />
+          </div>
+          <div style={{
+            fontSize: '0.5rem', color: faction.color, textAlign: 'center',
+            marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            letterSpacing: 1,
+          }}>{faction.name}</div>
+        </div>
+
+        <div style={{
+          position: 'absolute', top: 10, right: 12, zIndex: 10,
+          opacity: textVisible ? 1 : 0,
+          transform: textVisible ? 'scale(1)' : 'scale(0.5)',
+          transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s',
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: `radial-gradient(circle, ${cls.color}33, rgba(0,0,0,0.6))`,
+            border: `2px solid ${cls.color}88`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 12px ${cls.color}44`,
+          }}>
+            <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
+              width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
+            }} />
+          </div>
+          <div style={{
+            fontSize: '0.5rem', color: cls.color, textAlign: 'center',
+            marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            letterSpacing: 1,
+          }}>{cls.name}</div>
+        </div>
+
+        <div style={{
+          position: 'absolute', top: '15%', left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center', zIndex: 6,
+          opacity: textVisible ? 1 : 0,
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: 'none',
+        }}>
+          <div className="font-warcraft" style={{
+            fontSize: '2.4rem',
+            color: '#ffd700',
+            textShadow: `0 0 20px ${cls.color}88, 0 2px 8px rgba(0,0,0,0.9), 0 0 40px ${cls.color}44`,
+            letterSpacing: 4,
+            lineHeight: 1,
           }}>
             {race.name} {cls.name}
+          </div>
+          <div style={{
+            fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)',
+            marginTop: 6, fontStyle: 'italic',
+            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            maxWidth: 350, margin: '6px auto 0',
+            lineHeight: 1.4,
+          }}>
+            {LORE_QUOTES[combo.classId]}
           </div>
         </div>
 
         <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative',
+          position: 'absolute',
+          left: `${spriteX}%`, bottom: '14%',
+          zIndex: 5,
+          willChange: 'left',
+          transformOrigin: 'bottom center',
         }}>
           <div style={{
             position: 'absolute',
-            width: 300, height: 300,
+            width: 250, height: 250,
+            left: '50%', top: '50%',
+            transform: 'translate(-50%, -50%)',
             borderRadius: '50%',
-            background: `radial-gradient(circle, ${classEffect.aura}33 0%, ${classEffect.aura}15 30%, transparent 65%)`,
+            background: `radial-gradient(circle, ${classEffect.aura}28 0%, ${classEffect.aura}10 40%, transparent 65%)`,
             opacity: auraIntensity,
             transition: 'opacity 0.8s ease',
-            animation: auraIntensity > 0 ? 'auraPulse 2s ease-in-out infinite' : 'none',
-            zIndex: 1,
-          }} />
-          <div style={{
-            position: 'absolute',
-            width: 200, height: 200,
-            borderRadius: '50%',
-            border: `1px solid ${classEffect.aura}22`,
-            opacity: auraIntensity * 0.5,
-            animation: auraIntensity > 0 ? 'auraRing 3s linear infinite' : 'none',
-            zIndex: 1,
+            animation: auraIntensity > 0 ? 'ssAuraPulse 2s ease-in-out infinite' : 'none',
+            zIndex: 1, pointerEvents: 'none',
           }} />
 
           <div style={{
@@ -516,16 +688,16 @@ function HeroSlideshow() {
               spriteData={spriteData}
               animation={anim}
               scale={5}
-              loop={anim === 'idle'}
-              speed={anim === 'idle' ? 140 : 80}
-              onAnimationEnd={anim !== 'idle' ? () => setAnim('idle') : null}
+              loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
+              speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
+              onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
             />
           </div>
 
           {isWorge && showTransform && worgeTransformData && (
             <div style={{
-              position: 'absolute', zIndex: 4,
-              animation: 'transformFlash 0.4s ease-out',
+              position: 'absolute', left: 0, top: 0, zIndex: 4,
+              animation: 'ssTransformFlash 0.4s ease-out',
             }}>
               <SpriteAnimation
                 spriteData={worgeTransformData}
@@ -538,100 +710,79 @@ function HeroSlideshow() {
             </div>
           )}
 
-          <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} />
+          <ChatBubble text={slogan} visible={showBubble} />
         </div>
 
+        <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="70%" y="45%" />
+
         <div style={{
-          padding: '0 20px 14px',
-          opacity: textVisible ? 1 : 0,
-          transform: textVisible ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s',
+          position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
+          padding: '0 16px 8px',
+          background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 40%)',
         }}>
           <div style={{
-            display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 8, flexWrap: 'wrap',
+            display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 6, flexWrap: 'wrap',
+            opacity: textVisible ? 1 : 0,
+            transform: textVisible ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.6s ease 0.2s',
           }}>
             <span style={{
-              fontSize: '0.6rem', padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
               background: `${race.color}22`, color: race.color,
               border: `1px solid ${race.color}44`,
-              backdropFilter: 'blur(4px)',
             }}>
               {race.trait}
             </span>
             <span style={{
-              fontSize: '0.6rem', padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
               background: `${cls.color}22`, color: cls.color,
               border: `1px solid ${cls.color}44`,
-              backdropFilter: 'blur(4px)',
             }}>
               {cls.name}
             </span>
             <span style={{
-              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              fontSize: '0.5rem', padding: '2px 10px', borderRadius: 20,
+              background: `${faction.color}15`, color: faction.color,
+              border: `1px solid ${faction.color}33`,
             }}>
-              {race.passive}
+              {faction.name} &bull; {faction.god}
             </span>
           </div>
 
           <div style={{
-            fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)', textAlign: 'center',
-            lineHeight: 1.5, maxWidth: 500, margin: '0 auto 8px',
+            display: 'flex', justifyContent: 'center', gap: 3,
           }}>
-            {CLASS_DESCRIPTIONS[combo.classId] || cls.description}
+            {ALL_COMBOS.map((c, i) => {
+              const r = raceDefinitions[c.raceId];
+              return (
+                <div key={i} style={{
+                  width: i === index ? 14 : 4, height: 4, borderRadius: 2,
+                  background: i === index ? r.color : 'rgba(255,255,255,0.12)',
+                  transition: 'all 0.4s ease',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setIndex(i)}
+                />
+              );
+            })}
           </div>
-
-          <div style={{
-            display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap',
-          }}>
-            {abilities.map((ab, i) => (
-              <span key={ab.id} style={{
-                fontSize: '0.55rem', padding: '1px 8px', borderRadius: 4,
-                background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.45)',
-                border: `1px solid ${cls.color}33`,
-                opacity: textVisible ? 1 : 0,
-                transform: textVisible ? 'translateY(0)' : 'translateY(10px)',
-                transition: `all 0.5s ease ${0.3 + i * 0.1}s`,
-              }}>
-                {ab.name}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div style={{
-          display: 'flex', justifyContent: 'center', gap: 3, padding: '0 20px 10px',
-        }}>
-          {ALL_COMBOS.map((c, i) => {
-            const r = raceDefinitions[c.raceId];
-            return (
-              <div key={i} style={{
-                width: i === index ? 14 : 4, height: 4, borderRadius: 2,
-                background: i === index ? r.color : 'rgba(255,255,255,0.12)',
-                transition: 'all 0.4s ease',
-                cursor: 'pointer',
-              }}
-              onClick={() => setIndex(i)}
-              />
-            );
-          })}
         </div>
       </div>
 
       <style>{`
-        @keyframes auraPulse {
-          0%, 100% { transform: scale(1); opacity: 0.7; }
-          50% { transform: scale(1.08); opacity: 1; }
+        @keyframes ssAuraPulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+          50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
         }
-        @keyframes auraRing {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes transformFlash {
+        @keyframes ssTransformFlash {
           0% { opacity: 0; transform: scale(1.3); filter: brightness(3); }
           50% { opacity: 1; filter: brightness(1.5); }
           100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes bubblePop {
+          0% { transform: translate(-50%, -100%) scale(0.3); opacity: 0; }
+          60% { transform: translate(-50%, -100%) scale(1.05); }
+          100% { transform: translate(-50%, -100%) scale(1); opacity: 1; }
         }
       `}</style>
     </div>

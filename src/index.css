@@ -112,6 +112,10 @@ body {
   font-family: 'Cinzel', serif;
 }
 
+.font-warcraft {
+  font-family: 'LifeCraft', 'MedievalSharp', serif;
+}
+
 #game-ui-overlay {
   font-family: 'Cinzel', serif;
   box-sizing: border-box;

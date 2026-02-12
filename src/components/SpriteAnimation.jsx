@@ -178,6 +178,7 @@ export default function SpriteAnimation({
         backgroundPosition: `-${frame * displayWidth}px 0`,
         imageRendering: 'pixelated',
         filter: cssFilter || 'none',
+        willChange: 'background-position',
       }} />
       {spriteData?.showGuideGrid && (
         <div style={{
