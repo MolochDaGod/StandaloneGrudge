@@ -1,7 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import { setBgm } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
+
+function TitleParticles() {
+  const canvasRef = useRef(null);
+  const particlesRef = useRef([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let raf;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 40; i++) {
+      particlesRef.current.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -Math.random() * 0.4 - 0.1,
+        size: Math.random() * 2 + 0.5,
+        opacity: Math.random() * 0.4 + 0.1,
+        color: Math.random() > 0.5 ? '110,231,183' : '255,215,0',
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particlesRef.current.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.opacity += (Math.random() - 0.5) * 0.01;
+        p.opacity = Math.max(0.05, Math.min(0.5, p.opacity));
+        if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+        if (p.x < -10) p.x = canvas.width + 10;
+        if (p.x > canvas.width + 10) p.x = -10;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.opacity * 0.15})`;
+        ctx.fill();
+      });
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position: 'absolute', inset: 0, width: '100%', height: '100%',
+      pointerEvents: 'none', zIndex: 0,
+    }} />
+  );
+}
 
 export default function TitleScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -32,10 +100,13 @@ export default function TitleScreen() {
         opacity: fadeClass ? 1 : 0,
         transition: 'opacity 1.5s ease',
       }}>
+        <TitleParticles />
+
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
           <div style={{
             fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: 8,
             textTransform: 'uppercase', marginBottom: 24, opacity: 0.5,
+            animation: 'fadeIn 1.5s ease both',
           }}>
             Grudge Studio Presents
           </div>
@@ -44,7 +115,8 @@ export default function TitleScreen() {
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
             background: 'linear-gradient(135deg, #6ee7b7, #ffd700, #ef4444)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            textShadow: 'none', marginBottom: 8, lineHeight: 1.1,
+            marginBottom: 8, lineHeight: 1.1,
+            animation: 'titleGlow 4s ease-in-out infinite, scaleIn 0.8s ease 0.1s both',
           }}>
             GRUDGE<br/>WARLORDS
           </h1>
@@ -52,6 +124,7 @@ export default function TitleScreen() {
           <div style={{
             fontSize: '0.85rem', color: 'var(--accent)', letterSpacing: 3,
             textTransform: 'uppercase', marginBottom: 50, opacity: 0.8,
+            animation: 'fadeIn 1s ease 0.2s both',
           }}>
             The Void King Awaits
           </div>
@@ -62,6 +135,7 @@ export default function TitleScreen() {
               onClick={() => handleLogin('guest')}
               primary
               icon={<EssentialIcon name="Gamepad" size={20} style={{ marginRight: 8 }} />}
+              delay={0.3}
             />
 
             <MenuButton
@@ -72,6 +146,7 @@ export default function TitleScreen() {
                   <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
                 </svg>
               }
+              delay={0.45}
             />
 
             <MenuButton
@@ -79,12 +154,14 @@ export default function TitleScreen() {
               onClick={() => window.open('https://grudgestudio.com', '_blank')}
               subtle
               icon={<EssentialIcon name="Home" size={16} style={{ marginRight: 8 }} />}
+              delay={0.6}
             />
           </div>
 
           <div style={{
             color: 'var(--muted)', fontSize: '0.7rem', marginTop: 40, opacity: 0.4,
             letterSpacing: 1,
+            animation: 'fadeIn 1s ease 0.8s both',
           }}>
             Turn-Based RPG &bull; 6 Races &bull; 4 Classes &bull; 24 Warlords
           </div>
@@ -100,8 +177,9 @@ export default function TitleScreen() {
     );
 }
 
-function MenuButton({ label, onClick, primary, subtle, icon }) {
+function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
   const [hovered, setHovered] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   const baseStyle = {
     background: primary
@@ -126,12 +204,20 @@ function MenuButton({ label, onClick, primary, subtle, icon }) {
     cursor: 'pointer',
     fontFamily: "'Cinzel', serif",
     letterSpacing: primary ? 3 : 2,
-    transition: 'all 0.3s',
+    transition: 'all 0.2s ease',
     width: 280,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: hovered && primary ? '0 0 30px rgba(110,231,183,0.3)' : 'none',
+    transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.03)' : 'scale(1)',
+    boxShadow: hovered && primary
+      ? '0 0 30px rgba(110,231,183,0.3), 0 0 60px rgba(110,231,183,0.1)'
+      : hovered && !subtle
+        ? '0 0 15px rgba(255,255,255,0.1)'
+        : 'none',
+    animation: primary
+      ? `slideUp 0.5s ease ${delay}s both, ${hovered ? '' : 'glowPulse 3s ease-in-out infinite 2s'}`
+      : `slideUp 0.5s ease ${delay}s both`,
   };
 
   return (
@@ -139,7 +225,9 @@ function MenuButton({ label, onClick, primary, subtle, icon }) {
       style={baseStyle}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); setPressed(false); }}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
     >
       {icon}{label}
     </button>

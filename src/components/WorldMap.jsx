@@ -1777,9 +1777,10 @@ export default function WorldMap() {
               onContextMenu={(e) => handleNodeRightClick(e, loc)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'location', id: loc.id, x: pos.x, y: pos.y }); }}
               onMouseLeave={() => setHoveredNode(null)}
-              style={mapNodeStyle(pos, ns, isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.NODES, {
+              style={mapNodeStyle(pos, ns * (hoveredNode?.id === loc.id && hoveredNode?.type === 'location' ? 1.12 : 1), isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.NODES, {
                 cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                transition: 'transform 0.3s',
+                transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                filter: hoveredNode?.id === loc.id && hoveredNode?.type === 'location' ? 'brightness(1.15) drop-shadow(0 0 6px rgba(255,215,0,0.3))' : 'none',
               })}
             >
               <div style={{ position: 'relative', width: 42, height: 42 }}>
@@ -1969,9 +1970,10 @@ export default function WorldMap() {
               onContextMenu={(e) => handleNodeRightClick(e, city)}
               onMouseEnter={() => { if (!selectedLocation && !selectedCity && !selectedEvent) setHoveredNode({ type: 'city', id: city.id, x: pos.x, y: pos.y, name: city.name }); }}
               onMouseLeave={() => setHoveredNode(null)}
-              style={mapNodeStyle(pos, cs, isCityDragging ? MAP_LAYERS.DEV_DRAGGING : isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.CITIES, {
+              style={mapNodeStyle(pos, cs * (hoveredNode?.id === city.id && hoveredNode?.type === 'city' ? 1.12 : 1), isCityDragging ? MAP_LAYERS.DEV_DRAGGING : isSelected ? MAP_LAYERS.SELECTED : MAP_LAYERS.CITIES, {
                 cursor: isCityDragging ? 'grabbing' : isCityUnlocked ? 'pointer' : 'not-allowed',
-                transition: isCityDragging ? 'none' : 'transform 0.3s',
+                transition: isCityDragging ? 'none' : 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                filter: hoveredNode?.id === city.id && hoveredNode?.type === 'city' ? 'brightness(1.15) drop-shadow(0 0 8px rgba(74,222,128,0.4))' : 'none',
               })}
             >
               <div style={{ position: 'relative', width: 44, height: 44 }}>

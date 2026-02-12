@@ -2033,7 +2033,11 @@ export default function BattleScreen() {
     else if (isCrit) { text = `CRIT ${totalDmg}`; color = '#fbbf24'; }
     else { text = `-${totalDmg}`; color = '#ef4444'; }
     setFloatingDmg(prev => [...prev, { id, text, color, x: target.position.x, y: bodyY(target) - 8 }]);
-    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1500);
+    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1800);
+
+    if (isCrit || totalDmg > 30) {
+      window.dispatchEvent(new Event('game-screen-shake'));
+    }
   }, []);
 
   const showHealFloat = useCallback((target, healAmt) => {
@@ -2620,73 +2624,117 @@ export default function BattleScreen() {
           <ResurrectEffect key={r.id} x={r.x} y={r.y} />
         ))}
 
-        {floatingDmg.map(f => (
-          <div key={f.id} style={{
-            position: 'absolute',
-            left: `${f.x}%`, top: `${f.y}%`,
-            transform: 'translate(-50%, 0)',
-            color: f.color, fontWeight: 800, fontSize: '1rem',
-            textShadow: `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
-            animation: 'floatUp 1.5s ease forwards',
-            pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
-            fontFamily: "'Cinzel', serif",
-          }}>
-            {f.text}
-          </div>
-        ))}
+        {floatingDmg.map(f => {
+          const isHeal = f.color === '#22c55e' || f.color === '#10b981' || (f.text && f.text.toString().startsWith('+'));
+          const isCrit = f.text && f.text.toString().includes('CRIT');
+          const isMiss = f.text && (f.text.toString().includes('MISS') || f.text.toString().includes('DODGE'));
+          const animName = isCrit ? 'dmgCritPop' : isHeal ? 'healPop' : 'dmgPop';
+          const fontSize = isCrit ? '1.4rem' : isMiss ? '0.85rem' : '1.1rem';
+          return (
+            <div key={f.id} style={{
+              position: 'absolute',
+              left: `${f.x}%`, top: `${f.y}%`,
+              color: f.color, fontWeight: 900, fontSize,
+              textShadow: isCrit
+                ? `0 0 12px ${f.color}, 0 0 24px ${f.color}, 0 2px 6px rgba(0,0,0,0.9)`
+                : `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
+              animation: `${animName} ${isCrit ? '1.8s' : '1.4s'} ease forwards`,
+              pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
+              fontFamily: "'Cinzel', serif",
+              letterSpacing: isCrit ? 2 : 0,
+            }}>
+              {f.text}
+            </div>
+          );
+        })}
 
         {(isVictory || isDefeat) && (
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            textAlign: 'center', animation: 'slideUp 0.5s ease', zIndex: BATTLE.DAMAGE_NUMBERS,
-            backgroundImage: isDefeat ? 'linear-gradient(135deg, rgba(11,16,32,0.85), rgba(30,0,0,0.8)), url(/backgrounds/wc_gold.png)' : undefined,
-            background: isDefeat ? undefined : 'rgba(11,16,32,0.9)',
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            padding: '24px 40px', borderRadius: 16,
-            border: `2px solid ${isVictory ? 'var(--gold)' : 'var(--danger)'}`,
-            backdropFilter: 'blur(8px)',
-          }}>
-            <div className="font-cinzel" style={{
-              fontSize: '1.8rem',
-              color: isVictory ? 'var(--gold)' : 'var(--danger)',
-              textShadow: `0 0 20px ${isVictory ? 'rgba(255,215,0,0.4)' : 'rgba(239,68,68,0.4)'}`
+          <>
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: BATTLE.DAMAGE_NUMBERS - 1,
+              background: isVictory
+                ? 'radial-gradient(ellipse at center, transparent 30%, rgba(255,215,0,0.08) 60%, rgba(0,0,0,0.6) 100%)'
+                : 'radial-gradient(ellipse at center, transparent 20%, rgba(200,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%)',
+              animation: 'vignetteFadeIn 0.8s ease forwards',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%',
+              textAlign: 'center',
+              animation: isVictory ? 'victoryBanner 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'defeatBanner 0.8s ease forwards',
+              zIndex: BATTLE.DAMAGE_NUMBERS,
+              backgroundImage: isDefeat ? 'linear-gradient(135deg, rgba(11,16,32,0.92), rgba(30,0,0,0.88)), url(/backgrounds/wc_gold.png)' : undefined,
+              background: isDefeat ? undefined : 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(20,15,5,0.9))',
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              padding: '28px 48px', borderRadius: 16,
+              border: `2px solid ${isVictory ? 'var(--gold)' : 'var(--danger)'}`,
+              backdropFilter: 'blur(10px)',
+              boxShadow: isVictory
+                ? '0 0 40px rgba(255,215,0,0.2), 0 0 80px rgba(255,215,0,0.1), inset 0 0 30px rgba(255,215,0,0.05)'
+                : '0 0 40px rgba(239,68,68,0.2), 0 0 80px rgba(0,0,0,0.5)',
             }}>
-              {isVictory ? 'VICTORY!' : 'DEFEAT'}
-            </div>
-            {isVictory && (
-              <div style={{ color: 'var(--accent)', marginTop: 8, fontSize: '0.8rem' }}>
-                +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)} XP |
-                +{Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)} Gold
-              </div>
-            )}
-            {isDefeat && (
-              <div style={{ color: 'var(--muted)', marginTop: 8, fontSize: '0.75rem' }}>
-                Recover at 50% HP, lose 10% gold.
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'center' }}>
-              {isVictory && currentLocation && !battleState?.isTraining && (
-                <button onClick={() => startBattle(currentLocation)} style={{
-                  background: 'linear-gradient(135deg, var(--accent), #10b981)',
-                  border: 'none', borderRadius: 10, padding: '8px 16px',
-                  color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem'
-                }}>Fight Again</button>
-              )}
-              <button onClick={() => {
-                if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
-                else returnToWorld();
-              }} style={{
-                background: isDefeat ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : 'var(--border)',
-                border: isDefeat ? '2px solid var(--danger)' : 'none',
-                borderRadius: 10, padding: '8px 16px',
-                color: isDefeat ? 'var(--danger)' : 'var(--text)',
-                fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem'
+              <div className="font-cinzel" style={{
+                fontSize: '2.2rem',
+                color: isVictory ? 'var(--gold)' : 'var(--danger)',
+                textShadow: isVictory
+                  ? '0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2), 0 2px 4px rgba(0,0,0,0.5)'
+                  : '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2), 0 2px 4px rgba(0,0,0,0.5)',
+                letterSpacing: 4,
               }}>
-                {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
-                <span style={{ fontSize: '0.55rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
-              </button>
+                {isVictory ? 'VICTORY!' : 'DEFEAT'}
+              </div>
+              {isVictory && (
+                <div style={{
+                  color: 'var(--accent)', marginTop: 10, fontSize: '0.85rem',
+                  animation: 'fadeIn 0.5s ease 0.4s both',
+                }}>
+                  +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)} XP |
+                  +{Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)} Gold
+                </div>
+              )}
+              {isDefeat && (
+                <div style={{
+                  color: 'var(--muted)', marginTop: 10, fontSize: '0.8rem',
+                  animation: 'fadeIn 0.5s ease 0.5s both',
+                }}>
+                  Recover at 50% HP, lose 10% gold.
+                </div>
+              )}
+              <div style={{
+                display: 'flex', gap: 10, marginTop: 18, justifyContent: 'center',
+                animation: 'fadeIn 0.5s ease 0.6s both',
+              }}>
+                {isVictory && currentLocation && !battleState?.isTraining && (
+                  <button onClick={() => startBattle(currentLocation)} style={{
+                    background: 'linear-gradient(135deg, var(--accent), #10b981)',
+                    border: 'none', borderRadius: 10, padding: '10px 20px',
+                    color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem',
+                    transition: 'all 0.2s', boxShadow: '0 0 15px rgba(110,231,183,0.3)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 25px rgba(110,231,183,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(110,231,183,0.3)'; }}
+                  >Fight Again</button>
+                )}
+                <button onClick={() => {
+                  if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+                  else returnToWorld();
+                }} style={{
+                  background: isDefeat ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : 'var(--border)',
+                  border: isDefeat ? '2px solid var(--danger)' : 'none',
+                  borderRadius: 10, padding: '10px 20px',
+                  color: isDefeat ? 'var(--danger)' : 'var(--text)',
+                  fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
+                  <span style={{ fontSize: '0.55rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
       </div>

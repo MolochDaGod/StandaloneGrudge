@@ -38,6 +38,8 @@ function GameApp() {
   const [progress, setProgress] = useState({ loaded: 0, total: 1 });
   const prevScreenRef = useRef(screen);
   const [transitioning, setTransitioning] = useState(false);
+  const [transitionType, setTransitionType] = useState('fade');
+  const [screenShake, setScreenShake] = useState(false);
 
   useEffect(() => {
     if (isReady()) {
@@ -55,26 +57,51 @@ function GameApp() {
   useEffect(() => {
     const prev = prevScreenRef.current;
     if (screen !== prev) {
-      const needsTransition = (
-        (prev === 'title' && screen === 'intro') ||
-        (prev === 'intro' && screen === 'lobby') ||
-        (prev === 'title' && screen === 'lobby') ||
-        (prev === 'lobby' && screen === 'create') ||
-        (prev === 'title' && screen === 'create') ||
-        (prev === 'create' && screen === 'world') ||
-        (prev === 'lobby' && screen === 'world') ||
-        (screen === 'battle') ||
-        (prev === 'battle' && (screen === 'world' || screen === 'location'))
-      );
+      let type = 'fade';
+      let duration = 400;
+      const needsTransition = true;
+
+      if (screen === 'battle') {
+        type = 'battleEntry';
+        duration = 600;
+      } else if (prev === 'battle') {
+        type = 'battleExit';
+        duration = 500;
+      } else if ((prev === 'title' && screen === 'intro') || (prev === 'intro' && screen === 'lobby') || (prev === 'title' && screen === 'lobby')) {
+        type = 'cinematic';
+        duration = 700;
+      } else if ((prev === 'create' && screen === 'world') || (prev === 'lobby' && screen === 'world')) {
+        type = 'scaleIn';
+        duration = 500;
+      } else {
+        type = 'fade';
+        duration = 350;
+      }
+
       if (needsTransition) {
+        setTransitionType(type);
         setTransitioning(true);
-        const timer = setTimeout(() => setTransitioning(false), 300);
+        const timer = setTimeout(() => setTransitioning(false), duration);
         prevScreenRef.current = screen;
         return () => clearTimeout(timer);
       }
       prevScreenRef.current = screen;
     }
   }, [screen]);
+
+  const shakeKeyRef = useRef(0);
+  useEffect(() => {
+    const handleShake = () => {
+      setScreenShake(false);
+      requestAnimationFrame(() => {
+        shakeKeyRef.current++;
+        setScreenShake(true);
+        setTimeout(() => setScreenShake(false), 300);
+      });
+    };
+    window.addEventListener('game-screen-shake', handleShake);
+    return () => window.removeEventListener('game-screen-shake', handleShake);
+  }, []);
 
   if (!ready) {
     return (
@@ -112,27 +139,38 @@ function GameApp() {
     }
   };
 
+  const getScreenAnimation = () => {
+    switch (transitionType) {
+      case 'battleEntry': return 'battleEntry 0.6s ease-out both';
+      case 'battleExit': return 'cinematicFade 0.5s ease-out both';
+      case 'cinematic': return 'cinematicFade 0.7s ease-out both';
+      case 'scaleIn': return 'scaleIn 0.5s ease-out both';
+      default: return 'fadeIn 0.4s ease both';
+    }
+  };
+
   const contentStyle = isFullBleed ? {
     position: 'relative', zIndex: 10501, width: '100%', height: '100%',
-    opacity: transitioning ? 0 : 1,
-    transition: 'opacity 0.3s ease',
-    animation: 'fadeIn 0.5s ease',
+    animation: transitioning ? 'none' : getScreenAnimation(),
+    opacity: transitioning ? 0 : undefined,
   } : {
     position: 'absolute', zIndex: 10501,
     top: 'var(--frame-inset-top)',
     left: 'var(--frame-inset-side)',
     right: 'var(--frame-inset-side)',
     bottom: 'var(--frame-inset-bottom)',
-    opacity: transitioning ? 0 : 1,
-    transition: 'opacity 0.3s ease',
-    animation: 'fadeIn 0.5s ease',
+    animation: transitioning ? 'none' : getScreenAnimation(),
+    opacity: transitioning ? 0 : undefined,
     overflow: 'hidden',
     borderRadius: 2,
   };
 
   return (
     <div className="game-frame">
-      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+      <div style={{
+        width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+        animation: screenShake ? `screenShake 0.3s ease-out` : 'none',
+      }}>
         <VideoBackground blurred={bgBlurred} visible={bgVisible} />
         <div style={contentStyle}>
           {renderScreen()}
