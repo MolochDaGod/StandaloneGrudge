@@ -87,6 +87,18 @@ const defaultActionBar = {
   enemyGrudgeHeight: 3,
 };
 
+const defaultZones = [
+  { id: 'player_back', name: 'Player Backline', x: 5, y: 55, w: 20, h: 40, color: 'rgba(96,165,250,0.25)', border: '#60a5fa', visible: true },
+  { id: 'player_front', name: 'Player Frontline', x: 25, y: 55, w: 20, h: 40, color: 'rgba(110,231,183,0.2)', border: '#6ee7b7', visible: true },
+  { id: 'center', name: 'No Mans Land', x: 45, y: 55, w: 10, h: 40, color: 'rgba(251,191,36,0.15)', border: '#fbbf24', visible: true },
+  { id: 'enemy_front', name: 'Enemy Frontline', x: 55, y: 55, w: 20, h: 40, color: 'rgba(248,113,113,0.2)', border: '#f87171', visible: true },
+  { id: 'enemy_back', name: 'Enemy Backline', x: 75, y: 55, w: 20, h: 40, color: 'rgba(239,68,68,0.25)', border: '#ef4444', visible: true },
+  { id: 'high_ground', name: 'High Ground', x: 15, y: 45, w: 70, h: 15, color: 'rgba(167,139,250,0.12)', border: '#a78bfa', visible: false },
+  { id: 'melee_range', name: 'Melee Range', x: 35, y: 60, w: 30, h: 30, color: 'rgba(251,146,60,0.12)', border: '#fb923c', visible: false },
+  { id: 'flank_top', name: 'Top Flank', x: 30, y: 50, w: 40, h: 12, color: 'rgba(6,182,212,0.15)', border: '#06b6d4', visible: false },
+  { id: 'flank_bot', name: 'Bottom Flank', x: 30, y: 88, w: 40, h: 10, color: 'rgba(6,182,212,0.15)', border: '#06b6d4', visible: false },
+];
+
 function MiniBar({ current, max, color, height = 4, width = 50 }) {
   const pct = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
   const barHeight = Math.max(height, 6);
@@ -163,6 +175,15 @@ export default function AdminBattle() {
   const [spriteSize, setSpriteSize] = useState(200);
   const [bossScale, setBossScale] = useState(1.6);
   const [showOverlays, setShowOverlays] = useState(true);
+  const [showZones, setShowZones] = useState(true);
+  const [zones, setZones] = useState(() => {
+    const saved = localStorage.getItem('adminBattleZones');
+    return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultZones));
+  });
+  const [selectedZone, setSelectedZone] = useState(null);
+  const [draggingZone, setDraggingZone] = useState(null);
+  const [resizingZone, setResizingZone] = useState(null);
+  const [zoneDragStart, setZoneDragStart] = useState(null);
   const arenaRef = useRef(null);
 
   const playerUnits = (formations.player[playerCount] || formations.player[1]).map((pos, i) => ({
@@ -228,6 +249,7 @@ export default function AdminBattle() {
     localStorage.setItem('adminBattleFormations', JSON.stringify(formations));
     localStorage.setItem('adminBattleSpriteLayout', JSON.stringify(spriteLayout));
     localStorage.setItem('adminBattleActionBar', JSON.stringify(actionBar));
+    localStorage.setItem('adminBattleZones', JSON.stringify(zones));
   };
 
   const copyFormations = () => {
@@ -248,12 +270,101 @@ export default function AdminBattle() {
     setFormations(JSON.parse(JSON.stringify(defaultFormations)));
     setSpriteLayout({ ...defaultSpriteLayout });
     setActionBar({ ...defaultActionBar });
+    setZones(JSON.parse(JSON.stringify(defaultZones)));
     setSpriteSize(200);
     setBossScale(1.6);
+    setSelectedZone(null);
     localStorage.removeItem('adminBattleFormations');
     localStorage.removeItem('adminBattleSpriteLayout');
     localStorage.removeItem('adminBattleActionBar');
+    localStorage.removeItem('adminBattleZones');
   };
+
+  const updateZone = (idx, updates) => {
+    setZones(prev => prev.map((z, i) => i === idx ? { ...z, ...updates } : z));
+  };
+
+  const addZone = () => {
+    const newZone = {
+      id: `zone_${Date.now()}`,
+      name: `Zone ${zones.length + 1}`,
+      x: 40, y: 60, w: 20, h: 20,
+      color: 'rgba(168,85,247,0.2)',
+      border: '#a855f7',
+      visible: true,
+    };
+    setZones(prev => [...prev, newZone]);
+    setSelectedZone(zones.length);
+  };
+
+  const removeZone = (idx) => {
+    setZones(prev => prev.filter((_, i) => i !== idx));
+    setSelectedZone(null);
+  };
+
+  const copyZones = () => {
+    const code = JSON.stringify(zones, null, 2);
+    navigator.clipboard.writeText(code);
+    setCopied('zones');
+    setTimeout(() => setCopied(''), 2000);
+  };
+
+  const handleZoneMouseDown = useCallback((e, idx, mode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!arenaRef.current) return;
+    const rect = arenaRef.current.getBoundingClientRect();
+    const startPct = {
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    };
+    setSelectedZone(idx);
+    setZoneDragStart({ ...startPct, zone: { ...zones[idx] } });
+    if (mode === 'resize') {
+      setResizingZone(idx);
+    } else {
+      setDraggingZone(idx);
+    }
+  }, [zones]);
+
+  const handleZoneMouseMove = useCallback((e) => {
+    if ((draggingZone === null && resizingZone === null) || !arenaRef.current || !zoneDragStart) return;
+    const rect = arenaRef.current.getBoundingClientRect();
+    const curX = ((e.clientX - rect.left) / rect.width) * 100;
+    const curY = ((e.clientY - rect.top) / rect.height) * 100;
+    const dx = curX - zoneDragStart.x;
+    const dy = curY - zoneDragStart.y;
+    const orig = zoneDragStart.zone;
+
+    if (draggingZone !== null) {
+      updateZone(draggingZone, {
+        x: Math.max(0, Math.min(100 - orig.w, Math.round(orig.x + dx))),
+        y: Math.max(0, Math.min(100 - orig.h, Math.round(orig.y + dy))),
+      });
+    } else if (resizingZone !== null) {
+      updateZone(resizingZone, {
+        w: Math.max(5, Math.round(orig.w + dx)),
+        h: Math.max(5, Math.round(orig.h + dy)),
+      });
+    }
+  }, [draggingZone, resizingZone, zoneDragStart]);
+
+  const handleZoneMouseUp = useCallback(() => {
+    setDraggingZone(null);
+    setResizingZone(null);
+    setZoneDragStart(null);
+  }, []);
+
+  useEffect(() => {
+    if (draggingZone !== null || resizingZone !== null) {
+      window.addEventListener('mousemove', handleZoneMouseMove);
+      window.addEventListener('mouseup', handleZoneMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleZoneMouseMove);
+        window.removeEventListener('mouseup', handleZoneMouseUp);
+      };
+    }
+  }, [draggingZone, resizingZone, handleZoneMouseMove, handleZoneMouseUp]);
 
   const getUnitSprite = (unit) => {
     if (unit.team === 'player') {
@@ -306,6 +417,12 @@ export default function AdminBattle() {
           }}>
             {showOverlays ? 'Overlays ON' : 'Overlays OFF'}
           </button>
+          <button onClick={() => setShowZones(z => !z)} style={{
+            ...btnStyle(showZones ? '#a855f7' : '#6b7280'),
+            background: showZones ? 'rgba(168,85,247,0.2)' : 'rgba(107,114,128,0.15)',
+          }}>
+            {showZones ? 'Zones ON' : 'Zones OFF'}
+          </button>
         </div>
       </div>
 
@@ -314,14 +431,15 @@ export default function AdminBattle() {
           width: 240, background: '#141a2b', borderRight: '1px solid #2a3040',
           overflowY: 'auto', padding: 8,
         }}>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-            {['formations', 'sprites', 'actionbar'].map(t => (
+          <div style={{ display: 'flex', gap: 3, marginBottom: 8, flexWrap: 'wrap' }}>
+            {['formations', 'sprites', 'actionbar', 'zones'].map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 flex: 1, padding: '4px 0', borderRadius: 4, cursor: 'pointer',
-                fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
+                fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase',
                 background: tab === t ? 'rgba(245,158,11,0.2)' : 'transparent',
                 border: tab === t ? '1px solid #f59e0b' : '1px solid #2a3040',
                 color: tab === t ? '#f59e0b' : '#6b7280',
+                minWidth: 50,
               }}>{t}</button>
             ))}
           </div>
@@ -512,6 +630,100 @@ export default function AdminBattle() {
                 onChange={v => setActionBar(p => ({ ...p, enemyGrudgeWidth: v }))} />
             </>
           )}
+
+          {tab === 'zones' && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ fontSize: '0.65rem', color: '#f59e0b', fontWeight: 700 }}>BATTLE ZONES</div>
+                <button onClick={() => setShowZones(z => !z)} style={{
+                  ...btnStyle(showZones ? '#10b981' : '#6b7280'),
+                  fontSize: '0.5rem', padding: '2px 6px',
+                }}>
+                  {showZones ? 'Visible' : 'Hidden'}
+                </button>
+              </div>
+              <button onClick={addZone} style={{ ...btnStyle('#a855f7'), width: '100%', marginBottom: 6, fontSize: '0.55rem' }}>
+                + Add Zone
+              </button>
+              <button onClick={copyZones} style={{ ...btnStyle('#3b82f6'), width: '100%', marginBottom: 8, fontSize: '0.55rem' }}>
+                {copied === 'zones' ? 'Copied!' : 'Copy Zones JSON'}
+              </button>
+
+              {zones.map((zone, idx) => (
+                <div key={zone.id} onClick={() => setSelectedZone(idx)} style={{
+                  padding: '5px 6px', marginBottom: 3, borderRadius: 4, cursor: 'pointer',
+                  background: selectedZone === idx ? 'rgba(245,158,11,0.1)' : 'transparent',
+                  border: selectedZone === idx ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(255,255,255,0.05)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{
+                        width: 8, height: 8, borderRadius: 2,
+                        background: zone.color, border: `1px solid ${zone.border}`,
+                      }} />
+                      <span style={{ fontSize: '0.55rem', fontWeight: 600, color: zone.border }}>{zone.name}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 3 }}>
+                      <button onClick={(e) => { e.stopPropagation(); updateZone(idx, { visible: !zone.visible }); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.5rem', color: zone.visible ? '#6ee7b7' : '#6b7280', padding: 0 }}>
+                        {zone.visible ? 'ON' : 'OFF'}
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); removeZone(idx); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.5rem', color: '#ef4444', padding: 0 }}>
+                        X
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedZone === idx && (
+                    <>
+                      <input value={zone.name} onChange={e => updateZone(idx, { name: e.target.value })}
+                        style={{ ...numInputStyle, width: '100%', marginBottom: 4, fontSize: '0.55rem' }} />
+                      <div style={{ display: 'flex', gap: 3, marginBottom: 3 }}>
+                        <label style={{ fontSize: '0.5rem', flex: 1, color: '#94a3b8' }}>
+                          X: <input type="number" value={zone.x} min={0} max={100}
+                            onChange={e => updateZone(idx, { x: parseInt(e.target.value) || 0 })}
+                            style={numInputStyle} />
+                        </label>
+                        <label style={{ fontSize: '0.5rem', flex: 1, color: '#94a3b8' }}>
+                          Y: <input type="number" value={zone.y} min={0} max={100}
+                            onChange={e => updateZone(idx, { y: parseInt(e.target.value) || 0 })}
+                            style={numInputStyle} />
+                        </label>
+                      </div>
+                      <div style={{ display: 'flex', gap: 3, marginBottom: 3 }}>
+                        <label style={{ fontSize: '0.5rem', flex: 1, color: '#94a3b8' }}>
+                          W: <input type="number" value={zone.w} min={5} max={100}
+                            onChange={e => updateZone(idx, { w: parseInt(e.target.value) || 5 })}
+                            style={numInputStyle} />
+                        </label>
+                        <label style={{ fontSize: '0.5rem', flex: 1, color: '#94a3b8' }}>
+                          H: <input type="number" value={zone.h} min={5} max={100}
+                            onChange={e => updateZone(idx, { h: parseInt(e.target.value) || 5 })}
+                            style={numInputStyle} />
+                        </label>
+                      </div>
+                      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                        <label style={{ fontSize: '0.5rem', color: '#94a3b8' }}>Color:</label>
+                        <input type="color" value={zone.border}
+                          onChange={e => {
+                            const hex = e.target.value;
+                            const r = parseInt(hex.slice(1,3),16);
+                            const g = parseInt(hex.slice(3,5),16);
+                            const b = parseInt(hex.slice(5,7),16);
+                            updateZone(idx, {
+                              border: hex,
+                              color: `rgba(${r},${g},${b},0.2)`,
+                            });
+                          }}
+                          style={{ width: 24, height: 16, border: 'none', background: 'none', cursor: 'pointer', padding: 0 }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
@@ -543,6 +755,49 @@ export default function AdminBattle() {
                 </React.Fragment>
               ))}
             </svg>
+
+            {showZones && zones.map((zone, idx) => zone.visible && (
+              <div
+                key={`zone_${zone.id}`}
+                onMouseDown={(e) => handleZoneMouseDown(e, idx, 'move')}
+                style={{
+                  position: 'absolute',
+                  left: `${zone.x}%`, top: `${zone.y}%`,
+                  width: `${zone.w}%`, height: `${zone.h}%`,
+                  background: zone.color,
+                  border: `1.5px dashed ${zone.border}`,
+                  borderRadius: 3,
+                  zIndex: 2,
+                  cursor: draggingZone === idx ? 'grabbing' : 'grab',
+                  boxShadow: selectedZone === idx ? `0 0 12px ${zone.border}44, inset 0 0 20px ${zone.border}11` : 'none',
+                  transition: draggingZone === idx ? 'none' : 'box-shadow 0.2s',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 2, left: 4,
+                  fontSize: '0.45rem', fontWeight: 700,
+                  color: zone.border, textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                  pointerEvents: 'none', whiteSpace: 'nowrap',
+                  letterSpacing: '0.03em', textTransform: 'uppercase',
+                }}>{zone.name}</div>
+                <div style={{
+                  position: 'absolute', bottom: 1, right: 3,
+                  fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)',
+                  pointerEvents: 'none',
+                }}>{zone.x},{zone.y} {zone.w}x{zone.h}</div>
+                <div
+                  onMouseDown={(e) => handleZoneMouseDown(e, idx, 'resize')}
+                  style={{
+                    position: 'absolute', right: -3, bottom: -3,
+                    width: 8, height: 8,
+                    background: zone.border, borderRadius: 2,
+                    cursor: 'nwse-resize',
+                    border: '1px solid rgba(0,0,0,0.4)',
+                    boxShadow: '0 0 4px rgba(0,0,0,0.5)',
+                  }}
+                />
+              </div>
+            ))}
 
             {allUnits.map((unit) => {
               const pos = unit.position;
