@@ -685,12 +685,12 @@ export function getSellPrice(item) {
 }
 
 export const CONSUMABLE_ITEMS = [
-  { id: 'health_potion', name: 'Health Potion', icon: 'heart', slot: 'consumable', consumableType: 'health', description: 'Restores 40% HP to one ally', price: 50 },
-  { id: 'mana_potion', name: 'Mana Potion', icon: 'mana', slot: 'consumable', consumableType: 'mana', description: 'Restores 40% MP to one ally', price: 45 },
-  { id: 'stamina_potion', name: 'Stamina Potion', icon: 'energy', slot: 'consumable', consumableType: 'stamina', description: 'Restores 40% SP to one ally', price: 40 },
-  { id: 'speed_potion', name: 'Speed Potion', icon: 'lightning', slot: 'consumable', consumableType: 'speed', description: 'Boosts speed by 50% for 3 turns', price: 60 },
-  { id: 'cure_potion', name: 'Cure Potion', icon: 'sparkle', slot: 'consumable', consumableType: 'cure', description: 'Removes all debuffs and DoTs from one ally', price: 55 },
-  { id: 'rezzy', name: 'Rezzy', icon: 'lance', slot: 'consumable', consumableType: 'resurrect', description: 'Resurrects a fallen ally with 30% HP', price: 200 },
+  { id: 'health_potion', name: 'Hearty Steak', icon: 'food_steak', slot: 'consumable', consumableType: 'health', description: 'Restores 40% HP to one ally', price: 50 },
+  { id: 'mana_potion', name: 'Mystic Ramen', icon: 'food_ramen', slot: 'consumable', consumableType: 'mana', description: 'Restores 40% MP to one ally', price: 45 },
+  { id: 'stamina_potion', name: 'Power Burger', icon: 'food_burger', slot: 'consumable', consumableType: 'stamina', description: 'Restores 40% SP to one ally', price: 40 },
+  { id: 'speed_potion', name: 'Spicy Curry', icon: 'food_curry', slot: 'consumable', consumableType: 'speed', description: 'Boosts speed by 50% for 3 turns', price: 60 },
+  { id: 'cure_potion', name: 'Golden Salmon', icon: 'food_salmon', slot: 'consumable', consumableType: 'cure', description: 'Removes all debuffs and DoTs from one ally', price: 55 },
+  { id: 'rezzy', name: 'Phoenix Pizza', icon: 'food_pizza', slot: 'consumable', consumableType: 'resurrect', description: 'Resurrects a fallen ally with 30% HP', price: 200 },
 ];
 
 export function createConsumable(templateId) {

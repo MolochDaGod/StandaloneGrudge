@@ -13,6 +13,7 @@ const FIELD_EVENTS = [
   { id: 'chest', name: 'Treasure Chest', icon: 'gift', x: 30, y: 35, type: 'loot', color: '#fbbf24', img: '/images/buildings/treasure_chest.png' },
   { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3', img: '/images/buildings/healing_shrine.png' },
   { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316', img: '/images/buildings/campfire.png' },
+  { id: 'merchant', name: 'Traveling Merchant', icon: 'diamond', x: 20, y: 55, type: 'shop', color: '#FAAC47', img: '/sprites/buildings/shop_cart.png' },
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -20,6 +21,7 @@ const SPAWN_POS = { x: 50, y: 82 };
 export default function OpenFieldScene() {
   useEffect(() => { setBgm('scene'); }, []);
   const exitScene = useGameStore(s => s.exitScene);
+  const enterScene = useGameStore(s => s.enterScene);
   const startBattle = useGameStore(s => s.startBattle);
   const playerRace = useGameStore(s => s.playerRace);
   const playerClass = useGameStore(s => s.playerClass);
@@ -87,6 +89,8 @@ export default function OpenFieldScene() {
         setInteracted(prev => [...prev, evt.id]);
         setMessage('Rested by the campfire. Stats restored!');
         setTimeout(() => setMessage(null), 2500);
+      } else if (evt.type === 'shop') {
+        enterScene('trading', sceneReturnTo || 'world');
       }
     }, 600);
   };
@@ -138,18 +142,19 @@ export default function OpenFieldScene() {
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
             <div style={{
-              width: 72, height: 72, borderRadius: 10,
+              width: evt.type === 'shop' ? 96 : 72, height: evt.type === 'shop' ? 96 : 72,
+              borderRadius: evt.type === 'shop' ? 0 : 10,
               background: done
                 ? 'rgba(100,100,100,0.2)'
-                : `radial-gradient(circle, ${evt.color}25, rgba(0,0,0,0.3))`,
-              border: `2px solid ${done ? '#555' : evt.color}80`,
+                : evt.type === 'shop' ? 'none' : `radial-gradient(circle, ${evt.color}25, rgba(0,0,0,0.3))`,
+              border: evt.type === 'shop' ? 'none' : `2px solid ${done ? '#555' : evt.color}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: !done ? `0 0 16px ${evt.color}40, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
+              boxShadow: !done && evt.type !== 'shop' ? `0 0 16px ${evt.color}40, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
               animation: !done ? 'pulse 2s infinite' : 'none',
               overflow: 'hidden',
-              filter: done ? 'grayscale(0.8)' : 'none',
+              filter: done ? 'grayscale(0.8)' : evt.type === 'shop' ? `drop-shadow(0 0 8px ${evt.color}80)` : 'none',
             }}>
-              {done ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={evt.img} alt={evt.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />}
+              {done ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={evt.img} alt={evt.name} style={{ width: evt.type === 'shop' ? 88 : 60, height: evt.type === 'shop' ? 88 : 60, objectFit: 'contain', imageRendering: evt.type === 'shop' ? 'pixelated' : 'auto' }} />}
             </div>
             <div className="font-cinzel" style={{
               color: done ? '#666' : evt.color,

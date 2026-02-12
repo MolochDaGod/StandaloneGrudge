@@ -10,10 +10,10 @@ import { SCENE } from '../constants/layers';
 import { useDraggableNodes } from '../hooks/useSceneDrag';
 
 const TRADER_NODES = [
-  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/images/buildings/weapons_shop.png' },
-  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor', img: '/images/buildings/armor_shop.png' },
-  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable', img: '/images/buildings/potions_shop.png' },
-  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory', img: '/images/buildings/relics_shop.png' },
+  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/sprites/buildings/shop_cart.png' },
+  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor', img: '/sprites/buildings/shop_cart.png' },
+  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable', img: '/sprites/buildings/potion_cart.png' },
+  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory', img: '/sprites/buildings/shop_cart.png' },
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -128,15 +128,13 @@ export default function TradingPostScene() {
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
             <div style={{
-              width: 76, height: 76, borderRadius: 10,
-              background: `radial-gradient(circle, ${trader.color}25, rgba(0,0,0,0.3))`,
-              border: `2px solid ${trader.color}80`,
+              width: 96, height: 96,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 16px ${trader.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
+              filter: selectedTrader === trader.id ? `drop-shadow(0 0 12px ${trader.color})` : `drop-shadow(0 0 6px ${trader.color}60)`,
               animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
-              overflow: 'hidden',
+              transition: 'filter 0.3s ease',
             }}>
-              <img src={trader.img} alt={trader.name} style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'auto' }} />
+              <img src={trader.img} alt={trader.name} style={{ width: 88, height: 88, objectFit: 'contain', imageRendering: 'pixelated' }} />
             </div>
             <div className="font-cinzel" style={{
               color: trader.color, fontSize: '0.9rem', fontWeight: 700, marginTop: 4,
