@@ -540,6 +540,7 @@ function HeroSlideshow() {
     undead_warrior: 2,
     human_warrior: 2,
     undead_ranger: 0.75,
+    dwarf_worge: 0.5,
   };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
@@ -547,6 +548,7 @@ function HeroSlideshow() {
     human_warrior: 110,
     human_worge: -50,
     orc_mage: 20,
+    orc_worge: 50,
   };
   const SPRITE_X_OFFSETS = {
     human_warrior: -30,
@@ -847,6 +849,7 @@ function HeroSlideshow() {
                     spriteData={spriteData}
                     animation={anim}
                     scale={spriteScale}
+                    flip={!!spriteData?.facesLeft}
                     loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
                     speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
                     onAnimationEnd={anim !== 'idle' && anim !== 'walk' && anim !== 'run' ? () => setAnim('idle') : null}
