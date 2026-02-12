@@ -120,6 +120,9 @@ body {
   flex-direction: column;
   justify-content: flex-end;
   box-sizing: border-box;
+  padding-bottom: var(--frame-inset-bottom);
+  padding-left: var(--frame-inset-side);
+  padding-right: var(--frame-inset-side);
 }
 
 .ui-element {
