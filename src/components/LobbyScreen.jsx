@@ -501,10 +501,7 @@ function HeroSlideshow() {
     setAuraIntensity(0);
     setSpriteX(-30);
 
-    const enterAnims = ENTER_ANIMS.filter(a => spriteData?.[a]);
-    const enterAnim = enterAnims.length > 0
-      ? enterAnims[Math.floor(Math.random() * enterAnims.length)]
-      : 'idle';
+    const enterAnim = spriteData?.walk ? 'walk' : (spriteData?.run ? 'run' : 'idle');
     setAnim(enterAnim);
 
     setPrevBgIndex(bgIndex);
@@ -528,11 +525,13 @@ function HeroSlideshow() {
     intervalRefs.current.push(walkInterval);
 
     const availableAttacks = ATTACK_ANIMS.filter(a => spriteData?.[a]);
-    const chosenAttack = availableAttacks.length > 0
-      ? availableAttacks[Math.floor(Math.random() * availableAttacks.length)]
+    const shortAttacks = availableAttacks.filter(a => (spriteData?.[a]?.frames || 8) <= 15);
+    const attackPool = shortAttacks.length > 0 ? shortAttacks : availableAttacks;
+    const chosenAttack = attackPool.length > 0
+      ? attackPool[Math.floor(Math.random() * attackPool.length)]
       : 'attack1';
     attackRef.current = chosenAttack;
-    const attackFrames = spriteData?.[chosenAttack]?.frames || 8;
+    const attackFrames = Math.min(spriteData?.[chosenAttack]?.frames || 8, 15);
     const attackDuration = attackFrames * 80;
 
     addTimer(() => {
@@ -634,82 +633,84 @@ function HeroSlideshow() {
         opacity: phase === 'exit' ? 0 : 1,
         transition: 'opacity 0.6s ease',
       }}>
-        <div style={{
-          position: 'absolute', top: 10, left: 12, zIndex: 10,
-          opacity: textVisible ? 1 : 0,
-          transform: textVisible ? 'scale(1)' : 'scale(0.5)',
-          transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}>
+        {textVisible && (
           <div style={{
-            width: 48, height: 48, borderRadius: '50%',
-            background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
-            border: `2px solid ${faction.color}88`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 16px ${faction.color}44`,
-            overflow: 'hidden',
+            position: 'absolute', top: 10, left: 12, zIndex: 10,
+            animation: 'ssSlideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}>
-            <img src={faction.icon} alt={faction.name} style={{
-              width: 40, height: 40, objectFit: 'contain', filter: 'brightness(1.2)',
-            }} />
+            <div style={{
+              width: 48, height: 48, borderRadius: '50%',
+              background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
+              border: `2px solid ${faction.color}88`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 16px ${faction.color}44`,
+              overflow: 'hidden',
+            }}>
+              <img src={faction.icon} alt={faction.name} style={{
+                width: 40, height: 40, objectFit: 'contain', filter: 'brightness(1.2)',
+              }} />
+            </div>
+            <div style={{
+              fontSize: '0.5rem', color: faction.color, textAlign: 'center',
+              marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+              letterSpacing: 1,
+            }}>{faction.name}</div>
           </div>
-          <div style={{
-            fontSize: '0.5rem', color: faction.color, textAlign: 'center',
-            marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-            letterSpacing: 1,
-          }}>{faction.name}</div>
-        </div>
+        )}
 
-        <div style={{
-          position: 'absolute', top: 10, right: 12, zIndex: 10,
-          opacity: textVisible ? 1 : 0,
-          transform: textVisible ? 'scale(1)' : 'scale(0.5)',
-          transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s',
-        }}>
+        {textVisible && (
           <div style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: `radial-gradient(circle, ${cls.color}33, rgba(0,0,0,0.6))`,
-            border: `2px solid ${cls.color}88`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 12px ${cls.color}44`,
+            position: 'absolute', top: 10, right: 12, zIndex: 10,
+            animation: 'ssSlideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
           }}>
-            <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
-              width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
-            }} />
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: `radial-gradient(circle, ${cls.color}33, rgba(0,0,0,0.6))`,
+              border: `2px solid ${cls.color}88`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 12px ${cls.color}44`,
+            }}>
+              <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
+                width: 22, height: 22, imageRendering: 'pixelated', filter: 'brightness(1.3)',
+              }} />
+            </div>
+            <div style={{
+              fontSize: '0.5rem', color: cls.color, textAlign: 'center',
+              marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+              letterSpacing: 1,
+            }}>{cls.name}</div>
           </div>
-          <div style={{
-            fontSize: '0.5rem', color: cls.color, textAlign: 'center',
-            marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-            letterSpacing: 1,
-          }}>{cls.name}</div>
-        </div>
+        )}
 
-        <div style={{
-          position: 'absolute', top: '15%', left: '50%',
-          transform: 'translateX(-50%)',
-          textAlign: 'center', zIndex: 4,
-          opacity: textVisible ? 1 : 0,
-          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-          pointerEvents: 'none',
-        }}>
-          <div className="font-warcraft" style={{
-            fontSize: '2.4rem',
-            color: '#ffd700',
-            textShadow: `0 0 20px ${cls.color}88, 0 2px 8px rgba(0,0,0,0.9), 0 0 40px ${cls.color}44`,
-            letterSpacing: 4,
-            lineHeight: 1,
-          }}>
-            {race.name} {cls.name}
-          </div>
+        {textVisible && (
           <div style={{
-            fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)',
-            marginTop: 6, fontStyle: 'italic',
-            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-            maxWidth: 350, margin: '6px auto 0',
-            lineHeight: 1.4,
+            position: 'absolute', top: '15%', left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center', zIndex: 4,
+            animation: 'ssTitleDrop 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both',
+            pointerEvents: 'none',
           }}>
-            {LORE_QUOTES[combo.classId]}
+            <div className="font-warcraft" style={{
+              fontSize: '2.4rem',
+              color: '#ffd700',
+              textShadow: `0 0 20px ${cls.color}88, 0 2px 8px rgba(0,0,0,0.9), 0 0 40px ${cls.color}44`,
+              letterSpacing: 4,
+              lineHeight: 1,
+            }}>
+              {race.name} {cls.name}
+            </div>
+            <div style={{
+              fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)',
+              marginTop: 6, fontStyle: 'italic',
+              textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+              maxWidth: 350, margin: '6px auto 0',
+              lineHeight: 1.4,
+              animation: 'ssFadeUp 0.6s ease 0.4s both',
+            }}>
+              {LORE_QUOTES[combo.classId]}
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{
           position: 'absolute',
@@ -854,18 +855,34 @@ function HeroSlideshow() {
 
       <style>{`
         @keyframes ssAuraPulse {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-          50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+          0%, 100% { transform: translate(-50%, 20%) scale(1); opacity: 0.7; }
+          50% { transform: translate(-50%, 20%) scale(1.08); opacity: 1; }
         }
         @keyframes ssTransformFlash {
-          0% { opacity: 0; transform: scale(1.3); filter: brightness(3); }
+          0% { opacity: 0; transform: translateX(-50%) scale(1.3); filter: brightness(3); }
           50% { opacity: 1; filter: brightness(1.5); }
-          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+          100% { opacity: 1; transform: translateX(-50%) scale(1); filter: brightness(1); }
         }
         @keyframes bubblePop {
-          0% { transform: translate(-50%, -100%) scale(0.3); opacity: 0; }
-          60% { transform: translate(-50%, -100%) scale(1.05); }
-          100% { transform: translate(-50%, -100%) scale(1); opacity: 1; }
+          0% { transform: translateY(-50%) scale(0.3); opacity: 0; }
+          60% { transform: translateY(-50%) scale(1.05); }
+          100% { transform: translateY(-50%) scale(1); opacity: 1; }
+        }
+        @keyframes ssSlideInLeft {
+          0% { opacity: 0; transform: translateX(-30px) scale(0.7); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes ssSlideInRight {
+          0% { opacity: 0; transform: translateX(30px) scale(0.7); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes ssTitleDrop {
+          0% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
+          100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        @keyframes ssFadeUp {
+          0% { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
