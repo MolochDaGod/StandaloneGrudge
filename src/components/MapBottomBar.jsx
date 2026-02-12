@@ -520,7 +520,11 @@ export default function MapBottomBar({
         <div style={{
           flex: '1 1 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '16px 4px 8px',
+          padding: '8px 4px 8px',
+          backgroundImage: 'url(/ui/hotbar-background.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center center',
         }}>
           <div style={{
             display: 'grid',
@@ -531,9 +535,9 @@ export default function MapBottomBar({
           }}>
             {buttons.map(btn => (
               <button key={btn.id} onClick={btn.action} style={{
-                background: 'rgba(0,0,0,0.35)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 6,
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 4,
                 padding: '2px',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -543,9 +547,9 @@ export default function MapBottomBar({
                 animation: btn.pulse ? 'glow 2s infinite' : 'none',
                 aspectRatio: '1',
               }}
-                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)'; }}
+                onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.background = 'rgba(255,215,0,0.12)'; }}
                 onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = 'transparent'; }}
               >
                 {btn.img ? (
                   <img src={btn.img} alt={btn.label} style={{ width: '80%', height: '80%', objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
