@@ -645,6 +645,9 @@ function HeroSlideshow() {
   const timerRefs = useRef([]);
   const indexRef = useRef(index);
   indexRef.current = index;
+  const editorXRef = useRef(0);
+  const editorYRef = useRef(0);
+  const editorScaleRef = useRef(1);
 
   const getSavedPositions = () => {
     try {
@@ -714,54 +717,51 @@ function HeroSlideshow() {
     if (!editorMode) return;
     const handleKey = (e) => {
       const step = e.shiftKey ? 10 : 1;
+      const updateEditorX = (fn) => { setEditorX(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorXRef.current = v; return v; }); };
+      const updateEditorY = (fn) => { setEditorY(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorYRef.current = v; return v; }); };
+      const updateEditorScale = (fn) => { setEditorScale(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorScaleRef.current = v; return v; }); };
+      const resetEditor = () => { updateEditorX(0); updateEditorY(0); updateEditorScale(1); };
+
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
         e.preventDefault();
-        setEditorScale(s => Math.round((s + 0.05) * 100) / 100);
+        updateEditorScale(s => Math.round((s + 0.05) * 100) / 100);
       } else if (e.key === '-' || e.code === 'NumpadSubtract') {
         e.preventDefault();
-        setEditorScale(s => Math.max(0.1, Math.round((s - 0.05) * 100) / 100));
+        updateEditorScale(s => Math.max(0.1, Math.round((s - 0.05) * 100) / 100));
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        setEditorX(x => x - step);
+        updateEditorX(x => x - step);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        setEditorX(x => x + step);
+        updateEditorX(x => x + step);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setEditorY(y => y + step);
+        updateEditorY(y => y + step);
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setEditorY(y => y - step);
+        updateEditorY(y => y - step);
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         const ck = `${ALL_COMBOS[indexRef.current].raceId}_${ALL_COMBOS[indexRef.current].classId}`;
         const curSaved = getSavedPositions();
-        const curX = (curSaved[ck]?.x || SPRITE_X_OFFSETS[ck] || 0);
-        const curY = (curSaved[ck]?.y || SPRITE_Y_OFFSETS[ck] || 0);
-        const curScaleOv = curSaved[ck]?.scale || SPRITE_SCALE_OVERRIDES[ck] || 1;
-        const finalX = curX + editorX;
-        const finalY = curY + editorY;
-        const finalScale = Math.round(curScaleOv * editorScale * 100) / 100;
+        const curX = curSaved[ck] != null ? (curSaved[ck].x ?? 0) : (SPRITE_X_OFFSETS[ck] ?? 0);
+        const curY = curSaved[ck] != null ? (curSaved[ck].y ?? 0) : (SPRITE_Y_OFFSETS[ck] ?? 0);
+        const curScaleOv = curSaved[ck] != null ? (curSaved[ck].scale ?? 1) : (SPRITE_SCALE_OVERRIDES[ck] ?? 1);
+        const finalX = curX + editorXRef.current;
+        const finalY = curY + editorYRef.current;
+        const finalScale = Math.round(curScaleOv * editorScaleRef.current * 100) / 100;
         saveSpritePosition(ck, finalX, finalY, finalScale);
-        setEditorX(0); setEditorY(0); setEditorScale(1);
+        resetEditor();
         setEditorSaved(true);
         setTimeout(() => setEditorSaved(false), 1500);
       } else if (e.key === 'Escape') {
         setEditorMode(false);
       } else if (e.key === '>' || e.key === '.') {
-        setIndex(prev => {
-          const next = (prev + 1) % ALL_COMBOS.length;
-          const nk = `${ALL_COMBOS[next].raceId}_${ALL_COMBOS[next].classId}`;
-          const np = loadSpritePosition(nk);
-          setEditorX(0); setEditorY(0); setEditorScale(1);
-          return next;
-        });
+        setIndex(prev => (prev + 1) % ALL_COMBOS.length);
+        resetEditor();
       } else if (e.key === '<' || e.key === ',') {
-        setIndex(prev => {
-          const next = (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length;
-          setEditorX(0); setEditorY(0); setEditorScale(1);
-          return next;
-        });
+        setIndex(prev => (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length);
+        resetEditor();
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -778,8 +778,12 @@ function HeroSlideshow() {
     if (!draggingRef.current) return;
     const dx = e.clientX - dragStartRef.current.mx;
     const dy = e.clientY - dragStartRef.current.my;
-    setEditorX(dragStartRef.current.sx + dx);
-    setEditorY(dragStartRef.current.sy - dy);
+    const newX = dragStartRef.current.sx + dx;
+    const newY = dragStartRef.current.sy - dy;
+    editorXRef.current = newX;
+    editorYRef.current = newY;
+    setEditorX(newX);
+    setEditorY(newY);
   }, []);
   const handleEditorMouseUp = useCallback(() => { draggingRef.current = false; }, []);
 
