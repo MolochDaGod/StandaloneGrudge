@@ -399,7 +399,7 @@ export default function MapBottomBar({
 
   const allActions = buttons;
 
-  const resolvedSlots = Array.from({ length: 10 }, (_, i) => {
+  const resolvedSlots = Array.from({ length: 8 }, (_, i) => {
     const assignedId = hotbarAssignments[i];
     if (assignedId) {
       const found = allActions.find(a => a.id === assignedId);
@@ -568,7 +568,7 @@ export default function MapBottomBar({
             right: '5.5%',
             bottom: '16%',
             display: 'grid',
-            gridTemplateColumns: 'repeat(10, 1fr)',
+            gridTemplateColumns: 'repeat(8, 1fr)',
             gap: '1.2%',
             alignItems: 'center',
           }}>

@@ -7,7 +7,7 @@ const CANVAS_H = 720;
 export const ICON_GROUPS = {
   hotbarIcons: {
     label: 'Hotbar Icons',
-    description: '10 action slots on the world map bottom bar',
+    description: '8 action slots on the world map bottom bar',
     defaults: { offsetX: 0, offsetY: 0, iconSize: 24, slotSize: 40, gap: 6 },
   },
   battleActionIcons: {
