@@ -63,11 +63,22 @@ body {
   cursor: url('/sprites/ui/cursor_gauntlet.png') 4 0, auto;
 }
 
+.game-frame:active {
+  cursor: url('/sprites/ui/cursor_gauntlet_click.png') 4 0, auto;
+}
+
 .game-frame button,
 .game-frame a,
 .game-frame [role="button"],
 .game-frame .clickable {
   cursor: url('/sprites/ui/cursor_gauntlet.png') 4 0, pointer;
+}
+
+.game-frame button:active,
+.game-frame a:active,
+.game-frame [role="button"]:active,
+.game-frame .clickable:active {
+  cursor: url('/sprites/ui/cursor_gauntlet_click.png') 4 0, pointer;
 }
 
 .game-frame input,
