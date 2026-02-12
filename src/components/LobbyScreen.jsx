@@ -245,7 +245,7 @@ const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
   Object.keys(classDefinitions).map(classId => ({ raceId, classId }))
 );
 
-const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge'];
+const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge', 'shot1', 'shot2', 'cast'];
 const ENTER_ANIMS = ['walk', 'run', 'roll', 'slide', 'charge'];
 
 const BATTLE_BGS = [
