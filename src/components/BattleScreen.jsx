@@ -1166,6 +1166,7 @@ export default function BattleScreen() {
   const [waterSplashFx, setWaterSplashFx] = useState([]);
   const [poisonGustFx, setPoisonGustFx] = useState([]);
   const [resurrectFx, setResurrectFx] = useState([]);
+  const [morphingUnits, setMorphingUnits] = useState({});
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
@@ -1961,6 +1962,7 @@ export default function BattleScreen() {
         }
       }
     } else {
+      const isMorphAbility = abilityId === 'bear_form' || abilityType === 'revert_form' || (abilityName && (abilityName.includes('Form') || abilityName.includes('Revert')));
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
       const hfxR6 = getHitEffect(attacker, abilityName, false);
       if ((consumableType === 'resurrect' || abilityType === 'resurrect') && target && target.position) {
@@ -2014,7 +2016,11 @@ export default function BattleScreen() {
       } else {
         playBuff();
         if (attacker.position) {
-          addParticle('cast', attacker.position.x, bodyY(attacker), '#6ee7b7');
+          if (isMorphAbility) {
+            setMorphingUnits(prev => ({ ...prev, [attackerId]: true }));
+            setTimeout(() => setMorphingUnits(prev => { const n = { ...prev }; delete n[attackerId]; return n; }), 1200);
+          }
+          addParticle('cast', attacker.position.x, bodyY(attacker), isMorphAbility ? '#22c55e' : '#6ee7b7');
           if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
             setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter }]);
@@ -2023,8 +2029,8 @@ export default function BattleScreen() {
           }
         }
       }
-      setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
-      setTimeout(() => advanceTurn(), 900);
+      setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), isMorphAbility ? 900 : 600);
+      setTimeout(() => advanceTurn(), isMorphAbility ? 1400 : 900);
     }
   }, [lastAction]);
 
@@ -2242,11 +2248,11 @@ export default function BattleScreen() {
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
-          const BATTLE_SCALE_OVERRIDES = { human_warrior: 2 };
+          const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
           const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 } };
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
           const comboOffset = BATTLE_POSITION_OFFSETS[`${unit.raceId}_${unit.classId}`] || { x: 0, y: 0 };
-          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * bossScaleVal * comboScale;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const footCrop = 0.82;
@@ -2285,6 +2291,39 @@ export default function BattleScreen() {
                   filter: `drop-shadow(0 0 4px ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'})`,
                   zIndex: 15,
                 }} />
+              )}
+
+              {morphingUnits[unit.id] && unit.alive && (
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: 0,
+                  width: spriteSize * 0.6,
+                  height: spriteSize * 1.8,
+                  transform: 'translateX(-50%)',
+                  background: 'linear-gradient(to top, rgba(34,197,94,0.9) 0%, rgba(34,197,94,0.5) 30%, rgba(74,222,128,0.3) 60%, rgba(134,239,172,0.1) 85%, transparent 100%)',
+                  borderRadius: '50% 50% 0 0',
+                  animation: 'morphColumnPulse 0.4s ease-in-out infinite alternate',
+                  pointerEvents: 'none',
+                  zIndex: 20,
+                  boxShadow: '0 0 30px rgba(34,197,94,0.6), 0 0 60px rgba(34,197,94,0.3), inset 0 0 20px rgba(134,239,172,0.4)',
+                  mixBlendMode: 'screen',
+                }}>
+                  {Array.from({ length: 8 }).map((_, pi) => (
+                    <div key={`morph-p-${pi}`} style={{
+                      position: 'absolute',
+                      left: `${20 + Math.random() * 60}%`,
+                      bottom: `${Math.random() * 80}%`,
+                      width: 3 + Math.random() * 3,
+                      height: 3 + Math.random() * 3,
+                      borderRadius: '50%',
+                      background: `rgba(${180 + Math.floor(Math.random() * 75)}, 255, ${180 + Math.floor(Math.random() * 75)}, 0.9)`,
+                      animation: `morphParticleRise ${0.6 + Math.random() * 0.6}s ease-out infinite`,
+                      animationDelay: `${pi * 0.1}s`,
+                      pointerEvents: 'none',
+                    }} />
+                  ))}
+                </div>
               )}
 
               {isBearForm && unit.alive && (
