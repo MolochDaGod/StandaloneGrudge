@@ -61,12 +61,15 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Beta Tester System:** Creates one-time invite links to a Discord channel.
 - **GRUDA PvP Arena:** Comprehensive ranked PvP system. Players submit team snapshots via the GRUDA button (WorldMap) or directly at `/arena.html`. Teams are posted to a ranked lobby via 6 API endpoints (`/api/arena/submit`, `/api/arena/lobby`, `/api/arena/team/:id`, `/api/arena/battle/result`, `/api/arena/rewards/:id`, `/api/arena/stats`). Other players challenge posted teams (AI-controlled opponents). 3-loss relegation demotes teams from Ranked to Unranked. Rewards include gold (50 + avgLevel*10 + wins*5), resources (10 + avgLevel*2), and equipment drops every 5 wins. Standalone arena.html is self-contained for external hosting on grudgewarlords.com/arena and grudgestudio.com/arena. Uses in-memory Map storage (arenaTeams, arenaBattles) with server-generated UUIDs and SHA-256 snapshot hashing. Arena routes are implemented in both `server.js` (dev) and `server.prod.js` (production).
 
+- **Production Database:** PostgreSQL via `GRUDGE_ACCOUNT_DB` connection string (external Neon DB). Connection module at `src/server/db.js`, routes at `src/server/dbRoutes.js`. 5 tables: accounts, characters, inventory_items, crafted_items, islands. All DB API routes require `x-api-key` header matching `GAME_API_GRUDA`. Bulk save/load endpoints: `POST /api/db/save-game` and `GET /api/db/load-game?discord_id=`. CRUD endpoints for each table under `/api/db/accounts`, `/api/db/characters`, `/api/db/inventory`, `/api/db/crafted`, `/api/db/islands`.
+
 ## External Dependencies
 - **React:** Frontend library.
 - **Vite:** Development server and build tool.
 - **Zustand:** State management library.
 - **Express:** Backend server.
 - **discord.js:** Discord API client library.
+- **pg:** PostgreSQL client library for Node.js.
 - **Google Fonts:** For Cinzel and Jost fonts.
 - **Web Audio API:** For in-game sound effects and music.
 

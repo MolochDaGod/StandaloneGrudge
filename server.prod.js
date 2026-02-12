@@ -2,6 +2,8 @@ import express from 'express';
 import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { initDatabase, testConnection } from './src/server/db.js';
+import { registerDbRoutes } from './src/server/dbRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -598,6 +600,13 @@ app.use(express.static(path.join(__dirname, 'dist'), {
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+
+registerDbRoutes(app);
+
+(async () => {
+  const connected = await testConnection();
+  if (connected) await initDatabase();
+})();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Grudge Warlords production server running on port ${PORT}`);

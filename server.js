@@ -1,5 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
+import { initDatabase, testConnection } from './src/server/db.js';
+import { registerDbRoutes } from './src/server/dbRoutes.js';
 
 const app = express();
 app.use(express.json());
@@ -672,6 +674,13 @@ app.get('/api/arena/stats', (req, res) => {
     recentBattles: arenaBattles.slice(-10).reverse(),
   });
 });
+
+registerDbRoutes(app);
+
+(async () => {
+  const connected = await testConnection();
+  if (connected) await initDatabase();
+})();
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Discord API server running on port ${PORT}`);
