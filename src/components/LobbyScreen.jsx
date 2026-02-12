@@ -330,7 +330,7 @@ const CLASS_EFFECTS = {
 
 const CLASS_ICON_MAP = {
   warrior: '/sprites/ui/icons/icon_crossed_swords.png',
-  mage: '/sprites/ui/icons/icon_crystal.png',
+  mage: '/sprites/ui/icons/icon_mage.png',
   worge: '/sprites/ui/icons/icon_wolf.png',
   ranger: '/sprites/ui/icons/icon_ranger.png',
 };
