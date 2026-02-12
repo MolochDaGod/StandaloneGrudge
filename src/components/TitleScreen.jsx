@@ -149,13 +149,6 @@ export default function TitleScreen() {
               delay={0.45}
             />
 
-            <MenuButton
-              label="GRUDGE STUDIO"
-              onClick={() => window.open('https://grudgestudio.com', '_blank')}
-              subtle
-              icon={<EssentialIcon name="Home" size={16} style={{ marginRight: 8 }} />}
-              delay={0.6}
-            />
           </div>
 
           <div style={{
@@ -168,10 +161,22 @@ export default function TitleScreen() {
         </div>
 
         <div style={{
-          position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center',
+          position: 'absolute', bottom: 8, left: 0, right: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
           color: 'var(--muted)', fontSize: '0.65rem', opacity: 0.3,
+          animation: 'fadeIn 1s ease 0.6s both',
         }}>
-          &copy; 2026 Grudge Studio &bull; Inspired by Final Fantasy VII
+          <span
+            onClick={() => window.open('https://grudgestudio.com', '_blank')}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, transition: 'opacity 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = ''}
+          >
+            <EssentialIcon name="Home" size={12} />
+            GRUDGE STUDIO
+          </span>
+          <span>&bull;</span>
+          <span>&copy; 2026 Grudge Studio &bull; Inspired by Final Fantasy VII</span>
         </div>
       </div>
     );
