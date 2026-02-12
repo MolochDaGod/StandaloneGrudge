@@ -9,6 +9,7 @@ import { showContextMenu } from './GameContextMenu';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
+import InventoryModal from './InventoryModal';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification } from '../data/attributes';
@@ -186,73 +187,35 @@ function HarvestingPopup({ onClose }) {
 }
 
 function GearPopup({ onClose }) {
-  const { heroRoster, activeHeroIds, inventory } = useGameStore();
+  const { heroRoster, activeHeroIds } = useGameStore();
   const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
   const [selectedHero, setSelectedHero] = useState(activeHeroes[0]?.id || null);
-  const hero = heroRoster.find(h => h.id === selectedHero);
-
-  const slotNames = ['weapon', 'helmet', 'armor', 'boots', 'ring', 'shield', 'accessory'];
 
   return (
-    <div className="ui-element panel-style" style={{
+    <div className="ui-element" style={{
       position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-      padding: 16, width: 380, maxHeight: 450, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h4 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', margin: 0 }}>
-          <InlineIcon name="shield" size={14} /> Gear Overview
-        </h4>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem' }}>×</button>
-      </div>
-
-      <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
-        {heroRoster.map(h => (
-          <button key={h.id} onClick={() => setSelectedHero(h.id)} style={{
-            background: selectedHero === h.id ? 'rgba(110,231,183,0.2)' : 'rgba(42,49,80,0.3)',
-            border: `1px solid ${selectedHero === h.id ? 'var(--accent)' : 'var(--border)'}`,
-            borderRadius: 6, padding: '3px 8px', cursor: 'pointer',
-            color: selectedHero === h.id ? 'var(--accent)' : 'var(--muted)',
-            fontSize: '0.6rem', fontWeight: 600,
-          }}>{h.name}</button>
-        ))}
-      </div>
-
-      {hero && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div style={{ width: 56, height: 56, overflow: 'hidden', borderRadius: 8, border: '2px solid var(--accent)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-              <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.7} speed={150} />
-            </div>
-            <div>
-              <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 700 }}>{hero.name}</div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.55rem' }}>
-                Lv.{hero.level} {raceDefinitions[hero.raceId]?.name} {classDefinitions[hero.classId]?.name}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-            {slotNames.map(slot => {
-              const eq = hero.equipment?.[slot];
-              return (
-                <div key={slot} style={{
-                  background: eq ? 'rgba(110,231,183,0.06)' : 'rgba(42,49,80,0.15)',
-                  border: `1px solid ${eq ? 'rgba(110,231,183,0.2)' : 'var(--border)'}`,
-                  borderRadius: 6, padding: '6px 8px',
-                }}>
-                  <div style={{ fontSize: '0.5rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{slot}</div>
-                  {eq ? (
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text)', fontWeight: 600 }}>{eq.name || `T${eq.tier} ${slot}`}</div>
-                  ) : (
-                    <div style={{ fontSize: '0.55rem', color: 'rgba(148,163,184,0.4)', fontStyle: 'italic' }}>Empty</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      {heroRoster.length > 1 && (
+        <div style={{
+          display: 'flex', gap: 3, marginBottom: 4, flexWrap: 'wrap',
+          background: 'rgba(41,64,64,0.9)', borderRadius: '4px 4px 0 0',
+          padding: '3px 6px', border: '1px solid rgba(96,56,32,0.5)',
+          borderBottom: 'none',
+        }}>
+          {heroRoster.map(h => (
+            <button key={h.id} onClick={() => setSelectedHero(h.id)} style={{
+              background: selectedHero === h.id ? 'rgba(80,144,112,0.6)' : 'rgba(42,49,80,0.3)',
+              border: `1px solid ${selectedHero === h.id ? '#509070' : 'rgba(96,56,32,0.4)'}`,
+              borderRadius: 2, padding: '2px 6px', cursor: 'pointer',
+              color: selectedHero === h.id ? '#e5d6a1' : 'rgba(229,214,161,0.5)',
+              fontSize: '0.55rem', fontWeight: 600, fontFamily: 'Cinzel, serif',
+              imageRendering: 'pixelated',
+            }}>{h.name}</button>
+          ))}
         </div>
       )}
+      <InventoryModal heroId={selectedHero} onClose={onClose} compact />
     </div>
   );
 }

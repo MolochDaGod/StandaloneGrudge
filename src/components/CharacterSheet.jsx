@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useGameStore from '../stores/gameStore';
 import { attributeDefinitions, calculateCombatPower } from '../data/attributes';
 import { classDefinitions } from '../data/classes';
@@ -6,13 +6,17 @@ import { raceDefinitions } from '../data/races';
 import { InlineIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
+import InventoryModal from './InventoryModal';
 
 export default function CharacterSheet() {
   const {
     setScreen, playerName, playerClass, playerRace, level, xp, xpToNext, gold,
     attributePoints, unspentPoints, allocatePoint, deallocatePoint,
-    getStats, victories, losses, playerHealth, playerMaxHealth
+    getStats, victories, losses, playerHealth, playerMaxHealth,
+    heroRoster, activeHeroIds,
   } = useGameStore();
+  const [showEquipment, setShowEquipment] = useState(false);
+  const activeHero = heroRoster.find(h => activeHeroIds.includes(h.id)) || heroRoster[0];
 
   const cls = classDefinitions[playerClass];
   const raceDef = playerRace ? raceDefinitions[playerRace] : null;
@@ -117,6 +121,25 @@ export default function CharacterSheet() {
               ))}
             </div>
           </div>
+
+          {activeHero && (
+            <div style={{ marginTop: 16 }}>
+              <button onClick={() => setShowEquipment(!showEquipment)} style={{
+                width: '100%', padding: '8px 16px',
+                background: showEquipment ? 'rgba(80,144,112,0.3)' : 'rgba(110,231,183,0.1)',
+                border: '1px solid rgba(110,231,183,0.3)', borderRadius: 8,
+                color: '#e5d6a1', cursor: 'pointer', fontFamily: 'Cinzel, serif',
+                fontSize: '0.85rem', fontWeight: 600,
+              }}>
+                <InlineIcon name="shield" size={14} /> {showEquipment ? 'Hide Equipment' : 'Show Equipment'}
+              </button>
+              {showEquipment && (
+                <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+                  <InventoryModal heroId={activeHero.id} onClose={() => setShowEquipment(false)} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div style={{ background: 'rgba(20,26,43,0.8)', border: '1px solid var(--border)', borderRadius: 14, padding: 20 }}>

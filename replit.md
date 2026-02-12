@@ -26,7 +26,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Custom VFX Effects:** 14 high-quality custom effect sprite sheets are wired into all class and enemy abilities, buffs, and weapon skills.
 - **Icon System:** A comprehensive sprite-based icon system (`ICON_REGISTRY`) with 80+ pixel art icons is used throughout the UI.
 - **Game Systems:**
-    - **Equipment:** An 8-tier upgrade system across 7 slots, with a paper-doll UI supporting drag-and-drop.
+    - **Equipment:** An 8-tier upgrade system across 7 slots, with a pixel art paper-doll inventory UI (`InventoryModal` component). Split-pane book layout with parchment aesthetic: left panel shows character sprite surrounded by 7 equipment slots (helmet, armor, weapon, offhand, feet, ring, relic), right panel has 4x4 inventory grid with pagination. Supports drag-and-drop equip, right-click auto-equip/unequip, and hover stat tooltips. Uses extracted assets from pixel art sprite sheet.
     - **Skill Trees:** Node graph layout with SVG bezier curves.
     - **Progression:** Includes training, auto-harvesting, and status effects.
     - **Abilities:** Customizable 5-slot ability loadouts.
