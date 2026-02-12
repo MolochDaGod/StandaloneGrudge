@@ -4202,7 +4202,7 @@ export default function WorldMap() {
       )}
 
       <div style={{
-        position: 'absolute', bottom: 60, right: 12, zIndex: MAP_LAYERS.DEV_TOOLBAR,
+        position: 'absolute', top: 12, right: 12, zIndex: MAP_LAYERS.DEV_TOOLBAR,
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         background: 'rgba(0,0,0,0.7)', borderRadius: 8, padding: '6px 4px',
         backdropFilter: 'blur(4px)', border: '1px solid rgba(255,215,0,0.15)',

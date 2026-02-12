@@ -147,8 +147,8 @@ function AdminGizmo() {
   return (
     <div id="admin-gizmo-root">
       <div style={{
-        position: 'fixed', bottom: 16, right: 16, zIndex: GIZMO_Z + 10,
-        display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
+        position: 'fixed', top: 16, left: 60, zIndex: GIZMO_Z + 10,
+        display: 'flex', flexDirection: 'row', gap: 8, alignItems: 'center',
       }}>
         <button
           onClick={() => setShowFrameEditor(f => !f)}
