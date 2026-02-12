@@ -26,7 +26,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Custom VFX Effects:** 14 high-quality custom effect sprite sheets for abilities and skills.
 - **Icon System:** Comprehensive sprite-based `ICON_REGISTRY` with 80+ pixel art icons.
 - **Game Systems:**
-    - **Equipment:** 8-tier upgrade system across 7 slots with a pixel art paper-doll inventory UI (`InventoryModal`) supporting drag-and-drop.
+    - **Equipment:** 8-tier upgrade system across 7 slots with a pixel art paper-doll inventory UI (`InventoryModal`) supporting drag-and-drop. Tier scaling uses multiplicative + additive formula: `base * mult + flat`. Primary stats (damage, health, mana, defense) get full flat bonuses; secondary stats (crit, block, evasion) get 15% of flat bonus. Multipliers: T1=1.0x to T8=45.0x. `DISPLAY_STAT_MAP` provides UI labels and colors. `scaleStat`/`scaleItemStats` functions centralize all stat calculations.
     - **Skill Trees:** Node graph layout with SVG bezier curves.
     - **Progression:** Training, auto-harvesting, status effects.
     - **Abilities:** Customizable 5-slot ability loadouts.
@@ -38,7 +38,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Particle Effects:** CSS-animated in-battle particles, canvas-based title screen particles, and CSS keyframe animations for UI.
 - **World Map:** RTS-style 2D map with zoom/pan, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle. Features BFS pathfinding, portal fast travel, and god fights.
 - **Enemy System:** `createRaceClassEnemy` for dynamic enemy generation. Includes unique boss abilities and themed enemy packs.
-- **Economy:** Reduced gold gain from battles, supplemented by a harvest system.
+- **Economy:** Reduced gold gain from battles, supplemented by a harvest system. Shock Sweepers (purchasable at 100% zone conquest) provide passive harvesting at 1.5x base rate. Wandering Merchant NPC spawns periodically with rare weapons/relics at premium prices.
 - **Hero Roster:** Manages multiple heroes with independent progression.
 - **Zone Conquer System:** Impacts XP gain and auto-harvest.
 - **Zone Quest System:** 29 zones each with 4 optional quests.

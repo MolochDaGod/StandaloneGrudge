@@ -5,7 +5,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
-import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory, WEAPON_TYPES } from '../data/equipment';
+import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory, WEAPON_TYPES, allEquipmentTemplates, scaleItemStats, TIERS } from '../data/equipment';
 import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
@@ -406,6 +406,10 @@ const useGameStore = create(persist((set, get) => ({
   activeHarvests: {},
   harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
   lastHarvestTick: Date.now(),
+  shockSweepers: [],
+  shockSweeperNextId: 1,
+  wanderingMerchant: null,
+  merchantLastSpawn: 0,
   randomEvents: [],
   lastEventSpawn: Date.now(),
   eventBonusRewards: null,
@@ -2393,6 +2397,18 @@ const useGameStore = create(persist((set, get) => ({
       }
     });
 
+    (state.shockSweepers || []).forEach(sweeper => {
+      if (!sweeper.assignedNode) return;
+      const node = state.harvestNodes.find(n => n.id === sweeper.assignedNode);
+      if (!node) return;
+      const sweeperRate = node.baseRate * 1.5 * conquerHarvestMult * elapsed;
+      if (node.resource === 'gold') {
+        goldGained += Math.floor(sweeperRate);
+      } else {
+        newResources[node.resource] = floorTo2((newResources[node.resource] || 0) + sweeperRate);
+      }
+    });
+
     if (state.heroStandingZone) {
       const zoneId = state.heroStandingZone;
       const current = zoneConquer[zoneId] || 0;
@@ -2417,7 +2433,129 @@ const useGameStore = create(persist((set, get) => ({
     const updates = { lastHarvestTick: now, harvestResources: newResources };
     if (goldGained > 0) updates.gold = state.gold + goldGained;
     if (conquerChanged) updates.zoneConquer = zoneConquer;
+
+    if (state.wanderingMerchant && now >= state.wanderingMerchant.expiresAt) {
+      updates.wanderingMerchant = null;
+    }
+
     set(updates);
+  },
+
+  purchaseShockSweeper: () => {
+    const state = get();
+    const SWEEPER_COST = 2000;
+    const MAX_SWEEPERS = 5;
+    const zones = Object.values(state.zoneConquer || {});
+    const totalZones = Object.keys(state.zoneConquer || {}).length;
+    const allConquered = totalZones > 0 && zones.every(v => v >= 100);
+    if (!allConquered) return { success: false, reason: 'All zones must be 100% conquered' };
+    if (state.shockSweepers.length >= MAX_SWEEPERS) return { success: false, reason: 'Maximum Shock Sweepers reached (5)' };
+    if (state.gold < SWEEPER_COST) return { success: false, reason: 'Not enough gold (2000 required)' };
+    const newSweeper = {
+      id: `sweeper_${state.shockSweeperNextId}`,
+      name: `Shock Sweeper ${state.shockSweeperNextId}`,
+      assignedNode: null,
+      purchasedAt: Date.now(),
+    };
+    set({
+      gold: state.gold - SWEEPER_COST,
+      shockSweepers: [...state.shockSweepers, newSweeper],
+      shockSweeperNextId: state.shockSweeperNextId + 1,
+    });
+    return { success: true };
+  },
+
+  assignShockSweeper: (sweeperId, nodeId) => {
+    const state = get();
+    const sweepers = state.shockSweepers.map(s =>
+      s.id === sweeperId ? { ...s, assignedNode: nodeId } : s
+    );
+    set({ shockSweepers: sweepers });
+  },
+
+  recallShockSweeper: (sweeperId) => {
+    const state = get();
+    const sweepers = state.shockSweepers.map(s =>
+      s.id === sweeperId ? { ...s, assignedNode: null } : s
+    );
+    set({ shockSweepers: sweepers });
+  },
+
+  spawnWanderingMerchant: () => {
+    const state = get();
+    const now = Date.now();
+    const MERCHANT_COOLDOWN = 5 * 60 * 1000;
+    if (now - state.merchantLastSpawn < MERCHANT_COOLDOWN) return;
+    if (state.wanderingMerchant) return;
+
+    const playerLevel = state.level || 1;
+    const maxTier = Math.min(8, Math.max(2, Math.ceil(playerLevel / 2.5)));
+    const items = [];
+    const rareTemplates = allEquipmentTemplates.filter(t =>
+      t.slot === 'weapon' || t.slot === 'relic' || t.slot === 'ring'
+    );
+    const shuffled = [...rareTemplates].sort(() => Math.random() - 0.5);
+    const count = 4 + Math.floor(Math.random() * 3);
+
+    for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+      const template = shuffled[i];
+      const tier = Math.max(2, maxTier - Math.floor(Math.random() * 2));
+      const scaledStats = scaleItemStats(template.stats, tier);
+      items.push({
+        id: `merchant_${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        grudgeUuid: null,
+        templateId: template.id,
+        name: template.name,
+        slot: template.slot,
+        icon: template.icon,
+        weaponType: template.weaponType || null,
+        armorType: template.armorType || null,
+        helmetType: template.helmetType || null,
+        feetType: template.feetType || null,
+        relicType: template.relicType || null,
+        tier,
+        classReq: template.classReq || null,
+        stats: scaledStats,
+        merchantItem: true,
+      });
+    }
+
+    const conqueredZones = Object.keys(state.zoneConquer || {}).filter(z => (state.zoneConquer[z] || 0) > 0);
+    const spawnZone = conqueredZones.length > 0
+      ? conqueredZones[Math.floor(Math.random() * conqueredZones.length)]
+      : null;
+
+    set({
+      wanderingMerchant: {
+        inventory: items,
+        zone: spawnZone,
+        spawnedAt: now,
+        expiresAt: now + 3 * 60 * 1000,
+      },
+      merchantLastSpawn: now,
+    });
+  },
+
+  buyFromMerchant: (itemId) => {
+    const state = get();
+    if (!state.wanderingMerchant) return { success: false, reason: 'No merchant available' };
+    const item = state.wanderingMerchant.inventory.find(i => i.id === itemId);
+    if (!item) return { success: false, reason: 'Item not found' };
+    const price = Math.floor(getItemPrice(item) * 1.5);
+    if (state.gold < price) return { success: false, reason: 'Not enough gold' };
+    const newInventory = state.wanderingMerchant.inventory.filter(i => i.id !== itemId);
+    set({
+      gold: state.gold - price,
+      inventory: [...state.inventory, item],
+      wanderingMerchant: newInventory.length > 0
+        ? { ...state.wanderingMerchant, inventory: newInventory }
+        : null,
+    });
+    return { success: true, item };
+  },
+
+  dismissMerchant: () => {
+    set({ wanderingMerchant: null });
   },
 
   setHeroStandingZone: (zoneId) => {

@@ -2,14 +2,66 @@ export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'helmet', 'armor', 'feet', 
 
 export const TIERS = {
   1: { name: 'Tier 1', color: '#9ca3af', multiplier: 1.0 },
-  2: { name: 'Tier 2', color: '#22c55e', multiplier: 1.3 },
-  3: { name: 'Tier 3', color: '#3b82f6', multiplier: 1.65 },
-  4: { name: 'Tier 4', color: '#a855f7', multiplier: 2.1 },
-  5: { name: 'Tier 5', color: '#f59e0b', multiplier: 2.7 },
-  6: { name: 'Tier 6', color: '#ef4444', multiplier: 3.4 },
-  7: { name: 'Tier 7', color: '#06b6d4', multiplier: 4.3 },
-  8: { name: 'Tier 8', color: '#f472b6', multiplier: 5.5 },
+  2: { name: 'Tier 2', color: '#22c55e', multiplier: 2.5 },
+  3: { name: 'Tier 3', color: '#3b82f6', multiplier: 5.0 },
+  4: { name: 'Tier 4', color: '#a855f7', multiplier: 8.5 },
+  5: { name: 'Tier 5', color: '#f59e0b', multiplier: 13.0 },
+  6: { name: 'Tier 6', color: '#ef4444', multiplier: 20.0 },
+  7: { name: 'Tier 7', color: '#06b6d4', multiplier: 30.0 },
+  8: { name: 'Tier 8', color: '#f472b6', multiplier: 45.0 },
 };
+
+export const TIER_FLAT_BONUS = {
+  1: 0,
+  2: 1,
+  3: 3,
+  4: 5,
+  5: 8,
+  6: 12,
+  7: 18,
+  8: 25,
+};
+
+export const DISPLAY_STAT_MAP = {
+  physicalDamage: { label: 'Damage', color: '#ef4444', icon: 'sword' },
+  magicDamage: { label: 'Damage', color: '#a855f7', icon: 'wand' },
+  attackSpeed: { label: 'Speed', color: '#22c55e', icon: 'lightning' },
+  criticalChance: { label: 'Crit', color: '#f59e0b', icon: 'target' },
+  criticalDamage: { label: 'Combo', color: '#f472b6', icon: 'sparkle' },
+  block: { label: 'Block', color: '#3b82f6', icon: 'shield' },
+  defense: { label: 'Defense', color: '#06b6d4', icon: 'armor' },
+  health: { label: 'Health', color: '#22c55e', icon: 'heart' },
+  mana: { label: 'Mana', color: '#3b82f6', icon: 'crystal' },
+  evasion: { label: 'Evasion', color: '#a3e635', icon: 'wind' },
+  resistance: { label: 'Resist', color: '#c084fc', icon: 'shield' },
+  armorPenetration: { label: 'Pen', color: '#fb923c', icon: 'lance' },
+  drainHealth: { label: 'Drain', color: '#dc2626', icon: 'skull' },
+  damageReduction: { label: 'DR', color: '#64748b', icon: 'shield' },
+  manaRegen: { label: 'MP Regen', color: '#60a5fa', icon: 'crystal' },
+  healthRegen: { label: 'HP Regen', color: '#4ade80', icon: 'heart' },
+  cooldownReduction: { label: 'CDR', color: '#c084fc', icon: 'sparkle' },
+  stamina: { label: 'Stamina', color: '#fbbf24', icon: 'energy' },
+};
+
+const PRIMARY_STATS = new Set([
+  'physicalDamage', 'magicDamage', 'health', 'mana', 'stamina', 'defense',
+]);
+
+export function scaleStat(baseStat, tier, statKey) {
+  const mult = TIERS[tier]?.multiplier || 1;
+  const flat = TIER_FLAT_BONUS[tier] || 0;
+  const isPrimary = !statKey || PRIMARY_STATS.has(statKey);
+  const effectiveFlat = isPrimary ? flat : Math.round(flat * 0.15);
+  return Math.round((baseStat * mult + effectiveFlat) * 10) / 10;
+}
+
+export function scaleItemStats(templateStats, tier) {
+  const scaled = {};
+  Object.entries(templateStats).forEach(([key, val]) => {
+    scaled[key] = scaleStat(val, tier, key);
+  });
+  return scaled;
+}
 
 export const UPGRADE_COSTS = { 1: 100, 2: 250, 3: 500, 4: 1000, 5: 2500, 6: 5000, 7: 10000 };
 
@@ -494,11 +546,7 @@ export function generateLoot(enemyTemplateId, playerLevel, isBoss = false) {
   for (let i = 0; i < itemCount; i++) {
     const template = allEquipmentTemplates[Math.floor(Math.random() * allEquipmentTemplates.length)];
     const tier = getDropTier(playerLevel, isBoss);
-    const mult = TIERS[tier].multiplier;
-    const scaledStats = {};
-    Object.entries(template.stats).forEach(([key, val]) => {
-      scaledStats[key] = Math.round(val * mult * 10) / 10;
-    });
+    const scaledStats = scaleItemStats(template.stats, tier);
 
     drops.push({
       id: `${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -540,11 +588,7 @@ export function upgradeItem(item) {
   const template = allEquipmentTemplates.find(t => t.id === item.templateId);
   if (!template) return null;
 
-  const mult = TIERS[newTier].multiplier;
-  const scaledStats = {};
-  Object.entries(template.stats).forEach(([key, val]) => {
-    scaledStats[key] = Math.round(val * mult * 10) / 10;
-  });
+  const scaledStats = scaleItemStats(template.stats, newTier);
 
   return {
     ...item,
@@ -725,11 +769,7 @@ export function generateShopInventory(playerLevel, classId) {
     if (roll < 0.3) tier = Math.max(1, maxTier - 1);
     if (roll < 0.1) tier = Math.max(1, maxTier - 2);
     
-    const mult = TIERS[tier].multiplier;
-    const scaledStats = {};
-    Object.entries(template.stats).forEach(([key, val]) => {
-      scaledStats[key] = Math.round(val * mult * 10) / 10;
-    });
+    const scaledStats = scaleItemStats(template.stats, tier);
     
     const item = {
       id: `shop_${template.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
