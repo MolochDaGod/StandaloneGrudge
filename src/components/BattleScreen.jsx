@@ -2241,7 +2241,9 @@ export default function BattleScreen() {
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
-          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * bossScaleVal;
+          const BATTLE_SCALE_OVERRIDES = { human_warrior: 2 };
+          const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * bossScaleVal * comboScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const footCrop = 0.82;

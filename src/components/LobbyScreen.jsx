@@ -473,10 +473,12 @@ function HeroSlideshow() {
 
   const SPRITE_SCALE_OVERRIDES = {
     undead_warrior: 2,
+    human_warrior: 2,
   };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
     undead_warrior: 60,
+    human_warrior: 60,
   };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
   const scaleOverride = SPRITE_SCALE_OVERRIDES[`${combo.raceId}_${combo.classId}`] || null;
