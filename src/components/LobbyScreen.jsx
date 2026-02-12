@@ -344,7 +344,7 @@ function SlideshowVFX({ effectKey, playing, x, y }) {
 
   if (!sprite || !playing) return null;
 
-  const displaySize = 180;
+  const displaySize = 280;
   const scaleX = displaySize / frameW;
   const scaleY = displaySize / frameH;
   const col = frame % cols;
@@ -633,7 +633,7 @@ function HeroSlideshow() {
         <div style={{
           position: 'absolute', top: '15%', left: '50%',
           transform: 'translateX(-50%)',
-          textAlign: 'center', zIndex: 6,
+          textAlign: 'center', zIndex: 4,
           opacity: textVisible ? 1 : 0,
           transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
           pointerEvents: 'none',
@@ -660,14 +660,14 @@ function HeroSlideshow() {
 
         <div style={{
           position: 'absolute',
-          left: `${spriteX}%`, bottom: '14%',
-          zIndex: 5,
+          left: `${spriteX}%`, bottom: '5%',
+          width: 0, height: 0,
+          zIndex: 7,
           willChange: 'left',
-          transformOrigin: 'bottom center',
         }}>
           <div style={{
             position: 'absolute',
-            width: 250, height: 250,
+            width: 300, height: 300,
             left: '50%', top: '50%',
             transform: 'translate(-50%, -50%)',
             borderRadius: '50%',
@@ -675,13 +675,15 @@ function HeroSlideshow() {
             opacity: auraIntensity,
             transition: 'opacity 0.8s ease',
             animation: auraIntensity > 0 ? 'ssAuraPulse 2s ease-in-out infinite' : 'none',
-            zIndex: 1, pointerEvents: 'none',
+            pointerEvents: 'none',
           }} />
 
           <div style={{
-            position: 'relative', zIndex: 3,
+            position: 'absolute',
+            left: '50%', bottom: 0,
+            transform: `translateX(-50%) ${showTransform ? 'scale(0.6)' : 'scale(1)'}`,
+            transformOrigin: 'bottom center',
             opacity: showTransform ? 0 : 1,
-            transform: showTransform ? 'scale(0.6)' : 'scale(1)',
             transition: 'all 0.4s ease',
           }}>
             <SpriteAnimation
@@ -696,7 +698,10 @@ function HeroSlideshow() {
 
           {isWorge && showTransform && worgeTransformData && (
             <div style={{
-              position: 'absolute', left: 0, top: 0, zIndex: 4,
+              position: 'absolute',
+              left: '50%', bottom: 0,
+              transform: 'translateX(-50%)',
+              transformOrigin: 'bottom center',
               animation: 'ssTransformFlash 0.4s ease-out',
             }}>
               <SpriteAnimation
@@ -713,7 +718,7 @@ function HeroSlideshow() {
           <ChatBubble text={slogan} visible={showBubble} />
         </div>
 
-        <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="70%" y="45%" />
+        <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="70%" y="50%" />
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
