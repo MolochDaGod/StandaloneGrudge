@@ -7,11 +7,12 @@
 //   1. GAME FRAME (.game-frame) - contains all game content
 //   2. BODY PORTAL (document.body) - tooltips only
 //
-// Within .game-frame, the ornate border frame (::after) sits
-// at UI_FRAME (10500). The content wrapper in App.jsx is at
-// z-index 10501, placing ALL screen content above the frame.
-// Internal screen z-indices (map layers, battle layers, scene
-// layers) are relative within that stacking context.
+// Within .game-frame, the content wrapper in App.jsx is at
+// z-index 10501. The ornate border frame (::after) sits at
+// UI_FRAME (10505), ABOVE the content so it overlays the
+// viewport edges. Internal screen z-indices (map layers,
+// battle layers, scene layers) are relative within the
+// content wrapper's stacking context.
 //
 // Overlays (Settings, LootPopup, AdminGizmo) render as siblings
 // of the content wrapper and use elevated z-indices (10510+).
@@ -145,7 +146,7 @@ export const BOTTOM_BAR_POPUPS = 10700;
 // The ornate fantasy border. Set via CSS custom property.
 // Everything below this is "inside" the frame.
 // Everything above this appears "on top of" the frame.
-export const UI_FRAME = 10500;
+export const UI_FRAME = 10505;
 
 // ─── LAYER 16: ABOVE-FRAME UI (10501–10502) ────────────────
 // Frame editor mask and controls that overlay the frame itself

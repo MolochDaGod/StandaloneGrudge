@@ -70,7 +70,7 @@ body {
   background-repeat: no-repeat;
   background-position: center center;
   pointer-events: none;
-  z-index: var(--z-ui-frame, 10500);
+  z-index: var(--z-ui-frame, 10505);
   clip-path: inset(var(--frame-crop-top, 0%) var(--frame-crop-right, 0%) var(--frame-crop-bottom, 0%) var(--frame-crop-left, 0%));
   opacity: var(--frame-opacity, 1);
   display: var(--frame-display, block);
