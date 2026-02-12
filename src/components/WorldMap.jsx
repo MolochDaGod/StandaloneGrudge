@@ -21,6 +21,8 @@ import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { CHAT_BUBBLES } from '../constants/layers';
 import { locationPositions, pathConnections, locationIcons, terrainRegions, portalLocations } from '../data/worldMapData';
 import MapOverlay from './MapOverlay';
+import GrudaLeaderboard from './GrudaLeaderboard';
+import { RankBadgeInline } from './RankBadge';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -389,6 +391,7 @@ export default function WorldMap() {
   const [showWarParty, setShowWarParty] = useState(false);
   const [showGruda, setShowGruda] = useState(false);
   const [grudaCopied, setGrudaCopied] = useState(null);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [upgradeHeroId, setUpgradeHeroId] = useState(null);
   const [upgradeMsg, setUpgradeMsg] = useState(null);
   const [tradeTab, setTradeTab] = useState('buy');
@@ -3417,6 +3420,15 @@ export default function WorldMap() {
               }}>
                 🌐 Open Arena Lobby
               </button>
+
+              <button onClick={() => { setShowLeaderboard(true); setShowGruda(false); }} style={{
+                background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.15))',
+                border: '1px solid rgba(250,172,71,0.4)',
+                borderRadius: 6, padding: '6px 12px', color: 'var(--gold)',
+                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+              }}>
+                <InlineIcon name="medal" size={12} /> Leaderboard
+              </button>
             </div>
 
             <div style={{ marginTop: 10 }}>
@@ -3476,6 +3488,10 @@ export default function WorldMap() {
               Submit your team snapshot to the Ranked PvP Arena. Other players can challenge your team. Earn gold, resources, and equipment for each win. After 3 losses your team moves to Unranked. Posting a new team replaces your ranked entry.
             </div>
           </div>
+        )}
+
+        {showLeaderboard && (
+          <GrudaLeaderboard onClose={() => setShowLeaderboard(false)} />
         )}
 
         <MapBottomBar

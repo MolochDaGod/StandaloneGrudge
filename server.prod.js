@@ -551,16 +551,24 @@ app.post('/api/arena/battle/result', (req, res) => {
         }],
       }).catch(err => console.error('Relegation webhook error:', err.message));
     } else if (team.wins > 0 && team.wins % 5 === 0 && result === 'team_won') {
+      const rankTiers = [
+        { name: 'Bronze', minWins: 0 }, { name: 'Silver', minWins: 5 },
+        { name: 'Gold', minWins: 15 }, { name: 'Platinum', minWins: 30 },
+        { name: 'Diamond', minWins: 50 }, { name: 'Legend', minWins: 100 },
+      ];
+      let rank = rankTiers[0];
+      for (const t of rankTiers) { if (team.wins >= t.minWins) rank = t; }
       sendWebhookMessage({
         embeds: [{
-          title: 'Win Streak!',
-          description: `**${team.ownerName}**'s team reached **${team.wins} wins** in the Arena!`,
+          title: `${rank.name === 'Legend' ? '🏆' : '⚔️'} Win Streak! ${rank.name} Rank`,
+          description: `**${team.ownerName}**'s team reached **${team.wins} wins** in the Arena! Rank: **${rank.name}**`,
           color: EMBED_COLORS.milestone,
           fields: [
             { name: 'Record', value: `${team.wins}W / ${team.losses}L`, inline: true },
+            { name: 'Rank', value: `${rank.name}`, inline: true },
             { name: 'Status', value: team.status, inline: true },
           ],
-          footer: { text: 'GRUDA PvP Arena' },
+          footer: { text: 'GRUDA PvP Arena | grudgewarlords.com/arena' },
           timestamp: new Date().toISOString(),
         }],
       }).catch(err => console.error('Win streak webhook error:', err.message));
@@ -589,6 +597,25 @@ app.get('/api/arena/stats', (req, res) => {
     unrankedTeams: all.filter(t => t.status === 'unranked').length,
     totalBattles: arenaBattles.length, recentBattles: arenaBattles.slice(-10).reverse(),
   });
+});
+
+app.get('/api/arena/leaderboard', (req, res) => {
+  const { limit: lim } = req.query;
+  const pageSize = Math.min(100, Math.max(1, parseInt(lim) || 20));
+  const all = Array.from(arenaTeams.values());
+  const ranked = all
+    .filter(t => t.totalBattles > 0)
+    .map(t => ({
+      teamId: t.teamId, ownerName: t.ownerName, status: t.status,
+      wins: t.wins, losses: t.losses, totalBattles: t.totalBattles,
+      avgLevel: t.avgLevel, heroCount: t.heroCount,
+      heroes: t.heroes.map(h => ({ name: h.name, raceId: h.raceId, classId: h.classId, level: h.level || 1 })),
+      winRate: t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0,
+      createdAt: t.createdAt,
+    }))
+    .sort((a, b) => b.wins - a.wins || a.losses - b.losses || b.winRate - a.winRate);
+  const leaderboard = ranked.slice(0, pageSize).map((t, i) => ({ ...t, rank: i + 1 }));
+  res.json({ leaderboard, totalEntries: ranked.length, updatedAt: Date.now() });
 });
 
 app.use(express.static(path.join(__dirname, 'dist'), {

@@ -10,6 +10,7 @@ import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIco
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
+import PixelBar, { ActionTimerBar } from './PixelBar';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
@@ -2855,25 +2856,39 @@ export default function BattleScreen() {
           }}>
             {playerTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
-              const hpColor = !unit.alive ? '#555' : hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
+              const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hpGreen' : hpPct > 30 ? 'stamina' : 'hp';
               const grudgePct = Math.min(100, unit.grudge || 0);
+              const isCurrentTurn = unit.id === currentUnitId;
+              const turnIdx = battleTurnOrder.indexOf(unit.id);
+              const totalUnits = battleTurnOrder.length;
+              const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
               return (
-                <div key={unit.id} style={{ opacity: unit.alive ? 1 : 0.4 }}>
+                <div key={unit.id} style={{
+                  opacity: unit.alive ? 1 : 0.4,
+                  borderLeft: isCurrentTurn ? '2px solid var(--accent)' : '2px solid transparent',
+                  paddingLeft: 3,
+                  transition: 'border-color 0.3s',
+                }}>
                   <div style={{
                     fontSize: '0.5rem', fontWeight: 700,
-                    color: unit.id === currentUnitId ? 'var(--accent)' : '#93c5fd',
+                    color: isCurrentTurn ? 'var(--accent)' : '#93c5fd',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginBottom: 1,
-                  }}>{unit.name}</div>
-                  <MiniBar current={unit.health} max={unit.maxHealth} color={hpColor} height={5} width={128} />
+                    display: 'flex', alignItems: 'center', gap: 3,
+                  }}>
+                    <span>{unit.name}</span>
+                    {isCurrentTurn && <span style={{ fontSize: '0.4rem', color: 'var(--accent)', animation: 'pulse 1s infinite' }}>ACT</span>}
+                  </div>
+                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
                   <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={3} width={62} />
-                    <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={3} width={62} />
+                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={5} width={59} />
+                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={5} width={59} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                    <MiniBar current={grudgePct} max={100} color="#dc2626" height={3} width={grudgePct >= 100 ? 96 : 128} />
+                    <ActionTimerBar progress={actionProgress} width={grudgePct >= 100 ? 70 : 90} height={4} isActive={isCurrentTurn} />
+                    <PixelBar current={grudgePct} max={100} preset="grudge" height={4} width={grudgePct >= 100 ? 42 : 28} />
                     {grudgePct >= 100 && (
-                      <span style={{ fontSize: '0.4rem', color: '#ef4444', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
+                      <span style={{ fontSize: '0.35rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
                     )}
                   </div>
                 </div>
@@ -3385,25 +3400,39 @@ export default function BattleScreen() {
           }}>
             {enemyTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
-              const hpColor = !unit.alive ? '#555' : hpPct > 60 ? '#ef4444' : hpPct > 30 ? '#f59e0b' : '#22c55e';
+              const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hp' : hpPct > 30 ? 'stamina' : 'hpGreen';
+              const isCurrentTurn = unit.id === currentUnitId;
+              const turnIdx = battleTurnOrder.indexOf(unit.id);
+              const totalUnits = battleTurnOrder.length;
+              const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
               return (
-                <div key={unit.id} style={{ opacity: unit.alive ? 1 : 0.4 }}>
+                <div key={unit.id} style={{
+                  opacity: unit.alive ? 1 : 0.4,
+                  borderRight: isCurrentTurn ? '2px solid var(--danger)' : '2px solid transparent',
+                  paddingRight: 3,
+                  transition: 'border-color 0.3s',
+                }}>
                   <div style={{
                     fontSize: '0.5rem', fontWeight: 700,
-                    color: unit.id === currentUnitId ? 'var(--danger)' : '#fca5a5',
+                    color: isCurrentTurn ? 'var(--danger)' : '#fca5a5',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginBottom: 1, textAlign: 'right',
-                  }}>{unit.name}</div>
-                  <MiniBar current={unit.health} max={unit.maxHealth} color={hpColor} height={5} width={128} />
-                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={3} width={62} />
-                    <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={3} width={62} />
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3,
+                  }}>
+                    {isCurrentTurn && <span style={{ fontSize: '0.4rem', color: '#ef4444', animation: 'pulse 1s infinite' }}>ACT</span>}
+                    <span>{unit.name}</span>
                   </div>
-                  {unit.isBoss && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                      <MiniBar current={unit.grudge || 0} max={100} color="#dc2626" height={3} width={128} />
-                    </div>
-                  )}
+                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
+                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
+                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={5} width={59} />
+                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={5} width={59} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
+                    <ActionTimerBar progress={actionProgress} width={unit.isBoss ? 70 : 122} height={4} isActive={isCurrentTurn} />
+                    {unit.isBoss && (
+                      <PixelBar current={unit.grudge || 0} max={100} preset="grudge" height={4} width={48} />
+                    )}
+                  </div>
                 </div>
               );
             })}
