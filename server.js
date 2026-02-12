@@ -43,13 +43,14 @@ function getPublicOrigin(req) {
 }
 
 app.get('/api/discord/login', (req, res) => {
+  const redirectUrl = req.query.redirect_uri || null;
   const origin = getPublicOrigin(req);
-  const redirectUri = encodeURIComponent(`${origin}/discordauth`);
+  const redirectUri = redirectUrl || `${origin}/discordauth`;
   const scope = encodeURIComponent('identify email guilds.join');
   const state = crypto.randomBytes(16).toString('hex');
-  pendingStates.set(state, Date.now());
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}`;
-  res.json({ url, state });
+  pendingStates.set(state, { ts: Date.now(), redirectUri });
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=${state}`;
+  res.json({ url, state, clientId: DISCORD_CLIENT_ID, scope: 'identify email guilds.join' });
 });
 
 app.post('/api/discord/callback', async (req, res) => {
@@ -59,15 +60,16 @@ app.post('/api/discord/callback', async (req, res) => {
   if (!state || !pendingStates.has(state)) {
     return res.status(403).json({ error: 'Invalid or missing state parameter' });
   }
+  const stateEntry = pendingStates.get(state);
   pendingStates.delete(state);
 
   for (const [k, v] of pendingStates) {
-    if (Date.now() - v > 600000) pendingStates.delete(k);
+    const ts = typeof v === 'object' ? v.ts : v;
+    if (Date.now() - ts > 600000) pendingStates.delete(k);
   }
 
   try {
-    const origin = getPublicOrigin(req);
-    const redirectUri = `${origin}/discordauth`;
+    const redirectUri = req.body.redirect_uri || (typeof stateEntry === 'object' ? stateEntry.redirectUri : null) || `${getPublicOrigin(req)}/discordauth`;
 
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
