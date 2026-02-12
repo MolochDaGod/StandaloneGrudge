@@ -637,11 +637,29 @@ function HeroSlideshow() {
   const [editorX, setEditorX] = useState(0);
   const [editorY, setEditorY] = useState(0);
   const [editorScale, setEditorScale] = useState(1);
+  const [editorSaved, setEditorSaved] = useState(false);
   const draggingRef = useRef(false);
   const dragStartRef = useRef({ mx: 0, my: 0, sx: 0, sy: 0 });
   const containerRef = useRef(null);
   const attackRef = useRef('attack1');
   const timerRefs = useRef([]);
+  const indexRef = useRef(index);
+  indexRef.current = index;
+
+  const getSavedPositions = () => {
+    try {
+      return JSON.parse(localStorage.getItem('slideshow_positions') || '{}');
+    } catch { return {}; }
+  };
+  const saveSpritePosition = (comboKey, x, y, scale) => {
+    const saved = getSavedPositions();
+    saved[comboKey] = { x, y, scale };
+    localStorage.setItem('slideshow_positions', JSON.stringify(saved));
+  };
+  const loadSpritePosition = (comboKey) => {
+    const saved = getSavedPositions();
+    return saved[comboKey] || null;
+  };
 
   const combo = ALL_COMBOS[index];
   const race = raceDefinitions[combo.raceId];
@@ -677,9 +695,11 @@ function HeroSlideshow() {
     orc_ranger: -30,
     elf_mage: -30,
   };
-  const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
-  const spriteXOffset = SPRITE_X_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
-  const scaleOverride = SPRITE_SCALE_OVERRIDES[`${combo.raceId}_${combo.classId}`] || null;
+  const comboKey = `${combo.raceId}_${combo.classId}`;
+  const savedPos = loadSpritePosition(comboKey);
+  const spriteYOffset = savedPos ? savedPos.y : (SPRITE_Y_OFFSETS[comboKey] || 0);
+  const spriteXOffset = savedPos ? savedPos.x : (SPRITE_X_OFFSETS[comboKey] || 0);
+  const scaleOverride = savedPos ? savedPos.scale : (SPRITE_SCALE_OVERRIDES[comboKey] || null);
 
   const targetHeight = 240;
   const spriteFrameH = spriteData?.frameHeight || 100;
@@ -712,14 +732,36 @@ function HeroSlideshow() {
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         setEditorY(y => y - step);
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        const ck = `${ALL_COMBOS[indexRef.current].raceId}_${ALL_COMBOS[indexRef.current].classId}`;
+        const curSaved = getSavedPositions();
+        const curX = (curSaved[ck]?.x || SPRITE_X_OFFSETS[ck] || 0);
+        const curY = (curSaved[ck]?.y || SPRITE_Y_OFFSETS[ck] || 0);
+        const curScaleOv = curSaved[ck]?.scale || SPRITE_SCALE_OVERRIDES[ck] || 1;
+        const finalX = curX + editorX;
+        const finalY = curY + editorY;
+        const finalScale = Math.round(curScaleOv * editorScale * 100) / 100;
+        saveSpritePosition(ck, finalX, finalY, finalScale);
+        setEditorX(0); setEditorY(0); setEditorScale(1);
+        setEditorSaved(true);
+        setTimeout(() => setEditorSaved(false), 1500);
       } else if (e.key === 'Escape') {
         setEditorMode(false);
       } else if (e.key === '>' || e.key === '.') {
-        setIndex(prev => (prev + 1) % ALL_COMBOS.length);
-        setEditorX(0); setEditorY(0); setEditorScale(1);
+        setIndex(prev => {
+          const next = (prev + 1) % ALL_COMBOS.length;
+          const nk = `${ALL_COMBOS[next].raceId}_${ALL_COMBOS[next].classId}`;
+          const np = loadSpritePosition(nk);
+          setEditorX(0); setEditorY(0); setEditorScale(1);
+          return next;
+        });
       } else if (e.key === '<' || e.key === ',') {
-        setIndex(prev => (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length);
-        setEditorX(0); setEditorY(0); setEditorScale(1);
+        setIndex(prev => {
+          const next = (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length;
+          setEditorX(0); setEditorY(0); setEditorScale(1);
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', handleKey);
@@ -1210,16 +1252,23 @@ function HeroSlideshow() {
             Drag to move | +/- scale | Arrows to nudge (Shift=10x)
           </div>
           <div style={{ color: '#aaa' }}>
-            {'< > to cycle heroes | Esc to exit'}
+            {'< > to cycle heroes | S to save | Esc to exit'}
           </div>
+          {editorSaved && (
+            <div style={{
+              color: '#22c55e', fontWeight: 700, marginTop: 4, fontSize: '0.8rem',
+              animation: 'ssFadeIn 0.3s ease',
+            }}>
+              SAVED {comboKey}
+            </div>
+          )}
+          {savedPos && !editorSaved && (
+            <div style={{ color: '#22d3ee', marginTop: 4, fontSize: '0.65rem' }}>
+              Has saved position
+            </div>
+          )}
           <div style={{ color: '#FAAC47', marginTop: 4 }}>
-            SPRITE_X_OFFSETS['{combo.raceId}_{combo.classId}']: {spriteXOffset + editorX}
-          </div>
-          <div style={{ color: '#FAAC47' }}>
-            SPRITE_Y_OFFSETS['{combo.raceId}_{combo.classId}']: {spriteYOffset + editorY}
-          </div>
-          <div style={{ color: '#FAAC47' }}>
-            SPRITE_SCALE_OVERRIDES['{combo.raceId}_{combo.classId}']: {((scaleOverride || 1) * editorScale).toFixed(2)}
+            X: {spriteXOffset + editorX} | Y: {spriteYOffset + editorY} | Scale: {((scaleOverride || 1) * editorScale).toFixed(2)}
           </div>
         </div>
       )}
