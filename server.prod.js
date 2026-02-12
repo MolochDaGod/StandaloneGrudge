@@ -597,11 +597,11 @@ app.use(express.static(path.join(__dirname, 'dist'), {
   },
 }));
 
+registerDbRoutes(app);
+
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-
-registerDbRoutes(app);
 
 (async () => {
   const connected = await testConnection();
