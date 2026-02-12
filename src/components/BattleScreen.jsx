@@ -2243,7 +2243,9 @@ export default function BattleScreen() {
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const BATTLE_SCALE_OVERRIDES = { human_warrior: 2 };
+          const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 } };
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+          const comboOffset = BATTLE_POSITION_OFFSETS[`${unit.raceId}_${unit.classId}`] || { x: 0, y: 0 };
           const spriteScale = (targetDisplaySize / baseFrameSize) * (isBearForm ? 1.25 : 1) * bossScaleVal * comboScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
@@ -2257,8 +2259,8 @@ export default function BattleScreen() {
               onClick={() => isEnemyClickable && setSelectedTarget(unit.id)}
               style={{
                 position: 'absolute',
-                left: `${posX}%`,
-                top: `${posY}%`,
+                left: `calc(${posX}% + ${comboOffset.x}px)`,
+                top: `calc(${posY}% + ${comboOffset.y}px)`,
                 transform: 'translate(-50%, -100%)',
                 transition: dash ? 'left 0.3s ease-out, top 0.3s ease-out' : 'left 0.5s ease, top 0.5s ease',
                 cursor: isEnemyClickable ? 'pointer' : 'default',
