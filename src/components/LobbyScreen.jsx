@@ -932,38 +932,35 @@ function HeroSlideshow() {
         {textVisible && (
           <div style={{
             position: 'absolute', top: 10, left: 12, zIndex: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
             animation: 'ssSlideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}>
             <div style={{
-              width: 48, height: 48, borderRadius: '50%',
+              width: 40, height: 40, borderRadius: 6,
               background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
-              border: `2px solid ${faction.color}88`,
+              border: `2px solid ${faction.color}66`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 16px ${faction.color}44`,
+              boxShadow: `0 0 12px ${faction.color}33`,
               overflow: 'hidden',
             }}>
               <img src={faction.icon} alt={faction.name} style={{
-                width: 40, height: 40, objectFit: 'contain', filter: 'brightness(1.2)',
+                width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.2)',
               }} />
             </div>
             <div style={{
-              fontSize: '0.5rem', color: faction.color, textAlign: 'center',
-              marginTop: 2, textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-              letterSpacing: 1,
-            }}>{faction.name}</div>
-          </div>
-        )}
-
-        {textVisible && (
-          <div style={{
-            position: 'absolute', top: 10, right: 12, zIndex: 10,
-            animation: 'ssSlideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
-          }}>
-            <img src={CLASS_TAG_MAP[combo.classId]} alt={cls.name} style={{
-              height: 36, imageRendering: 'auto',
-              filter: 'brightness(1.2)',
-              dropShadow: '0 2px 8px rgba(0,0,0,0.8)',
-            }} />
+              width: 40, height: 40, borderRadius: 6,
+              background: `radial-gradient(circle, ${auraColor}33, rgba(0,0,0,0.6))`,
+              border: `2px solid ${auraColor}66`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 12px ${auraColor}33`,
+              overflow: 'hidden',
+            }}>
+              <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
+                width: 32, height: 32, objectFit: 'contain',
+                imageRendering: 'pixelated',
+                filter: 'brightness(1.3)',
+              }} />
+            </div>
           </div>
         )}
 
