@@ -123,6 +123,9 @@ function GameApp() {
   const fullBleedScreens = ['world', 'battle', 'intro'];
   const isFullBleed = fullBleedScreens.includes(screen);
 
+  const frameVisibleScreens = ['title', 'lobby', 'create', 'character', 'skills', 'account', 'training', 'heroCreate'];
+  const showFrame = frameVisibleScreens.includes(screen);
+
   const renderScreen = () => {
     switch (screen) {
       case 'title': return <TitleScreen />;
@@ -169,7 +172,7 @@ function GameApp() {
   };
 
   return (
-    <div className="game-frame">
+    <div className={`game-frame${showFrame ? '' : ' hide-frame'}`}>
       <div style={{
         width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
         animation: screenShake ? `screenShake 0.3s ease-out` : 'none',
