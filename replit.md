@@ -36,7 +36,8 @@ The application is a React 19 frontend developed with Vite, with an Express back
     - **Scene System:** 4 interactive scene views accessible from the world map (Camp, Dungeon, Trading Post, Open Field).
 - **Audio System:** Web Audio API for synthesized combat sounds and file-based background music. 7 BGM tracks: intro (youth_thinker.mp3), map/ambient (bgm_harukaze.ogg), camp (bgm_camping.ogg), tavern/trading post (bgm_tavern.ogg), scene/general (elevate_your_mind.mp3), battle (synthesized), dungeon (synthesized battle). `setBgm(type)` accepts: 'intro', 'ambient'/'map', 'camp', 'tavern', 'scene', 'battle', 'dungeon'.
 - **Particle Effects:** CSS-animated particle effects for in-battle actions, canvas-based particles for the title screen, and CSS keyframe animations for UI interactions.
-- **World Map:** An RTS-style 2D map with zoom/pan, a centralized layer system, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle.
+- **World Map:** An RTS-style 2D map with zoom/pan, a centralized layer system, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle. Static data (locationPositions, pathConnections, locationIcons, terrainRegions, portalLocations, godFightLocations) extracted to `src/data/worldMapData.js`.
+    - **Map Overlay (MapOverlay.jsx):** Fullscreen map overlay toggled by "M" key (or Escape to close). Shows all 32 zones with clickable nodes, terrain region backgrounds, path connections, icons, labels, level ranges, conquer %, cleared badges, portal indicators, and current position highlight. Click-to-navigate triggers BFS pathfinding. Portals via `createPortal` into `#game-ui-portal`.
     - **Map Node Menus:** Zone popup menus use `MenuButton` components.
     - **Chat Bubble System:** Comic-style speech bubbles anchored to speaker hero sprites.
     - **Pathfinding:** Heroes use BFS for shortest pathfinding with dynamic footprint marks.
