@@ -140,6 +140,7 @@ export default function SpriteAnimation({
   const cssFilter = spriteData?.filter || '';
   const tintColor = spriteData?.tint || '';
   const blendMode = spriteData?.blendMode || 'normal';
+  const dwarfTransform = spriteData?.dwarfTransform || '';
 
   const overlayElements = useMemo(() => {
     if (!equipmentOverlays || !Array.isArray(equipmentOverlays)) return null;
@@ -163,7 +164,8 @@ export default function SpriteAnimation({
       height: displayHeight,
       overflow: 'hidden',
       imageRendering: 'pixelated',
-      transform: flip ? 'scaleX(-1)' : 'none',
+      transform: [flip ? 'scaleX(-1)' : '', dwarfTransform].filter(Boolean).join(' ') || 'none',
+      transformOrigin: dwarfTransform ? 'bottom center' : undefined,
       position: 'relative',
       mixBlendMode: blendMode,
       outline: 'none',

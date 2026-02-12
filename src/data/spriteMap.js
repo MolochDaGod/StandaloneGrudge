@@ -117,6 +117,32 @@ const spriteSheets = {
     attack1: { src: '/sprites/dwarf-worge/attack1.png', frames: 20 },
     attack2: { src: '/sprites/dwarf-worge/attack2.png', frames: 20 },
   },
+  'arcane-archer': {
+    folder: 'arcane-archer',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/arcane-archer/idle.png', frames: 8 },
+    walk: { src: '/sprites/arcane-archer/walk.png', frames: 8 },
+    attack1: { src: '/sprites/arcane-archer/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/arcane-archer/attack2.png', frames: 7 },
+    death: { src: '/sprites/arcane-archer/death.png', frames: 6 },
+    hurt: { src: '/sprites/arcane-archer/hurt.png', frames: 4 },
+    cast: { src: '/sprites/arcane-archer/cast.png', frames: 4 },
+  },
+  'free-knight': {
+    folder: 'free-knight',
+    frameWidth: 120,
+    frameHeight: 80,
+    idle: { src: '/sprites/free-knight/idle.png', frames: 10 },
+    walk: { src: '/sprites/free-knight/walk.png', frames: 10 },
+    attack1: { src: '/sprites/free-knight/attack1.png', frames: 4 },
+    attack2: { src: '/sprites/free-knight/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/free-knight/hurt.png', frames: 1 },
+    death: { src: '/sprites/free-knight/death.png', frames: 10 },
+    block: { src: '/sprites/free-knight/block.png', frames: 12 },
+    jump: { src: '/sprites/free-knight/jump.png', frames: 3 },
+    fall: { src: '/sprites/free-knight/fall.png', frames: 3 },
+  },
   orc: {
     folder: 'orc',
     idle: { src: '/sprites/orc/idle.png', frames: 6 },
@@ -717,7 +743,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['greatsword-skeleton'],
     mage: spriteSheets.necromancer,
     worge: spriteSheets.skeleton,
-    ranger: spriteSheets['skeleton-archer'],
+    ranger: spriteSheets['arcane-archer'],
   },
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', scale: 1.35 },
@@ -727,7 +753,7 @@ export const raceClassSpriteMap = {
   },
   dwarf: {
     warrior: spriteSheets['armored-axeman'],
-    mage: spriteSheets['fire-wizard'],
+    mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.85, dwarfTransform: 'scaleX(1.15) scaleY(0.85)' },
     worge: spriteSheets['dwarf-worge'],
     ranger: spriteSheets['dwarf-ranger'],
   },
@@ -773,14 +799,16 @@ export const worgBearTransformSprite = {
   dwarf: spriteSheets.werebear,
 };
 
+export const freeKnightSprite = spriteSheets['free-knight'];
+
 export const eliteTransformSprites = {
   warrior: {
-    human: spriteSheets['medieval-warrior-3'],
+    human: spriteSheets['free-knight'],
     elf: spriteSheets['fantasy-warrior'],
-    dwarf: spriteSheets['medieval-warrior-3'],
+    dwarf: spriteSheets['free-knight'],
     barbarian: spriteSheets['fantasy-warrior'],
-    orc: { ...spriteSheets['medieval-warrior-3'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
-    undead: { ...spriteSheets['fantasy-warrior'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+    orc: { ...spriteSheets['free-knight'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    undead: { ...spriteSheets['free-knight'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
   },
   mage: {
     human: spriteSheets['fire-wizard'],
