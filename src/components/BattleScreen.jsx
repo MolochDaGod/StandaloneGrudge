@@ -2249,7 +2249,7 @@ export default function BattleScreen() {
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
-          const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 } };
+          const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 }, elf_warrior: { x: 0, y: 20 } };
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
           const comboOffset = BATTLE_POSITION_OFFSETS[`${unit.raceId}_${unit.classId}`] || { x: 0, y: 0 };
           const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale;
