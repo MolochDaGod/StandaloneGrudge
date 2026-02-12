@@ -367,7 +367,8 @@ export default function LocationView() {
 
           <div style={{
             flex: 1, overflowY: 'auto',
-            background: 'rgba(14,22,48,0.85)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'linear-gradient(rgba(14,22,48,0.82), rgba(14,22,48,0.82)), url(/backgrounds/quest_bg.png) center/cover no-repeat',
+            border: '1px solid rgba(255,255,255,0.06)',
             borderRadius: 12, padding: '12px 14px',
             backdropFilter: 'blur(10px)',
           }}>
