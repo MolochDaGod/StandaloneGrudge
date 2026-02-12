@@ -46,6 +46,16 @@ export const classSpriteMap = {
 const spriteSheets = {
   knight: classSpriteMap.warrior,
   priest: classSpriteMap.mage,
+  'stormhead': {
+    folder: 'stormhead',
+    frameWidth: 119,
+    frameHeight: 124,
+    idle: { src: '/sprites/stormhead/idle.png', frames: 9 },
+    walk: { src: '/sprites/stormhead/run.png', frames: 10 },
+    attack1: { src: '/sprites/stormhead/attack.png', frames: 21 },
+    hurt: { src: '/sprites/stormhead/damaged.png', frames: 2 },
+    death: { src: '/sprites/stormhead/death.png', frames: 9 },
+  },
   'orc-rider': {
     folder: 'orc-rider',
     idle: { src: '/sprites/orc-rider/idle.png', frames: 6 },
@@ -1046,6 +1056,10 @@ export const enemySpriteMap = {
   skeleton_archer: spriteSheets['skeleton-archer'],
   skeleton_spearman: spriteSheets['skeleton-spearman'],
   skeleton_warrior_elite: spriteSheets['skeleton-warrior'],
+  stormhead: spriteSheets['stormhead'],
+  stormhead_boss: { ...spriteSheets['stormhead'], scale: 1.8 },
+  stormhead_miniboss: { ...spriteSheets['stormhead'], scale: 1.3 },
+  stormhead_ally: { ...spriteSheets['stormhead'], scale: 0.9, filter: 'hue-rotate(120deg) saturate(1.2) brightness(1.1)' },
 };
 
 export const effectSprites = {
