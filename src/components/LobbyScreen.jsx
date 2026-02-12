@@ -546,9 +546,11 @@ function HeroSlideshow() {
     undead_warrior: 60,
     human_warrior: 110,
     human_worge: -50,
+    orc_mage: 20,
   };
   const SPRITE_X_OFFSETS = {
     human_warrior: -30,
+    orc_mage: -70,
   };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
   const spriteXOffset = SPRITE_X_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
