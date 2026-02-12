@@ -839,13 +839,10 @@ function HeroSlideshow() {
                 </div>
 
                 {isWorge && showTransform && worgeTransformData && (() => {
-                  const baseH = (spriteData?.frameHeight || 100) * spriteScale;
-                  const transformH = (worgeTransformData?.frameHeight || 100) * transformScale;
-                  const offsetY = transformH - baseH;
                   return (
                     <div style={{
                       position: 'absolute',
-                      left: '50%', bottom: -offsetY,
+                      left: '50%', bottom: 0,
                       transform: 'translateX(-50%)',
                       transformOrigin: 'bottom center',
                       animation: 'ssTransformFlash 0.4s ease-out forwards',
