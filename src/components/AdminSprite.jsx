@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import SpriteAnimation from './SpriteAnimation';
-import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets } from '../data/spriteMap';
+import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets, EFFECT_TYPE_TAGS } from '../data/spriteMap';
 import { classDefinitions } from '../data/classes';
 import { WEAPON_SKILLS, CLASS_EQUIPMENT_RULES } from '../data/equipment';
 
@@ -22,17 +22,21 @@ const TABS = [
 ];
 
 const EFFECT_CATEGORIES = {
-  hits: { label: 'Hit Effects', color: '#ef4444', keys: ['hitEffect1', 'hitEffect2', 'hitEffect3', 'weaponHit'] },
-  slashes: { label: 'Slashes', color: '#f97316', keys: ['slash', 'demonSlash1', 'demonSlash2', 'demonSlash3'] },
-  fire: { label: 'Fire & Explosion', color: '#f59e0b', keys: ['brightFire', 'fire', 'fireSpin', 'fireExplosion', 'fireExplosion2', 'flameLash'] },
-  ice: { label: 'Ice & Water', color: '#38bdf8', keys: ['freezing', 'magicBubbles'] },
-  thunder: { label: 'Thunder & Lightning', color: '#facc15', keys: ['thunderHit', 'thunderProjectile', 'thunderProjectile2'] },
-  holy: { label: 'Holy & Light', color: '#fde68a', keys: ['holyImpact', 'holyRepeatable', 'holyVfx', 'sunburn'] },
+  hits: { label: 'Hit Effects', color: '#ef4444', keys: ['hitEffect1', 'hitEffect2', 'hitEffect3', 'weaponHit', 'hitBurst', 'critSlash'] },
+  slashes: { label: 'Slashes & Melee', color: '#f97316', keys: ['slash', 'slashRanged', 'demonSlash1', 'demonSlash2', 'demonSlash3', ...Object.keys(effectSprites).filter(k => k.startsWith('slash') && k !== 'slash' && k !== 'slashRanged')] },
+  fire: { label: 'Fire & Explosion', color: '#f59e0b', keys: ['brightFire', 'fire', 'fireSpin', 'fireExplosion', 'fireExplosion2', 'flameLash', 'fireBreath', 'fireBreathHit', 'firebolt', 'flamestrike'] },
+  ice: { label: 'Ice & Frost', color: '#38bdf8', keys: ['freezing', 'frozenIce', 'frostbolt', 'iceVfx1', 'iceVfx2', 'iceHit', 'iceRepeatable', 'iceStart', 'iceActive', 'iceVfx2Start', 'iceEnding'] },
+  water: { label: 'Water & Nature', color: '#22d3ee', keys: ['waterSpike', 'waterSplash', 'waterStartup1', 'waterStartup2', 'waterBall', 'waterBallImpact', 'waterBlast', 'waterBlastEnd', 'earthBump', 'earthWall', 'magicBubbles'] },
+  thunder: { label: 'Thunder & Lightning', color: '#facc15', keys: ['thunderHit', 'thunderProjectile', 'thunderProjectile2', 'arcanelighting'] },
+  holy: { label: 'Holy & Light', color: '#fde68a', keys: ['holyImpact', 'holyRepeatable', 'holyVfx', 'sunburn', 'beamHoly', 'holylight', 'holyheal', 'healEffect', 'resurrect', 'healingwave', 'healingregen'] },
   dark: { label: 'Dark & Shadow', color: '#a78bfa', keys: ['midnight', 'nebula', 'phantom', 'felSpell', 'vortex'] },
-  nature: { label: 'Nature & Wind', color: '#4ade80', keys: ['windBreath', 'windHit', 'windProjectile'] },
-  magic: { label: 'Magic & Arcane', color: '#818cf8', keys: ['magicSpell', 'magic8', 'blueFire', 'casting', 'magickaHit'] },
-  defensive: { label: 'Defensive & Healing', color: '#2dd4bf', keys: ['protectionCircle', 'healEffect', 'resurrect'] },
-  utility: { label: 'Utility', color: '#94a3b8', keys: ['loading'] },
+  arcane: { label: 'Arcane & Magic', color: '#818cf8', keys: ['magicSpell', 'magic8', 'blueFire', 'casting', 'magickaHit', 'arcaneslash', 'arcanebolt', 'arcanemist', 'arcanelighting'] },
+  wind: { label: 'Wind & Smoke', color: '#4ade80', keys: ['windBreath', 'windHit', 'windProjectile', 'smokeVfx1', 'smokeVfx2', 'smokeVfx3'] },
+  impact: { label: 'Retro Impacts', color: '#fb923c', keys: Object.keys(effectSprites).filter(k => k.startsWith('impact')) },
+  bullet: { label: 'Bullet Impacts', color: '#e879f9', keys: Object.keys(effectSprites).filter(k => k.startsWith('bullet')) },
+  defensive: { label: 'Defensive & Buff', color: '#2dd4bf', keys: ['protectionCircle', 'healEffect', 'resurrect'] },
+  smears: { label: 'Smear Trails', color: '#94a3b8', keys: ['smearH1', 'smearH2', 'smearH3', 'smearV1', 'smearV2', 'smearV3'] },
+  generic: { label: 'Generic Effects', color: '#a1a1aa', keys: ['effect1', 'effect2', 'effect3', 'effect4', 'thrust1', 'thrust2', 'loading'] },
 };
 
 function getEffectUsage(effectKey) {
@@ -862,6 +866,34 @@ export default function AdminSprite() {
                           </div>
                         );
                       })()}
+                    </div>
+
+                    <div style={{ ...S.panel, marginTop: 12 }}>
+                      <h3 style={S.h3}>Effect Type Tags</h3>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {Object.entries(EFFECT_TYPE_TAGS)
+                          .filter(([, keys]) => keys.includes(gallerySelected))
+                          .map(([tag]) => {
+                            const tagColors = {
+                              cast: '#ffd700', effect: '#3b82f6', effect2: '#60a5fa', effect3: '#22d3ee',
+                              impact: '#ef4444', projectile: '#f97316', traveleffect: '#a78bfa', aura: '#e879f9',
+                              animation: '#818cf8', animation2: '#6366f1', buff: '#22c55e', debuff: '#dc2626',
+                              stone: '#a1a1aa', frozen: '#38bdf8', slow: '#94a3b8', haste: '#facc15',
+                              dodge: '#4ade80', block: '#a1a1aa', crit: '#ef4444', spellcrit: '#818cf8',
+                              largecrit: '#f59e0b', combo: '#fbbf24', counter: '#f97316', huechange: '#e879f9',
+                              transform: '#a78bfa', sleep: '#6366f1', slashColor: '#fb923c',
+                            };
+                            return (
+                              <span key={tag} style={{
+                                fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5,
+                                color: tagColors[tag] || '#ccc', background: `${tagColors[tag] || '#888'}22`,
+                                padding: '2px 6px', borderRadius: 3, border: `1px solid ${tagColors[tag] || '#888'}44`,
+                              }}>{tag}</span>
+                            );
+                          })}
+                        {Object.entries(EFFECT_TYPE_TAGS).filter(([, keys]) => keys.includes(gallerySelected)).length === 0 &&
+                          <span style={{ fontSize: 11, color: '#666' }}>No tags assigned</span>}
+                      </div>
                     </div>
 
                     <div style={{ ...S.panel, marginTop: 12 }}>

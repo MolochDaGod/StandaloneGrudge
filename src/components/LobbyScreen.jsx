@@ -303,7 +303,7 @@ const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
   Object.keys(classDefinitions).map(classId => ({ raceId, classId }))
 );
 
-const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge', 'shot1', 'shot2', 'cast'];
+const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge', 'shot1', 'shot2'];
 const ENTER_ANIMS = ['walk', 'run', 'roll', 'slide', 'charge'];
 
 const BATTLE_BGS = [
@@ -549,6 +549,7 @@ function HeroSlideshow() {
     human_warrior: 2,
     undead_ranger: 0.75,
     dwarf_worge: 0.5,
+    barbarian_mage: 0.7,
   };
   const SPRITE_Y_OFFSETS = {
     human_mage: 20,
@@ -557,6 +558,7 @@ function HeroSlideshow() {
     human_worge: -50,
     orc_mage: 20,
     orc_worge: 50,
+    barbarian_mage: 20,
   };
   const SPRITE_X_OFFSETS = {
     human_warrior: -30,
