@@ -3,964 +3,447 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grudge Warlords - PvP Arena</title>
-<meta property="og:title" content="Grudge Warlords - PvP Arena">
-<meta property="og:description" content="Challenge warlords in the ranked PvP arena! Post your team and earn rewards.">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>GRUDA Arena | Grudge Warlords</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0f1e;--surface:rgba(14,22,48,0.95);--accent:#6ee7b7;--gold:#fbbf24;--hp:#ef4444;--mana:#6366f1;--stamina:#22c55e;--text:#e2e8f0;--dim:#64748b;--ranked:#fbbf24;--unranked:#6b7280}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-h1,h2,h3{font-family:'Cinzel',serif}
-.container{max-width:1100px;margin:0 auto;padding:16px;position:relative}
-.header{text-align:center;padding:20px 0 12px;border-bottom:2px solid rgba(251,191,36,0.2);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
-.header h1{font-size:1.6rem;background:linear-gradient(135deg,#fbbf24,#ef4444,#6ee7b7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px}
-.header p{color:var(--dim);font-size:0.7rem;letter-spacing:2px;margin-top:2px}
-.tabs{display:flex;gap:0;border-bottom:1px solid rgba(251,191,36,0.15);margin-bottom:16px;background:rgba(14,22,48,0.6)}
-.tab{padding:10px 20px;cursor:pointer;border:none;background:transparent;color:var(--dim);font-family:'Cinzel',serif;font-size:0.8rem;font-weight:600;border-bottom:2px solid transparent;transition:all 0.2s}
-.tab:hover{color:var(--gold)}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(251,191,36,0.06)}
-.tab .badge{margin-left:6px;font-size:0.55rem;opacity:0.5;font-family:'Jost',sans-serif}
-.phase{display:none}.phase.active{display:block}
-.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin:12px 0}
-.team-card{background:var(--surface);border:1px solid rgba(251,191,36,0.12);border-radius:10px;padding:14px;transition:all 0.2s;cursor:pointer;position:relative}
-.team-card:hover{border-color:rgba(251,191,36,0.4);box-shadow:0 0 20px rgba(251,191,36,0.1)}
-.team-card.ranked{border-left:3px solid var(--ranked)}
-.team-card.unranked{border-left:3px solid var(--unranked)}
-.team-card .owner{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);margin-bottom:4px}
-.team-card .meta{font-size:0.6rem;color:var(--dim);display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.team-card .meta .status{padding:1px 6px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:0.5rem}
-.team-card .meta .status.ranked{background:rgba(251,191,36,0.15);color:var(--ranked);border:1px solid rgba(251,191,36,0.3)}
-.team-card .meta .status.unranked{background:rgba(107,114,128,0.15);color:var(--unranked);border:1px solid rgba(107,114,128,0.3)}
-.team-card .heroes{display:flex;gap:6px;flex-wrap:wrap}
-.team-card .hero-pill{background:rgba(110,231,183,0.06);border:1px solid rgba(110,231,183,0.15);border-radius:6px;padding:3px 8px;font-size:0.6rem;display:flex;align-items:center;gap:4px}
-.team-card .hero-pill .lvl{color:var(--dim)}
-.team-card .record{font-size:0.6rem;color:var(--dim);margin-top:6px}
-.team-card .record .wins{color:var(--accent)}
-.team-card .record .losses{color:var(--hp)}
-.challenge-btn{background:linear-gradient(135deg,rgba(251,191,36,0.2),rgba(239,68,68,0.15));border:1px solid rgba(251,191,36,0.4);color:var(--gold);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:'Cinzel',serif;font-size:0.7rem;font-weight:700;margin-top:8px;transition:all 0.2s;letter-spacing:1px}
-.challenge-btn:hover{background:linear-gradient(135deg,rgba(251,191,36,0.35),rgba(239,68,68,0.25));box-shadow:0 0 12px rgba(251,191,36,0.3)}
-.btn{font-family:'Cinzel',serif;padding:8px 22px;border:1px solid var(--accent);background:rgba(110,231,183,0.08);color:var(--accent);border-radius:6px;cursor:pointer;font-size:0.8rem;letter-spacing:1px;transition:all 0.2s}
-.btn:hover{background:rgba(110,231,183,0.2)}
-.btn:disabled{opacity:0.3;cursor:not-allowed}
-.btn-gold{border-color:var(--gold);color:var(--gold);background:rgba(251,191,36,0.08)}
-.btn-gold:hover{background:rgba(251,191,36,0.2)}
-.btn-red{border-color:var(--hp);color:var(--hp);background:rgba(239,68,68,0.08)}
-.center{text-align:center}
-.mt{margin-top:12px}.mb{margin-bottom:12px}
-.hero-card-detail{border:1px solid rgba(110,231,183,0.2);border-radius:10px;padding:14px;width:260px;position:relative;overflow:hidden}
-.hero-cards-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}
-.bar-container{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;margin:2px 0;overflow:hidden}
-.bar-fill{height:100%;border-radius:3px;transition:width 0.5s}
-.bar-hp{background:linear-gradient(90deg,#dc2626,#ef4444)}.bar-mp{background:linear-gradient(90deg,#4f46e5,#6366f1)}.bar-sp{background:linear-gradient(90deg,#16a34a,#22c55e)}
-.stat-row{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--dim);margin:1px 0}
-.stat-row .val{color:var(--text)}
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px 8px;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.05)}
-.battle-field{position:relative;width:100%;height:320px;background:linear-gradient(180deg,rgba(14,22,48,0.9) 0%,rgba(30,10,60,0.85) 100%);border-radius:10px;border:1px solid rgba(251,191,36,0.15);overflow:hidden;margin:12px 0}
-.battle-field .field-label{position:absolute;font-family:'Cinzel',serif;font-size:0.5rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase;opacity:0.4}
-.battle-field .field-label.left{left:12%;top:92%}
-.battle-field .field-label.right{right:12%;top:8%}
-.battle-unit{position:absolute;text-align:center;transition:all 0.4s}
-.battle-unit .unit-name{font-family:'Cinzel',serif;font-size:0.5rem;white-space:nowrap}
-.battle-unit.player .unit-name{color:var(--accent)}
-.battle-unit.enemy .unit-name{color:#f87171}
-.battle-unit .sprite-box{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 2px}
-.battle-unit.player .sprite-box{background:rgba(110,231,183,0.1);border:2px solid rgba(110,231,183,0.3)}
-.battle-unit.enemy .sprite-box{background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.3)}
-.battle-unit .unit-bars{width:65px;margin:0 auto}
-.battle-unit .mini-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin:1px 0;overflow:hidden}
-.battle-unit .mini-bar .fill{height:100%;border-radius:2px;transition:width 0.4s}
-.action-bar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:10px;background:var(--surface);border-radius:8px;border:1px solid rgba(251,191,36,0.1);margin:6px 0}
-.ability-btn{padding:6px 12px;border:1px solid rgba(110,231,183,0.2);background:rgba(110,231,183,0.05);color:var(--text);border-radius:5px;cursor:pointer;font-size:0.65rem;transition:all 0.2s;font-family:'Jost',sans-serif}
-.ability-btn:hover:not(:disabled){background:rgba(110,231,183,0.15);border-color:var(--accent)}
-.ability-btn:disabled{opacity:0.3;cursor:not-allowed}
-.ability-btn.selected{border-color:var(--gold);background:rgba(251,191,36,0.15);color:var(--gold)}
-.battle-log{max-height:100px;overflow-y:auto;padding:6px;background:var(--surface);border-radius:6px;border:1px solid rgba(255,255,255,0.05);font-size:0.6rem;color:var(--dim)}
-.battle-log .entry{padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03)}.battle-log .entry:last-child{border:none}
-.battle-log .dmg{color:#f87171}.battle-log .heal{color:#4ade80}.battle-log .info{color:#93c5fd}
-.target-select{display:flex;gap:5px;justify-content:center;margin:4px 0;flex-wrap:wrap}
-.target-btn{padding:4px 10px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#fca5a5;border-radius:4px;cursor:pointer;font-size:0.6rem;transition:all 0.2s}
-.target-btn:hover{background:rgba(239,68,68,0.2)}
-.target-btn.ally{border-color:rgba(110,231,183,0.3);background:rgba(110,231,183,0.08);color:var(--accent)}
-.flash{animation:flash 0.3s}@keyframes flash{0%,100%{opacity:1}50%{opacity:0.3}}
-.shake{animation:shake 0.4s}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.float-dmg{position:absolute;font-family:'Cinzel',serif;font-weight:700;font-size:0.9rem;pointer-events:none;animation:floatUp 1s forwards;z-index:20}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-18px) scale(1.15)}100%{opacity:0;transform:translateY(-36px) scale(0.8)}}
-.grudge-bar{height:3px;background:rgba(239,68,68,0.15);border-radius:2px;margin:1px 0;overflow:hidden}
-.grudge-fill{height:100%;background:linear-gradient(90deg,#b91c1c,#ef4444,#fbbf24);border-radius:2px;transition:width 0.5s}
-.active-turn{box-shadow:0 0 14px rgba(251,191,36,0.5) !important;border-color:var(--gold) !important}
-.dead{opacity:0.25;filter:grayscale(1)}
-.loading{text-align:center;padding:40px;color:var(--dim);font-size:0.8rem}
-.empty{text-align:center;padding:30px;color:var(--dim);font-size:0.75rem}
-.pvp-banner{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,rgba(251,191,36,0.08),rgba(239,68,68,0.06));border:1px solid rgba(251,191,36,0.15);border-radius:8px;padding:10px 16px;margin-bottom:12px}
-.pvp-banner .vs{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--hp);font-weight:900}
-.pvp-banner .team-name{font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold)}
-.result-screen{text-align:center;padding:30px 16px}
-.result-screen h2{font-size:1.6rem;margin-bottom:8px}
-.result-screen .rewards{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.15);border-radius:8px;padding:12px;margin:12px auto;max-width:400px}
-.result-screen .rewards .item{display:flex;justify-content:space-between;padding:3px 0;font-size:0.7rem}
-.refresh-btn{position:absolute;top:16px;right:16px}
-@keyframes pulseGold{0%,100%{box-shadow:0 0 8px rgba(251,191,36,0.2)}50%{box-shadow:0 0 20px rgba(251,191,36,0.5)}}
-.equip-section{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05)}
-.equip-title{font-size:0.5rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
-.equip-item{display:flex;align-items:center;gap:3px;font-size:0.55rem;padding:1px 0}
-.import-area{background:var(--surface);border:1px solid rgba(110,231,183,0.15);border-radius:10px;padding:16px;margin:12px 0}
-.import-area textarea{width:100%;height:80px;background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.15);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;padding:8px;font-size:0.75rem;resize:vertical}
-select{background:rgba(0,0,0,0.3);border:1px solid rgba(110,231,183,0.2);color:var(--text);padding:5px 8px;border-radius:5px;font-family:'Jost',sans-serif;font-size:0.75rem}
-.stats-bar{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:8px 0;padding:8px;background:rgba(14,22,48,0.5);border-radius:8px;border:1px solid rgba(251,191,36,0.08)}
-.stats-bar .stat{text-align:center}
-.stats-bar .stat .num{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold)}
-.stats-bar .stat .label{font-size:0.5rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+:root{
+  --bg:#0a0a12;--bg2:#12121f;--bg3:#1a1a2e;--bg4:#16213e;
+  --red:#e94560;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;
+  --platinum:#70d6ff;--diamond:#b9f2ff;--legend:#ff6b6b;
+  --text:#e0e0e0;--dim:#888;--border:#2a2a3e;
+}
+body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh}
+h1,h2,h3,h4{font-family:'Cinzel',serif}
+
+.arena-wrap{max-width:1200px;margin:0 auto;padding:20px}
+
+.arena-header{text-align:center;padding:40px 20px 30px;position:relative}
+.arena-header h1{font-size:clamp(28px,5vw,48px);color:var(--red);text-shadow:0 0 30px rgba(233,69,96,0.4);letter-spacing:3px}
+.arena-header .subtitle{color:var(--dim);font-size:14px;margin-top:8px;letter-spacing:2px;text-transform:uppercase}
+.arena-header .live-dot{display:inline-block;width:8px;height:8px;background:#4caf50;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.stats-bar{display:flex;justify-content:center;gap:30px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin:20px 0;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-item .val{font-size:24px;font-weight:700;color:var(--red);font-family:'Cinzel',serif}
+.stat-item .label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+.tabs{display:flex;gap:4px;margin:20px 0;border-bottom:2px solid var(--border)}
+.tab{padding:10px 24px;cursor:pointer;color:var(--dim);font-weight:600;font-size:14px;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;font-family:'Jost',sans-serif}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+
+.filter-row{display:flex;gap:10px;margin:12px 0;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:6px 16px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;transition:all 0.2s;font-family:'Jost',sans-serif}
+.filter-btn:hover{border-color:var(--red);color:var(--text)}
+.filter-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.team-grid{display:grid;gap:12px;margin-top:16px}
+
+.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;transition:border-color 0.2s,transform 0.2s}
+.team-card:hover{border-color:var(--red);transform:translateY(-1px)}
+.team-card.ranked{border-left:3px solid var(--red)}
+.team-card.unranked{border-left:3px solid var(--dim);opacity:0.8}
+
+.team-rank{text-align:center;min-width:50px}
+.team-rank .pos{font-size:22px;font-weight:900;font-family:'Cinzel',serif}
+.team-rank .pos.gold-rank{color:var(--gold)}
+.team-rank .pos.silver-rank{color:var(--silver)}
+.team-rank .pos.bronze-rank{color:var(--bronze)}
+.team-rank .pos.default-rank{color:var(--dim)}
+
+.team-info h3{font-size:16px;color:var(--text);margin-bottom:4px}
+.team-info .heroes-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hero-tag{font-size:11px;padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--dim)}
+.hero-tag .lvl{color:var(--red);font-weight:600}
+.team-info .status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-left:8px}
+.status-badge.ranked{background:rgba(233,69,96,0.2);color:var(--red)}
+.status-badge.unranked{background:rgba(136,136,136,0.2);color:var(--dim)}
+
+.team-stats{text-align:right;min-width:100px}
+.team-stats .record{font-size:18px;font-weight:700;font-family:'Cinzel',serif}
+.team-stats .record .w{color:#4caf50}
+.team-stats .record .l{color:var(--red)}
+.team-stats .winrate{font-size:11px;color:var(--dim);margin-top:2px}
+.team-stats .battles{font-size:11px;color:var(--dim)}
+
+.lb-table{width:100%;border-collapse:collapse;margin-top:16px}
+.lb-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--red);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-family:'Cinzel',serif}
+.lb-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px}
+.lb-table tr:hover{background:var(--bg3)}
+.lb-table .rank-cell{font-weight:900;font-family:'Cinzel',serif;font-size:16px}
+.rank-badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.rank-bronze{background:rgba(205,127,50,0.2);color:var(--bronze)}
+.rank-silver{background:rgba(192,192,192,0.2);color:var(--silver)}
+.rank-gold{background:rgba(255,215,0,0.2);color:var(--gold)}
+.rank-platinum{background:rgba(112,214,255,0.2);color:var(--platinum)}
+.rank-diamond{background:rgba(185,242,255,0.2);color:var(--diamond)}
+.rank-legend{background:rgba(255,107,107,0.2);color:var(--legend)}
+
+.recent-battle{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px}
+.recent-battle .result-icon{font-size:20px;min-width:30px;text-align:center}
+.recent-battle .battle-info{flex:1}
+.recent-battle .battle-info .names{font-weight:600;font-size:14px}
+.recent-battle .battle-info .time{font-size:11px;color:var(--dim);margin-top:2px}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-state h3{color:var(--text);margin-bottom:8px;font-size:20px}
+.empty-state p{font-size:14px;max-width:400px;margin:0 auto}
+.empty-state .cta{display:inline-block;margin-top:20px;padding:10px 24px;background:var(--red);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;transition:background 0.2s}
+.empty-state .cta:hover{background:#d63050}
+
+.pagination{display:flex;justify-content:center;gap:8px;margin-top:20px}
+.page-btn{padding:6px 14px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;font-family:'Jost',sans-serif}
+.page-btn:hover{border-color:var(--red);color:var(--text)}
+.page-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+.page-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+.discord-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;background:#5865F2;border-radius:8px;margin:20px 0;color:#fff;font-size:14px}
+.discord-bar a{color:#fff;font-weight:700;text-decoration:none;padding:6px 16px;background:rgba(255,255,255,0.2);border-radius:4px;transition:background 0.2s}
+.discord-bar a:hover{background:rgba(255,255,255,0.3)}
+
+.loading{text-align:center;padding:40px;color:var(--dim)}
+.loading .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  .team-card{grid-template-columns:1fr;gap:8px}
+  .team-rank{display:flex;align-items:center;gap:10px}
+  .team-stats{text-align:left}
+  .stats-bar{gap:16px}
+  .lb-table{font-size:12px}
+  .lb-table th,.lb-table td{padding:6px 8px}
+}
 </style>
 </head>
 <body>
-<div class="container">
-<div class="header">
-<div>
-<h1>GRUDA PVP ARENA</h1>
-<p>GRUDGE WARLORDS RANKED BATTLES</p>
-</div>
-</div>
 
-<div id="arenaStats" class="stats-bar"></div>
+<div class="arena-wrap">
+  <div class="arena-header">
+    <h1>GRUDA ARENA</h1>
+    <div class="subtitle"><span class="live-dot"></span>LIVE PvP RANKED BATTLES</div>
+  </div>
 
-<div class="tabs">
-<button class="tab active" data-tab="lobby" onclick="switchTab('lobby')">Ranked Arena <span class="badge" id="rankedCount"></span></button>
-<button class="tab" data-tab="unranked" onclick="switchTab('unranked')">Unranked <span class="badge" id="unrankedCount"></span></button>
-<button class="tab" data-tab="submit" onclick="switchTab('submit')">Submit Team</button>
-<button class="tab" data-tab="battle" onclick="switchTab('battle')" id="battleTab" style="display:none">Battle</button>
-</div>
+  <div class="discord-bar">
+    <svg width="20" height="15" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.4.2a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.4 37.4 0 0 0 25.4.3a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 5a.2.2 0 0 0-.1.1C1.5 18.7-.9 32 .3 45.1v.1a58.8 58.8 0 0 0 17.9 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.8 38.8 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42 42 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3 36.4 36.4 0 0 1-5.5 2.7.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.8.2.2 0 0 0 .3.1A58.6 58.6 0 0 0 71 45.2v-.1C72.4 30.1 68.4 17 60.2 5a.2.2 0 0 0-.1 0zM23.7 37a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.3 3.1 6.2 7a6.7 6.7 0 0 1-6.2 7zm23.2 0a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.4 3.1 6.3 7a6.8 6.8 0 0 1-6.3 7z"/></svg>
+    Join the fight &mdash;
+    <a href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord Server</a>
+  </div>
 
-<div id="phase-lobby" class="phase active">
-<div id="lobbyLoading" class="loading">Loading arena teams...</div>
-<div id="lobbyTeams" class="team-grid"></div>
-<div id="lobbyEmpty" class="empty" style="display:none">No ranked teams in the arena yet. Be the first to submit!</div>
-<div class="center mt" id="lobbyPagination"></div>
-</div>
+  <div id="stats-bar" class="stats-bar">
+    <div class="stat-item"><div class="val" id="stat-teams">-</div><div class="label">Arena Teams</div></div>
+    <div class="stat-item"><div class="val" id="stat-ranked">-</div><div class="label">Ranked</div></div>
+    <div class="stat-item"><div class="val" id="stat-battles">-</div><div class="label">Battles</div></div>
+    <div class="stat-item"><div class="val" id="stat-players">-</div><div class="label">Players</div></div>
+  </div>
 
-<div id="phase-unranked" class="phase">
-<div id="unrankedLoading" class="loading">Loading unranked teams...</div>
-<div id="unrankedTeams" class="team-grid"></div>
-<div id="unrankedEmpty" class="empty" style="display:none">No unranked teams yet.</div>
-</div>
+  <div class="tabs">
+    <button class="tab active" data-tab="lobby">Lobby</button>
+    <button class="tab" data-tab="leaderboard">Leaderboard</button>
+    <button class="tab" data-tab="recent">Recent Battles</button>
+  </div>
 
-<div id="phase-submit" class="phase">
-<div class="center mb">
-<h2 style="font-size:1rem;color:var(--gold);margin-bottom:6px">Submit Your Team</h2>
-<p style="font-size:0.7rem;color:var(--dim)">Paste your GW2: share code to post your team to the ranked arena</p>
-</div>
-<div class="import-area">
-<p style="font-size:0.7rem;color:var(--dim);margin-bottom:6px">Paste GW2: share code, GW: code, or hero JSON:</p>
-<textarea id="submitInput" placeholder='Paste your GW2: share code from the GRUDA button in Grudge Warlords...'></textarea>
-<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
-<input id="ownerName" placeholder="Your Warlord Name" style="flex:1;min-width:140px;padding:6px 10px;background:rgba(0,0,0,0.3);border:1px solid rgba(251,191,36,0.2);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:0.75rem">
-<button class="btn btn-gold" onclick="submitTeam()" style="animation:pulseGold 2s ease-in-out infinite">POST TO ARENA</button>
-</div>
-<div id="submitError" style="color:#f87171;font-size:0.7rem;margin-top:6px;display:none"></div>
-<div id="submitSuccess" style="color:var(--accent);font-size:0.7rem;margin-top:6px;display:none"></div>
-</div>
-<div style="margin-top:16px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;font-size:0.55rem;color:var(--dim);line-height:1.6">
-<strong style="color:var(--gold)">How it works:</strong><br>
-1. Open Grudge Warlords and click the GRUDA button on the world map<br>
-2. Copy your GW2: share code<br>
-3. Paste it here and submit to the Ranked Arena<br>
-4. Other players can challenge your team - AI controls your heroes<br>
-5. Your team earns gold, resources, and equipment for each win<br>
-6. After 3 losses your team moves to Unranked (no more rewards)<br>
-7. Posting a new team replaces your current ranked entry
-</div>
-</div>
+  <div id="panel-lobby" class="panel active">
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">All Teams</button>
+      <button class="filter-btn" data-filter="ranked">Ranked</button>
+      <button class="filter-btn" data-filter="unranked">Unranked</button>
+    </div>
+    <div id="lobby-content" class="team-grid">
+      <div class="loading"><div class="spinner"></div><br>Loading arena...</div>
+    </div>
+    <div id="lobby-pagination" class="pagination"></div>
+  </div>
 
-<div id="phase-battle" class="phase">
-<div id="pvpBanner" class="pvp-banner" style="display:none">
-<div class="team-name" id="bannerPlayer">You</div>
-<div class="vs">VS</div>
-<div class="team-name" id="bannerEnemy">Opponent</div>
-</div>
-<div id="battleField" class="battle-field">
-<div class="field-label left">YOUR TEAM</div>
-<div class="field-label right">OPPONENT</div>
-</div>
-<div id="turnIndicator" class="center" style="font-size:0.65rem;color:var(--gold);margin:3px 0"></div>
-<div id="actionBar" class="action-bar" style="display:none"></div>
-<div id="targetBar" class="target-select" style="display:none"></div>
-<div id="battleLog" class="battle-log"><div class="entry info">Preparing for battle...</div></div>
-</div>
+  <div id="panel-leaderboard" class="panel">
+    <div id="leaderboard-content">
+      <div class="loading"><div class="spinner"></div><br>Loading leaderboard...</div>
+    </div>
+  </div>
 
-<div id="phase-result" class="phase">
-<div id="resultContent" class="result-screen"></div>
-</div>
+  <div id="panel-recent" class="panel">
+    <div id="recent-content">
+      <div class="loading"><div class="spinner"></div><br>Loading battles...</div>
+    </div>
+  </div>
 </div>
 
 <script>
-const API_BASE = (function() {
-  const loc = window.location;
-  if (loc.hostname === 'grudgewarlords.com' || loc.hostname === 'grudgestudio.com' || loc.hostname.endsWith('.grudgewarlords.com') || loc.hostname.endsWith('.grudgestudio.com')) {
-    return '';
-  }
-  return '';
-})();
+(function() {
+  'use strict';
 
-const CLASSES = {
-  warrior:{name:'Warrior',icon:'⚔️',color:'#ef4444',startAttrs:{Strength:5,Vitality:3,Endurance:2,Dexterity:1,Agility:1,Intellect:0,Wisdom:0,Tactics:0},abilities:[
-    {id:'slash',name:'Slash',icon:'⚔️',type:'physical',damage:0.9,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic attack'},
-    {id:'power_strike',name:'Power Strike',icon:'💥',type:'physical',damage:2.0,manaCost:0,staminaCost:25,cd:2,target:'enemy',desc:'2x damage blow'},
-    {id:'war_cry',name:'War Cry',icon:'📢',type:'buff',damage:0,manaCost:0,staminaCost:30,cd:5,target:'self',desc:'+30% damage 3 turns',effect:{stat:'damage',mult:1.3,dur:3}},
-    {id:'shield_bash',name:'Shield Bash',icon:'🛡️',type:'physical',damage:0.8,manaCost:0,staminaCost:20,cd:4,target:'enemy',desc:'Stun 1 turn',effect:{type:'stun',dur:1}},
-    {id:'cleave',name:'Cleave',icon:'🩸',type:'physical',damage:1.5,manaCost:0,staminaCost:22,cd:3,target:'enemy',desc:'Bleed 3 turns',effect:{type:'dot',dmg:0.12,dur:3}},
-  ]},
-  mage:{name:'Mage Priest',icon:'🔮',color:'#8b5cf6',startAttrs:{Strength:0,Vitality:1,Endurance:1,Dexterity:0,Agility:0,Intellect:5,Wisdom:4,Tactics:1},abilities:[
-    {id:'arcane_bolt',name:'Arcane Bolt',icon:'✨',type:'magical',damage:1.0,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic spell'},
-    {id:'fireball',name:'Fireball',icon:'🔥',type:'magical',damage:2.5,manaCost:35,staminaCost:0,cd:3,target:'enemy',desc:'Massive fire damage'},
-    {id:'heal',name:'Divine Heal',icon:'💚',type:'heal',damage:0,manaCost:40,staminaCost:0,cd:4,target:'ally',desc:'Restore 30% HP',healPct:0.3},
-    {id:'ice_storm',name:'Ice Storm',icon:'❄️',type:'magical',damage:1.8,manaCost:30,staminaCost:0,cd:3,target:'enemy',desc:'Freeze, -40% dmg 2 turns'},
-  ]},
-  ranger:{name:'Ranger',icon:'🏹',color:'#22c55e',startAttrs:{Strength:1,Vitality:1,Endurance:1,Dexterity:5,Agility:3,Intellect:0,Wisdom:0,Tactics:1},abilities:[
-    {id:'quick_shot',name:'Quick Shot',icon:'🏹',type:'physical',damage:0.85,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic shot'},
-    {id:'aimed_shot',name:'Aimed Shot',icon:'🎯',type:'physical',damage:2.2,manaCost:0,staminaCost:28,cd:2,target:'enemy',desc:'Precise high-damage shot'},
-    {id:'multi_shot',name:'Multi-Shot',icon:'🌟',type:'physical',damage:1.2,manaCost:0,staminaCost:30,cd:3,target:'all_enemies',desc:'Hit all enemies'},
-    {id:'evade',name:'Evade',icon:'💨',type:'buff',damage:0,manaCost:0,staminaCost:15,cd:4,target:'self',desc:'+50% dodge 2 turns',effect:{stat:'dodge',add:50,dur:2}},
-  ]},
-  worge:{name:'Worge',icon:'🐺',color:'#d97706',startAttrs:{Strength:2,Vitality:2,Endurance:1,Dexterity:2,Agility:2,Intellect:2,Wisdom:1,Tactics:0},abilities:[
-    {id:'claw_strike',name:'Claw Strike',icon:'🐾',type:'physical',damage:0.95,manaCost:0,staminaCost:0,cd:0,target:'enemy',desc:'Basic claw attack'},
-    {id:'lightning_bolt',name:'Lightning Bolt',icon:'⚡',type:'magical',damage:2.0,manaCost:25,staminaCost:0,cd:2,target:'enemy',desc:'Electric shock'},
-    {id:'bear_form',name:'Bear Form',icon:'🐻',type:'buff',damage:0,manaCost:20,staminaCost:0,cd:6,target:'self',desc:'+50% HP, +30% dmg 4 turns',effect:{stat:'transform',dur:4}},
-    {id:'root',name:'Entangle',icon:'🌿',type:'magical',damage:1.0,manaCost:20,staminaCost:0,cd:3,target:'enemy',desc:'Root + DoT 2 turns',effect:{type:'dot',dmg:0.15,dur:2}},
-  ]},
-};
-const RACES = {
-  human:{name:'Human',icon:'👤',bonuses:{Strength:1,Intellect:1,Vitality:1,Dexterity:1,Endurance:1,Wisdom:1,Agility:1,Tactics:1}},
-  orc:{name:'Orc',icon:'👹',bonuses:{Strength:4,Vitality:2,Endurance:2,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:0}},
-  elf:{name:'Elf',icon:'🧝',bonuses:{Strength:0,Vitality:0,Endurance:0,Dexterity:2,Agility:2,Intellect:3,Wisdom:1,Tactics:0}},
-  undead:{name:'Undead',icon:'💀',bonuses:{Strength:2,Vitality:3,Endurance:3,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:0}},
-  dwarf:{name:'Dwarf',icon:'⛏️',bonuses:{Strength:2,Vitality:2,Endurance:3,Dexterity:0,Agility:0,Intellect:0,Wisdom:0,Tactics:1}},
-  barbarian:{name:'Barbarian',icon:'🪓',bonuses:{Strength:3,Vitality:1,Endurance:1,Dexterity:1,Agility:2,Intellect:0,Wisdom:0,Tactics:0}},
-};
-const CLASS_GRADIENTS = {
-  warrior:'linear-gradient(135deg,rgba(180,30,30,0.3),rgba(80,10,10,0.8))',
-  mage:'linear-gradient(135deg,rgba(100,40,180,0.3),rgba(40,10,80,0.8))',
-  ranger:'linear-gradient(135deg,rgba(30,130,50,0.3),rgba(10,60,20,0.8))',
-  worge:'linear-gradient(135deg,rgba(180,120,20,0.3),rgba(80,50,10,0.8))',
-};
-const TIER_COLORS={1:'#9ca3af',2:'#22c55e',3:'#3b82f6',4:'#a855f7',5:'#f59e0b',6:'#ef4444',7:'#ec4899',8:'#f472b6'};
-const TIER_NAMES={1:'Common',2:'Uncommon',3:'Rare',4:'Epic',5:'Legendary',6:'Ancient',7:'Divine',8:'Mythic'};
+  var API = 'https://f36fb95c-926d-4e1b-9411-9de769d82a4b-00-9efd742oijgh.kirk.replit.dev';
+  // IMPORTANT: After publishing, replace API above with your production URL
 
-let lobbyTeams = [];
-let unrankedTeamsList = [];
-let currentBattleTeamId = null;
-let currentChallengeNonce = null;
-let challengerHeroes = [];
-let opponentHeroes = [];
-let battleUnits = [];
-let turnOrder = [];
-let currentTurnIdx = 0;
-let selectedAbility = null;
-let battlePhase = 'idle';
-let cooldowns = {};
-let buffs = {};
-let dots = {};
-let stunned = {};
-let grudge = {};
-
-function decompressFromBase64Url(encoded) {
-  let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-  while (base64.length % 4) base64 += '=';
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
-}
-
-function decodeShareToken(token) {
-  const parts = token.split('.');
-  if (parts.length !== 3) throw new Error('Invalid share token');
-  const json = decompressFromBase64Url(parts[1]);
-  return JSON.parse(json);
-}
-
-function deserializeEquipment(data) {
-  if (!data) return {};
-  const result = {};
-  for (const [slot, item] of Object.entries(data)) {
-    result[slot] = {
-      id: 'eq_' + slot + '_' + Math.random().toString(36).slice(2, 8),
-      name: item.n, icon: item.i, slot: item.s,
-      tier: item.t || 1, stats: item.st || {},
-      weaponType: item.wt, armorType: item.at, hand: item.h,
-    };
-  }
-  return result;
-}
-
-function deserializeHero(data) {
-  return {
-    name: data.n, raceId: data.r, classId: data.c, level: data.l,
-    attributePoints: data.a, equipment: deserializeEquipment(data.e),
-    unlockedSkills: data.sk || {}, abilityLoadout: data.lo || null, premerged: true,
+  var RACE_NAMES = {
+    human:'Human', elf:'Elf', dwarf:'Dwarf', orc:'Orc', undead:'Undead', demon:'Demon',
+    Human:'Human', Elf:'Elf', Dwarf:'Dwarf', Orc:'Orc', Undead:'Undead', Demon:'Demon'
   };
-}
-
-function parseHeroInput(raw) {
-  if (raw.startsWith('GW2:')) {
-    const payload = decodeShareToken(raw.slice(4));
-    if (!Array.isArray(payload)) throw new Error('Invalid share data');
-    return payload.map(deserializeHero);
-  }
-  if (raw.startsWith('GW:')) {
-    const decoded = atob(raw.slice(3));
-    return JSON.parse(decoded);
-  }
-  return JSON.parse(raw);
-}
-
-function calcStats(attrs, level) {
-  const s = {health:250,mana:100,stamina:80,physicalDamage:10,magicDamage:8,defense:5,speed:50,critChance:5,dodge:3};
-  s.health += level*10; s.mana += level*5; s.stamina += level*3;
-  s.physicalDamage += level*2; s.magicDamage += level*1.5; s.defense += level*2;
-  const eff = p => p <= 10 ? p : 10 + (p-10)*0.6;
-  if(attrs.Strength){const e=eff(attrs.Strength);s.health+=e*5;s.physicalDamage+=e*1.25;s.defense+=e*4}
-  if(attrs.Vitality){const e=eff(attrs.Vitality);s.health+=e*12;s.defense+=e*2}
-  if(attrs.Endurance){const e=eff(attrs.Endurance);s.stamina+=e*8;s.mana+=e*3}
-  if(attrs.Dexterity){const e=eff(attrs.Dexterity);s.physicalDamage+=e*0.75;s.critChance+=e*0.8}
-  if(attrs.Agility){const e=eff(attrs.Agility);s.speed+=e*3;s.dodge+=e*1.2}
-  if(attrs.Intellect){const e=eff(attrs.Intellect);s.magicDamage+=e*2;s.mana+=e*5}
-  if(attrs.Wisdom){const e=eff(attrs.Wisdom);s.mana+=e*4;s.magicDamage+=e*0.8}
-  if(attrs.Tactics){const e=eff(attrs.Tactics);s.critChance+=e*0.5;s.speed+=e*1}
-  return s;
-}
-
-function mergeAttrs(base, race, classAttrs) {
-  const r = {};
-  for(const k of ['Strength','Vitality','Endurance','Dexterity','Agility','Intellect','Wisdom','Tactics']) {
-    r[k] = (base[k]||0) + (race[k]||0) + (classAttrs[k]||0);
-  }
-  return r;
-}
-
-function applyEquipmentStats(stats, equipment) {
-  if (!equipment) return stats;
-  for (const item of Object.values(equipment)) {
-    if (!item || !item.stats) continue;
-    for (const [stat, val] of Object.entries(item.stats)) {
-      if (typeof val === 'number' && stats[stat] !== undefined) stats[stat] += val;
-    }
-  }
-  return stats;
-}
-
-function buildBattleUnit(heroData, team) {
-  const r = (heroData.raceId || heroData.race || '').toLowerCase();
-  const c = (heroData.classId || heroData.class || '').toLowerCase();
-  const cls = CLASSES[c];
-  const race = RACES[r];
-  if (!cls || !race) return null;
-  const lvl = Math.max(1, Math.min(20, parseInt(heroData.level) || 1));
-  const hasAttrs = heroData.attributePoints != null;
-  const baseAttrs = heroData.attributePoints || heroData.attrs || heroData.attributes || {};
-  const finalAttrs = hasAttrs || heroData.premerged ? baseAttrs : mergeAttrs(baseAttrs, race.bonuses, cls.startAttrs);
-  const stats = calcStats(finalAttrs, lvl);
-  applyEquipmentStats(stats, heroData.equipment);
-  return {
-    id: team + '_' + Math.random().toString(36).slice(2,8),
-    name: heroData.name, raceId: r, classId: c, level: lvl,
-    attrs: finalAttrs, team,
-    ...stats,
-    maxHealth: Math.floor(stats.health), health: Math.floor(stats.health),
-    maxMana: Math.floor(stats.mana), mana: Math.floor(stats.mana),
-    maxStamina: Math.floor(stats.stamina), stamina: Math.floor(stats.stamina),
-    abilities: cls.abilities, icon: cls.icon, color: cls.color,
-    equipment: heroData.equipment || {},
+  var CLASS_NAMES = {
+    warrior:'Warrior', mage:'Mage', ranger:'Ranger', cleric:'Cleric',
+    Warrior:'Warrior', Mage:'Mage', Ranger:'Ranger', Cleric:'Cleric'
   };
-}
 
-function switchTab(tabId) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-  document.getElementById('phase-' + tabId).classList.add('active');
-  if (tabId === 'lobby') loadLobby('ranked');
-  if (tabId === 'unranked') loadLobby('unranked');
-}
+  var currentFilter = 'all';
+  var currentPage = 0;
 
-async function loadLobby(status) {
-  const isRanked = status === 'ranked';
-  const loadingEl = document.getElementById(isRanked ? 'lobbyLoading' : 'unrankedLoading');
-  const gridEl = document.getElementById(isRanked ? 'lobbyTeams' : 'unrankedTeams');
-  const emptyEl = document.getElementById(isRanked ? 'lobbyEmpty' : 'unrankedEmpty');
-  loadingEl.style.display = 'block';
-  gridEl.innerHTML = '';
-  emptyEl.style.display = 'none';
-
-  try {
-    const res = await fetch(API_BASE + '/api/arena/lobby?status=' + status + '&limit=50');
-    const data = await res.json();
-    loadingEl.style.display = 'none';
-
-    if (isRanked) {
-      lobbyTeams = data.teams || [];
-      document.getElementById('rankedCount').textContent = '(' + data.total + ')';
-    } else {
-      unrankedTeamsList = data.teams || [];
-      document.getElementById('unrankedCount').textContent = '(' + data.total + ')';
-    }
-
-    const teams = isRanked ? lobbyTeams : unrankedTeamsList;
-    if (teams.length === 0) { emptyEl.style.display = 'block'; return; }
-
-    teams.forEach(team => {
-      const card = document.createElement('div');
-      card.className = 'team-card ' + team.status;
-      const heroesHtml = (team.heroSummary || []).map(h => {
-        const cls = CLASSES[h.classId];
-        const race = RACES[h.raceId];
-        return `<div class="hero-pill">${cls?.icon||'?'} <span>${h.name}</span> <span class="lvl">Lv.${h.level} ${race?.name||''} ${cls?.name||''}</span></div>`;
-      }).join('');
-
-      card.innerHTML = `
-        <div class="owner">${team.ownerName}'s Warband</div>
-        <div class="meta">
-          <span class="status ${team.status}">${team.status}</span>
-          <span>${team.heroCount} heroes</span>
-          <span>Avg Lv.${team.avgLevel}</span>
-        </div>
-        <div class="heroes">${heroesHtml}</div>
-        <div class="record">
-          Record: <span class="wins">${team.wins}W</span> / <span class="losses">${team.losses}L</span>
-          (${team.totalBattles} battles)
-        </div>
-        <button class="challenge-btn" onclick="challengeTeam('${team.teamId}')">⚔️ CHALLENGE</button>
-      `;
-      gridEl.appendChild(card);
-    });
-  } catch (err) {
-    loadingEl.innerHTML = '<span style="color:#f87171">Failed to load arena teams. Is the server running?</span>';
-    console.error('Lobby load error:', err);
-  }
-}
-
-async function loadArenaStats() {
-  try {
-    const res = await fetch(API_BASE + '/api/arena/stats');
-    const data = await res.json();
-    document.getElementById('arenaStats').innerHTML = `
-      <div class="stat"><div class="num">${data.totalTeams}</div><div class="label">Teams</div></div>
-      <div class="stat"><div class="num">${data.rankedTeams}</div><div class="label">Ranked</div></div>
-      <div class="stat"><div class="num">${data.unrankedTeams}</div><div class="label">Unranked</div></div>
-      <div class="stat"><div class="num">${data.totalBattles}</div><div class="label">Battles</div></div>
-    `;
-  } catch (e) {
-    document.getElementById('arenaStats').innerHTML = '<div class="stat"><div class="label" style="color:var(--dim)">Arena Offline</div></div>';
-  }
-}
-
-async function submitTeam() {
-  const input = document.getElementById('submitInput').value.trim();
-  const name = document.getElementById('ownerName').value.trim() || 'Unknown Warlord';
-  const errEl = document.getElementById('submitError');
-  const successEl = document.getElementById('submitSuccess');
-  errEl.style.display = 'none';
-  successEl.style.display = 'none';
-
-  if (!input) { errEl.textContent = 'Paste your share code first'; errEl.style.display = 'block'; return; }
-
-  try {
-    let heroes = parseHeroInput(input);
-    if (!Array.isArray(heroes)) heroes = [heroes];
-    if (heroes.length > 3) heroes = heroes.slice(0, 3);
-
-    const heroSnapshots = heroes.map(h => ({
-      name: h.name, raceId: h.raceId || h.race, classId: h.classId || h.class,
-      level: h.level || 1,
-      attributePoints: h.attributePoints || h.attrs || {},
-      equipment: h.equipment || {},
-      unlockedSkills: h.unlockedSkills || {},
-      abilityLoadout: h.abilityLoadout || null,
-    }));
-
-    const ownerId = 'web_' + name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36);
-
-    const res = await fetch(API_BASE + '/api/arena/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ownerId, ownerName: name, heroes: heroSnapshots, shareToken: input.startsWith('GW2:') ? input.slice(4) : null }),
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      successEl.innerHTML = `Team posted to Ranked Arena! <br>Team ID: <code style="font-size:0.55rem;color:var(--gold)">${data.teamId}</code><br>Snapshot Hash: <code style="font-size:0.55rem">${data.snapshotHash}</code>`;
-      successEl.style.display = 'block';
-      document.getElementById('submitInput').value = '';
-      loadArenaStats();
-    } else {
-      errEl.textContent = data.error || 'Submission failed';
-      errEl.style.display = 'block';
-    }
-  } catch (e) {
-    errEl.textContent = 'Error: ' + e.message;
-    errEl.style.display = 'block';
-  }
-}
-
-async function challengeTeam(teamId) {
-  try {
-    const res = await fetch(API_BASE + '/api/arena/team/' + teamId);
-    const teamData = await res.json();
-    if (!teamData.heroes || teamData.heroes.length === 0) { alert('Team data not found'); return; }
-
-    currentBattleTeamId = teamId;
-    currentChallengeNonce = teamData.challengeNonce || null;
-    opponentHeroes = teamData.heroes;
-
-    const demoNames = ['Aethor','Kira','Draven'];
-    const demoClasses = ['warrior','mage','ranger'];
-    const demoRaces = ['human','elf','orc'];
-    const avgLvl = teamData.avgLevel || 5;
-    challengerHeroes = demoNames.map((n,i) => buildBattleUnit({
-      name: n, raceId: demoRaces[i], classId: demoClasses[i],
-      level: Math.max(1, avgLvl + Math.floor(Math.random()*3) - 1),
-      attributePoints: null, premerged: false,
-    }, 'player')).filter(Boolean);
-
-    const enemyUnits = opponentHeroes.map(h => buildBattleUnit(h, 'enemy')).filter(Boolean);
-
-    if (challengerHeroes.length === 0 || enemyUnits.length === 0) { alert('Failed to build battle units'); return; }
-
-    document.getElementById('battleTab').style.display = '';
-    switchTab('battle');
-
-    document.getElementById('bannerPlayer').textContent = 'Your Team';
-    document.getElementById('bannerEnemy').textContent = teamData.ownerName + "'s Warband";
-    document.getElementById('pvpBanner').style.display = 'flex';
-
-    battleUnits = [...challengerHeroes, ...enemyUnits];
-    cooldowns = {}; buffs = {}; dots = {}; stunned = {}; grudge = {};
-    battleUnits.forEach(u => { cooldowns[u.id]={}; buffs[u.id]=[]; dots[u.id]=[]; stunned[u.id]=false; grudge[u.id]=u.team==='player'?0:-1; });
-    turnOrder = battleUnits.map(u=>u.id).sort((a,b)=>getUnit(b).speed-getUnit(a).speed);
-    currentTurnIdx = 0;
-    selectedAbility = null;
-    battlePhase = 'playing';
-    document.getElementById('battleLog').innerHTML = '<div class="entry info">PvP Battle begins!</div>';
-    renderBattleField();
-    nextTurn();
-  } catch (e) {
-    console.error('Challenge error:', e);
-    alert('Failed to load team: ' + e.message);
-  }
-}
-
-function getUnit(id) { return battleUnits.find(u => u.id === id); }
-function alive(u) { return u && u.health > 0; }
-function aliveTeam(team) { return battleUnits.filter(u => u.team === team && alive(u)); }
-
-function renderBattleField() {
-  const field = document.getElementById('battleField');
-  const labels = field.querySelectorAll('.field-label');
-  field.innerHTML = '';
-  labels.forEach(l => field.appendChild(l.cloneNode(true)));
-
-  const players = battleUnits.filter(u => u.team === 'player');
-  const enemies = battleUnits.filter(u => u.team === 'enemy');
-  const currentId = turnOrder[currentTurnIdx];
-
-  players.forEach((u, i) => {
-    const x = 10 + i * 20;
-    const y = 55 + i * 12;
-    field.innerHTML += unitHTML(u, x, y, currentId);
-  });
-  enemies.forEach((u, i) => {
-    const x = 55 + i * 15;
-    const y = 15 + i * 12;
-    field.innerHTML += unitHTML(u, x, y, currentId);
-  });
-}
-
-function unitHTML(u, x, y, currentId) {
-  const dead = u.health <= 0;
-  const isCurrent = u.id === currentId && !dead;
-  const hpPct = Math.max(0, u.health / u.maxHealth * 100);
-  const mpPct = Math.max(0, u.mana / u.maxMana * 100);
-  const spPct = Math.max(0, u.stamina / u.maxStamina * 100);
-  const grudgePct = grudge[u.id] >= 0 ? grudge[u.id] : 0;
-  const showGrudge = grudge[u.id] >= 0;
-  return `<div id="unit-${u.id}" class="battle-unit ${u.team} ${dead?'dead':''} ${isCurrent?'active-turn':''}" style="left:${x}%;top:${y}%;">
-    <div class="unit-name">${u.name}</div>
-    <div class="sprite-box">${u.icon}</div>
-    <div class="unit-bars">
-      <div class="mini-bar"><div class="fill bar-hp" style="width:${hpPct}%"></div></div>
-      <div class="mini-bar"><div class="fill bar-mp" style="width:${mpPct}%"></div></div>
-      <div class="mini-bar"><div class="fill bar-sp" style="width:${spPct}%"></div></div>
-      ${showGrudge ? `<div class="grudge-bar"><div class="grudge-fill" style="width:${grudgePct}%"></div></div>` : ''}
-    </div>
-  </div>`;
-}
-
-function nextTurn() {
-  if (battlePhase !== 'playing') return;
-  if (aliveTeam('player').length === 0) { endBattle(false); return; }
-  if (aliveTeam('enemy').length === 0) { endBattle(true); return; }
-
-  let safety = 0;
-  while (safety++ < 20) {
-    currentTurnIdx = currentTurnIdx % turnOrder.length;
-    const unit = getUnit(turnOrder[currentTurnIdx]);
-    if (alive(unit)) break;
-    currentTurnIdx++;
-  }
-
-  const unit = getUnit(turnOrder[currentTurnIdx]);
-  if (!unit) return;
-
-  processTurnStart(unit);
-  renderBattleField();
-  document.getElementById('turnIndicator').textContent = `${unit.name}'s turn`;
-
-  if (stunned[unit.id]) {
-    logEntry(`${unit.name} is stunned!`, 'info');
-    stunned[unit.id] = false;
-    setTimeout(() => { currentTurnIdx++; nextTurn(); }, 700);
-    return;
-  }
-
-  if (unit.team === 'player') {
-    showPlayerActions(unit);
-  } else {
-    setTimeout(() => enemyAI(unit), 500);
-  }
-}
-
-function processTurnStart(unit) {
-  unit.mana = Math.min(unit.maxMana, unit.mana + 3);
-  unit.stamina = Math.min(unit.maxStamina, unit.stamina + 5);
-
-  const newDots = [];
-  for (const dot of (dots[unit.id]||[])) {
-    const dmg = Math.floor(unit.maxHealth * dot.dmg);
-    unit.health = Math.max(0, unit.health - dmg);
-    logEntry(`${unit.name} takes ${dmg} DoT`, 'dmg');
-    floatDamage(unit.id, dmg);
-    if (dot.dur > 1) newDots.push({...dot, dur: dot.dur - 1});
-  }
-  dots[unit.id] = newDots;
-
-  const newBuffs = [];
-  for (const buff of (buffs[unit.id]||[])) {
-    if (buff.dur > 1) newBuffs.push({...buff, dur: buff.dur - 1});
-    else logEntry(`${unit.name}'s ${buff.name||'buff'} fades`, 'info');
-  }
-  buffs[unit.id] = newBuffs;
-
-  for (const aid in (cooldowns[unit.id]||{})) {
-    if (cooldowns[unit.id][aid] > 0) cooldowns[unit.id][aid]--;
-  }
-}
-
-function showPlayerActions(unit) {
-  const bar = document.getElementById('actionBar');
-  bar.style.display = 'flex';
-  bar.innerHTML = '';
-  selectedAbility = null;
-
-  (unit.abilities || []).forEach((ab, i) => {
-    const onCd = (cooldowns[unit.id]?.[ab.id] || 0) > 0;
-    const noRes = (ab.manaCost > unit.mana) || (ab.staminaCost > unit.stamina);
-    const cdText = onCd ? ` (${cooldowns[unit.id][ab.id]}cd)` : '';
-    const btn = document.createElement('button');
-    btn.className = 'ability-btn';
-    btn.disabled = onCd || noRes;
-    btn.innerHTML = `${ab.icon} ${ab.name}${cdText}`;
-    btn.title = ab.desc;
-    btn.onclick = () => selectAbility(unit, ab, i, bar);
-    bar.appendChild(btn);
-  });
-
-  if (grudge[unit.id] >= 100) {
-    const revBtn = document.createElement('button');
-    revBtn.className = 'ability-btn';
-    revBtn.style.borderColor = '#ef4444';
-    revBtn.style.color = '#ef4444';
-    revBtn.innerHTML = '💀 REVENGE';
-    revBtn.title = '2.5x AoE to all enemies';
-    revBtn.onclick = () => executeRevenge(unit);
-    bar.appendChild(revBtn);
-  }
-
-  document.getElementById('targetBar').style.display = 'none';
-}
-
-function selectAbility(unit, ab, idx, bar) {
-  selectedAbility = ab;
-  bar.querySelectorAll('.ability-btn').forEach((b,i) => b.classList.toggle('selected', i === idx));
-
-  const targetBar = document.getElementById('targetBar');
-  targetBar.style.display = 'flex';
-  targetBar.innerHTML = '';
-
-  if (ab.target === 'self') { executeAbility(unit, ab, unit); }
-  else if (ab.target === 'ally') {
-    aliveTeam('player').forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'target-btn ally';
-      btn.textContent = t.name;
-      btn.onclick = () => executeAbility(unit, ab, t);
-      targetBar.appendChild(btn);
-    });
-  } else if (ab.target === 'all_enemies') { executeAbility(unit, ab, null); }
-  else {
-    aliveTeam('enemy').forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'target-btn';
-      btn.textContent = `${t.icon} ${t.name} (${Math.ceil(t.health/t.maxHealth*100)}%)`;
-      btn.onclick = () => executeAbility(unit, ab, t);
-      targetBar.appendChild(btn);
+  function api(path) {
+    return fetch(API + path).then(function(r) {
+      if (!r.ok) throw new Error('API error ' + r.status);
+      return r.json();
     });
   }
-}
 
-function executeAbility(attacker, ab, target) {
-  document.getElementById('actionBar').style.display = 'none';
-  document.getElementById('targetBar').style.display = 'none';
-
-  if (ab.manaCost) attacker.mana = Math.max(0, attacker.mana - ab.manaCost);
-  if (ab.staminaCost) attacker.stamina = Math.max(0, attacker.stamina - ab.staminaCost);
-  if (ab.cd > 0) { if(!cooldowns[attacker.id]) cooldowns[attacker.id]={}; cooldowns[attacker.id][ab.id] = ab.cd; }
-
-  if (ab.type === 'heal' && target) {
-    const heal = Math.floor(target.maxHealth * (ab.healPct || 0.3));
-    target.health = Math.min(target.maxHealth, target.health + heal);
-    logEntry(`${attacker.name} heals ${target.name} for ${heal}`, 'heal');
-    floatDamage(target.id, heal, true);
-  } else if (ab.type === 'buff') {
-    if (ab.effect) {
-      buffs[attacker.id] = buffs[attacker.id] || [];
-      buffs[attacker.id].push({...ab.effect, name: ab.name});
-      logEntry(`${attacker.name} uses ${ab.name}!`, 'info');
-    }
-  } else if (ab.target === 'all_enemies') {
-    aliveTeam('enemy').forEach(t => {
-      const dmg = calcDamage(attacker, ab, t);
-      applyDamage(t, dmg, attacker);
-      logEntry(`${attacker.name}'s ${ab.name} hits ${t.name} for ${dmg}`, 'dmg');
-    });
-  } else if (target) {
-    const dmg = calcDamage(attacker, ab, target);
-    applyDamage(target, dmg, attacker);
-    logEntry(`${attacker.name}'s ${ab.name} hits ${target.name} for ${dmg}`, 'dmg');
-    if (ab.effect?.type === 'stun') { stunned[target.id] = true; logEntry(`${target.name} stunned!`, 'info'); }
-    if (ab.effect?.type === 'dot') { dots[target.id] = dots[target.id]||[]; dots[target.id].push({dmg:ab.effect.dmg,dur:ab.effect.dur}); }
+  function getRankTier(wins) {
+    if (wins >= 100) return { name:'Legend', css:'rank-legend' };
+    if (wins >= 50) return { name:'Diamond', css:'rank-diamond' };
+    if (wins >= 30) return { name:'Platinum', css:'rank-platinum' };
+    if (wins >= 15) return { name:'Gold', css:'rank-gold' };
+    if (wins >= 5) return { name:'Silver', css:'rank-silver' };
+    return { name:'Bronze', css:'rank-bronze' };
   }
 
-  if (ab.manaCost === 0 && ab.staminaCost === 0) {
-    attacker.mana = Math.min(attacker.maxMana, attacker.mana + 5);
-    attacker.stamina = Math.min(attacker.maxStamina, attacker.stamina + 5);
+  function getRankPosClass(i) {
+    if (i === 0) return 'gold-rank';
+    if (i === 1) return 'silver-rank';
+    if (i === 2) return 'bronze-rank';
+    return 'default-rank';
   }
 
-  renderBattleField();
-  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 450);
-}
-
-function executeRevenge(unit) {
-  document.getElementById('actionBar').style.display = 'none';
-  document.getElementById('targetBar').style.display = 'none';
-  const baseDmg = (unit.physicalDamage + unit.magicDamage) * 2.5 + unit.level * 5;
-  aliveTeam('enemy').forEach(e => {
-    const dmg = Math.floor(baseDmg * (0.8 + Math.random() * 0.4));
-    applyDamage(e, dmg, unit);
-    logEntry(`${unit.name}'s REVENGE hits ${e.name} for ${dmg}!`, 'dmg');
-  });
-  grudge[unit.id] = 0;
-  renderBattleField();
-  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 450);
-}
-
-function calcDamage(attacker, ab, target) {
-  const dmgBuff = (buffs[attacker.id]||[]).reduce((m,b) => b.stat==='damage' ? m * (b.mult||1) : m, 1);
-  let base = ab.type === 'magical' ? attacker.magicDamage * (ab.damage||1) : attacker.physicalDamage * (ab.damage||1);
-  base *= dmgBuff;
-  const def = Math.max(0, target.defense * 0.5);
-  let dmg = Math.max(1, Math.floor(base - def));
-  if (Math.random() * 100 < (attacker.critChance || 5)) { dmg = Math.floor(dmg * 1.8); logEntry('Critical!', 'info'); }
-  return Math.floor(dmg * (0.9 + Math.random() * 0.2));
-}
-
-function applyDamage(target, dmg, attacker) {
-  const dodged = Math.random()*100 < (target.dodge||0) + ((buffs[target.id]||[]).reduce((s,b)=>b.stat==='dodge'?s+(b.add||0):s,0));
-  if (dodged) { logEntry(`${target.name} dodges!`, 'info'); floatDamage(target.id, 'MISS', false); return; }
-  target.health = Math.max(0, target.health - dmg);
-  floatDamage(target.id, dmg);
-
-  if (target.team === 'player' && grudge[target.id] >= 0) {
-    const gain = Math.min(30, Math.max(5, Math.floor(dmg / target.maxHealth * 100)));
-    grudge[target.id] = Math.min(100, grudge[target.id] + gain);
+  function timeAgo(ts) {
+    var diff = Date.now() - ts;
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
   }
 
-  const el = document.getElementById('unit-' + target.id);
-  if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); }
-  if (target.health <= 0) logEntry(`${target.name} has fallen!`, 'info');
-}
-
-function floatDamage(unitId, val, isHeal) {
-  const el = document.getElementById('unit-' + unitId);
-  if (!el) return;
-  const float = document.createElement('div');
-  float.className = 'float-dmg';
-  float.style.color = isHeal ? '#4ade80' : (val === 'MISS' ? '#93c5fd' : '#ef4444');
-  float.style.left = '25%';
-  float.style.top = '8%';
-  float.textContent = isHeal ? `+${val}` : (val === 'MISS' ? 'MISS' : `-${val}`);
-  el.appendChild(float);
-  setTimeout(() => float.remove(), 1000);
-}
-
-function enemyAI(unit) {
-  const targets = aliveTeam('player');
-  if (targets.length === 0) { currentTurnIdx++; nextTurn(); return; }
-
-  const abilities = unit.abilities || [];
-  const usable = abilities.filter(ab => {
-    if ((cooldowns[unit.id]?.[ab.id]||0) > 0) return false;
-    if (ab.manaCost > unit.mana || ab.staminaCost > unit.stamina) return false;
-    return true;
-  });
-
-  let chosen;
-  if (usable.length > 1 && Math.random() > 0.35) {
-    const specials = usable.filter(a => a.cd > 0);
-    chosen = specials.length > 0 ? specials[Math.floor(Math.random()*specials.length)] : usable[0];
-  } else {
-    chosen = usable[0] || abilities[0];
+  function escHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
   }
 
-  if (!chosen) { currentTurnIdx++; nextTurn(); return; }
-
-  if (chosen.manaCost) unit.mana = Math.max(0, unit.mana - chosen.manaCost);
-  if (chosen.staminaCost) unit.stamina = Math.max(0, unit.stamina - chosen.staminaCost);
-  if (chosen.cd > 0) { if(!cooldowns[unit.id]) cooldowns[unit.id]={}; cooldowns[unit.id][chosen.id] = chosen.cd; }
-
-  if (chosen.type === 'heal') {
-    const healTarget = aliveTeam('enemy').sort((a,b) => a.health/a.maxHealth - b.health/b.maxHealth)[0];
-    if (healTarget) {
-      const heal = Math.floor(healTarget.maxHealth * 0.3);
-      healTarget.health = Math.min(healTarget.maxHealth, healTarget.health + heal);
-      logEntry(`${unit.name} heals ${healTarget.name} for ${heal}`, 'heal');
-      floatDamage(healTarget.id, heal, true);
-    }
-  } else if (chosen.type === 'buff') {
-    buffs[unit.id] = buffs[unit.id] || [];
-    if (chosen.effect) buffs[unit.id].push({...chosen.effect, name: chosen.name});
-    logEntry(`${unit.name} uses ${chosen.name}!`, 'info');
-  } else if (chosen.target === 'all_enemies') {
-    targets.forEach(t => {
-      const dmg = calcDamage(unit, chosen, t);
-      applyDamage(t, dmg, unit);
-      logEntry(`${unit.name}'s ${chosen.name} hits ${t.name} for ${dmg}`, 'dmg');
-    });
-  } else {
-    const target = targets.sort((a,b) => a.health - b.health)[0];
-    const dmg = calcDamage(unit, chosen, target);
-    applyDamage(target, dmg, unit);
-    logEntry(`${unit.name}'s ${chosen.name} hits ${target.name} for ${dmg}`, 'dmg');
-    if (chosen.effect?.type === 'stun') { stunned[target.id] = true; logEntry(`${target.name} stunned!`, 'info'); }
-    if (chosen.effect?.type === 'dot') { dots[target.id] = dots[target.id]||[]; dots[target.id].push({dmg:chosen.effect.dmg,dur:chosen.effect.dur}); }
+  function loadStats() {
+    Promise.all([
+      api('/api/arena/stats'),
+      api('/api/public/stats')
+    ]).then(function(results) {
+      var arena = results[0];
+      var pub = results[1];
+      document.getElementById('stat-teams').textContent = arena.totalTeams;
+      document.getElementById('stat-ranked').textContent = arena.rankedTeams;
+      document.getElementById('stat-battles').textContent = arena.totalBattles;
+      document.getElementById('stat-players').textContent = pub.totalPlayers;
+    }).catch(function() {});
   }
 
-  unit.mana = Math.min(unit.maxMana, unit.mana + 3);
-  unit.stamina = Math.min(unit.maxStamina, unit.stamina + 3);
+  function loadLobby() {
+    var statusParam = currentFilter === 'all' ? '' : '&status=' + currentFilter;
+    api('/api/arena/lobby?page=' + currentPage + '&limit=20' + statusParam).then(function(data) {
+      var el = document.getElementById('lobby-content');
 
-  renderBattleField();
-  setTimeout(() => { currentTurnIdx++; nextTurn(); }, 450);
-}
+      if (!data.teams || data.teams.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>No Warriors Yet</h3>' +
+            '<p>The arena awaits its first challengers. Submit your war party in-game to appear here!</p>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+          '</div>';
+        document.getElementById('lobby-pagination').innerHTML = '';
+        return;
+      }
 
-async function endBattle(playerWon) {
-  battlePhase = 'ended';
-  const resultType = playerWon ? 'team_lost' : 'team_won';
+      var html = '';
+      data.teams.forEach(function(t, i) {
+        var globalIdx = currentPage * 20 + i + 1;
+        var heroTags = (t.heroSummary || []).map(function(h) {
+          return '<span class="hero-tag"><span class="lvl">Lv.' + h.level + '</span> ' +
+            escHtml(RACE_NAMES[h.raceId] || h.raceId) + ' ' +
+            escHtml(CLASS_NAMES[h.classId] || h.classId) +
+            ' &mdash; ' + escHtml(h.name) + '</span>';
+        }).join('');
 
-  let apiResult = null;
-  if (currentBattleTeamId) {
-    try {
-      const res = await fetch(API_BASE + '/api/arena/battle/result', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teamId: currentBattleTeamId,
-          challengerName: 'Arena Challenger',
-          result: resultType,
-          challengeNonce: currentChallengeNonce,
-        }),
+        var wr = t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0;
+        var tier = getRankTier(t.wins);
+
+        html +=
+          '<div class="team-card ' + t.status + '">' +
+            '<div class="team-rank"><div class="pos ' + getRankPosClass(i + currentPage * 20) + '">#' + globalIdx + '</div></div>' +
+            '<div class="team-info">' +
+              '<h3>' + escHtml(t.ownerName) +
+                '<span class="status-badge ' + t.status + '">' + t.status + '</span>' +
+                ' <span class="rank-badge ' + tier.css + '">' + tier.name + '</span>' +
+              '</h3>' +
+              '<div class="heroes-list">' + heroTags + '</div>' +
+            '</div>' +
+            '<div class="team-stats">' +
+              '<div class="record"><span class="w">' + t.wins + 'W</span> / <span class="l">' + t.losses + 'L</span></div>' +
+              '<div class="winrate">' + wr + '% win rate</div>' +
+              '<div class="battles">' + t.totalBattles + ' battles</div>' +
+            '</div>' +
+          '</div>';
       });
-      apiResult = await res.json();
-    } catch (e) { console.error('Battle result post error:', e); }
+      el.innerHTML = html;
+
+      var pagEl = document.getElementById('lobby-pagination');
+      if (data.totalPages > 1) {
+        var pagHtml = '';
+        pagHtml += '<button class="page-btn" ' + (currentPage <= 0 ? 'disabled' : '') +
+          ' onclick="window._arenaPage(' + (currentPage - 1) + ')">&laquo;</button>';
+        for (var p = 0; p < data.totalPages && p < 10; p++) {
+          pagHtml += '<button class="page-btn ' + (p === currentPage ? 'active' : '') +
+            '" onclick="window._arenaPage(' + p + ')">' + (p + 1) + '</button>';
+        }
+        pagHtml += '<button class="page-btn" ' + (currentPage >= data.totalPages - 1 ? 'disabled' : '') +
+          ' onclick="window._arenaPage(' + (currentPage + 1) + ')">&raquo;</button>';
+        pagEl.innerHTML = pagHtml;
+      } else {
+        pagEl.innerHTML = '';
+      }
+    }).catch(function(err) {
+      document.getElementById('lobby-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not reach the arena server. Please try again later.</p></div>';
+    });
   }
 
-  const resultEl = document.getElementById('resultContent');
-  if (playerWon) {
-    const survivors = aliveTeam('player');
-    const survivorHtml = survivors.map(h => `<div style="font-size:0.75rem;color:var(--dim)">${h.icon} ${h.name} - ${Math.ceil(h.health/h.maxHealth*100)}% HP</div>`).join('');
-    resultEl.innerHTML = `
-      <h2 style="color:var(--gold)">VICTORY!</h2>
-      <p style="color:var(--dim);margin-bottom:12px">You defeated the opponent's warband!</p>
-      <div style="margin-bottom:12px">${survivorHtml}</div>
-      ${apiResult?.demoted ? '<div style="color:var(--hp);font-size:0.7rem;margin-bottom:8px">The opponent\'s team has been demoted to Unranked after 3 losses!</div>' : ''}
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-        <button class="btn btn-gold" onclick="switchTab('lobby')">Back to Lobby</button>
-        <button class="btn" onclick="challengeTeam('${currentBattleTeamId}')">Rematch</button>
-      </div>
-    `;
-  } else {
-    const rewardsHtml = apiResult?.rewards ? `
-      <div class="rewards">
-        <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);margin-bottom:6px">Opponent Team Rewards</div>
-        ${apiResult.rewards.gold ? `<div class="item"><span>Gold Earned</span><span style="color:var(--gold)">+${apiResult.rewards.gold}</span></div>` : ''}
-        ${apiResult.rewards.resources ? `<div class="item"><span>Resources</span><span style="color:var(--accent)">+${apiResult.rewards.resources}</span></div>` : ''}
-        ${apiResult.rewards.equipment ? `<div class="item"><span>Equipment Drop</span><span style="color:#a855f7">Tier ${apiResult.rewards.equipment.tier}</span></div>` : ''}
-      </div>
-    ` : '';
+  window._arenaPage = function(p) {
+    currentPage = Math.max(0, p);
+    loadLobby();
+  };
 
-    resultEl.innerHTML = `
-      <h2 style="color:var(--hp)">DEFEATED</h2>
-      <p style="color:var(--dim);margin-bottom:12px">The opponent's warband was too strong!</p>
-      ${rewardsHtml}
-      <div style="font-size:0.6rem;color:var(--dim);margin:8px 0">
-        Team record: ${apiResult?.wins || '?'}W / ${apiResult?.losses || '?'}L
-        ${apiResult?.teamStatus === 'unranked' ? ' (UNRANKED)' : ' (RANKED)'}
-      </div>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-        <button class="btn btn-gold" onclick="switchTab('lobby')">Back to Lobby</button>
-        <button class="btn btn-red" onclick="challengeTeam('${currentBattleTeamId}')">Try Again</button>
-      </div>
-    `;
+  function loadLeaderboard() {
+    api('/api/arena/leaderboard?limit=50').then(function(data) {
+      var el = document.getElementById('leaderboard-content');
+      if (!data.leaderboard || data.leaderboard.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>Leaderboard Empty</h3>' +
+            '<p>No battles have been fought yet. Be the first to claim glory!</p>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+          '</div>';
+        return;
+      }
+
+      var html =
+        '<table class="lb-table"><thead><tr>' +
+        '<th>#</th><th>Warlord</th><th>Heroes</th><th>Record</th><th>Win Rate</th><th>Rank</th>' +
+        '</tr></thead><tbody>';
+
+      data.leaderboard.forEach(function(t) {
+        var tier = getRankTier(t.wins);
+        var heroNames = (t.heroes || []).map(function(h) {
+          return escHtml(h.name) + ' <span style="color:var(--dim);font-size:11px;">(Lv.' + h.level + ')</span>';
+        }).join(', ');
+
+        html +=
+          '<tr>' +
+            '<td class="rank-cell" style="color:' +
+              (t.rank === 1 ? 'var(--gold)' : t.rank === 2 ? 'var(--silver)' : t.rank === 3 ? 'var(--bronze)' : 'var(--dim)') +
+              '">' + t.rank + '</td>' +
+            '<td><strong>' + escHtml(t.ownerName) + '</strong></td>' +
+            '<td>' + heroNames + '</td>' +
+            '<td><span style="color:#4caf50">' + t.wins + 'W</span> / <span style="color:var(--red)">' + t.losses + 'L</span></td>' +
+            '<td>' + t.winRate + '%</td>' +
+            '<td><span class="rank-badge ' + tier.css + '">' + tier.name + '</span></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }).catch(function() {
+      document.getElementById('leaderboard-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not load leaderboard.</p></div>';
+    });
   }
 
-  document.getElementById('battleTab').style.display = 'none';
-  switchTab('result');
-  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-  document.getElementById('phase-result').classList.add('active');
-  loadArenaStats();
-}
+  function loadRecent() {
+    api('/api/arena/stats').then(function(data) {
+      var el = document.getElementById('recent-content');
+      var battles = data.recentBattles || [];
 
-function logEntry(text, type) {
-  const log = document.getElementById('battleLog');
-  const entry = document.createElement('div');
-  entry.className = `entry ${type||''}`;
-  entry.textContent = text;
-  log.appendChild(entry);
-  log.scrollTop = log.scrollHeight;
-}
+      if (battles.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>No Battles Yet</h3>' +
+            '<p>The arena is quiet... for now.</p>' +
+          '</div>';
+        return;
+      }
 
-(function init() {
-  loadArenaStats();
-  loadLobby('ranked');
-
-  const params = new URLSearchParams(window.location.search);
-  const shareToken = params.get('s') || params.get('wk');
-  if (shareToken) {
-    try {
-      const heroes = parseHeroInput('GW2:' + shareToken);
-      document.getElementById('submitInput').value = 'GW2:' + shareToken;
-      switchTab('submit');
-    } catch(e) { console.error('URL token parse failed:', e); }
+      var html = '';
+      battles.forEach(function(b) {
+        var won = b.result === 'team_won';
+        html +=
+          '<div class="recent-battle">' +
+            '<div class="result-icon">' + (won ? '&#9876;' : '&#9760;') + '</div>' +
+            '<div class="battle-info">' +
+              '<div class="names">' +
+                '<span style="color:' + (won ? '#4caf50' : 'var(--red)') + '">' +
+                  escHtml(b.challengerName) +
+                '</span>' +
+                ' challenged team ' +
+                '<span style="color:var(--dim)">' + escHtml(b.teamId).slice(0, 20) + '...</span>' +
+              '</div>' +
+              '<div class="time">' +
+                (won ? 'Defender held' : 'Challenger defeated') +
+                ' &bull; ' + timeAgo(b.timestamp) +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      });
+      el.innerHTML = html;
+    }).catch(function() {
+      document.getElementById('recent-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not load recent battles.</p></div>';
+    });
   }
+
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      var panel = document.getElementById('panel-' + tab.dataset.tab);
+      if (panel) panel.classList.add('active');
+
+      if (tab.dataset.tab === 'leaderboard') loadLeaderboard();
+      if (tab.dataset.tab === 'recent') loadRecent();
+    });
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      currentPage = 0;
+      loadLobby();
+    });
+  });
+
+  loadStats();
+  loadLobby();
+
+  setInterval(function() {
+    loadStats();
+    var activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+      if (activeTab.dataset.tab === 'lobby') loadLobby();
+      else if (activeTab.dataset.tab === 'leaderboard') loadLeaderboard();
+      else if (activeTab.dataset.tab === 'recent') loadRecent();
+    }
+  }, 30000);
+
 })();
 </script>
+
 </body>
 </html>
