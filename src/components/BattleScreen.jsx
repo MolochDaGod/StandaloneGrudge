@@ -1425,6 +1425,7 @@ export default function BattleScreen() {
         if (desired === 'heal' && spriteData.heal) return 'heal';
         if (desired === 'block' && spriteData.block) return 'block';
         if (spriteData[desired]) return desired;
+        if (effectMapping.fallbackAnim && spriteData[effectMapping.fallbackAnim]) return effectMapping.fallbackAnim;
       }
       if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : spriteData.cast ? 'cast' : 'attack1';
       if (abilityType === 'buff') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
@@ -1438,7 +1439,8 @@ export default function BattleScreen() {
     const getComboAnims = () => {
       const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
       if (effectMapping?.comboAnims) {
-        return effectMapping.comboAnims.filter(a => spriteData[a]);
+        const resolved = effectMapping.comboAnims.map(a => spriteData[a] ? a : (effectMapping.fallbackAnim && spriteData[effectMapping.fallbackAnim] ? effectMapping.fallbackAnim : 'attack1'));
+        return resolved.filter(a => spriteData[a]);
       }
       return null;
     };
