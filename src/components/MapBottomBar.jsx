@@ -44,6 +44,48 @@ function ChatAvatar({ race, heroClass, size = 20 }) {
   );
 }
 
+function BarRow({ label, current, max, color }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  const fillColors = {
+    '#22c55e': { top: '#78e08f', mid: '#38b764', bot: '#1e6f3e', glow: 'rgba(34,197,94,0.35)' },
+    '#3b82f6': { top: '#7db8ff', mid: '#3b82f6', bot: '#1d4ed8', glow: 'rgba(59,130,246,0.35)' },
+    '#f59e0b': { top: '#fcd34d', mid: '#f59e0b', bot: '#b45309', glow: 'rgba(245,158,11,0.35)' },
+    '#dc2626': { top: '#f87171', mid: '#dc2626', bot: '#7f1d1d', glow: 'rgba(220,38,38,0.4)' },
+  };
+  const fc = fillColors[color] || { top: color, mid: color, bot: color, glow: color + '44' };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <span style={{ width: 14, fontSize: '0.35rem', fontWeight: 800, color: fc.mid, textAlign: 'right', letterSpacing: '-0.02em' }}>{label}</span>
+      <div style={{
+        flex: 1, height: 4,
+        background: 'linear-gradient(180deg, #1a1a2e, #0d0d1a)',
+        overflow: 'hidden',
+        border: '1px solid #2a2a3e',
+        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)',
+        imageRendering: 'pixelated',
+        position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, bottom: 0,
+          width: `${pct}%`,
+          background: `linear-gradient(180deg, ${fc.top} 0%, ${fc.mid} 40%, ${fc.bot} 100%)`,
+          transition: 'width 0.4s ease',
+          boxShadow: pct > 0 ? `0 0 4px ${fc.glow}` : 'none',
+        }} />
+        {pct > 0 && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0,
+            width: `${pct}%`, height: '40%',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0))',
+            transition: 'width 0.4s ease',
+          }} />
+        )}
+      </div>
+      <span style={{ width: 22, fontSize: '0.3rem', color: 'rgba(226,232,240,0.5)', textAlign: 'right', fontWeight: 600 }}>{Math.floor(current)}</span>
+    </div>
+  );
+}
+
 function HarvestingPopup({ onClose }) {
   const {
     harvestNodes, activeHarvests, harvestResources,
@@ -317,6 +359,7 @@ export default function MapBottomBar({
   onToggleGruda,
   showWarParty,
   showGruda,
+  onSelectPartyHero,
 }) {
   const {
     heroRoster, activeHeroIds, activeHarvests, level,
@@ -327,6 +370,21 @@ export default function MapBottomBar({
   const [showHarvesting, setShowHarvesting] = useState(false);
   const [showGear, setShowGear] = useState(false);
   const [showCharacter, setShowCharacter] = useState(false);
+  const activePartyHeroes = heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id));
+  const [selectedPartyHero, setSelectedPartyHeroState] = useState(() => activePartyHeroes[0]?.id || null);
+
+  useEffect(() => {
+    if (selectedPartyHero && !activePartyHeroes.find(h => h.id === selectedPartyHero)) {
+      const fallback = activePartyHeroes[0]?.id || null;
+      setSelectedPartyHeroState(fallback);
+      if (onSelectPartyHero) onSelectPartyHero(fallback);
+    }
+  }, [heroRoster, activeHeroIds]);
+
+  const setSelectedPartyHero = (id) => {
+    setSelectedPartyHeroState(id);
+    if (onSelectPartyHero) onSelectPartyHero(id);
+  };
 
   const closeAllPopups = () => {
     setShowHarvesting(false);
@@ -491,13 +549,12 @@ export default function MapBottomBar({
 
         {/* RIGHT PANEL: War Party Status */}
         <div className="ui-element" style={{
-          width: 200,
+          width: 290,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-end',
           flexShrink: 0,
         }}>
-          {/* Circle buttons floating above the panel */}
           <div style={{ display: 'flex', gap: 5, marginBottom: -12, zIndex: 10, paddingRight: 10 }}>
             {popupButtons.map(pb => (
               <div
@@ -513,10 +570,9 @@ export default function MapBottomBar({
             ))}
           </div>
 
-          {/* Status panel */}
           <div className="panel-style" style={{
             width: '100%',
-            height: 130,
+            height: 185,
             display: 'flex',
             flexDirection: 'column',
             padding: '14px 10px 8px',
@@ -526,30 +582,85 @@ export default function MapBottomBar({
               WAR PARTY
             </div>
             <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: "'Jost', sans-serif" }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: "'Jost', sans-serif" }}>
                 {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map(hero => {
                   const heroCls = classDefinitions[hero.classId];
+                  const heroRace = raceDefinitions[hero.raceId];
                   const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
-                  const hpPercent = heroStats ? Math.round((hero.currentHealth / heroStats.health) * 100) : 100;
+                  const isSelected = selectedPartyHero === hero.id;
+                  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+                  const circleSize = 44;
+                  const fw = spriteData?.frameWidth || 100;
+                  const spriteScale = (circleSize / fw) * 1.1;
+
                   return (
-                    <div key={`bar_${hero.id}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div
+                      key={`bar_${hero.id}`}
+                      onClick={() => setSelectedPartyHero(hero.id)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        cursor: 'pointer',
+                        padding: '4px 6px',
+                        borderRadius: 6,
+                        background: isSelected ? 'rgba(110,231,183,0.08)' : 'transparent',
+                        border: isSelected ? '1px solid rgba(110,231,183,0.25)' : '1px solid transparent',
+                        transition: 'background 0.15s, border-color 0.15s',
+                      }}
+                    >
                       <div style={{
-                        width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-                        border: '1px solid var(--gold)', background: '#000',
+                        width: circleSize, height: circleSize, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                        border: isSelected ? '2px solid var(--accent)' : '1.5px solid rgba(255,215,0,0.35)',
+                        background: 'rgba(0,0,0,0.7)',
+                        boxShadow: isSelected ? '0 0 8px rgba(110,231,183,0.3)' : '0 0 4px rgba(0,0,0,0.5)',
                         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                        position: 'relative',
                       }}>
-                        <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.36} speed={180} />
+                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} />
                       </div>
+
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {hero.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                          <span style={{
+                            fontSize: '0.6rem', fontWeight: 700,
+                            color: isSelected ? 'var(--accent)' : '#fff',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            flex: 1, minWidth: 0,
+                          }}>
+                            {hero.name}
+                          </span>
                         </div>
-                        <div style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroCls?.name}</div>
-                        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-                          <div style={{ flex: 1, height: 4, background: 'rgba(48,0,0,0.6)', borderRadius: 2, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${hpPercent}%`, background: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444', borderRadius: 2, transition: 'width 0.3s' }} />
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                          <span style={{
+                            fontSize: '0.45rem', fontWeight: 700, color: 'var(--gold)',
+                            background: 'rgba(255,215,0,0.1)', padding: '0px 4px', borderRadius: 3,
+                            border: '1px solid rgba(255,215,0,0.15)',
+                          }}>
+                            Lv.{hero.level}
+                          </span>
+                          {heroCls && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <InlineIcon name={heroCls.icon} size={11} />
+                              <span style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>{heroCls.name}</span>
+                            </span>
+                          )}
+                          {heroRace?.icon && (
+                            <img src={heroRace.icon} alt={heroRace.name} style={{
+                              width: 13, height: 13, borderRadius: '50%',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              imageRendering: 'pixelated',
+                            }} />
+                          )}
+                        </div>
+
+                        {heroStats && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <BarRow label="HP" current={hero.currentHealth} max={heroStats.health} color="#22c55e" />
+                            <BarRow label="MP" current={hero.currentMana} max={heroStats.mana} color="#3b82f6" />
+                            <BarRow label="SP" current={hero.currentStamina} max={heroStats.stamina} color="#f59e0b" />
+                            <BarRow label="GR" current={hero.grudge || 0} max={100} color="#dc2626" />
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   );

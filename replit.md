@@ -16,7 +16,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Game Frame & Layout:** The application is wrapped in a `.game-frame` class with an ornate fantasy border frame overlay. CSS custom properties define content-safe insets. Responsive breakpoints adjust insets for various viewports.
 - **Z-Index Layer System:** A two-context architecture is used. The content wrapper sits at z-index 10501, creating a stacking context for screen-internal layers. Overlay siblings render outside the wrapper at elevated z-indices.
 - **Game UI Overlay System:** A full-screen transparent layer (`#game-ui-overlay`) covers the game, with interactive panels receiving clicks via `.ui-element` class. Three bottom-aligned panels use `.panel-style` class.
-- **Map Bottom Bar:** Renders inside `#game-ui-overlay` with three panels: Party Log, hotbar action slots, and War Party status with popup buttons.
+- **Map Bottom Bar (MapBottomBar.jsx):** Renders inside `#game-ui-overlay`. Three panels: left (Party Log chat, 260px), center (8 hotbar action slots, max 520px), right (War Party status, 290px×185px with 3 `.circle-btn` popups above). War Party panel features 44px animated sprite circles, MiniBar-style HP/MP/SP/Grudge bars (BarRow component), Level badge + class icon + race icon row per hero, and left-click hero selection with accent highlight for focusing operations. Popups (Harvest, Gear, Character) use `.panel-style` and absolute positioning.
 
 **Technical Implementations:**
 - **Character System:** Supports 24 unique Warlord combinations across 6 races and 4 classes, with 8 attributes and a 0-20 level progression.
