@@ -404,12 +404,12 @@ export default function MapBottomBar({
   const hasUnspent = unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0);
 
   const buttons = [
-    { id: 'camp', label: 'Camp', icon: 'camp', color: '#4ade80', action: () => enterScene('camp', 'world') },
-    { id: 'points', label: 'Points', icon: 'star', color: hasUnspent ? '#ef4444' : '#94a3b8', action: () => setScreen('account'), pulse: hasUnspent },
-    { id: 'council', label: 'Council', icon: 'battle', color: 'var(--gold)', action: () => setScreen('account') },
-    { id: 'party', label: 'Party', icon: 'shield', color: 'var(--accent)', action: () => onToggleWarParty(), badge: Object.keys(activeHarvests).length > 0 ? Object.keys(activeHarvests).length : null },
+    { id: 'camp', label: 'Camp', img: '/ui/icon-camp.png', color: '#4ade80', action: () => enterScene('camp', 'world') },
+    { id: 'points', label: 'Points', img: '/ui/icon-points.png', color: hasUnspent ? '#ef4444' : '#94a3b8', action: () => setScreen('account'), pulse: hasUnspent },
+    { id: 'council', label: 'Council', img: '/ui/icon-council.png', color: 'var(--gold)', action: () => setScreen('account') },
+    { id: 'party', label: 'Party', img: '/ui/icon-party.png', color: 'var(--accent)', action: () => onToggleWarParty(), badge: Object.keys(activeHarvests).length > 0 ? Object.keys(activeHarvests).length : null },
     { id: 'gruda', label: 'Gruda', icon: 'skull', color: '#f87171', action: () => onToggleGruda() },
-    { id: 'settings', label: 'Settings', icon: 'scroll', color: '#94a3b8', action: () => setScreen('account') },
+    { id: 'settings', label: 'Settings', img: '/ui/icon-settings.png', color: '#94a3b8', action: () => setScreen('account') },
     { id: 'music', label: musicMuted ? 'Unmute' : 'Mute', icon: 'energy', color: musicMuted ? '#ef4444' : '#6ee7b7', action: () => {
       const newVal = !musicMuted;
       setMusicMutedState(newVal);
@@ -535,7 +535,11 @@ export default function MapBottomBar({
                 }}
               >
                 <span className="hotbar-num">{idx + 1}</span>
-                <InlineIcon name={btn.icon} size={20} />
+                {btn.img ? (
+                  <img src={btn.img} alt={btn.label} style={{ width: 26, height: 26, objectFit: 'contain', imageRendering: 'auto', borderRadius: 2 }} />
+                ) : (
+                  <InlineIcon name={btn.icon} size={20} />
+                )}
                 {btn.badge && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4,
