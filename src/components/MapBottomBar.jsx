@@ -441,29 +441,23 @@ export default function MapBottomBar({
 
   const overlayContent = (
     <div id="game-ui-overlay" style={{
-      position: 'absolute',
-      bottom: 'var(--frame-inset-bottom, 12%)',
-      left: 'var(--frame-inset-side, 4%)',
-      right: 'var(--frame-inset-side, 4%)',
+      position: 'fixed',
+      bottom: '12%',
+      left: '5%',
+      right: '5%',
       height: BAR_HEIGHT,
-      zIndex: 10600,
-      pointerEvents: 'none',
+      zIndex: 99999,
+      display: 'flex',
+      alignItems: 'stretch',
+      backgroundImage: 'url(/ui/bar-background.png)',
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center center',
+      borderRadius: 4,
     }}>
-      {showHarvesting && <div style={{ pointerEvents: 'auto' }}><HarvestingPopup onClose={() => setShowHarvesting(false)} /></div>}
-      {showGear && <div style={{ pointerEvents: 'auto' }}><GearPopup onClose={() => setShowGear(false)} /></div>}
-      {showCharacter && <div style={{ pointerEvents: 'auto' }}><CharacterPopup onClose={() => setShowCharacter(false)} /></div>}
-
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: '100%',
-        pointerEvents: 'auto',
-        display: 'flex',
-        alignItems: 'stretch',
-        padding: '0',
-        backgroundImage: 'url(/ui/bar-background.png)',
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center center',
-      }}>
+      {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
+      {showGear && <GearPopup onClose={() => setShowGear(false)} />}
+      {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
 
         {/* LEFT PANEL: Party Log / Chat */}
         <div style={{
@@ -703,7 +697,6 @@ export default function MapBottomBar({
           </div>
         </div>
 
-      </div>
     </div>
   );
 
