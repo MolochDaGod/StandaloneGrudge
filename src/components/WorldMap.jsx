@@ -2327,25 +2327,25 @@ export default function WorldMap() {
             zIndex: MAP_LAYERS.POPUPS,
             background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
             border: `2px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}`,
-            borderRadius: 14,
+            borderRadius: 12,
             padding: 0,
-            width: 260,
-            maxHeight: '70vh', overflowY: 'auto',
-            boxShadow: `0 8px 40px rgba(0,0,0,0.8), 0 0 20px ${locationIcons[selectedLoc.id]?.glow || 'rgba(110,231,183,0.2)'}`,
+            width: 220,
+            maxHeight: '60vh', overflowY: 'auto',
+            boxShadow: `0 6px 30px rgba(0,0,0,0.8), 0 0 16px ${locationIcons[selectedLoc.id]?.glow || 'rgba(110,231,183,0.2)'}`,
             ...popupPositionStyle(selectedLoc.id),
           }}>
             <div style={{
-              padding: '14px 16px 10px',
+              padding: '10px 12px 8px',
               borderBottom: '1px solid rgba(255,255,255,0.08)',
               background: `linear-gradient(135deg, ${locationIcons[selectedLoc.id]?.glow || 'rgba(0,0,0,0.2)'}, transparent)`,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <img src={locationIcons[selectedLoc.id]?.img} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}` }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <img src={locationIcons[selectedLoc.id]?.img} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}` }} />
                 <div>
-                  <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700 }}>
+                  <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700 }}>
                     {selectedLoc.name}
                   </div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
+                  <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>
                     Level {selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}
                     {isCleared && <span style={{ color: 'var(--gold)', marginLeft: 6 }}>Cleared</span>}
                   </div>
@@ -2618,28 +2618,28 @@ export default function WorldMap() {
               zIndex: MAP_LAYERS.POPUPS,
               background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
               border: '2px solid #4ade80',
-              borderRadius: 14,
+              borderRadius: 12,
               padding: 0,
-              width: 280,
-              maxHeight: '70vh', overflowY: 'auto',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.8), 0 0 20px rgba(74,222,128,0.3)',
+              width: 230,
+              maxHeight: '60vh', overflowY: 'auto',
+              boxShadow: '0 6px 30px rgba(0,0,0,0.8), 0 0 16px rgba(74,222,128,0.3)',
               ...popupPositionStyle(city.id),
             }}>
               <div style={{
-                padding: '14px 16px 10px',
+                padding: '10px 12px 8px',
                 borderBottom: '1px solid rgba(255,255,255,0.08)',
                 background: 'linear-gradient(135deg, rgba(74,222,128,0.15), transparent)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: '1.4rem' }}>{city.icon}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: '1.1rem' }}>{city.icon}</span>
                   <div>
-                    <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.95rem', fontWeight: 700 }}>
+                    <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.8rem', fontWeight: 700 }}>
                       {city.name}
                     </div>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
+                    <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>City</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+                <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.3 }}>
                   {city.description}
                 </div>
               </div>
@@ -4234,13 +4234,13 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        width: '100%', padding: '8px 10px', margin: '4px 0',
+        display: 'flex', alignItems: 'center', gap: 7,
+        width: '100%', padding: '5px 8px', margin: '2px 0',
         background: disabled ? 'rgba(40,40,60,0.3)' : 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.06))',
-        border: `1.5px solid ${disabled ? 'rgba(80,80,100,0.2)' : `${color}33`}`,
-        borderRadius: 10, cursor: disabled ? 'not-allowed' : 'pointer',
+        border: `1px solid ${disabled ? 'rgba(80,80,100,0.2)' : `${color}33`}`,
+        borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
         color: disabled ? 'rgba(150,150,170,0.4)' : '#fff',
-        fontSize: '0.85rem', fontWeight: 600, textAlign: 'left',
+        fontSize: '0.75rem', fontWeight: 600, textAlign: 'left',
         transition: 'all 0.2s',
         animation: glow ? 'glow 2s infinite' : 'none',
         opacity: disabled ? 0.5 : 1,
@@ -4251,12 +4251,12 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
     >
       {hotkey && (
         <div style={{
-          position: 'absolute', top: -6, right: -4,
-          width: 18, height: 18, borderRadius: 4,
+          position: 'absolute', top: -5, right: -3,
+          width: 16, height: 16, borderRadius: 3,
           background: 'linear-gradient(135deg, #2a2040, #1a1530)',
           border: `1px solid ${color}66`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.55rem', fontWeight: 800, color: color,
+          fontSize: '0.5rem', fontWeight: 800, color: color,
           fontFamily: "'Cinzel', serif",
           boxShadow: `0 0 6px ${color}30`,
           zIndex: 2,
@@ -4264,9 +4264,9 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
       )}
       {iconSrc ? (
         <div style={{
-          width: 38, height: 38, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
-          border: `2px solid ${disabled ? 'rgba(80,80,100,0.3)' : `${color}88`}`,
-          boxShadow: disabled ? 'none' : `0 0 8px ${color}30, inset 0 0 10px rgba(0,0,0,0.5)`,
+          width: 30, height: 30, borderRadius: 6, overflow: 'hidden', flexShrink: 0,
+          border: `1.5px solid ${disabled ? 'rgba(80,80,100,0.3)' : `${color}88`}`,
+          boxShadow: disabled ? 'none' : `0 0 6px ${color}30, inset 0 0 8px rgba(0,0,0,0.5)`,
           position: 'relative',
         }}>
           <img src={iconSrc} alt="" style={{
@@ -4276,20 +4276,20 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
           <div style={{
             position: 'absolute', inset: 0,
             background: `linear-gradient(135deg, transparent 60%, ${color}30)`,
-            borderRadius: 6,
+            borderRadius: 5,
           }} />
         </div>
       ) : (
-        <span style={{ fontSize: '1.3rem', width: 38, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+        <span style={{ fontSize: '1rem', width: 30, textAlign: 'center', flexShrink: 0 }}>{icon}</span>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           color: disabled ? 'rgba(150,150,170,0.4)' : color,
-          fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '0.8rem',
+          fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '0.7rem',
           textShadow: disabled ? 'none' : `0 0 8px ${color}40`,
           letterSpacing: '0.02em',
         }}>{label}</div>
-        {sublabel && <div style={{ fontSize: '0.58rem', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.3 }}>
+        {sublabel && <div style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.3 }}>
           {sublabel}{disabled ? ' (Coming soon)' : ''}
         </div>}
       </div>

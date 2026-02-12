@@ -443,8 +443,8 @@ export default function MapBottomBar({
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
-        gap: 10,
-        padding: '10px',
+        gap: 6,
+        padding: '6px 4px',
         width: '100%',
         boxSizing: 'border-box',
       }}>

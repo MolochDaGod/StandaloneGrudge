@@ -12,7 +12,10 @@ function AdminGizmo() {
   const [props, setProps] = useState({});
   const [panelPos, setPanelPos] = useState({ x: 20, y: 60 });
   const [draggingPanel, setDraggingPanel] = useState(false);
+  const [draggingElement, setDraggingElement] = useState(false);
+  const [resizingElement, setResizingElement] = useState(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const overlayRef = useRef(null);
 
   const updateSelRect = useCallback((el) => {
@@ -123,6 +126,66 @@ function AdminGizmo() {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [draggingPanel]);
 
+  const handleElementDragStart = (e) => {
+    if (!selected) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const r = selected.getBoundingClientRect();
+    dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+    setDraggingElement(true);
+  };
+
+  useEffect(() => {
+    if (!draggingElement || !selected) return;
+    const cs = window.getComputedStyle(selected);
+    if (cs.position === 'static') selected.style.position = 'relative';
+    const onMove = (e) => {
+      const parent = selected.offsetParent || document.body;
+      const pr = parent.getBoundingClientRect();
+      const newLeft = e.clientX - dragOffset.current.x - pr.left;
+      const newTop = e.clientY - dragOffset.current.y - pr.top;
+      selected.style.left = newLeft + 'px';
+      selected.style.top = newTop + 'px';
+      updateSelRect(selected);
+      setProps(readProps(selected));
+    };
+    const onUp = () => setDraggingElement(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [draggingElement, selected]);
+
+  const handleResizeStart = (corner, e) => {
+    if (!selected) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const r = selected.getBoundingClientRect();
+    resizeStart.current = { x: e.clientX, y: e.clientY, w: r.width, h: r.height };
+    setResizingElement(corner);
+  };
+
+  useEffect(() => {
+    if (!resizingElement || !selected) return;
+    const onMove = (e) => {
+      const dx = e.clientX - resizeStart.current.x;
+      const dy = e.clientY - resizeStart.current.y;
+      let newW = resizeStart.current.w;
+      let newH = resizeStart.current.h;
+      if (resizingElement.includes('r')) newW += dx;
+      if (resizingElement.includes('l')) newW -= dx;
+      if (resizingElement.includes('b')) newH += dy;
+      if (resizingElement.includes('t')) newH -= dy;
+      selected.style.width = Math.max(20, newW) + 'px';
+      selected.style.height = Math.max(20, newH) + 'px';
+      updateSelRect(selected);
+      setProps(readProps(selected));
+    };
+    const onUp = () => setResizingElement(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [resizingElement, selected]);
+
   useEffect(() => {
     applyFrameSettings();
   }, []);
@@ -202,25 +265,49 @@ function AdminGizmo() {
           pointerEvents: 'none',
           zIndex: GIZMO_Z,
           boxShadow: '0 0 0 1px rgba(245,158,11,0.3), 0 0 12px rgba(245,158,11,0.2)',
-          transition: 'all 0.15s ease',
+          transition: draggingElement || resizingElement ? 'none' : 'all 0.15s ease',
         }}>
           <div style={{
             position: 'absolute', top: -20, left: 0,
             background: '#f59e0b', color: '#000',
             fontSize: '0.55rem', fontWeight: 700, padding: '1px 6px', borderRadius: 3,
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap', pointerEvents: 'none',
           }}>
             {props.tagName} · {selRect.width.toFixed(0)}×{selRect.height.toFixed(0)}
           </div>
 
+          <div
+            onMouseDown={handleElementDragStart}
+            style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 20, height: 20, borderRadius: '50%',
+              background: 'rgba(245,158,11,0.8)', border: '2px solid #fff',
+              cursor: 'move', pointerEvents: 'auto',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.5rem', color: '#000', fontWeight: 900,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+            }}
+            title="Drag to move"
+          >✥</div>
+
           {[
-            { t: -3, l: -3 }, { t: -3, r: -3 }, { b: -3, l: -3 }, { b: -3, r: -3 },
-          ].map((pos, i) => (
-            <div key={i} style={{
-              position: 'absolute', ...pos,
-              width: 6, height: 6, background: '#f59e0b', borderRadius: 1,
-              pointerEvents: 'none',
-            }} />
+            { pos: { top: -5, left: -5 }, cursor: 'nw-resize', corner: 'tl' },
+            { pos: { top: -5, right: -5 }, cursor: 'ne-resize', corner: 'tr' },
+            { pos: { bottom: -5, left: -5 }, cursor: 'sw-resize', corner: 'bl' },
+            { pos: { bottom: -5, right: -5 }, cursor: 'se-resize', corner: 'br' },
+          ].map(({ pos, cursor, corner }) => (
+            <div
+              key={corner}
+              onMouseDown={(e) => handleResizeStart(corner, e)}
+              style={{
+                position: 'absolute', ...pos,
+                width: 10, height: 10, background: '#f59e0b',
+                border: '1px solid #fff', borderRadius: 2,
+                cursor, pointerEvents: 'auto',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              }}
+            />
           ))}
         </div>
       )}
@@ -421,7 +508,7 @@ function AdminGizmo() {
 
           <div style={{ marginTop: 10, borderTop: '1px solid #334155', paddingTop: 8 }}>
             <div style={{ fontSize: '0.55rem', color: '#475569', textAlign: 'center' }}>
-              Click elements to inspect · Drag panel to move
+              Click to select · Center handle to move · Corner handles to resize
             </div>
           </div>
         </div>
