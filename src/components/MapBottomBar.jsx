@@ -399,7 +399,7 @@ export default function MapBottomBar({
 
   const allActions = buttons;
 
-  const resolvedSlots = Array.from({ length: 8 }, (_, i) => {
+  const resolvedSlots = Array.from({ length: 10 }, (_, i) => {
     const assignedId = hotbarAssignments[i];
     if (assignedId) {
       const found = allActions.find(a => a.id === assignedId);
@@ -563,13 +563,14 @@ export default function MapBottomBar({
         }}>
           <div style={{
             position: 'absolute',
-            top: '48%',
+            top: '18%',
             left: '5.5%',
             right: '5.5%',
-            height: '48%',
+            bottom: '16%',
             display: 'grid',
-            gridTemplateColumns: 'repeat(8, 1fr)',
-            gap: '2%',
+            gridTemplateColumns: 'repeat(10, 1fr)',
+            gap: '1.2%',
+            alignItems: 'center',
           }}>
             {resolvedSlots.map(btn => (
               <button key={btn.slotIndex} onClick={btn.action || undefined}
@@ -668,7 +669,7 @@ export default function MapBottomBar({
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            padding: '6px 8px 4px 6px',
+            padding: '10px 12px 10px 10px',
           }}>
             <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY

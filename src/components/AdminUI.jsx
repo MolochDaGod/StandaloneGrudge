@@ -300,7 +300,7 @@ function getElementBox(config, el) {
 }
 
 const ICON_GROUP_SAMPLES = {
-  hotbarIcons: { count: 8, icons: ['sword', 'shield', 'crystal', 'potion', 'sparkle', 'fire', 'ice', 'lightning'], label: 'Hotbar' },
+  hotbarIcons: { count: 10, icons: ['sword', 'shield', 'crystal', 'potion', 'sparkle', 'fire', 'ice', 'lightning', 'scroll', 'star'], label: 'Hotbar' },
   battleActionIcons: { count: 5, icons: ['sword', 'crystal', 'shield', 'potion', 'sparkle'], label: 'Actions' },
   equipIcons: { count: 7, icons: ['helm', 'armor', 'sword', 'shield', 'boots', 'ring', 'crystal'], label: 'Equip' },
   invGridIcons: { count: 16, icons: ['sword','helm','potion','ring','armor','shield','boots','crystal','wand','bow','dagger','scroll','bomb','herb','gem','staff'], label: 'Inv Grid' },
