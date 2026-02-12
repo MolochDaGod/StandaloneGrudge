@@ -748,7 +748,7 @@ export const worgTransformSprite = {
   human: spriteSheets.werewolf,
   orc: spriteSheets.werewolf,
   elf: spriteSheets.werebear,
-  undead: { ...spriteSheets.werewolf, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  undead: { ...spriteSheets.werewolf, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)' },
   barbarian: spriteSheets.werebear,
   dwarf: spriteSheets.werebear,
 };
@@ -757,7 +757,7 @@ export const worgBearTransformSprite = {
   human: spriteSheets.werebear,
   orc: spriteSheets.werebear,
   elf: spriteSheets.werebear,
-  undead: { ...spriteSheets.werebear, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  undead: { ...spriteSheets.werebear, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)' },
   barbarian: spriteSheets.werebear,
   dwarf: spriteSheets.werebear,
 };

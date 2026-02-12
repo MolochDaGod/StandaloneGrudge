@@ -782,24 +782,29 @@ function HeroSlideshow() {
                   />
                 </div>
 
-                {isWorge && showTransform && worgeTransformData && (
-                  <div style={{
-                    position: 'absolute',
-                    left: '50%', bottom: 0,
-                    transform: 'translateX(-50%)',
-                    transformOrigin: 'bottom center',
-                    animation: 'ssTransformFlash 0.4s ease-out forwards',
-                  }}>
-                    <SpriteAnimation
-                      spriteData={worgeTransformData}
-                      animation={transformAnim}
-                      scale={transformScale}
-                      loop={transformAnim === 'idle'}
-                      speed={transformAnim === 'idle' ? 140 : 80}
-                      onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
-                    />
-                  </div>
-                )}
+                {isWorge && showTransform && worgeTransformData && (() => {
+                  const baseH = (spriteData?.frameHeight || 100) * spriteScale;
+                  const transformH = (worgeTransformData?.frameHeight || 100) * transformScale;
+                  const offsetY = transformH - baseH;
+                  return (
+                    <div style={{
+                      position: 'absolute',
+                      left: '50%', bottom: -offsetY,
+                      transform: 'translateX(-50%)',
+                      transformOrigin: 'bottom center',
+                      animation: 'ssTransformFlash 0.4s ease-out forwards',
+                    }}>
+                      <SpriteAnimation
+                        spriteData={worgeTransformData}
+                        animation={transformAnim}
+                        scale={transformScale}
+                        loop={transformAnim === 'idle'}
+                        speed={transformAnim === 'idle' ? 140 : 80}
+                        onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
+                      />
+                    </div>
+                  );
+                })()}
 
               </div>
             </div>
