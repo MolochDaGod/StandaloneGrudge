@@ -10,7 +10,6 @@ import RadarChart from './RadarChart';
 import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 
-const BAR_HEIGHT = '26.2%';
 const POPUP_BOTTOM_OFFSET = 'calc(26.2% + 8px)';
 
 function ChatAvatar({ race, heroClass, size = 20 }) {
@@ -58,11 +57,9 @@ function HarvestingPopup({ onClose }) {
   const unlockedNodes = (harvestNodes || []).filter(n => level >= n.unlockLevel);
 
   return (
-    <div style={{
+    <div className="ui-element panel-style" style={{
       position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-      background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(251,191,36,0.3)',
-      borderRadius: 12, padding: 16, width: 360, maxHeight: 400, overflowY: 'auto',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
+      padding: 16, width: 360, maxHeight: 400, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -151,11 +148,9 @@ function GearPopup({ onClose }) {
   const slotNames = ['weapon', 'helmet', 'armor', 'boots', 'ring', 'shield', 'accessory'];
 
   return (
-    <div style={{
+    <div className="ui-element panel-style" style={{
       position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-      background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(110,231,183,0.3)',
-      borderRadius: 12, padding: 16, width: 380, maxHeight: 450, overflowY: 'auto',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
+      padding: 16, width: 380, maxHeight: 450, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -236,11 +231,9 @@ function CharacterPopup({ onClose }) {
   const totalPower = stats ? statKeys.reduce((sum, k) => sum + (stats[k] || 0), 0) + (hero.level || 1) * 10 : 0;
 
   return (
-    <div style={{
+    <div className="ui-element panel-style" style={{
       position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-      background: 'rgba(14,22,48,0.97)', border: '1px solid rgba(168,85,247,0.3)',
-      borderRadius: 12, padding: 16, width: 400, maxHeight: 500, overflowY: 'auto',
-      boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
+      padding: 16, width: 400, maxHeight: 500, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -384,38 +377,40 @@ export default function MapBottomBar({
   };
 
   return (
-    <div style={{
-      position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
-      zIndex: BOTTOM_BAR,
-      pointerEvents: 'none',
-    }}>
-      {showHarvesting && <div style={{ pointerEvents: 'auto' }}><HarvestingPopup onClose={() => setShowHarvesting(false)} /></div>}
-      {showGear && <div style={{ pointerEvents: 'auto' }}><GearPopup onClose={() => setShowGear(false)} /></div>}
-      {showCharacter && <div style={{ pointerEvents: 'auto' }}><CharacterPopup onClose={() => setShowCharacter(false)} /></div>}
+    <div id="game-ui-overlay">
+      {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
+      {showGear && <GearPopup onClose={() => setShowGear(false)} />}
+      {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
 
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
-        pointerEvents: 'auto',
         display: 'flex',
-        alignItems: 'stretch',
-        padding: '0',
+        alignItems: 'flex-end',
+        gap: 10,
+        padding: '10px',
+        width: '100%',
+        boxSizing: 'border-box',
       }}>
-        <div style={{
-          flex: '0 0 28%',
-          display: 'flex', flexDirection: 'column',
-          padding: '24px 8px 12px 28px',
-          overflow: 'hidden',
+
+        {/* LEFT PANEL: Party Log / Chat */}
+        <div className="ui-element panel-style" style={{
+          width: 260,
+          height: 160,
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
         }}>
           <div style={{
-            padding: '3px 8px 2px',
+            padding: '6px 10px 2px',
             display: 'flex', alignItems: 'center', gap: 5,
+            borderBottom: '1px solid rgba(197,160,89,0.2)',
           }}>
-            <span className="font-cinzel" style={{ fontSize: '0.55rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+            <span className="font-cinzel" style={{ fontSize: '0.55rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
           </div>
           <div ref={chatLogRef} style={{
-            flex: 1, overflowY: 'auto', padding: '2px 8px',
+            flex: 1, overflowY: 'auto', padding: '4px 10px',
             fontSize: '0.65rem', lineHeight: 1.5,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
+            fontFamily: "'Jost', sans-serif",
           }}>
             {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 3, padding: '1px 0' }}>
@@ -426,165 +421,144 @@ export default function MapBottomBar({
                 </div>
               </div>
             )) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic', fontFamily: "'Jost', sans-serif" }}>Your party is quiet...</div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, padding: '4px 8px 6px', alignItems: 'center', borderTop: '1px solid rgba(197,160,89,0.15)', background: 'rgba(0,0,0,0.3)' }}>
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') sendChat(); }}
-              placeholder="Say something..."
+              placeholder="Chat..."
               style={{
-                flex: 1, background: 'rgba(0,0,0,0.4)',
-                border: '1px solid rgba(255,215,0,0.1)',
-                borderRadius: 4, padding: '3px 6px',
+                flex: 1, background: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,215,0,0.15)',
+                borderRadius: 3, padding: '3px 6px',
                 color: 'rgba(226,232,240,0.9)', fontSize: '0.6rem',
                 fontFamily: "'Jost', sans-serif", outline: 'none', minWidth: 0,
               }}
-              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.3)'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.1)'}
+              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.4)'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.15)'}
             />
             <button onClick={sendChat} style={{
-              background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.15)',
-              borderRadius: 4, padding: '2px 6px', color: 'var(--gold)', fontSize: '0.55rem',
+              background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.2)',
+              borderRadius: 3, padding: '2px 8px', color: 'var(--gold)', fontSize: '0.55rem',
               fontFamily: "'Cinzel', serif", fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             }}>Send</button>
           </div>
         </div>
 
-        <div style={{
-          flex: '1 1 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '20px 4px 8px',
-          position: 'relative',
+        {/* CENTER PANEL: Hotbar (Action Slots 1-8) */}
+        <div className="ui-element panel-style" style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '10px 12px',
+          alignItems: 'center',
+          maxWidth: 520,
+          alignSelf: 'flex-end',
         }}>
-          <div style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: 480,
-          }}>
-            <div style={{
-              position: 'absolute', inset: -12,
-              backgroundImage: 'url(/ui/button-container-panel.png)',
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              pointerEvents: 'none',
-              opacity: 0.85,
-            }} />
-            <div style={{
-              position: 'relative',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(8, 1fr)',
-              gap: 4,
-              padding: '8px 10px',
-            }}>
-              {buttons.map(btn => (
-                <button key={btn.id} onClick={btn.action} style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: 0,
-                  padding: 0,
-                  cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 1,
-                  transition: 'all 0.2s',
-                  position: 'relative',
+          <div style={{ display: 'flex', gap: 4 }}>
+            {buttons.map((btn, idx) => (
+              <div
+                key={btn.id}
+                className="hotbar-slot"
+                onClick={btn.action}
+                onMouseEnter={e => showTooltip(btn.label, e)}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={() => hideTooltip()}
+                style={{
                   animation: btn.pulse ? 'glow 2s infinite' : 'none',
                 }}
-                  onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.querySelector('.btn-frame').style.filter = 'brightness(1.4) drop-shadow(0 0 6px rgba(255,215,0,0.5))'; e.currentTarget.querySelector('.btn-frame').style.transform = 'scale(1.08)'; }}
-                  onMouseMove={e => updateTooltipPosition(e)}
-                  onMouseLeave={e => { hideTooltip(); e.currentTarget.querySelector('.btn-frame').style.filter = 'brightness(1)'; e.currentTarget.querySelector('.btn-frame').style.transform = 'scale(1)'; }}
-                >
-                  <div className="btn-frame" style={{
-                    width: 42, height: 42,
-                    backgroundImage: 'url(/ui/icon-button-frame.png)',
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
+              >
+                <span className="hotbar-num">{idx + 1}</span>
+                <InlineIcon name={btn.icon} size={20} />
+                {btn.badge && (
+                  <span style={{
+                    position: 'absolute', top: -4, right: -4,
+                    background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
+                    fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'filter 0.2s, transform 0.2s',
-                  }}>
-                    <InlineIcon name={btn.icon} size={18} />
-                  </div>
-                  <span style={{ fontSize: '0.42rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{btn.label}</span>
-                  {btn.badge && (
-                    <span style={{
-                      position: 'absolute', top: 0, right: 0,
-                      background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
-                      fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 0 6px rgba(255,215,0,0.5)',
-                    }}>{btn.badge}</span>
-                  )}
-                </button>
-              ))}
-            </div>
+                    boxShadow: '0 0 6px rgba(255,215,0,0.5)',
+                    fontFamily: "'Jost', sans-serif",
+                  }}>{btn.badge}</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div style={{
-          flex: '0 0 20%',
-          display: 'flex', flexDirection: 'column',
-          padding: '20px 28px 14px 8px',
-          position: 'relative',
+        {/* RIGHT PANEL: War Party Status */}
+        <div className="ui-element" style={{
+          width: 200,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          flexShrink: 0,
         }}>
-          <div style={{
-            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: 6,
-          }}>
+          {/* Circle buttons floating above the panel */}
+          <div style={{ display: 'flex', gap: 5, marginBottom: -12, zIndex: 10, paddingRight: 10 }}>
             {popupButtons.map(pb => (
-              <button key={pb.id} onClick={() => togglePopup(pb.id)} style={{
-                width: 30, height: 30, borderRadius: '50%',
-                background: pb.active ? 'rgba(255,215,0,0.25)' : 'rgba(20,24,48,0.9)',
-                border: `2px solid ${pb.active ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-                boxShadow: pb.active ? '0 0 10px rgba(255,215,0,0.3)' : 'none',
-              }}
-                onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.3)'; }}
+              <div
+                key={pb.id}
+                className={`circle-btn ${pb.active ? 'active' : ''}`}
+                onClick={() => togglePopup(pb.id)}
+                onMouseEnter={e => showTooltip(pb.label, e)}
                 onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => { hideTooltip(); if (!pb.active) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.boxShadow = 'none'; } }}
+                onMouseLeave={() => hideTooltip()}
               >
                 <InlineIcon name={pb.icon} size={14} />
-              </button>
+              </div>
             ))}
           </div>
 
-          <div style={{
-            flex: 1, overflowY: 'auto', paddingTop: 18,
-            scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent',
+          {/* Status panel */}
+          <div className="panel-style" style={{
+            width: '100%',
+            height: 130,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '14px 10px 8px',
+            overflow: 'hidden',
           }}>
-            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
+            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map(hero => {
-                const heroCls = classDefinitions[hero.classId];
-                const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
-                const hpPercent = heroStats ? Math.round((hero.currentHealth / heroStats.health) * 100) : 100;
-                return (
-                  <div key={`bar_${hero.id}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 28, height: 28, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.36} speed={180} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {hero.name}
+            <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: "'Jost', sans-serif" }}>
+                {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map(hero => {
+                  const heroCls = classDefinitions[hero.classId];
+                  const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
+                  const hpPercent = heroStats ? Math.round((hero.currentHealth / heroStats.health) * 100) : 100;
+                  return (
+                    <div key={`bar_${hero.id}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                        border: '1px solid var(--gold)', background: '#000',
+                        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                      }}>
+                        <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.36} speed={180} />
                       </div>
-                      <div style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroCls?.name}</div>
-                      <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginTop: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${hpPercent}%`, background: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444', borderRadius: 2, transition: 'width 0.3s' }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '0.5rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {hero.name}
+                        </div>
+                        <div style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroCls?.name}</div>
+                        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                          <div style={{ flex: 1, height: 4, background: 'rgba(48,0,0,0.6)', borderRadius: 2, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${hpPercent}%`, background: hpPercent > 50 ? '#22c55e' : hpPercent > 25 ? '#f59e0b' : '#ef4444', borderRadius: 2, transition: 'width 0.3s' }} />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
