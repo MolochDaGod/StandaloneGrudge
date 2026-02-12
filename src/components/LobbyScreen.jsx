@@ -486,7 +486,7 @@ function HeroSlideshow() {
   const baseScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
   const spriteScale = scaleOverride ? baseScale * scaleOverride : baseScale;
   const transformFrameH = worgeTransformData?.frameHeight || 128;
-  const transformScale = Math.min(Math.max(targetHeight / transformFrameH, 1.5), 5);
+  const transformScale = spriteScale * 1.5;
 
   const intervalRefs = useRef([]);
 
