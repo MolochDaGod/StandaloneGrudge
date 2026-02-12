@@ -595,7 +595,7 @@ export default function MapBottomBar({
                 {btn.img ? (
                   <img src={btn.img} alt={btn.label} style={{ width: '85%', height: '85%', objectFit: 'contain', imageRendering: 'auto' }} />
                 ) : btn.icon ? (
-                  (() => { const ip = getIconPlacement('hotbarIcons'); return <InlineIcon name={btn.icon} size={ip.iconSize} style={{ transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+                  (() => { const ip = getIconPlacement('hotbarIcons'); return <InlineIcon name={btn.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
                 ) : (
                   <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)' }}>{btn.slotIndex + 1}</span>
                 )}

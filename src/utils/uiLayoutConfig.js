@@ -17,13 +17,13 @@ export const ICON_GROUPS = {
   },
   equipIcons: {
     label: 'Equipment Slot Icons',
-    description: '7 equipment slots around the paper doll',
-    defaults: { offsetX: 0, offsetY: 0, iconSize: 24, slotSize: 36, gap: 4 },
+    description: '7 equipment slots around the paper doll (40px slots)',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 30, slotSize: 40, gap: 4 },
   },
   invGridIcons: {
     label: 'Inventory Grid Icons',
-    description: '4x4 inventory grid in the book panel',
-    defaults: { offsetX: 0, offsetY: 0, iconSize: 22, slotSize: 34, gap: 3 },
+    description: '4x4 inventory grid in the book panel (36px slots)',
+    defaults: { offsetX: 0, offsetY: 0, iconSize: 26, slotSize: 36, gap: 3 },
   },
   warPartyIcons: {
     label: 'War Party Icons',

@@ -3221,7 +3221,7 @@ export default function BattleScreen() {
                       onMouseMove={e => updateTooltipPosition(e)}
                       onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
                       >
-                        {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+                        {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
                         <span>{group.name}</span>
                         <span style={{ color: '#4ade80', fontSize: '0.55rem' }}>x{group.count}</span>
                       </button>
