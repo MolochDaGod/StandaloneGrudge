@@ -827,7 +827,7 @@ function HeroSlideshow() {
     setAuraIntensity(0);
     setSpriteX(-30);
 
-    const IDLE_ENTER_COMBOS = ['undead_ranger'];
+    const IDLE_ENTER_COMBOS = ['undead_ranger', 'human_ranger'];
     const comboId = `${combo.raceId}_${combo.classId}`;
     const forceIdle = IDLE_ENTER_COMBOS.includes(comboId);
     const enterAnim = forceIdle ? 'idle' : (spriteData?.walk ? 'walk' : (spriteData?.run ? 'run' : 'idle'));
@@ -855,7 +855,7 @@ function HeroSlideshow() {
 
     const PREFERRED_ATTACKS = {
       human_warrior: 'attack2',
-      human_ranger: 'attack1',
+      human_ranger: 'attack2',
     };
     const comboKey = `${combo.raceId}_${combo.classId}`;
     const preferredAttack = PREFERRED_ATTACKS[comboKey];
