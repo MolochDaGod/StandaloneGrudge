@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from './stores/gameStore';
 import { startPreload, isReady } from './utils/assetManager';
-import VideoBackground from './components/VideoBackground';
+
 import LoadingScreen from './components/LoadingScreen';
 import TitleScreen from './components/TitleScreen';
 import CharacterCreate from './components/CharacterCreate';
@@ -117,14 +117,10 @@ function GameApp() {
     );
   }
 
-  const screensWithOwnBackground = ['title', 'world', 'battle', 'location', 'scene', 'intro'];
-  const bgVisible = !screensWithOwnBackground.includes(screen);
-  const bgBlurred = screen !== 'title' && screen !== 'lobby' && screen !== 'intro';
-
-  const fullBleedScreens = ['title', 'world', 'battle', 'intro'];
+  const fullBleedScreens = ['title', 'world', 'battle', 'intro', 'lobby'];
   const isFullBleed = fullBleedScreens.includes(screen);
 
-  const frameVisibleScreens = ['title', 'lobby', 'create', 'character', 'skills', 'account', 'training', 'heroCreate'];
+  const frameVisibleScreens = ['title', 'create', 'character', 'skills', 'account', 'training', 'heroCreate'];
   const showFrame = frameVisibleScreens.includes(screen);
 
   const renderScreen = () => {
@@ -178,7 +174,6 @@ function GameApp() {
         width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
         animation: screenShake ? `screenShake 0.3s ease-out` : 'none',
       }}>
-        <VideoBackground blurred={bgBlurred} visible={bgVisible} />
         <div style={contentStyle}>
           {renderScreen()}
         </div>

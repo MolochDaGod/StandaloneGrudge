@@ -28,7 +28,7 @@ function TitleParticles() {
         vy: -Math.random() * 0.4 - 0.1,
         size: Math.random() * 2 + 0.5,
         opacity: Math.random() * 0.4 + 0.1,
-        color: Math.random() > 0.5 ? '110,231,183' : '255,215,0',
+        color: Math.random() > 0.5 ? '250,172,71' : '219,99,49',
       });
     }
 
@@ -113,7 +113,7 @@ export default function TitleScreen() {
 
           <h1 className="font-cinzel" style={{
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            background: 'linear-gradient(135deg, #6ee7b7, #ffd700, #ef4444)',
+            background: 'linear-gradient(135deg, #FAAC47, #DB6331, #8B372E)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             marginBottom: 8, lineHeight: 1.1,
             animation: 'titleGlow 4s ease-in-out infinite, scaleIn 0.8s ease 0.1s both',
@@ -184,8 +184,8 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
   const baseStyle = {
     background: primary
       ? hovered
-        ? 'rgba(110,231,183,0.25)'
-        : 'linear-gradient(135deg, rgba(110,231,183,0.15), rgba(110,231,183,0.05))'
+        ? 'rgba(250,172,71,0.25)'
+        : 'linear-gradient(135deg, rgba(250,172,71,0.15), rgba(219,99,49,0.05))'
       : subtle
         ? 'transparent'
         : hovered
@@ -211,7 +211,7 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
     justifyContent: 'center',
     transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.03)' : 'scale(1)',
     boxShadow: hovered && primary
-      ? '0 0 30px rgba(110,231,183,0.3), 0 0 60px rgba(110,231,183,0.1)'
+      ? '0 0 30px rgba(250,172,71,0.3), 0 0 60px rgba(219,99,49,0.1)'
       : hovered && !subtle
         ? '0 0 15px rgba(255,255,255,0.1)'
         : 'none',

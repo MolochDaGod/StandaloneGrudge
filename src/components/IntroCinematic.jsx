@@ -77,7 +77,7 @@ export default function IntroCinematic() {
           transition: 'all 0.3s',
           zIndex: 10,
         }}
-        onMouseEnter={e => { e.target.style.background = 'rgba(110,231,183,0.2)'; e.target.style.borderColor = '#6ee7b3'; e.target.style.color = '#6ee7b3'; }}
+        onMouseEnter={e => { e.target.style.background = 'rgba(250,172,71,0.2)'; e.target.style.borderColor = '#FAAC47'; e.target.style.color = '#FAAC47'; }}
         onMouseLeave={e => { e.target.style.background = 'rgba(0,0,0,0.6)'; e.target.style.borderColor = 'rgba(255,255,255,0.3)'; e.target.style.color = '#ccc'; }}
         >
           SKIP
