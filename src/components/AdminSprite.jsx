@@ -875,13 +875,17 @@ export default function AdminSprite() {
                           .filter(([, keys]) => keys.includes(gallerySelected))
                           .map(([tag]) => {
                             const tagColors = {
-                              cast: '#ffd700', effect: '#3b82f6', effect2: '#60a5fa', effect3: '#22d3ee',
-                              impact: '#ef4444', projectile: '#f97316', traveleffect: '#a78bfa', aura: '#e879f9',
-                              animation: '#818cf8', animation2: '#6366f1', buff: '#22c55e', debuff: '#dc2626',
-                              stone: '#a1a1aa', frozen: '#38bdf8', slow: '#94a3b8', haste: '#facc15',
-                              dodge: '#4ade80', block: '#a1a1aa', crit: '#ef4444', spellcrit: '#818cf8',
-                              largecrit: '#f59e0b', combo: '#fbbf24', counter: '#f97316', huechange: '#e879f9',
-                              transform: '#a78bfa', sleep: '#6366f1', slashColor: '#fb923c',
+                              cast: '#ffd700', impact: '#ef4444', projectile: '#f97316', melee: '#fb923c',
+                              aura: '#e879f9', buff: '#22c55e', debuff: '#dc2626', heal: '#34d399',
+                              fire: '#f97316', ice: '#38bdf8', lightning: '#facc15', arcane: '#818cf8',
+                              holy: '#fcd34d', earth: '#a1887f', water: '#22d3ee', wind: '#4ade80',
+                              nature: '#66bb6a', dark: '#7c3aed', poison: '#84cc16', physical: '#d4d4d8',
+                              explosion: '#ff6b6b', movement: '#a78bfa', crit: '#ef4444', spellcrit: '#818cf8',
+                              largecrit: '#f59e0b', combo: '#fbbf24', counter: '#f97316', block: '#a1a1aa',
+                              dodge: '#4ade80', stun: '#fbbf24', slow: '#94a3b8', haste: '#facc15',
+                              sleep: '#6366f1', frozen: '#38bdf8', stone: '#a1a1aa', transform: '#a78bfa',
+                              huechange: '#e879f9', slashColor: '#fb923c', bulletImpact: '#9ca3af',
+                              retro: '#f472b6', custom: '#60a5fa', pixel: '#a5f3fc', misc: '#6b7280',
                             };
                             return (
                               <span key={tag} style={{
