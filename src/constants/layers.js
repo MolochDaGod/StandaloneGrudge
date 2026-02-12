@@ -155,7 +155,11 @@ export const FRAME_EDITOR = 10502;
 // ─── LAYER 17: INTRO CINEMATIC (10800) ─────────────────────
 export const INTRO_CINEMATIC = 10800;
 
-// ─── LAYER 18: TOOLTIPS (99999) ────────────────────────────
+// ─── LAYER 18: CONTEXT MENU (99998) ────────────────────────
+// Right-click game context menu, portaled to document.body
+export const CONTEXT_MENU = 99998;
+
+// ─── LAYER 19: TOOLTIPS (99999) ────────────────────────────
 // Portaled to document.body – outside .game-frame context
 export const TOOLTIP = 99999;
 

@@ -26,6 +26,7 @@ import { InlineIcon } from './data/uiSprites';
 import AdminGizmo from './components/AdminGizmo';
 import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
+import GameContextMenuRenderer from './components/GameContextMenu';
 import { HERO_CREATE_MODAL } from './constants/layers';
 
 function GameApp() {
@@ -181,6 +182,7 @@ function GameApp() {
         }} />
         <FrameMaskLayer />
         <GameTooltipRenderer />
+        <GameContextMenuRenderer />
         <SettingsMenu />
         <AdminGizmo />
         {pendingLoot && pendingLoot.length > 0 && <LootPopup />}
