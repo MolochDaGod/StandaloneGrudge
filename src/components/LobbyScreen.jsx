@@ -369,6 +369,33 @@ const CLASS_TAG_MAP = {
   ranger: '/sprites/ui/icons/tag_ranger.png',
 };
 
+const RACE_CLASS_PORTRAIT_MAP = {
+  human_warrior: '/icons/pack/misc/Human_Warrior.png',
+  human_mage: '/icons/pack/misc/human_mage.png',
+  human_worge: '/icons/pack/misc/human_paladin.png',
+  human_ranger: '/icons/pack/misc/human_archer.png',
+  orc_warrior: '/icons/pack/misc/orc_warrior.png',
+  orc_mage: '/icons/pack/misc/orc_mage.png',
+  orc_worge: '/icons/pack/misc/orc_paladin.png',
+  orc_ranger: '/icons/pack/misc/orc_archer.png',
+  elf_warrior: '/icons/pack/misc/elf_warrior.png',
+  elf_mage: '/icons/pack/misc/elf_mage.png',
+  elf_worge: '/icons/pack/misc/elf_paladin.png',
+  elf_ranger: '/icons/pack/misc/elf_archer.png',
+  undead_warrior: '/icons/pack/misc/undead_warrior.png',
+  undead_mage: '/icons/pack/misc/undead_mage.png',
+  undead_worge: '/icons/pack/misc/undead_paladin.png',
+  undead_ranger: '/icons/pack/misc/undead_archer.png',
+  barbarian_warrior: '/icons/pack/misc/barb_warrior.png',
+  barbarian_mage: '/icons/pack/misc/barbarian_Mage.png',
+  barbarian_worge: '/icons/pack/misc/barb_paladin.png',
+  barbarian_ranger: '/icons/pack/misc/barb_archer.png',
+  dwarf_warrior: '/icons/pack/misc/dwarf_warrior.png',
+  dwarf_mage: '/icons/pack/misc/dwarf_mage.png',
+  dwarf_worge: '/icons/pack/misc/dwarf_paladin.png',
+  dwarf_ranger: '/icons/pack/misc/dwarf_archer.png',
+};
+
 const FACTION_MAP = {
   human: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
   barbarian: { name: 'Crusade', god: 'Odin', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
@@ -978,31 +1005,43 @@ function HeroSlideshow() {
         {textVisible && (
           <div style={{
             position: 'absolute', top: 10, left: 12, zIndex: 10,
-            display: 'flex', alignItems: 'center', gap: 6,
+            display: 'flex', alignItems: 'center', gap: 5,
             animation: 'ssSlideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}>
             <div style={{
-              width: 40, height: 40, borderRadius: 6,
-              background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
-              border: `2px solid ${faction.color}66`,
+              width: 42, height: 42, borderRadius: '50%',
+              background: `radial-gradient(circle, ${race.color}44, rgba(0,0,0,0.7))`,
+              border: `2px solid ${race.color}88`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 12px ${faction.color}33`,
+              boxShadow: `0 0 14px ${race.color}44`,
               overflow: 'hidden',
             }}>
-              <img src={faction.icon} alt={faction.name} style={{
-                width: 32, height: 32, objectFit: 'contain', filter: 'brightness(1.2)',
+              <img src={RACE_CLASS_PORTRAIT_MAP[`${combo.raceId}_${combo.classId}`]} alt={race.name} style={{
+                width: 38, height: 38, objectFit: 'cover', borderRadius: '50%',
               }} />
             </div>
             <div style={{
-              width: 40, height: 40, borderRadius: 6,
+              width: 36, height: 36, borderRadius: 5,
+              background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
+              border: `2px solid ${faction.color}66`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 0 10px ${faction.color}33`,
+              overflow: 'hidden',
+            }}>
+              <img src={faction.icon} alt={faction.name} style={{
+                width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.2)',
+              }} />
+            </div>
+            <div style={{
+              width: 36, height: 36, borderRadius: 5,
               background: `radial-gradient(circle, ${auraColor}33, rgba(0,0,0,0.6))`,
               border: `2px solid ${auraColor}66`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 12px ${auraColor}33`,
+              boxShadow: `0 0 10px ${auraColor}33`,
               overflow: 'hidden',
             }}>
               <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
-                width: 32, height: 32, objectFit: 'contain',
+                width: 28, height: 28, objectFit: 'contain',
                 imageRendering: 'pixelated',
                 filter: 'brightness(1.3)',
               }} />
