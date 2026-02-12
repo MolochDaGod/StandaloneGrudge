@@ -19,6 +19,8 @@ import { MAP_LAYERS, svgOverlayProps, mapNodeStyle, mapCenterStyle, fullCoverSty
 import { InlineIcon, getIconSrc } from '../data/uiSprites';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { CHAT_BUBBLES } from '../constants/layers';
+import { locationPositions, pathConnections, locationIcons, terrainRegions, portalLocations } from '../data/worldMapData';
+import MapOverlay from './MapOverlay';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -37,173 +39,6 @@ const bossMapSprites = {
 };
 
 
-const locationPositions = {
-  verdant_plains:     { x: 12, y: 85 },
-  dark_forest:        { x: 22, y: 76 },
-  mystic_grove:       { x: 12, y: 66 },
-  whispering_caverns: { x: 28, y: 85 },
-  haunted_marsh:      { x: 38, y: 76 },
-  cursed_ruins:       { x: 35, y: 63 },
-  crystal_caves:      { x: 20, y: 54 },
-  thornwood_pass:     { x: 48, y: 70 },
-  sunken_temple:      { x: 50, y: 82 },
-  iron_peaks:         { x: 30, y: 44 },
-  blood_canyon:       { x: 60, y: 63 },
-  frozen_tundra:      { x: 42, y: 38 },
-  dragon_peaks:       { x: 55, y: 50 },
-  ashen_battlefield:  { x: 68, y: 73 },
-  windswept_ridge:    { x: 45, y: 28 },
-  molten_core:        { x: 72, y: 57 },
-  shadow_forest:      { x: 25, y: 35 },
-  obsidian_wastes:    { x: 78, y: 66 },
-  ruins_of_ashenmoor: { x: 58, y: 38 },
-  blight_hollow:      { x: 35, y: 22 },
-  shadow_citadel:     { x: 65, y: 28 },
-  stormspire_peak:    { x: 50, y: 16 },
-  demon_gate:         { x: 80, y: 42 },
-  abyssal_depths:     { x: 75, y: 30 },
-  infernal_forge:     { x: 85, y: 52 },
-  dreadmaw_canyon:    { x: 82, y: 38 },
-  void_threshold:     { x: 72, y: 18 },
-  corrupted_spire:    { x: 85, y: 22 },
-  void_throne:        { x: 80, y: 12 },
-  hall_of_odin:       { x: 65, y: 10 },
-  maw_of_madra:       { x: 88, y: 10 },
-  sanctum_of_omni:    { x: 76, y: 6 },
-};
-
-const pathConnections = [
-  // === EARLY GAME: Starter Zones (Lv 1-6) ===
-  ['verdant_plains', 'dark_forest'],
-  ['verdant_plains', 'whispering_caverns'],
-  ['dark_forest', 'mystic_grove'],
-  ['dark_forest', 'haunted_marsh'],
-  ['whispering_caverns', 'haunted_marsh'],
-
-  // === MID GAME BRANCH: Crusade Arc (Lv 5-9) ===
-  ['mystic_grove', 'crystal_caves'],
-  ['haunted_marsh', 'cursed_ruins'],
-  ['haunted_marsh', 'thornwood_pass'],
-  ['cursed_ruins', 'sunken_temple'],
-  ['cursed_ruins', 'thornwood_pass'],
-  ['crystal_caves', 'iron_peaks'],
-  ['thornwood_pass', 'sunken_temple'],
-
-  // === MID GAME BRANCH: Legion Arc (Lv 8-13) ===
-  ['iron_peaks', 'frozen_tundra'],
-  ['iron_peaks', 'blood_canyon'],
-  ['frozen_tundra', 'windswept_ridge'],
-  ['blood_canyon', 'ashen_battlefield'],
-  ['blood_canyon', 'molten_core'],
-  ['blood_canyon', 'dragon_peaks'],
-
-  // === MID GAME BRANCH: Fabled Arc (Lv 10-14) ===
-  ['windswept_ridge', 'dragon_peaks'],
-  ['dragon_peaks', 'ruins_of_ashenmoor'],
-  ['molten_core', 'obsidian_wastes'],
-  ['molten_core', 'ashen_battlefield'],
-
-  // === LATE GAME: Shadow & Corruption (Lv 11-16) ===
-  ['iron_peaks', 'shadow_forest'],
-  ['shadow_forest', 'blight_hollow'],
-  ['windswept_ridge', 'stormspire_peak'],
-  ['ruins_of_ashenmoor', 'shadow_citadel'],
-  ['obsidian_wastes', 'demon_gate'],
-  ['blight_hollow', 'stormspire_peak'],
-
-  // === ENDGAME: Convergence (Lv 15-18) ===
-  ['shadow_citadel', 'abyssal_depths'],
-  ['demon_gate', 'infernal_forge'],
-  ['demon_gate', 'dreadmaw_canyon'],
-  ['stormspire_peak', 'void_threshold'],
-  ['abyssal_depths', 'dreadmaw_canyon'],
-  ['infernal_forge', 'dreadmaw_canyon'],
-  ['dreadmaw_canyon', 'corrupted_spire'],
-  ['void_threshold', 'corrupted_spire'],
-
-  // === FINAL: The Void Throne (Lv 18-20) ===
-  ['corrupted_spire', 'void_throne'],
-
-  // === GOD FIGHTS: Endgame (Lv 20) ===
-  ['void_throne', 'hall_of_odin'],
-  ['void_throne', 'maw_of_madra'],
-  ['void_throne', 'sanctum_of_omni'],
-];
-
-const locationIcons = {
-  verdant_plains:     { color: '#4ade80', glow: 'rgba(74,222,128,0.4)', img: '/map_nodes/verdant_plains.png' },
-  dark_forest:        { color: '#22d3ee', glow: 'rgba(34,211,238,0.4)', img: '/map_nodes/dark_forest.png' },
-  mystic_grove:       { color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', img: '/map_nodes/mystic_grove.png' },
-  whispering_caverns: { color: '#94a3b8', glow: 'rgba(148,163,184,0.4)', img: '/map_nodes/whispering_caverns.png' },
-  haunted_marsh:      { color: '#86efac', glow: 'rgba(134,239,172,0.3)', img: '/map_nodes/haunted_marsh.png' },
-  cursed_ruins:       { color: '#c084fc', glow: 'rgba(192,132,252,0.4)', img: '/map_nodes/cursed_ruins.png' },
-  crystal_caves:      { color: '#67e8f9', glow: 'rgba(103,232,249,0.4)', img: '/map_nodes/crystal_caves.png' },
-  thornwood_pass:     { color: '#6ee7b7', glow: 'rgba(110,231,183,0.3)', img: '/map_nodes/thornwood_pass.png' },
-  sunken_temple:      { color: '#38bdf8', glow: 'rgba(56,189,248,0.4)', img: '/map_nodes/sunken_temple.png' },
-  iron_peaks:         { color: '#9ca3af', glow: 'rgba(156,163,175,0.4)', img: '/map_nodes/iron_peaks.png' },
-  blood_canyon:       { color: '#ef4444', glow: 'rgba(239,68,68,0.4)', img: '/map_nodes/blood_canyon.png' },
-  frozen_tundra:      { color: '#7dd3fc', glow: 'rgba(125,211,252,0.4)', img: '/map_nodes/frozen_tundra.png' },
-  dragon_peaks:       { color: '#f97316', glow: 'rgba(249,115,22,0.4)', img: '/map_nodes/dragon_peaks.png' },
-  ashen_battlefield:  { color: '#a8a29e', glow: 'rgba(168,162,158,0.3)', img: '/map_nodes/ashen_battlefield.png' },
-  windswept_ridge:    { color: '#93c5fd', glow: 'rgba(147,197,253,0.3)', img: '/map_nodes/windswept_ridge.png' },
-  molten_core:        { color: '#fb923c', glow: 'rgba(251,146,60,0.4)', img: '/map_nodes/molten_core.png' },
-  shadow_forest:      { color: '#818cf8', glow: 'rgba(129,140,248,0.4)', img: '/map_nodes/shadow_forest.png' },
-  obsidian_wastes:    { color: '#f87171', glow: 'rgba(248,113,113,0.4)', img: '/map_nodes/obsidian_wastes.png' },
-  ruins_of_ashenmoor: { color: '#d4d4d8', glow: 'rgba(212,212,216,0.3)', img: '/map_nodes/ruins_of_ashenmoor.png' },
-  blight_hollow:      { color: '#a3e635', glow: 'rgba(163,230,53,0.3)', img: '/map_nodes/blight_hollow.png' },
-  shadow_citadel:     { color: '#a78bfa', glow: 'rgba(167,139,250,0.4)', img: '/map_nodes/shadow_citadel.png' },
-  stormspire_peak:    { color: '#fcd34d', glow: 'rgba(252,211,77,0.4)', img: '/map_nodes/stormspire_peak.png' },
-  demon_gate:         { color: '#f43f5e', glow: 'rgba(244,63,94,0.4)', img: '/map_nodes/demon_gate.png' },
-  abyssal_depths:     { color: '#6366f1', glow: 'rgba(99,102,241,0.4)', img: '/map_nodes/abyssal_depths.png' },
-  infernal_forge:     { color: '#ef4444', glow: 'rgba(239,68,68,0.4)', img: '/map_nodes/infernal_forge.png' },
-  dreadmaw_canyon:    { color: '#d946ef', glow: 'rgba(217,70,239,0.4)', img: '/map_nodes/dreadmaw_canyon.png' },
-  void_threshold:     { color: '#c084fc', glow: 'rgba(192,132,252,0.5)', img: '/map_nodes/void_threshold.png' },
-  corrupted_spire:    { color: '#e879f9', glow: 'rgba(232,121,249,0.4)', img: '/map_nodes/corrupted_spire.png' },
-  void_throne:        { color: '#fbbf24', glow: 'rgba(251,191,36,0.5)', img: '/map_nodes/void_throne.png' },
-  hall_of_odin:       { color: '#fbbf24', glow: 'rgba(251,191,36,0.6)', img: '/map_nodes/void_throne.png' },
-  maw_of_madra:       { color: '#dc2626', glow: 'rgba(220,38,38,0.6)', img: '/map_nodes/void_throne.png' },
-  sanctum_of_omni:    { color: '#a78bfa', glow: 'rgba(167,139,250,0.6)', img: '/map_nodes/void_throne.png' },
-};
-
-const terrainRegions = [
-  {
-    name: 'Verdant Wilds',
-    fill: 'rgba(74,222,128,0.06)',
-    stroke: 'rgba(74,222,128,0.2)',
-    points: '8,64 32,16 52,68 54,89 26,92 6,92',
-    labelX: 28, labelY: 72,
-  },
-  {
-    name: 'Shadow Realm',
-    fill: 'rgba(167,139,250,0.06)',
-    stroke: 'rgba(167,139,250,0.2)',
-    points: '82,4 92,20 89,42 38,69 21,32 69,14',
-    labelX: 65, labelY: 28,
-  },
-  {
-    name: 'Volcanic Wastes',
-    fill: 'rgba(239,68,68,0.06)',
-    stroke: 'rgba(239,68,68,0.2)',
-    points: '52,47 83,38 92,50 82,72 65,79 56,68',
-    labelX: 72, labelY: 60,
-  },
-  {
-    name: 'Frozen Peaks',
-    fill: 'rgba(125,211,252,0.06)',
-    stroke: 'rgba(125,211,252,0.2)',
-    points: '53,11 49,25 46,42 27,49 16,58 16,50 30,30',
-    labelX: 36, labelY: 36,
-  },
-  {
-    name: 'Ashenmoor',
-    fill: 'rgba(251,191,36,0.06)',
-    stroke: 'rgba(251,191,36,0.2)',
-    points: '54,34 62,34 62,42 54,42',
-    labelX: 58, labelY: 44,
-  },
-];
-
-const portalLocations = ['shadow_citadel', 'demon_gate', 'void_throne'];
 
 const zoneResourceMap = {
   verdant_plains:     { resource: 'wood', sprite: 'trees', count: 4 },
@@ -587,6 +422,7 @@ export default function WorldMap() {
   const walkAnimRef = useRef(null);
   const routeNetworkRef = useRef(null);
   const [portalMenu, setPortalMenu] = useState(null);
+  const [showMapOverlay, setShowMapOverlay] = useState(false);
   const [portalTransition, setPortalTransition] = useState(false);
   const [showDebugGrid, setShowDebugGrid] = useState(false);
   const [walkFootprints, setWalkFootprints] = useState([]);
@@ -1060,6 +896,24 @@ export default function WorldMap() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'm' || e.key === 'M') {
+        const tag = document.activeElement?.tagName;
+        const editable = document.activeElement?.isContentEditable;
+        if (!e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !editable) {
+          e.preventDefault();
+          setShowMapOverlay(prev => !prev);
+        }
+      }
+      if (e.key === 'Escape' && showMapOverlay) {
+        setShowMapOverlay(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showMapOverlay]);
 
   useEffect(() => {
     const interval = setInterval(() => { tickHarvests(); }, 2000);
@@ -4277,6 +4131,31 @@ export default function WorldMap() {
           fontSize: '0.45rem', fontWeight: 700, width: 28, height: 20, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>FIT</button>
       </div>
+
+      <MapOverlay
+        isOpen={showMapOverlay}
+        onClose={() => setShowMapOverlay(false)}
+        onSelectLocation={(locId) => {
+          if (isPathing || markerMode) return;
+          if (locId === currentZone) {
+            setSelectedLocation(locId);
+            return;
+          }
+          if (portalLocations.includes(locId)) {
+            setPortalMenu(locId);
+            return;
+          }
+          const path = findPath(currentZone, locId);
+          if (path && path.length >= 2) {
+            setSelectedLocation(locId);
+            setMovePath(path);
+            setMoveStep(0);
+          } else {
+            setSelectedLocation(locId);
+          }
+        }}
+        currentZone={currentZone}
+      />
     </div>
   );
 }
