@@ -34,7 +34,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
     - **Consumables:** 6 potion types.
     - **Trading:** Camp merchant system.
     - **Scene System:** 4 interactive scene views (Camp, Dungeon, Trading Post, Open Field).
-- **Audio System:** Web Audio API for synthesized combat sounds and file-based background music (7 tracks).
+- **Audio System:** Web Audio API for synthesized combat sounds, file-based attack SFX (swish_2/3/4.wav for melee, bow.wav for ranger), and file-based background music (7 tracks). Audio caching via sfxCache for performance.
 - **Particle Effects:** CSS-animated in-battle particles, canvas-based title screen particles, and CSS keyframe animations for UI.
 - **World Map:** RTS-style 2D map with zoom/pan, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle. Features BFS pathfinding, portal fast travel, and god fights.
 - **Enemy System:** `createRaceClassEnemy` for dynamic enemy generation. Includes unique boss abilities and themed enemy packs.
@@ -48,6 +48,8 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Rank Badge System:** `RankBadge.jsx` with 6 tiers (Bronze→Silver→Gold→Platinum→Diamond→Legend). SVG star badges with tier-colored glows. Discord webhooks include rank info.
 - **UI Sprite Sheet:** `pixel_ui_pack.png` (1312x304) provides bar frames, fill textures, rank emblems, visual effects. `PixelBar.jsx` renders sprite-based bars (HP, mana, stamina, grudge, action timer, XP).
 - **Custom Cursor:** Dwarven gauntlet pixel art cursor applied globally via CSS on `.game-frame`.
+- **War Room Cards:** 4-card layout (New Campaign, Save/Continue, Grudge Online info, Web3 Wallet placeholder) with background images and hover effects.
+- **Grudge Online Compendium:** `GrudgeOnlinePage.jsx` full-screen overlay with 6 tabs (Overview, Races, Classes, Attributes, Combat Math, Tips). Accessible from War Room info card.
 - **Admin Tools:** Includes an Admin Dashboard, UI Layout Editor, Sprite Editor, Map Editor, Battle Tester, Icon Manager, and an in-game Gizmo for DOM inspection.
 
 ## External Dependencies

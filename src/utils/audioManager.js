@@ -55,10 +55,40 @@ function playNoise(duration, gainNode = sfxGain, volume = 0.1, delay = 0) {
   source.start(ctx.currentTime + delay);
 }
 
+const sfxCache = {};
+function playFileSound(src, volume = 0.3) {
+  const ctx = getCtx();
+  if (sfxCache[src]) {
+    const source = ctx.createBufferSource();
+    source.buffer = sfxCache[src];
+    const g = ctx.createGain();
+    g.gain.value = sfxMuted ? 0 : volume * sfxVolume;
+    source.connect(g);
+    g.connect(ctx.destination);
+    source.start();
+    return;
+  }
+  fetch(src).then(r => r.arrayBuffer()).then(buf => ctx.decodeAudioData(buf)).then(decoded => {
+    sfxCache[src] = decoded;
+    const source = ctx.createBufferSource();
+    source.buffer = decoded;
+    const g = ctx.createGain();
+    g.gain.value = sfxMuted ? 0 : volume * sfxVolume;
+    source.connect(g);
+    g.connect(ctx.destination);
+    source.start();
+  }).catch(() => {});
+}
+
+const SWISH_SOUNDS = ['/audio/swish_2.wav', '/audio/swish_3.wav', '/audio/swish_4.wav'];
+function randomSwish() { return SWISH_SOUNDS[Math.floor(Math.random() * SWISH_SOUNDS.length)]; }
+
 export function playSwordHit() {
-  playNoise(0.15, sfxGain, 0.15);
-  playNote(200, 0.1, 'sawtooth', sfxGain, 0.15);
-  playNote(120, 0.15, 'sawtooth', sfxGain, 0.1, 0.05);
+  playFileSound(randomSwish(), 0.4);
+}
+
+export function playBowShot() {
+  playFileSound('/audio/bow.wav', 0.4);
 }
 
 export function playMagicCast() {

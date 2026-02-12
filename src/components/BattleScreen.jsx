@@ -8,7 +8,7 @@ import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTra
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
-import { playSwordHit, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
+import { playSwordHit, playBowShot, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
 import PixelBar, { ActionTimerBar } from './PixelBar';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
@@ -1861,7 +1861,7 @@ export default function BattleScreen() {
           return;
         }
 
-        if (abilityType === 'physical') playSwordHit();
+        if (abilityType === 'physical') { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
         if (attacker.position && target.position) {
           const dashX = target.position.x + (attacker.team === 'player' ? -8 : 8);
           const dashY = target.position.y;
@@ -1874,7 +1874,7 @@ export default function BattleScreen() {
               setUnitAnims(prev => ({ ...prev, [attackerId]: anim }));
               if (i > 0 && target.position) {
                 addParticle('hit', target.position.x + (Math.random() - 0.5) * 4, bodyY(target), '#ef4444');
-                playSwordHit();
+                attacker.classId === 'ranger' ? playBowShot() : playSwordHit();
               }
             }, 300 + i * 250);
           });

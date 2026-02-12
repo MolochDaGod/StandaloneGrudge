@@ -6,6 +6,7 @@ import { getRaceClassSprite, worgTransformSprite, effectSprites } from '../data/
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import { setBgm } from '../utils/audioManager';
+import GrudgeOnlinePage from './GrudgeOnlinePage';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -195,48 +196,105 @@ function NavItem({ essentialIcon, label, active, onClick }) {
 }
 
 function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLevel, playerRace, playerClass, gold, heroRoster, panelStyle }) {
+  const [showInfo, setShowInfo] = useState(false);
+
+  const cardStyle = {
+    flex: '1 1 0',
+    minWidth: 180,
+    minHeight: 160,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    cursor: 'pointer',
+    border: '1px solid rgba(110,231,183,0.15)',
+    transition: 'transform 0.2s, border-color 0.2s',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
+  };
+
   return (
     <div>
-      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
+      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 16 }}>
         War Room
       </h2>
 
-      {hasExistingSave && (
-        <div style={{ ...panelStyle, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.7rem', letterSpacing: 2, marginBottom: 4 }}>
-                SAVED CAMPAIGN
-              </div>
-              <div className="font-cinzel" style={{ color: '#fff', fontSize: '1.1rem' }}>
-                {playerName}
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 4 }}>
-                Level {playerLevel} {playerRace} {playerClass} &bull;{' '}
-                <InlineIcon name="gold" size={12} /> {gold} Gold &bull;{' '}
-                <EssentialIcon name="Team" size={12} /> {heroRoster?.length || 0} Heroes
-              </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div
+          onClick={onNewGame}
+          style={{ ...cardStyle, borderColor: 'rgba(250,172,71,0.3)' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(250,172,71,0.6)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(250,172,71,0.3)'; }}
+        >
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/character_create.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
+            <div style={{ color: 'rgba(250,172,71,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>NEW JOURNEY</div>
+            <div className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1rem' }}>New Campaign</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
+              Choose your race and class
             </div>
-            <LobbyButton label="CONTINUE" onClick={onContinue} primary icon="Play" />
           </div>
         </div>
-      )}
 
-      <div style={{ ...panelStyle }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div className="font-cinzel" style={{ color: '#fff', fontSize: '1rem' }}>
-              New Campaign
+        <div
+          onClick={hasExistingSave ? onContinue : undefined}
+          style={{ ...cardStyle, borderColor: hasExistingSave ? 'rgba(110,231,183,0.3)' : 'rgba(255,255,255,0.08)', opacity: hasExistingSave ? 1 : 0.5 }}
+          onMouseEnter={e => { if (hasExistingSave) { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(110,231,183,0.6)'; } }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = hasExistingSave ? 'rgba(110,231,183,0.3)' : 'rgba(255,255,255,0.08)'; }}
+        >
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/dark_forest.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
+            <div style={{ color: 'rgba(110,231,183,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>
+              {hasExistingSave ? 'SAVED CAMPAIGN' : 'NO SAVE DATA'}
             </div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: 4 }}>
-              Begin your journey through the realms. Choose your race and class.
+            <div className="font-cinzel" style={{ color: hasExistingSave ? 'var(--accent)' : 'rgba(255,255,255,0.3)', fontSize: '1rem' }}>
+              {hasExistingSave ? playerName : 'Continue'}
+            </div>
+            {hasExistingSave && (
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
+                Lv.{playerLevel} {playerRace} {playerClass} &bull; <InlineIcon name="gold" size={10} /> {gold}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div
+          onClick={() => setShowInfo(true)}
+          style={{ ...cardStyle, borderColor: 'rgba(219,99,49,0.3)' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(219,99,49,0.6)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(219,99,49,0.3)'; }}
+        >
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/storm_ruins.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
+            <div style={{ color: 'rgba(219,99,49,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>COMPENDIUM</div>
+            <div className="font-cinzel" style={{ color: '#DB6331', fontSize: '1rem' }}>Grudge Online</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
+              Guides, lore & combat info
             </div>
           </div>
-          <LobbyButton label="NEW GAME" onClick={onNewGame} icon="Restart" />
+        </div>
+
+        <div
+          style={{ ...cardStyle, borderColor: 'rgba(139,55,46,0.3)', opacity: 0.6, cursor: 'default' }}
+        >
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/shadow_citadel.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
+            <div style={{ color: 'rgba(139,55,46,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>WEB3</div>
+            <div className="font-cinzel" style={{ color: '#8B372E', fontSize: '1rem' }}>Wallet</div>
+            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', marginTop: 4 }}>
+              GBUX &bull; SOL &bull; Coming Soon
+            </div>
+          </div>
         </div>
       </div>
 
       <HeroSlideshow />
+
+      {showInfo && <GrudgeOnlinePage onClose={() => setShowInfo(false)} />}
     </div>
   );
 }
