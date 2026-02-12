@@ -328,6 +328,33 @@ const CLASS_EFFECTS = {
   ranger: { effect: 'slashGreenLg', aura: '#22c55e', effectKey: 'frostbolt' },
 };
 
+const COMBO_EFFECTS = {
+  human_warrior: { projectile: 'firebolt', effect: 'fireExplosion', impact: 'impactFireA', aura: '#ef4444' },
+  human_mage: { projectile: null, effect: 'holylight', impact: 'impactYellowA', aura: '#fcd34d' },
+  human_worge: { projectile: null, effect: 'healingwave', impact: 'impactGreenA', aura: '#22c55e' },
+  human_ranger: { projectile: 'firebolt', effect: 'hitBurst', impact: 'impactOrangeA', aura: '#f97316' },
+  orc_warrior: { projectile: null, effect: 'critSlash', impact: 'impactRedA', aura: '#dc2626' },
+  orc_mage: { projectile: null, effect: 'felSpell', impact: 'impactPurpleA', aura: '#7c3aed' },
+  orc_worge: { projectile: null, effect: 'fireSpin', impact: 'impactFireB', aura: '#f59e0b' },
+  orc_ranger: { projectile: 'firebolt', effect: 'fireExplosion2', impact: 'impactRedB', aura: '#ef4444' },
+  elf_warrior: { projectile: null, effect: 'beamHoly', impact: 'impactWhiteA', aura: '#e0e7ff' },
+  elf_mage: { projectile: null, effect: 'arcanelighting', impact: 'impactYellowB', aura: '#facc15', effect2: 'thunderHit' },
+  elf_worge: { projectile: null, effect: 'waterBlast', impact: 'impactTealA', aura: '#2dd4bf' },
+  elf_ranger: { projectile: 'firebolt', effect: 'frostbolt', impact: 'impactCyanA', aura: '#22d3ee' },
+  undead_warrior: { projectile: null, effect: 'arcaneslash', impact: 'impactPurpleB', aura: '#a855f7' },
+  undead_mage: { projectile: null, effect: 'midnight', impact: 'impactMagentaA', aura: '#c026d3' },
+  undead_worge: { projectile: null, effect: 'phantom', impact: 'impactPurpleC', aura: '#6366f1' },
+  undead_ranger: { projectile: 'firebolt', effect: 'arcanebolt', impact: 'impactBlueA', aura: '#3b82f6' },
+  barbarian_warrior: { projectile: null, effect: 'flamestrike', impact: 'impactFireC', aura: '#ea580c' },
+  barbarian_mage: { projectile: null, effect: 'magicSpell', impact: 'impactPinkA', aura: '#ec4899' },
+  barbarian_worge: { projectile: null, effect: 'vortex', impact: 'impactOrangeB', aura: '#d97706' },
+  barbarian_ranger: { projectile: 'firebolt', effect: 'brightFire', impact: 'impactFireD', aura: '#fbbf24' },
+  dwarf_warrior: { projectile: null, effect: 'earthBump', impact: 'impactWhiteC', aura: '#a1887f', effect2: 'earthWall' },
+  dwarf_mage: { projectile: null, effect: 'nebula', impact: 'impactCyanB', aura: '#818cf8' },
+  dwarf_worge: { projectile: null, effect: 'frozenIce', impact: 'impactBlueB', aura: '#38bdf8' },
+  dwarf_ranger: { projectile: 'firebolt', effect: 'sunburn', impact: 'impactWhiteD', aura: '#fbbf24' },
+};
+
 const CLASS_ICON_MAP = {
   warrior: '/sprites/ui/icons/icon_crossed_swords.png',
   mage: '/sprites/ui/icons/icon_mage.png',
@@ -385,7 +412,7 @@ const LORE_QUOTES = {
   ranger: "Silent as shadow, deadly as the wind — masters of the killing blow.",
 };
 
-function SlideshowVFX({ effectKey, playing, x, y }) {
+function SlideshowVFXSprite({ effectKey, displaySize = 280, style }) {
   const [frame, setFrame] = useState(0);
   const sprite = effectSprites[effectKey];
 
@@ -394,9 +421,10 @@ function SlideshowVFX({ effectKey, playing, x, y }) {
   const frameW = hasCustomLayout ? sprite.frameW : (sprite ? (sprite.size / cols) : 100);
   const frameH = hasCustomLayout ? sprite.frameH : (sprite ? (sprite.size / cols) : 100);
   const totalFrames = sprite ? sprite.frames : 1;
+  const rows = sprite?.rows || Math.ceil(totalFrames / cols);
 
   useEffect(() => {
-    if (!playing || !sprite) return;
+    if (!sprite) return;
     let f = 0;
     setFrame(0);
     const interval = setInterval(() => {
@@ -405,34 +433,116 @@ function SlideshowVFX({ effectKey, playing, x, y }) {
       setFrame(f);
     }, 40);
     return () => clearInterval(interval);
-  }, [playing, effectKey, totalFrames]);
+  }, [effectKey, totalFrames]);
 
-  if (!sprite || !playing) return null;
+  if (!sprite) return null;
 
-  const displaySize = 280;
-  const scaleX = displaySize / frameW;
-  const scaleY = displaySize / frameH;
+  const aspect = frameW / frameH;
+  const dW = aspect >= 1 ? displaySize : displaySize * aspect;
+  const dH = aspect >= 1 ? displaySize / aspect : displaySize;
   const col = frame % cols;
   const row = Math.floor(frame / cols);
 
   return (
     <div style={{
-      position: 'absolute',
-      left: x ?? '70%', top: y ?? '45%',
-      transform: 'translate(-50%, -50%)',
-      width: displaySize, height: displaySize,
+      width: dW, height: dH,
       overflow: 'hidden', pointerEvents: 'none',
-      zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
+      ...style,
     }}>
       <div style={{
-        width: displaySize, height: displaySize,
+        width: dW, height: dH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`,
-        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundSize: `${cols * dW}px ${rows * dH}px`,
+        backgroundPosition: `-${col * dW}px -${row * dH}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
       }} />
     </div>
+  );
+}
+
+function SlideshowVFX({ comboKey, playing }) {
+  const combo = COMBO_EFFECTS[comboKey];
+  const [phase, setPhase] = useState('idle');
+  const [projX, setProjX] = useState(65);
+
+  useEffect(() => {
+    if (!playing || !combo) { setPhase('idle'); setProjX(65); return; }
+    const timers = [];
+    const intervals = [];
+    const addT = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); };
+
+    if (combo.projectile) {
+      setPhase('projectile');
+      setProjX(65);
+      let x = 65;
+      const moveInterval = setInterval(() => {
+        x -= 2.5;
+        setProjX(x);
+        if (x <= 10) {
+          clearInterval(moveInterval);
+          setPhase('effect');
+          addT(() => setPhase('impact'), 400);
+          if (combo.effect2) addT(() => setPhase('effect2'), 700);
+          addT(() => setPhase('idle'), 1100);
+        }
+      }, 30);
+      intervals.push(moveInterval);
+    } else {
+      setPhase('effect');
+      addT(() => setPhase('impact'), 500);
+      if (combo.effect2) addT(() => setPhase('effect2'), 800);
+      addT(() => setPhase('idle'), 1200);
+    }
+
+    return () => { timers.forEach(t => clearTimeout(t)); intervals.forEach(i => clearInterval(i)); };
+  }, [playing, comboKey]);
+
+  if (!playing || !combo || phase === 'idle') return null;
+
+  return (
+    <>
+      {phase === 'projectile' && combo.projectile && (
+        <div style={{
+          position: 'absolute',
+          left: `${projX}%`, top: '45%',
+          transform: 'translate(-50%, -50%) scaleX(-1)',
+          zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
+        }}>
+          <SlideshowVFXSprite effectKey={combo.projectile} displaySize={120} />
+        </div>
+      )}
+      {(phase === 'effect' || phase === 'impact' || phase === 'effect2') && (
+        <div style={{
+          position: 'absolute',
+          left: combo.projectile ? '10%' : '65%', top: '45%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
+        }}>
+          <SlideshowVFXSprite effectKey={combo.effect} displaySize={280} />
+        </div>
+      )}
+      {(phase === 'impact' || phase === 'effect2') && (
+        <div style={{
+          position: 'absolute',
+          left: combo.projectile ? '10%' : '65%', top: '45%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9, mixBlendMode: 'screen', opacity: 0.9,
+        }}>
+          <SlideshowVFXSprite effectKey={combo.impact} displaySize={200} />
+        </div>
+      )}
+      {phase === 'effect2' && combo.effect2 && (
+        <div style={{
+          position: 'absolute',
+          left: combo.projectile ? '10%' : '65%', top: '45%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10, mixBlendMode: 'screen', opacity: 0.85,
+        }}>
+          <SlideshowVFXSprite effectKey={combo.effect2} displaySize={240} />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -539,6 +649,8 @@ function HeroSlideshow() {
   const spriteData = getRaceClassSprite(combo.raceId, combo.classId);
   const isWorge = combo.classId === 'worge';
   const classEffect = CLASS_EFFECTS[combo.classId] || CLASS_EFFECTS.warrior;
+  const comboEffect = COMBO_EFFECTS[`${combo.raceId}_${combo.classId}`];
+  const auraColor = comboEffect?.aura || classEffect.aura;
   const faction = FACTION_MAP[combo.raceId];
   const slogan = HERO_SLOGANS[`${combo.raceId}_${combo.classId}`] || "My grudge runs deeper than any blade.";
 
@@ -918,7 +1030,7 @@ function HeroSlideshow() {
                   left: '50%', bottom: 0,
                   transform: 'translate(-50%, 20%)',
                   borderRadius: '50%',
-                  background: `radial-gradient(circle, ${classEffect.aura}28 0%, ${classEffect.aura}10 40%, transparent 65%)`,
+                  background: `radial-gradient(circle, ${auraColor}28 0%, ${auraColor}10 40%, transparent 65%)`,
                   opacity: auraIntensity,
                   transition: 'opacity 0.8s ease',
                   animation: auraIntensity > 0 ? 'ssAuraPulse 2s ease-in-out infinite' : 'none',
@@ -966,11 +1078,11 @@ function HeroSlideshow() {
               </div>
             </div>
 
-            <SlideshowVFX effectKey={classEffect.effectKey} playing={showVfx} x="65%" y="45%" />
+            <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx} />
           </div>
         </div>
 
-        <ChatBubble text={slogan} visible={showBubble} auraColor={classEffect.aura} />
+        <ChatBubble text={slogan} visible={showBubble} auraColor={auraColor} />
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
