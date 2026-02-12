@@ -522,6 +522,14 @@ function HeroSlideshow() {
   const [auraIntensity, setAuraIntensity] = useState(0);
   const [spriteX, setSpriteX] = useState(-30);
   const [showBubble, setShowBubble] = useState(false);
+
+  const [editorMode, setEditorMode] = useState(false);
+  const [editorX, setEditorX] = useState(0);
+  const [editorY, setEditorY] = useState(0);
+  const [editorScale, setEditorScale] = useState(1);
+  const draggingRef = useRef(false);
+  const dragStartRef = useRef({ mx: 0, my: 0, sx: 0, sy: 0 });
+  const containerRef = useRef(null);
   const attackRef = useRef('attack1');
   const timerRefs = useRef([]);
 
@@ -567,6 +575,67 @@ function HeroSlideshow() {
 
   const intervalRefs = useRef([]);
 
+  useEffect(() => {
+    if (!editorMode) return;
+    const handleKey = (e) => {
+      const step = e.shiftKey ? 10 : 1;
+      if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
+        e.preventDefault();
+        setEditorScale(s => Math.round((s + 0.05) * 100) / 100);
+      } else if (e.key === '-' || e.code === 'NumpadSubtract') {
+        e.preventDefault();
+        setEditorScale(s => Math.max(0.1, Math.round((s - 0.05) * 100) / 100));
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setEditorX(x => x - step);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setEditorX(x => x + step);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setEditorY(y => y + step);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setEditorY(y => y - step);
+      } else if (e.key === 'Escape') {
+        setEditorMode(false);
+      } else if (e.key === '>' || e.key === '.') {
+        setIndex(prev => (prev + 1) % ALL_COMBOS.length);
+        setEditorX(0); setEditorY(0); setEditorScale(1);
+      } else if (e.key === '<' || e.key === ',') {
+        setIndex(prev => (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length);
+        setEditorX(0); setEditorY(0); setEditorScale(1);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [editorMode]);
+
+  const handleEditorMouseDown = (e) => {
+    if (!editorMode) return;
+    e.preventDefault();
+    draggingRef.current = true;
+    dragStartRef.current = { mx: e.clientX, my: e.clientY, sx: editorX, sy: editorY };
+  };
+  const handleEditorMouseMove = useCallback((e) => {
+    if (!draggingRef.current) return;
+    const dx = e.clientX - dragStartRef.current.mx;
+    const dy = e.clientY - dragStartRef.current.my;
+    setEditorX(dragStartRef.current.sx + dx);
+    setEditorY(dragStartRef.current.sy - dy);
+  }, []);
+  const handleEditorMouseUp = useCallback(() => { draggingRef.current = false; }, []);
+
+  useEffect(() => {
+    if (!editorMode) return;
+    window.addEventListener('mousemove', handleEditorMouseMove);
+    window.addEventListener('mouseup', handleEditorMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleEditorMouseMove);
+      window.removeEventListener('mouseup', handleEditorMouseUp);
+    };
+  }, [editorMode, handleEditorMouseMove, handleEditorMouseUp]);
+
   const clearTimers = () => {
     timerRefs.current.forEach(t => clearTimeout(t));
     timerRefs.current = [];
@@ -580,6 +649,18 @@ function HeroSlideshow() {
   };
 
   useEffect(() => {
+    if (editorMode) {
+      clearTimers();
+      setPhase('idle');
+      setAnim('idle');
+      setTextVisible(true);
+      setAuraIntensity(1);
+      setSpriteX(22);
+      setShowVfx(false);
+      setShowTransform(false);
+      setShowBubble(false);
+      return;
+    }
     clearTimers();
     setPhase('enter');
     setTextVisible(false);
@@ -693,7 +774,7 @@ function HeroSlideshow() {
     }
 
     return clearTimers;
-  }, [index]);
+  }, [index, editorMode]);
 
   return (
     <div style={{
@@ -816,10 +897,12 @@ function HeroSlideshow() {
           }}>
             <div style={{
               position: 'absolute',
-              left: `calc(${spriteX}% + ${spriteXOffset}px)`,
-              bottom: 60 - spriteYOffset,
+              left: `calc(${spriteX}% + ${spriteXOffset + (editorMode ? editorX : 0)}px)`,
+              bottom: 60 - spriteYOffset + (editorMode ? editorY : 0),
               willChange: 'left',
-            }}>
+              cursor: editorMode ? 'grab' : undefined,
+            }}
+            onMouseDown={handleEditorMouseDown}>
               <div style={{
                 position: 'relative',
                 display: 'inline-flex',
@@ -848,7 +931,7 @@ function HeroSlideshow() {
                   <SpriteAnimation
                     spriteData={spriteData}
                     animation={anim}
-                    scale={spriteScale}
+                    scale={spriteScale * (editorMode ? editorScale : 1)}
                     flip={!!spriteData?.facesLeft}
                     loop={anim === 'idle' || anim === 'walk' || anim === 'run'}
                     speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
@@ -972,6 +1055,57 @@ function HeroSlideshow() {
           100% { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+
+      <button
+        onClick={() => {
+          setEditorMode(e => !e);
+          if (!editorMode) {
+            setEditorX(0);
+            setEditorY(0);
+            setEditorScale(1);
+          }
+        }}
+        style={{
+          position: 'absolute', top: 8, right: 8, zIndex: 20,
+          background: editorMode ? '#FAAC47' : 'rgba(0,0,0,0.5)',
+          color: editorMode ? '#000' : '#fff',
+          border: 'none', borderRadius: 4, padding: '4px 10px',
+          fontSize: '0.7rem', cursor: 'pointer',
+          fontFamily: 'Jost, sans-serif', fontWeight: 600,
+        }}
+      >
+        {editorMode ? 'EXIT EDITOR' : 'EDIT'}
+      </button>
+
+      {editorMode && (
+        <div style={{
+          position: 'absolute', bottom: 8, left: 8, zIndex: 20,
+          background: 'rgba(0,0,0,0.85)', border: '1px solid #FAAC47',
+          borderRadius: 6, padding: '8px 12px',
+          fontFamily: 'monospace', fontSize: '0.7rem', color: '#fff',
+          lineHeight: 1.6, pointerEvents: 'none', userSelect: 'none',
+        }}>
+          <div style={{ color: '#FAAC47', fontWeight: 700, marginBottom: 4, fontSize: '0.75rem' }}>
+            Sprite Editor — {combo.raceId}_{combo.classId}
+          </div>
+          <div>X: <span style={{ color: '#6f6' }}>{editorX}</span> | Y: <span style={{ color: '#6f6' }}>{editorY}</span> | Scale: <span style={{ color: '#6f6' }}>{editorScale.toFixed(2)}</span></div>
+          <div style={{ color: '#aaa', marginTop: 4 }}>
+            Drag to move | +/- scale | Arrows to nudge (Shift=10x)
+          </div>
+          <div style={{ color: '#aaa' }}>
+            {'< > to cycle heroes | Esc to exit'}
+          </div>
+          <div style={{ color: '#FAAC47', marginTop: 4 }}>
+            SPRITE_X_OFFSETS['{combo.raceId}_{combo.classId}']: {spriteXOffset + editorX}
+          </div>
+          <div style={{ color: '#FAAC47' }}>
+            SPRITE_Y_OFFSETS['{combo.raceId}_{combo.classId}']: {spriteYOffset + editorY}
+          </div>
+          <div style={{ color: '#FAAC47' }}>
+            SPRITE_SCALE_OVERRIDES['{combo.raceId}_{combo.classId}']: {((scaleOverride || 1) * editorScale).toFixed(2)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
