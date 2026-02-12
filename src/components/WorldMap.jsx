@@ -3561,12 +3561,65 @@ export default function WorldMap() {
                 borderRadius: 6, padding: '6px 12px', color: '#c084fc',
                 cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
               }}>
-                🌐 Deploy to Arena
+                🌐 Open Arena Lobby
               </button>
             </div>
 
-            <div style={{ marginTop: 10, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
-              Share the link or code with anyone. Full hero builds including equipment, skills, and loadouts are encoded. They can paste it into the Gruda Arena page to fight with your heroes against AI enemies.
+            <div style={{ marginTop: 10 }}>
+              <button onClick={async () => {
+                try {
+                  setGrudaCopied('submitting');
+                  const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
+                  const token = await encodeGrudaShare(activeHeroes);
+                  const heroSnapshots = activeHeroes.map(h => ({
+                    name: h.name,
+                    raceId: h.raceId,
+                    classId: h.classId,
+                    level: h.level,
+                    attributePoints: h.attributePoints || h.baseAttributePoints || {},
+                    equipment: h.equipment || {},
+                    unlockedSkills: h.unlockedSkills || {},
+                    abilityLoadout: h.abilityLoadout || null,
+                  }));
+                  const discordUser = JSON.parse(localStorage.getItem('discordUser') || 'null');
+                  const ownerId = discordUser?.id || `local_${heroRoster[0]?.id || Date.now()}`;
+                  const ownerName = discordUser?.globalName || discordUser?.username || heroRoster[0]?.name || 'Unknown';
+                  const res = await fetch('/api/arena/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ownerId, ownerName, heroes: heroSnapshots, shareToken: token }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    setGrudaCopied('submitted');
+                    setTimeout(() => setGrudaCopied(null), 3000);
+                  } else {
+                    setGrudaCopied('error');
+                    setTimeout(() => setGrudaCopied(null), 3000);
+                  }
+                } catch (err) {
+                  console.error('Arena submit error:', err);
+                  setGrudaCopied('error');
+                  setTimeout(() => setGrudaCopied(null), 3000);
+                }
+              }} disabled={grudaCopied === 'submitting'} style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, rgba(251,191,36,0.25), rgba(239,68,68,0.2))',
+                border: '2px solid rgba(251,191,36,0.5)',
+                borderRadius: 8, padding: '10px 16px', color: 'var(--gold)',
+                cursor: grudaCopied === 'submitting' ? 'wait' : 'pointer',
+                fontSize: '0.75rem', fontWeight: 700, fontFamily: "'Cinzel', serif",
+                letterSpacing: '1px',
+              }}>
+                {grudaCopied === 'submitting' ? '⏳ Submitting...'
+                  : grudaCopied === 'submitted' ? '✓ Team Posted to Ranked Arena!'
+                  : grudaCopied === 'error' ? '✕ Submission Failed'
+                  : '⚔️ POST TEAM TO PVP ARENA'}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 8, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
+              Submit your team snapshot to the Ranked PvP Arena. Other players can challenge your team. Earn gold, resources, and equipment for each win. After 3 losses your team moves to Unranked. Posting a new team replaces your ranked entry.
             </div>
           </div>
         )}

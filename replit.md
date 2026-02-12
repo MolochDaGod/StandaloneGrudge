@@ -59,6 +59,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Discord OAuth:** `/discordauth` route handles Discord login with CSRF state protection.
 - **Discord Webhook Broadcaster:** Admin-authenticated webhook system for sending rich embed messages to a Discord channel.
 - **Beta Tester System:** Creates one-time invite links to a Discord channel.
+- **GRUDA PvP Arena:** Comprehensive ranked PvP system. Players submit team snapshots via the GRUDA button (WorldMap) or directly at `/arena.html`. Teams are posted to a ranked lobby via 6 API endpoints (`/api/arena/submit`, `/api/arena/lobby`, `/api/arena/team/:id`, `/api/arena/battle/result`, `/api/arena/rewards/:id`, `/api/arena/stats`). Other players challenge posted teams (AI-controlled opponents). 3-loss relegation demotes teams from Ranked to Unranked. Rewards include gold (50 + avgLevel*10 + wins*5), resources (10 + avgLevel*2), and equipment drops every 5 wins. Standalone arena.html is self-contained for external hosting on grudgewarlords.com/arena and grudgestudio.com/arena. Uses in-memory Map storage (arenaTeams, arenaBattles) with server-generated UUIDs and SHA-256 snapshot hashing. Arena routes are implemented in both `server.js` (dev) and `server.prod.js` (production).
 
 ## External Dependencies
 - **React:** Frontend library.
