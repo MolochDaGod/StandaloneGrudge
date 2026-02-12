@@ -100,6 +100,8 @@ const spriteSheets = {
   archer: classSpriteMap.ranger,
   'human-ranger': {
     folder: 'human-ranger',
+    frameWidth: 100,
+    frameHeight: 100,
     idle: { src: '/sprites/human-ranger/idle.png', frames: 8 },
     attack1: { src: '/sprites/human-ranger/attack1.png', frames: 20 },
     attack2: { src: '/sprites/human-ranger/attack2.png', frames: 28 },

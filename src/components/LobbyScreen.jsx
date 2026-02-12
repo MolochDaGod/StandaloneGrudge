@@ -663,10 +663,10 @@ function HeroSlideshow() {
     dwarf_worge: 0.5,
   };
   const SPRITE_Y_OFFSETS = {
-    human_mage: 20,
+    human_mage: 30,
     undead_warrior: 60,
     human_warrior: 110,
-    human_worge: -50,
+    human_worge: 0,
     orc_mage: 20,
     orc_worge: 50,
     orc_ranger: 70,
@@ -813,6 +813,7 @@ function HeroSlideshow() {
 
     const PREFERRED_ATTACKS = {
       human_warrior: 'attack2',
+      human_ranger: 'attack1',
     };
     const comboKey = `${combo.raceId}_${combo.classId}`;
     const preferredAttack = PREFERRED_ATTACKS[comboKey];
@@ -825,7 +826,8 @@ function HeroSlideshow() {
         ? attackPool[Math.floor(Math.random() * attackPool.length)]
         : 'attack1';
     attackRef.current = chosenAttack;
-    const attackFrames = Math.min(spriteData?.[chosenAttack]?.frames || 8, 15);
+    const maxFrames = 24;
+    const attackFrames = Math.min(spriteData?.[chosenAttack]?.frames || 8, maxFrames);
     const attackDuration = attackFrames * 80;
 
     addTimer(() => {
