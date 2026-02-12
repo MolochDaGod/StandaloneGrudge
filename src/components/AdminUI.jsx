@@ -25,6 +25,253 @@ const SCREEN_BGS = {
   scene: 'linear-gradient(180deg, #0a1a0a 0%, #1a2a1a 40%, #0a1a28 100%)',
 };
 
+function MiniBar({ pct, color, width = '100%' }) {
+  return (
+    <div style={{
+      width, height: 3, background: '#1a1a2e', borderRadius: 1,
+      overflow: 'hidden', border: '0.5px solid #2a2a3e',
+    }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 1 }} />
+    </div>
+  );
+}
+
+function MockChatPanel({ scale }) {
+  const fs = Math.max(5, 7 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: 4 / scale, overflow: 'hidden' }}>
+      <div style={{ fontSize: fs, color: '#ffd700', fontWeight: 700, marginBottom: 2 / scale, fontFamily: "'Cinzel', serif" }}>Party Log</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 / scale, justifyContent: 'flex-end', overflow: 'hidden' }}>
+        {['Hero attacks Goblin for 12 dmg', 'Goblin strikes back!', 'Mage casts Fireball', 'Enemy defeated!', '+15 XP, +8 Gold'].map((msg, i) => (
+          <div key={i} style={{ fontSize: fs * 0.8, color: i === 4 ? '#22c55e' : 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {msg}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockHotbar({ scale }) {
+  const slotSize = Math.max(10, 28 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 / scale }}>
+      {[1,2,3,4,5,6,7,8].map(i => (
+        <div key={i} style={{
+          width: slotSize, height: slotSize,
+          border: `1px solid ${i <= 5 ? 'rgba(255,215,0,0.5)' : 'rgba(255,255,255,0.15)'}`,
+          borderRadius: 2, background: i <= 5 ? 'rgba(255,215,0,0.08)' : 'rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: Math.max(5, 8 / scale), color: 'rgba(255,255,255,0.3)',
+        }}>
+          {i}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockWarParty({ scale }) {
+  const fs = Math.max(4, 6 / scale);
+  const heroes = [
+    { name: 'Knight', hp: 85, mp: 60, sp: 70, color: '#22c55e' },
+    { name: 'Mage', hp: 55, mp: 90, sp: 40, color: '#3b82f6' },
+    { name: 'Ranger', hp: 72, mp: 45, sp: 80, color: '#f59e0b' },
+  ];
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: 3 / scale, gap: 2 / scale }}>
+      <div style={{ fontSize: fs * 1.1, color: '#ffd700', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>War Party</div>
+      {heroes.map((h, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 / scale }}>
+          <div style={{
+            width: Math.max(8, 16 / scale), height: Math.max(8, 16 / scale),
+            borderRadius: '50%', border: '1px solid rgba(255,215,0,0.4)',
+            background: 'rgba(0,0,0,0.5)', flexShrink: 0,
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: fs, color: '#e2e8f0', fontWeight: 600, marginBottom: 1 }}>{h.name}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <MiniBar pct={h.hp} color="#22c55e" />
+              <MiniBar pct={h.mp} color="#3b82f6" />
+              <MiniBar pct={h.sp} color="#f59e0b" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockMinimap({ scale }) {
+  return (
+    <div style={{ width: '100%', height: '100%', borderRadius: 4 / scale, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1a3a2a, #0a2818)', opacity: 0.8 }} />
+      <div style={{ position: 'absolute', top: '20%', left: '30%', width: 4 / scale, height: 4 / scale, background: '#ffd700', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', top: '50%', left: '60%', width: 3 / scale, height: 3 / scale, background: '#ef4444', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', top: '70%', left: '40%', width: 3 / scale, height: 3 / scale, background: '#3b82f6', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', bottom: 2 / scale, right: 3 / scale, fontSize: Math.max(4, 6 / scale), color: 'rgba(255,255,255,0.4)' }}>MAP</div>
+    </div>
+  );
+}
+
+function MockZoneLabel({ scale }) {
+  const fs = Math.max(6, 12 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ fontSize: fs, color: '#ffd700', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 1, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        Eldertree Forest
+      </span>
+    </div>
+  );
+}
+
+function MockBattleActionBar({ scale }) {
+  const slotSize = Math.max(12, 32 / scale);
+  const fs = Math.max(4, 6 / scale);
+  const abilities = ['ATK', 'MAG', 'DEF', 'ITM', 'SPL'];
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 / scale }}>
+      {abilities.map((a, i) => (
+        <div key={i} style={{
+          width: slotSize, height: slotSize,
+          border: '1px solid rgba(255,215,0,0.4)', borderRadius: 3 / scale,
+          background: 'linear-gradient(180deg, rgba(255,215,0,0.12), rgba(0,0,0,0.4))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: fs, color: '#ffd700', fontWeight: 700,
+        }}>
+          {a}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockEnemyInfo({ scale }) {
+  const fs = Math.max(5, 7 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', padding: 3 / scale, display: 'flex', flexDirection: 'column', gap: 2 / scale }}>
+      <div style={{ fontSize: fs * 1.1, color: '#ef4444', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>Goblin Lv.5</div>
+      <MiniBar pct={65} color="#ef4444" />
+      <div style={{ fontSize: fs * 0.85, color: 'rgba(255,255,255,0.4)' }}>HP: 65/100</div>
+      <div style={{ fontSize: fs * 0.85, color: 'rgba(255,255,255,0.4)' }}>ATK: 12 | DEF: 8</div>
+    </div>
+  );
+}
+
+function MockPartyInfo({ scale }) {
+  const fs = Math.max(4, 6 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', padding: 3 / scale, display: 'flex', flexDirection: 'column', gap: 2 / scale }}>
+      <div style={{ fontSize: fs * 1.1, color: '#22c55e', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>Party</div>
+      {['Knight', 'Mage'].map((name, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ fontSize: fs, color: '#e2e8f0' }}>{name}</div>
+          <MiniBar pct={i === 0 ? 80 : 55} color="#22c55e" />
+          <MiniBar pct={i === 0 ? 50 : 90} color="#3b82f6" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockBattleLog({ scale }) {
+  const fs = Math.max(4, 6 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', padding: 3 / scale, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: fs * 1.1, color: '#f59e0b', fontWeight: 700, marginBottom: 2 / scale, fontFamily: "'Cinzel', serif" }}>Battle Log</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, justifyContent: 'flex-end', overflow: 'hidden' }}>
+        {['Turn 3 begins', 'Knight uses Slash!', 'Critical Hit! 24 damage', 'Goblin is stunned', 'Mage prepares spell...'].map((msg, i) => (
+          <div key={i} style={{ fontSize: fs * 0.85, color: i === 2 ? '#f59e0b' : 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            {msg}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockSceneHeader({ scale }) {
+  const fs = Math.max(7, 14 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ fontSize: fs, color: '#ffd700', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: 2 }}>
+        Merchant Camp
+      </span>
+    </div>
+  );
+}
+
+function MockSceneActions({ scale }) {
+  const fs = Math.max(5, 8 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 / scale }}>
+      {['Trade', 'Rest', 'Train', 'Leave'].map((a, i) => (
+        <div key={i} style={{
+          padding: `${2 / scale}px ${6 / scale}px`,
+          border: '1px solid rgba(255,215,0,0.3)', borderRadius: 3 / scale,
+          background: 'rgba(255,215,0,0.08)',
+          fontSize: fs, color: '#ffd700', fontWeight: 600,
+        }}>
+          {a}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockNpcPanel({ scale }) {
+  const fs = Math.max(5, 7 / scale);
+  return (
+    <div style={{ width: '100%', height: '100%', padding: 4 / scale, display: 'flex', flexDirection: 'column', gap: 3 / scale }}>
+      <div style={{ fontSize: fs * 1.2, color: '#ffd700', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>Merchant</div>
+      <div style={{
+        width: Math.max(16, 40 / scale), height: Math.max(16, 40 / scale),
+        borderRadius: '50%', border: '1px solid rgba(255,215,0,0.3)',
+        background: 'rgba(0,0,0,0.4)', alignSelf: 'center',
+      }} />
+      <div style={{ fontSize: fs * 0.9, color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+        "Welcome, traveler! Care to browse my wares?"
+      </div>
+      <div style={{ display: 'flex', gap: 2 / scale, flexWrap: 'wrap' }}>
+        {['Buy', 'Sell', 'Talk'].map((b, i) => (
+          <div key={i} style={{
+            padding: `${1 / scale}px ${4 / scale}px`,
+            border: '1px solid rgba(255,215,0,0.2)', borderRadius: 2,
+            fontSize: fs * 0.85, color: '#ffd700', background: 'rgba(255,215,0,0.06)',
+          }}>
+            {b}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const ELEMENT_PREVIEWS = {
+  chatPanel: MockChatPanel,
+  hotbar: MockHotbar,
+  warParty: MockWarParty,
+  minimap: MockMinimap,
+  zoneLabel: MockZoneLabel,
+  battleActionBar: MockBattleActionBar,
+  battleEnemyInfo: MockEnemyInfo,
+  battlePartyInfo: MockPartyInfo,
+  battleLog: MockBattleLog,
+  sceneHeader: MockSceneHeader,
+  sceneActions: MockSceneActions,
+  sceneNpcPanel: MockNpcPanel,
+};
+
+function MockBottomBar({ scale }) {
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', gap: 2 / scale, padding: 2 / scale, opacity: 0.4 }}>
+      <div style={{ flex: 1, border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 3 / scale, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.max(4, 6 / scale), color: 'rgba(255,255,255,0.2)' }}>Chat</div>
+      <div style={{ flex: 2, border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 3 / scale, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.max(4, 6 / scale), color: 'rgba(255,255,255,0.2)' }}>Hotbar</div>
+      <div style={{ flex: 1, border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 3 / scale, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.max(4, 6 / scale), color: 'rgba(255,255,255,0.2)' }}>Party</div>
+    </div>
+  );
+}
+
 function getElementBox(config, el) {
   const def = el.defaultRect;
   const x = config.customX !== null ? config.customX : def.x;
@@ -43,6 +290,7 @@ export default function AdminUI() {
   const [showExport, setShowExport] = useState(false);
   const [importText, setImportText] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const canvasRef = useRef(null);
   const dragStart = useRef({ mx: 0, my: 0, ex: 0, ey: 0 });
   const resizeStart = useRef({ mx: 0, my: 0, ew: 0, eh: 0, ex: 0, ey: 0 });
@@ -225,10 +473,24 @@ export default function AdminUI() {
           flex: 1, overflowY: 'auto', padding: '8px 16px',
           scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
         }}>
-          <div style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, fontWeight: 700 }}>
-            Elements ({elements.length})
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>
+              Elements ({elements.length})
+            </div>
+            <button
+              onClick={() => setShowPreview(p => !p)}
+              style={{
+                background: showPreview ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${showPreview ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                borderRadius: 4, padding: '2px 6px', cursor: 'pointer',
+                color: showPreview ? '#22c55e' : '#64748b',
+                fontSize: '0.55rem', fontWeight: 600,
+              }}
+            >
+              {showPreview ? 'Preview ON' : 'Preview OFF'}
+            </button>
           </div>
-          {elements.map((el, idx) => {
+          {elements.map((el) => {
             const config = layout[el.id] || {};
             const isSelected = selectedId === el.id;
             return (
@@ -409,7 +671,7 @@ export default function AdminUI() {
               {SCREEN_LABELS[activeScreen].toUpperCase()} LAYOUT
             </div>
 
-            {elements.map((el, idx) => {
+            {elements.map((el) => {
               const config = layout[el.id] || {};
               if (config.visible === false) return null;
               const box = getElementBox(config, el);
@@ -418,6 +680,8 @@ export default function AdminUI() {
               const scale = canvasRef.current ? canvasRef.current.getBoundingClientRect().width / CANVAS_W : 1;
 
               const elColor = isLocked ? '#f59e0b' : isSelected ? '#ffd700' : SCREEN_COLORS[activeScreen];
+
+              const PreviewComponent = showPreview ? (ELEMENT_PREVIEWS[el.id] || (el.id === 'bottomBar' ? MockBottomBar : null)) : null;
 
               return (
                 <div
@@ -432,12 +696,23 @@ export default function AdminUI() {
                     height: `${(box.h / CANVAS_H) * 100}%`,
                     border: `2px solid ${elColor}${isSelected ? 'cc' : '55'}`,
                     borderRadius: 4,
-                    background: `${elColor}${isSelected ? '18' : '0a'}`,
+                    background: PreviewComponent
+                      ? `linear-gradient(180deg, rgba(10,14,23,0.85), rgba(10,14,23,0.92))`
+                      : `${elColor}${isSelected ? '18' : '0a'}`,
                     cursor: isLocked ? 'not-allowed' : dragging === el.id ? 'grabbing' : 'grab',
                     transition: dragging === el.id || resizing === el.id ? 'none' : 'all 0.1s',
-                    boxShadow: isSelected ? `0 0 16px ${elColor}33, inset 0 0 20px ${elColor}08` : 'none',
+                    boxShadow: isSelected
+                      ? `0 0 16px ${elColor}33, inset 0 0 20px ${elColor}08`
+                      : PreviewComponent ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
+                    overflow: 'hidden',
                   }}
                 >
+                  {PreviewComponent && (
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                      <PreviewComponent scale={scale} />
+                    </div>
+                  )}
+
                   <div style={{
                     position: 'absolute', top: -1, left: 4,
                     transform: 'translateY(-100%)',
@@ -453,6 +728,7 @@ export default function AdminUI() {
                     position: 'absolute', bottom: 2 / scale, right: 4 / scale,
                     fontSize: 9 / scale, color: 'rgba(255,255,255,0.3)',
                     pointerEvents: 'none',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
                   }}>
                     {box.w}x{box.h}
                   </div>
