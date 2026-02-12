@@ -1339,7 +1339,7 @@ export default function BattleScreen() {
 
   const bodyY = useCallback((unit) => {
     if (!unit?.position) return 50;
-    return unit.position.y - 10;
+    return unit.position.y + 15;
   }, []);
 
   const addParticle = useCallback((type, x, y, color) => {
