@@ -123,7 +123,7 @@ export default function GrudgeOnlinePage({ onClose }) {
 
 function OverviewTab() {
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <div style={{ ...panelStyle, borderColor: 'rgba(250,172,71,0.3)' }}>
         <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 12 }}>
           Welcome to the Grudge War
@@ -178,7 +178,7 @@ function OverviewTab() {
 function RacesTab() {
   const races = Object.values(raceDefinitions);
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 16 }}>
         Race Index
       </h2>
@@ -211,7 +211,7 @@ function RacesTab() {
 function ClassesTab() {
   const classes = Object.entries(classDefinitions);
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 16 }}>
         Class Index
       </h2>
@@ -264,7 +264,7 @@ function ClassesTab() {
 
 function AttributesTab() {
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 16 }}>
         Attribute Guide
       </h2>
@@ -289,7 +289,7 @@ function AttributesTab() {
 
 function CombatTab() {
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 16 }}>
         Combat Math
       </h2>
@@ -316,7 +316,7 @@ function CombatTab() {
 
 function TipsTab() {
   return (
-    <div style={{ maxWidth: 800 }}>
+    <div style={{ width: '100%' }}>
       <h2 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.2rem', marginBottom: 16 }}>
         Warlord Tips & Strategy
       </h2>
