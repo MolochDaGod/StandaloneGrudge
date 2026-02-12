@@ -471,6 +471,11 @@ function HeroSlideshow() {
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
 
+  const SPRITE_Y_OFFSETS = {
+    human_mage: 20,
+  };
+  const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
+
   const targetHeight = 240;
   const spriteFrameH = spriteData?.frameHeight || 100;
   const spriteScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
@@ -733,7 +738,7 @@ function HeroSlideshow() {
             <div style={{
               position: 'absolute',
               left: `${spriteX}%`,
-              bottom: 60,
+              bottom: 60 - spriteYOffset,
               willChange: 'left',
             }}>
               <div style={{

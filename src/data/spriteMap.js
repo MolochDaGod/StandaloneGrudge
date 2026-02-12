@@ -698,7 +698,7 @@ export const raceClassSpriteMap = {
   },
   elf: {
     warrior: spriteSheets['hero-knight'],
-    mage: spriteSheets.wizard,
+    mage: spriteSheets['wanderer-magician'],
     worge: { ...spriteSheets.priest, filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.1)' },
     ranger: spriteSheets['elf-ranger'],
   },
@@ -710,13 +710,13 @@ export const raceClassSpriteMap = {
   },
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', scale: 1.35 },
-    mage: { ...spriteSheets['barbarian-mage'], scale: 1.35 },
+    mage: spriteSheets['lightning-mage'],
     worge: { ...spriteSheets.soldier, scale: 1.35 },
     ranger: { ...spriteSheets['barbarian-ranger'], scale: 1.35 },
   },
   dwarf: {
     warrior: spriteSheets['armored-axeman'],
-    mage: spriteSheets.priest,
+    mage: spriteSheets['fire-wizard'],
     worge: { ...spriteSheets.soldier, filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)' },
     ranger: spriteSheets['dwarf-ranger'],
   },
@@ -745,21 +745,21 @@ export const leafRangerSprite = spriteSheets['leaf-ranger'];
 export const crystalMaulerSprite = spriteSheets['crystal-mauler'];
 
 export const worgTransformSprite = {
-  human: leafRangerSprite,
-  orc: leafRangerSprite,
-  elf: leafRangerSprite,
-  undead: { ...leafRangerSprite, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
-  barbarian: leafRangerSprite,
-  dwarf: leafRangerSprite,
+  human: spriteSheets.werewolf,
+  orc: spriteSheets.werewolf,
+  elf: spriteSheets.werebear,
+  undead: { ...spriteSheets.werewolf, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  barbarian: spriteSheets.werebear,
+  dwarf: spriteSheets.werebear,
 };
 
 export const worgBearTransformSprite = {
-  human: crystalMaulerSprite,
-  orc: crystalMaulerSprite,
-  elf: crystalMaulerSprite,
-  undead: { ...crystalMaulerSprite, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
-  barbarian: crystalMaulerSprite,
-  dwarf: crystalMaulerSprite,
+  human: spriteSheets.werebear,
+  orc: spriteSheets.werebear,
+  elf: spriteSheets.werebear,
+  undead: { ...spriteSheets.werebear, filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
+  barbarian: spriteSheets.werebear,
+  dwarf: spriteSheets.werebear,
 };
 
 export const eliteTransformSprites = {
