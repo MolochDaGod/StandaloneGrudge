@@ -106,6 +106,17 @@ const spriteSheets = {
     jump: { src: '/sprites/heroes/barbarian_warrior/Jump.png', frames: 3 },
     fall: { src: '/sprites/heroes/barbarian_warrior/Fall.png', frames: 3 },
   },
+  'dwarf-worge': {
+    folder: 'dwarf-worge',
+    frameWidth: 100,
+    frameHeight: 82,
+    idle: { src: '/sprites/dwarf-worge/idle.png', frames: 6 },
+    walk: { src: '/sprites/dwarf-worge/walk.png', frames: 6 },
+    hurt: { src: '/sprites/dwarf-worge/hurt.png', frames: 4 },
+    death: { src: '/sprites/dwarf-worge/death.png', frames: 4 },
+    attack1: { src: '/sprites/dwarf-worge/attack1.png', frames: 20 },
+    attack2: { src: '/sprites/dwarf-worge/attack2.png', frames: 20 },
+  },
   orc: {
     folder: 'orc',
     idle: { src: '/sprites/orc/idle.png', frames: 6 },
@@ -717,7 +728,7 @@ export const raceClassSpriteMap = {
   dwarf: {
     warrior: spriteSheets['armored-axeman'],
     mage: spriteSheets['fire-wizard'],
-    worge: { ...spriteSheets.soldier, filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)' },
+    worge: spriteSheets['dwarf-worge'],
     ranger: spriteSheets['dwarf-ranger'],
   },
 };
