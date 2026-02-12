@@ -566,6 +566,10 @@ export function getItemSpriteIcon(item) {
 }
 
 export function getIconSrc(key) {
+  try {
+    const overrides = JSON.parse(localStorage.getItem('iconOverrides') || '{}');
+    if (overrides[key]) return overrides[key];
+  } catch {}
   return ICON_REGISTRY[key] || UI_ICONS[key] || null;
 }
 

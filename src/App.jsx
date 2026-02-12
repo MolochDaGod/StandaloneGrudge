@@ -21,6 +21,7 @@ import AdminBattle from './components/AdminBattle';
 import AdminSprite from './components/AdminSprite';
 import AdminUI from './components/AdminUI';
 import AdminDashboard from './components/AdminDashboard';
+import AdminIcons from './components/AdminIcons';
 import SceneView from './components/SceneView';
 import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
@@ -223,6 +224,7 @@ export default function App() {
   if (path === '/adminbattle') return <AdminBattle />;
   if (path === '/adminsprite') return <AdminSprite />;
   if (path === '/adminui') return <AdminUI />;
+  if (path === '/adminicons') return <AdminIcons />;
   if (path === '/discordauth') return <DiscordAuth />;
 
   return <GameApp />;

@@ -11,6 +11,7 @@ const ADMIN_TOOLS = [
   { id: 'battle', label: 'Battle Editor', path: '/adminbattle', desc: 'Configure formations, sprites, and action bar layout', color: '#ef4444', icon: 'M6.92 5H5l3.5 10 1.42-4.09L6.92 5zM11.5 1l-1 3h3l-1-3h-1zM17.08 5h-1.92l-3 5.91L13.5 15 17.08 5zM7 21h2v-4H7v4zm4 0h2v-6h-2v6zm4 0h2v-3h-2v3z', bg: '/backgrounds/scene_field.png' },
   { id: 'sprite', label: 'Sprite Editor', path: '/adminsprite', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z', bg: '/backgrounds/wc_purple.png' },
   { id: 'ui', label: 'UI Layout Editor', path: '/adminui', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z', bg: '/backgrounds/wc_blue.png' },
+  { id: 'icons', label: 'Icon Manager', path: '/adminicons', desc: 'Browse, replace, and manage all game icons, skills, and materials', color: '#06b6d4', icon: 'M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4z', bg: '/backgrounds/wc_gold.png' },
 ];
 
 const GAME_SYSTEMS = [

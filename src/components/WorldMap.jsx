@@ -1344,7 +1344,7 @@ export default function WorldMap() {
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
       onMouseLeave={handleMapMouseUp}
-      style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab') }}
+      style={{ width: '100%', height: 'calc(100% - 10px)', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), marginBottom: 10 }}
     >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',

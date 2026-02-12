@@ -75,4 +75,13 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Admin Sprite Editor (`/adminsprite`):** Dev tool for configuring character sprites, projectiles, buffs/effects, weapons, and effect layers.
 - **Admin Map (`/adminmap`):** Dev tool for map configuration.
 - **Admin Battle (`/adminbattle`):** Dev tool for battle testing.
+- **Admin Icon Manager (`/adminicons`):** Browse all game icons organized by category (Actions, Abilities, Skills, Equipment, Potions, Weapons, Resources, Misc). Drag-and-drop PNG upload to override any icon (stored in localStorage). Sprite sheet viewers for RPG 16x16 icons and Crafting Materials with click-to-copy coordinates.
 - **Admin Gizmo:** In-game DOM element inspector with drag/resize (toggled via gear button).
+
+## UI Component Library
+- **OrnatePanel (`src/components/OrnatePanel.jsx`):** Reusable CSS-only ornate panel with dark leather background, gold borders, SVG corner filigree with red gem accents. Used for bottom bar panels (chat, hotbar, war party). Also exports `OrnateSlot` for styled hotbar slots.
+
+## Asset Directories
+- `public/sprites/bosses/` - Forest boss sprite sheets (3 bosses, 96x96 frames, animations: Idle, Walk, Attack1-4, Death, Hurt, Special, Projectile)
+- `public/icons/rpg16/` - 16x16 RPG icon sprite sheets (armours, books, chests, consumables, potions, weapons)
+- `public/icons/materials/` - 24x24 crafting material icon sprite sheets (resources_basic, various color variants)
