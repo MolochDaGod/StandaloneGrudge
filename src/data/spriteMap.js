@@ -258,6 +258,8 @@ const spriteSheets = {
   },
   werewolf: {
     folder: 'werewolf',
+    frameWidth: 100,
+    frameHeight: 100,
     idle: { src: '/sprites/werewolf/idle.png', frames: 6 },
     attack1: { src: '/sprites/werewolf/attack1.png', frames: 9 },
     attack2: { src: '/sprites/werewolf/attack2.png', frames: 13 },

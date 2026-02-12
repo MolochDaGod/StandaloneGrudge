@@ -545,6 +545,7 @@ function HeroSlideshow() {
     human_mage: 20,
     undead_warrior: 60,
     human_warrior: 60,
+    human_worge: -50,
   };
   const spriteYOffset = SPRITE_Y_OFFSETS[`${combo.raceId}_${combo.classId}`] || 0;
   const scaleOverride = SPRITE_SCALE_OVERRIDES[`${combo.raceId}_${combo.classId}`] || null;
@@ -553,8 +554,8 @@ function HeroSlideshow() {
   const spriteFrameH = spriteData?.frameHeight || 100;
   const baseScale = Math.min(Math.max(targetHeight / spriteFrameH, 1.5), 5);
   const spriteScale = scaleOverride ? baseScale * scaleOverride : baseScale;
-  const transformFrameH = worgeTransformData?.frameHeight || 128;
-  const transformScale = spriteScale * 1.5;
+  const transformFrameH = worgeTransformData?.frameHeight || 100;
+  const transformScale = (spriteFrameH * spriteScale) / transformFrameH;
 
   const intervalRefs = useRef([]);
 
