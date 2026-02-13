@@ -43,6 +43,9 @@ export const classDefinitions = {
       { id: 'lightning_lash', name: 'Lightning Lash', icon: 'lightning', description: 'Call down a bolt of lightning on the target', type: 'magical', damage: 1.8, manaCost: 25, staminaCost: 0, cooldown: 2, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'natures_grasp', name: "Nature's Grasp", icon: 'nature', description: 'Vines heal you over 3 turns', type: 'heal_over_time', damage: 0, manaCost: 20, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.08, duration: 3 },
       { id: 'dagger_toss', name: 'Dagger Toss', icon: 'sword', description: 'Hurl an envenomed dagger, poisoning for 3 turns', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
+      { id: 'summon_heal_totem', name: 'Heal Totem', icon: 'nature', description: 'Summon a totem that heals allies when you act', type: 'summon_totem', totemType: 'heal_totem', manaCost: 30, staminaCost: 0, cooldown: 6, target: 'self' },
+      { id: 'summon_fire_totem', name: 'Fire Totem', icon: 'fire', description: 'Summon a totem that attacks enemies when you act', type: 'summon_totem', totemType: 'fire_totem', manaCost: 25, staminaCost: 10, cooldown: 6, target: 'self' },
+      { id: 'summon_fear_totem', name: 'Fear Totem', icon: 'skull', description: 'Summon a totem that slows enemies and may cause them to skip attacks', type: 'summon_totem', totemType: 'fear_totem', manaCost: 35, staminaCost: 0, cooldown: 7, target: 'self' },
     ],
     signatureAbility: { id: 'bear_form', name: 'Bear Form', icon: 'wolf', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
     bearFormAbilities: {

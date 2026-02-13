@@ -11,6 +11,7 @@ import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
 import { adminConfig } from '../utils/adminConfig';
+import { TOTEM_DEFINITIONS } from '../data/spriteMap';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -1106,8 +1107,8 @@ const useGameStore = create(persist((set, get) => ({
     const units = state.battleUnits;
     const order = state.battleTurnOrder;
 
-    const alivePlayerUnits = units.filter(u => u.team === 'player' && u.alive && u.health > 0);
-    const aliveEnemyUnits = units.filter(u => u.team === 'enemy' && u.alive && u.health > 0);
+    const alivePlayerUnits = units.filter(u => u.team === 'player' && u.alive && u.health > 0 && !u.isTotem);
+    const aliveEnemyUnits = units.filter(u => u.team === 'enemy' && u.alive && u.health > 0 && !u.isTotem);
 
     if (aliveEnemyUnits.length === 0) {
       get().handleVictory();
@@ -1122,7 +1123,7 @@ const useGameStore = create(persist((set, get) => ({
     let attempts = 0;
     while (attempts < order.length) {
       const unit = units.find(u => u.id === order[nextIndex]);
-      if (unit && unit.alive && unit.health > 0) break;
+      if (unit && unit.alive && unit.health > 0 && !unit.isTotem) break;
       nextIndex = (nextIndex + 1) % order.length;
       attempts++;
     }
@@ -1181,6 +1182,26 @@ const useGameStore = create(persist((set, get) => ({
 
       return updated;
     });
+
+    newUnits.forEach(totem => {
+      if (!totem.isTotem || !totem.alive) return;
+      totem.turnsLeft = (totem.turnsLeft || 0) - 1;
+      if (totem.turnsLeft <= 0) {
+        totem.alive = false;
+        totem.health = 0;
+      }
+    });
+
+    const fearTotems = newUnits.filter(u => u.isTotem && u.totemType === 'fear_totem' && u.alive);
+    if (fearTotems.length > 0 && nextUnit && nextUnit.alive && !nextUnit.isTotem) {
+      const enemyFearTotem = fearTotems.find(t => t.team !== nextUnit.team);
+      if (enemyFearTotem) {
+        const def = TOTEM_DEFINITIONS.fear_totem;
+        if (Math.random() < def.skipChance) {
+          nextUnit.feared = true;
+        }
+      }
+    }
 
     const refreshedUnit = newUnits.find(u => u.id === nextUnit.id);
     if (!refreshedUnit || !refreshedUnit.alive) {
@@ -1317,6 +1338,18 @@ const useGameStore = create(persist((set, get) => ({
         battleLog: log.slice(-12),
         battleState: { ...bs, phase: 'animating' },
         lastAction: { attackerId: currentUnitId, type: 'stunned' },
+      });
+      return;
+    }
+
+    if (attacker.feared) {
+      attacker.feared = false;
+      const log = [...state.battleLog, `[FEAR] ${attacker.name} is gripped by fear and cannot act!`];
+      set({
+        battleUnits: units,
+        battleLog: log.slice(-12),
+        battleState: { ...bs, phase: 'animating' },
+        lastAction: { attackerId: currentUnitId, type: 'feared' },
       });
       return;
     }
@@ -1525,6 +1558,44 @@ const useGameStore = create(persist((set, get) => ({
         const t = units.find(u => u.id === targetId && u.alive);
         if (t) { applyDebuffToTarget(t); actionResult.targetId = t.id; }
       }
+    } else if (ability.type === 'summon_totem') {
+      const totemDef = TOTEM_DEFINITIONS[ability.totemType];
+      if (totemDef) {
+        const existingTotem = units.find(u => u.isTotem && u.totemType === ability.totemType && u.summonerId === currentUnitId && u.alive);
+        if (existingTotem) {
+          existingTotem.health = totemDef.health;
+          existingTotem.turnsLeft = totemDef.duration;
+          log.push(`${attacker.name} refreshes ${totemDef.name}!`);
+        } else {
+          const totemId = `totem_${ability.totemType}_${currentUnitId}_${Date.now()}`;
+          const totemX = attacker.team === 'player' ? Math.max(5, (attacker.position?.x || 20) - 12) : Math.min(95, (attacker.position?.x || 80) + 12);
+          const totemY = (attacker.position?.y || 50) + 5;
+          const totemUnit = {
+            id: totemId,
+            name: totemDef.name,
+            team: attacker.team,
+            isTotem: true,
+            totemType: ability.totemType,
+            summonerId: currentUnitId,
+            health: totemDef.health,
+            maxHealth: totemDef.health,
+            alive: true,
+            position: { x: totemX, y: totemY },
+            row: 'back',
+            turnsLeft: totemDef.duration,
+            buffs: [],
+            dots: [],
+            cooldowns: {},
+            abilities: [],
+            isPlayerControlled: false,
+          };
+          units.push(totemUnit);
+          log.push(`${attacker.name} summons ${totemDef.name}!`);
+        }
+        actionResult.targetId = currentUnitId;
+        actionResult.type = 'summon_totem';
+        actionResult.totemType = ability.totemType;
+      }
     }
 
     if (attacker.id === 'player') {
@@ -1534,6 +1605,39 @@ const useGameStore = create(persist((set, get) => ({
         playerStamina: attacker.stamina,
       });
     }
+
+    const totemEffectLog = [];
+    const activeTotems = units.filter(u => u.isTotem && u.summonerId === currentUnitId && u.alive);
+    activeTotems.forEach(totem => {
+      const def = TOTEM_DEFINITIONS[totem.totemType];
+      if (!def) return;
+
+      if (totem.totemType === 'heal_totem') {
+        const allies = units.filter(u => u.team === totem.team && u.alive && !u.isTotem);
+        let totalHealed = 0;
+        allies.forEach(ally => {
+          const healAmt = Math.floor(ally.maxHealth * def.healPercent);
+          ally.health = Math.min(ally.maxHealth, ally.health + healAmt);
+          totalHealed += healAmt;
+        });
+        if (totalHealed > 0) {
+          totemEffectLog.push(`[TOTEM] ${totem.name} heals all allies!`);
+        }
+      }
+
+      if (totem.totemType === 'fire_totem') {
+        const enemies = units.filter(u => u.team !== totem.team && u.alive && !u.isTotem);
+        if (enemies.length > 0) {
+          const target = enemies[Math.floor(Math.random() * enemies.length)];
+          const baseDmg = Math.floor((attacker.physicalDamage || 10) * def.damage);
+          const dmg = Math.max(1, baseDmg - Math.floor((target.defense || 0) * 0.3));
+          target.health = Math.max(0, target.health - dmg);
+          if (target.health <= 0) { target.alive = false; totemEffectLog.push(`${target.name} has been slain by ${totem.name}!`); }
+          else { totemEffectLog.push(`[TOTEM] ${totem.name} spits fire at ${target.name} for ${dmg}!`); }
+        }
+      }
+    });
+    log = [...log, ...totemEffectLog];
 
     set({
       battleUnits: units,

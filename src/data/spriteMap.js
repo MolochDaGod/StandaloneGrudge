@@ -1894,6 +1894,73 @@ export const SCENE_NPCS = {
   ],
 };
 
+export const totemSpriteMap = {
+  heal_totem: {
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/totems/heal_totem_row0.png', frames: 6 },
+    pulse: { src: '/sprites/totems/heal_totem_row1.png', frames: 6 },
+    heal: { src: '/sprites/totems/heal_totem_row2.png', frames: 6 },
+    death: { src: '/sprites/totems/heal_totem_row3.png', frames: 6 },
+  },
+  fire_totem: {
+    frameWidth: 56,
+    frameHeight: 40,
+    idle: { src: '/sprites/totems/fire_totem_row0.png', frames: 8 },
+    attack1: { src: '/sprites/totems/fire_totem_row1.png', frames: 8 },
+    cast: { src: '/sprites/totems/fire_totem_row2.png', frames: 8 },
+    death: { src: '/sprites/totems/fire_totem_row3.png', frames: 8 },
+  },
+  fire_spit: {
+    frameWidth: 16,
+    frameHeight: 16,
+    idle: { src: '/sprites/totems/fire_spit.png', frames: 5 },
+  },
+  fear_totem: {
+    frameWidth: 32,
+    frameHeight: 32,
+    filter: 'hue-rotate(260deg) saturate(1.6) brightness(0.85)',
+    idle: { src: '/sprites/totems/heal_totem_row0.png', frames: 6 },
+    pulse: { src: '/sprites/totems/heal_totem_row1.png', frames: 6 },
+    cast: { src: '/sprites/totems/heal_totem_row2.png', frames: 6 },
+    death: { src: '/sprites/totems/heal_totem_row3.png', frames: 6 },
+  },
+};
+
+export const TOTEM_DEFINITIONS = {
+  heal_totem: {
+    id: 'heal_totem',
+    name: 'Heal Totem',
+    type: 'heal_totem',
+    health: 40,
+    healPercent: 0.08,
+    duration: 5,
+    color: '#22c55e',
+    description: 'Heals all allies each time the caster acts',
+  },
+  fire_totem: {
+    id: 'fire_totem',
+    name: 'Fire Totem',
+    type: 'fire_totem',
+    health: 30,
+    damage: 0.6,
+    duration: 5,
+    color: '#ef4444',
+    description: 'Attacks a random enemy each time the caster acts',
+  },
+  fear_totem: {
+    id: 'fear_totem',
+    name: 'Fear Totem',
+    type: 'fear_totem',
+    health: 35,
+    slowPercent: 0.25,
+    skipChance: 0.20,
+    duration: 4,
+    color: '#8b5cf6',
+    description: 'Slows enemies and gives 20% chance to skip attacks',
+  },
+};
+
 export function getAbilityEffect(classId, abilityName, abilityId) {
   if (abilityId && weaponSkillEffectMap[abilityId]) return weaponSkillEffectMap[abilityId];
   const classEffects = abilityEffectMap[classId];
