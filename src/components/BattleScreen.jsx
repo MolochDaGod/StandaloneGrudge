@@ -2489,6 +2489,7 @@ export default function BattleScreen() {
                     flip={unit.team === 'enemy'}
                     speed={160}
                     loop={true}
+                    containerless
                   />
                   <div style={{
                     position: 'absolute',
@@ -2558,6 +2559,7 @@ export default function BattleScreen() {
                     flip={unit.team === 'enemy'}
                     speed={140}
                     loop={true}
+                    containerless
                   />
                   <div style={{
                     position: 'absolute',
@@ -2698,6 +2700,7 @@ export default function BattleScreen() {
                         flip={flipSprite}
                         speed={autoBattleEnabled ? 150 : 188}
                         loop={anim === 'idle' || anim === 'walk'}
+                        containerless
                       />
                     </div>
                   ))}
@@ -2756,6 +2759,7 @@ export default function BattleScreen() {
                   speed={autoBattleEnabled ? 150 : 188}
                   loop={anim === 'idle' || anim === 'walk'}
                   equipmentOverlays={unit.team === 'player' ? buildEquipmentOverlays(heroRoster.find(h => h.id === unit.id), TIERS) : null}
+                  containerless
                 />
               </div>
 
