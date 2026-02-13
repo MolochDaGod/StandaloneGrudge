@@ -14,7 +14,7 @@ const RACES = ['human', 'orc', 'elf', 'undead', 'barbarian', 'dwarf'];
 const CLASSES = ['warrior', 'mage', 'worge', 'ranger'];
 
 const CATEGORY_COLORS = {
-  Characters: '#3b82f6',
+  Heroes: '#3b82f6',
   Enemies: '#ef4444',
   Neutral: '#94a3b8',
   Bosses: '#a855f7',
@@ -67,7 +67,7 @@ function getAllSprites() {
           id: `${race}_${cls}`,
           label: `${capitalize(race)} ${capitalize(cls)}`,
           spriteData,
-          category: 'Characters',
+          category: 'Heroes',
         });
       }
     }
@@ -227,7 +227,7 @@ export default function AdminSize({ onClose }) {
   const selectedSprite = allSprites.find(s => s.id === selectedId);
   const editFilter = buildFilterString(editHue, editSat, editBright, editContrast, editSepia);
 
-  const categories = ['Characters', 'Enemies', 'Neutral', 'Bosses', 'Secret'];
+  const categories = ['Heroes', 'Enemies', 'Neutral', 'Bosses', 'Secret'];
 
   return (
     <div style={{
