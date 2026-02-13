@@ -15,6 +15,62 @@ import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
 
+const DMG_NUM_SRC = '/effects/damage_numbers.png';
+const DMG_CELL_W = 16, DMG_CELL_H = 20, DMG_COLS = 10, DMG_ROWS_PER_COLOR = 10;
+const DMG_COLOR_OFFSETS = { red: 0, orange: 1, yellow: 2, green: 3 };
+function SpriteNumber({ value, color = 'red', scale = 3 }) {
+  const num = Math.abs(Math.round(value));
+  const digits = String(num).split('').map(Number);
+  const colorRow = DMG_COLOR_OFFSETS[color] || 0;
+  const yBase = colorRow * DMG_ROWS_PER_COLOR * DMG_CELL_H;
+  const w = DMG_CELL_W * scale;
+  const h = DMG_CELL_H * scale;
+  return (
+    <div style={{ display: 'flex', gap: Math.round(scale * 0.5) }}>
+      {digits.map((d, i) => {
+        const sx = d * DMG_CELL_W;
+        const sy = yBase;
+        return (
+          <div key={i} style={{
+            width: w, height: h, overflow: 'hidden',
+            backgroundImage: `url(${DMG_NUM_SRC})`,
+            backgroundSize: `${DMG_COLS * DMG_CELL_W * scale}px ${DMG_ROWS_PER_COLOR * 4 * DMG_CELL_H * scale}px`,
+            backgroundPosition: `-${sx * scale}px -${sy * scale}px`,
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'pixelated',
+          }} />
+        );
+      })}
+    </div>
+  );
+}
+
+const BUFF_LABELS = {
+  lower_attack: { text: '-ATK', color: '#ef4444' },
+  confuse: { text: 'CONFUSE', color: '#c084fc' },
+  stun: { text: 'STUN', color: '#fbbf24' },
+  dot: { text: 'BLEED', color: '#f87171' },
+  strength: { text: '+ATK', color: '#f97316' },
+  haste: { text: '+SPD', color: '#38bdf8' },
+  rage: { text: '+ATK', color: '#ef4444' },
+  bless: { text: '+DEF', color: '#fcd34d' },
+  mana_shield: { text: 'SHIELD', color: '#a78bfa' },
+  thorns: { text: 'THORNS', color: '#4ade80' },
+  lifesteal: { text: 'DRAIN', color: '#dc2626' },
+  slow: { text: '-SPD', color: '#6b7280' },
+  poison: { text: 'POISON', color: '#4ade80' },
+  burn: { text: 'BURN', color: '#f97316' },
+  freeze: { text: 'FREEZE', color: '#7dd3fc' },
+  curse: { text: 'CURSE', color: '#a855f7' },
+  heal_over_time: { text: '+HEAL', color: '#22c55e' },
+  regen: { text: 'REGEN', color: '#22c55e' },
+  defense_up: { text: '+DEF', color: '#f59e0b' },
+  defense_down: { text: '-DEF', color: '#ef4444' },
+  attack_up: { text: '+ATK', color: '#f97316' },
+  speed_up: { text: '+SPD', color: '#38bdf8' },
+  speed_down: { text: '-SPD', color: '#6b7280' },
+};
+
 const locationBackgrounds = {
   verdant_plains: '/backgrounds/verdant_plains.png',
   dark_forest: '/backgrounds/dark_forest.png',
@@ -1538,6 +1594,8 @@ export default function BattleScreen() {
             if (isDebuffOnly) {
               addParticle('cast', hitTarget.position.x, bodyY(hitTarget), '#a855f7');
               setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'hurt' }));
+              const debuffType = lastAction.effectType || 'lower_attack';
+              showBuffFloat(hitTarget, debuffType, abilityName);
               setTimeout(() => setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'idle' })), 400);
             } else {
               showDamageFloat(hitTarget, hit.totalDmg, hit.evaded, hit.blocked, hit.isCrit);
@@ -2172,17 +2230,26 @@ export default function BattleScreen() {
       setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), isMorphAbility ? 1600 : 600);
       setTimeout(() => advanceTurn(), isMorphAbility ? 2000 : 900);
     }
+
+    if (lastAction.effectType && abilityType !== 'debuff') {
+      const effectTarget = battleUnits.find(u => u.id === targetId);
+      if (effectTarget?.position && !lastAction.evaded) {
+        setTimeout(() => {
+          showBuffFloat(effectTarget, lastAction.effectType, abilityName);
+        }, 600);
+      }
+    }
   }, [lastAction]);
 
   const showDamageFloat = useCallback((target, totalDmg, evaded, blocked, isCrit) => {
     if (!target?.position) return;
     const id = Date.now() + Math.random();
-    let text, color;
+    let text, color, numValue, numColor, label;
     if (evaded) { text = 'DODGE!'; color = '#6ee7b7'; }
-    else if (blocked) { text = `BLOCK ${totalDmg}`; color = '#3b82f6'; }
-    else if (isCrit) { text = `CRIT ${totalDmg}`; color = '#fbbf24'; }
-    else { text = `-${totalDmg}`; color = '#ef4444'; }
-    setFloatingDmg(prev => [...prev, { id, text, color, x: target.position.x, y: bodyY(target) - 8 }]);
+    else if (blocked) { label = 'BLOCK'; numValue = totalDmg; numColor = 'orange'; color = '#3b82f6'; }
+    else if (isCrit) { label = 'CRIT'; numValue = totalDmg; numColor = 'yellow'; color = '#fbbf24'; }
+    else { numValue = totalDmg; numColor = 'red'; color = '#ef4444'; }
+    setFloatingDmg(prev => [...prev, { id, text, color, numValue, numColor, label, x: target.position.x, y: bodyY(target) - 8 }]);
     setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1800);
 
     if (isCrit || totalDmg > 30) {
@@ -2193,8 +2260,19 @@ export default function BattleScreen() {
   const showHealFloat = useCallback((target, healAmt) => {
     if (!target?.position) return;
     const id = Date.now() + Math.random();
-    setFloatingDmg(prev => [...prev, { id, text: `+${healAmt}`, color: '#22c55e', x: target.position.x, y: bodyY(target) - 8 }]);
+    setFloatingDmg(prev => [...prev, { id, numValue: healAmt, numColor: 'green', label: '+', color: '#22c55e', x: target.position.x, y: bodyY(target) - 8 }]);
     setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1500);
+  }, []);
+
+  const showBuffFloat = useCallback((target, effectType, abilityName) => {
+    if (!target?.position) return;
+    const id = Date.now() + Math.random();
+    const info = BUFF_LABELS[effectType];
+    if (!info) return;
+    const label = info.text;
+    const color = info.color;
+    setFloatingDmg(prev => [...prev, { id, text: label, color, isBuff: true, x: target.position.x, y: bodyY(target) - 16 }]);
+    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1600);
   }, []);
 
   const handleAbility = useCallback((abilityId) => {
@@ -2801,23 +2879,55 @@ export default function BattleScreen() {
         ))}
 
         {floatingDmg.map(f => {
-          const isHeal = f.color === '#22c55e' || f.color === '#10b981' || (f.text && f.text.toString().startsWith('+'));
-          const isCrit = f.text && f.text.toString().includes('CRIT');
+          const hasSprite = f.numValue !== undefined && f.numValue !== null;
+          const isHeal = f.numColor === 'green';
+          const isCrit = f.label === 'CRIT';
+          const isBlock = f.label === 'BLOCK';
+          const isBuff = f.isBuff;
           const isMiss = f.text && (f.text.toString().includes('MISS') || f.text.toString().includes('DODGE'));
-          const animName = isCrit ? 'dmgCritPop' : isHeal ? 'healPop' : 'dmgPop';
-          const fontSize = isCrit ? '1.4rem' : isMiss ? '0.85rem' : '1.1rem';
+          const animName = isCrit ? 'dmgCritPop' : isHeal ? 'healPop' : isBuff ? 'buffPop' : 'dmgPop';
+          const animDur = isCrit ? '1.8s' : isBuff ? '1.6s' : '1.4s';
+          const spriteScale = isCrit ? 3.5 : isBlock ? 2.8 : isHeal ? 2.8 : 2.5;
+
+          if (hasSprite) {
+            return (
+              <div key={f.id} style={{
+                position: 'absolute',
+                left: `${f.x}%`, top: `${f.y}%`,
+                transform: 'translate(-50%, -50%)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+                animation: `${animName} ${animDur} ease forwards`,
+                pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
+                filter: `drop-shadow(0 0 6px ${f.color}) drop-shadow(0 2px 3px rgba(0,0,0,0.8))`,
+              }}>
+                {f.label && (
+                  <div style={{
+                    color: f.color, fontWeight: 900,
+                    fontSize: isCrit ? '0.75rem' : '0.6rem',
+                    fontFamily: "'Cinzel', serif",
+                    textShadow: `0 0 8px ${f.color}, 0 1px 3px rgba(0,0,0,0.9)`,
+                    letterSpacing: 2, marginBottom: -2,
+                  }}>{f.label}</div>
+                )}
+                <SpriteNumber value={f.numValue} color={f.numColor} scale={spriteScale} />
+              </div>
+            );
+          }
+
           return (
             <div key={f.id} style={{
               position: 'absolute',
               left: `${f.x}%`, top: `${f.y}%`,
-              color: f.color, fontWeight: 900, fontSize,
-              textShadow: isCrit
-                ? `0 0 12px ${f.color}, 0 0 24px ${f.color}, 0 2px 6px rgba(0,0,0,0.9)`
+              color: f.color, fontWeight: 900,
+              fontSize: isBuff ? '0.85rem' : isMiss ? '0.85rem' : '1.1rem',
+              textShadow: isBuff
+                ? `0 0 10px ${f.color}, 0 0 20px ${f.color}88, 0 2px 4px rgba(0,0,0,0.9)`
                 : `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
-              animation: `${animName} ${isCrit ? '1.8s' : '1.4s'} ease forwards`,
+              animation: `${animName} ${animDur} ease forwards`,
               pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
               fontFamily: "'Cinzel', serif",
-              letterSpacing: isCrit ? 2 : 0,
+              letterSpacing: isBuff ? 3 : 0,
+              textTransform: 'uppercase',
             }}>
               {f.text}
             </div>

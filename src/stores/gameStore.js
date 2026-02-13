@@ -1412,11 +1412,13 @@ const useGameStore = create(persist((set, get) => ({
         const primaryHit = aoEHits.find(h => h.targetId === targetId) || aoEHits[0] || {};
         actionResult = { ...actionResult, ...primaryHit, isAoE: true, aoEHits };
         if (!actionResult.targetId && aoEHits.length > 0) actionResult.targetId = aoEHits[0].targetId;
+        if (ability.effect?.type) actionResult.effectType = ability.effect.type;
       } else {
         const actualTarget = units.find(u => u.id === targetId);
         if (!actualTarget) return;
         const result = calculateAttackDamage(attacker, actualTarget, ability);
         actionResult = { ...actionResult, ...result };
+        if (ability.effect?.type) actionResult.effectType = ability.effect.type;
         applyHitToTarget(actualTarget, result);
         if (result.drained > 0) {
           attacker.health = Math.min(attacker.maxHealth, attacker.health + result.drained);
@@ -1522,6 +1524,7 @@ const useGameStore = create(persist((set, get) => ({
         if (ability.secondaryEffect) { t.buffs.push({ ...ability.secondaryEffect, source: ability.name }); }
         log.push(`${t.name} is affected by ${ability.name}!`);
       };
+      actionResult.effectType = ability.effect?.type || 'lower_attack';
       if (ability.isAoE) {
         const targets = units.filter(u => u.team !== attacker.team && u.alive && u.health > 0);
         const aoEHits = [];
