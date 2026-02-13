@@ -10,6 +10,7 @@ import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/ab
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
+import { adminConfig } from '../utils/adminConfig';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -303,19 +304,7 @@ function chooseAIAction(unit, allUnits) {
 }
 
 function getFormationPositions(count, side) {
-  const p = {
-    player: {
-      1: [{x:35,y:90}],
-      2: [{x:32,y:86},{x:38,y:94}],
-      3: [{x:30,y:82},{x:36,y:90},{x:32,y:97}],
-    },
-    enemy: {
-      1: [{x:65,y:90}],
-      2: [{x:68,y:86},{x:62,y:94}],
-      3: [{x:72,y:88},{x:62,y:82},{x:64,y:96}],
-      4: [{x:72,y:86},{x:60,y:78},{x:62,y:92},{x:64,y:99}],
-    }
-  };
+  const p = adminConfig.getFormations();
   const maxCount = side === 'player' ? 3 : 4;
   return p[side][Math.min(count, maxCount)] || p[side][1];
 }

@@ -14,6 +14,7 @@ import PixelBar, { ActionTimerBar } from './PixelBar';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
+import { adminConfig } from '../utils/adminConfig';
 
 const DMG_NUM_SRC = '/effects/damage_numbers.png';
 const DMG_CELL_W = 16, DMG_CELL_H = 20, DMG_COLS = 10, DMG_ROWS_PER_COLOR = 10;
@@ -1295,13 +1296,7 @@ export default function BattleScreen() {
 
   const [adminMode, setAdminMode] = useState(false);
   const [adminPaused, setAdminPaused] = useState(false);
-  const [adminOverrides, setAdminOverrides] = useState({
-    stun: { offsetY: -40, size: 30, opacity: 0.75 },
-    poison: { offsetY: -36, size: 28, opacity: 0.7 },
-    dot: { offsetY: -36, size: 30, opacity: 0.7 },
-    buff: { offsetY: -44, size: 24, opacity: 0.6 },
-    nameplate: { offsetY: -30 },
-  });
+  const [adminOverrides, setAdminOverrides] = useState(() => adminConfig.getEffectPositions());
   const [adminDragging, setAdminDragging] = useState(null);
   const adminDragStart = useRef(null);
 
@@ -1348,6 +1343,12 @@ export default function BattleScreen() {
       window.removeEventListener('mouseup', handleAdminDragEnd);
     };
   }, [adminDragging, handleAdminDragMove, handleAdminDragEnd]);
+
+  useEffect(() => {
+    if (adminMode) {
+      adminConfig.saveEffectPositions(adminOverrides);
+    }
+  }, [adminOverrides, adminMode]);
 
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
@@ -3106,13 +3107,14 @@ export default function BattleScreen() {
             </div>
           ))}
           <button onClick={() => {
+            adminConfig.saveEffectPositions(adminOverrides);
             const json = JSON.stringify(adminOverrides, null, 2);
-            navigator.clipboard.writeText(json).then(() => alert('Copied to clipboard!')).catch(() => {});
+            navigator.clipboard.writeText(json).then(() => alert('Saved & copied!')).catch(() => alert('Saved!'));
           }} style={{
             width: '100%', background: 'rgba(251,191,36,0.15)', border: '1px solid #f59e0b',
             color: '#f59e0b', borderRadius: 4, padding: '3px 0', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer', marginTop: 4,
-          }}><InlineIcon name="scroll" size={12} /> Copy Values</button>
-          <div style={{ fontSize: '0.4rem', color: '#666', marginTop: 4, textAlign: 'center' }}>Press ~ to toggle admin mode</div>
+          }}><InlineIcon name="scroll" size={12} /> Save & Copy</button>
+          <div style={{ fontSize: '0.4rem', color: '#666', marginTop: 4, textAlign: 'center' }}>Press ~ to toggle | Changes auto-saved</div>
         </div>
       )}
 

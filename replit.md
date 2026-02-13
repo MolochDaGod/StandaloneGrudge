@@ -53,7 +53,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 - **Game Compendium:** Static HTML page at `public/compendium.html` with 8 tabbed sections indexing all game data: Characters (races/classes/combinations), World Map (32 locations), Enemies & Bosses (27 entries), Equipment (7 slots, 8 tiers), Attributes (8 stats), Combat Math, Named Heroes, and Factions. Dark fantasy themed with search/filter functionality.
 - **War Room Cards:** 4-card layout (New Campaign, Save/Continue, Grudge Online info, Web3 Wallet placeholder) with background images and hover effects.
 - **Grudge Online Compendium:** `GrudgeOnlinePage.jsx` full-screen overlay with 6 tabs (Overview, Races, Classes, Attributes, Combat Math, Tips). Accessible from War Room info card.
-- **Admin Tools:** Includes an Admin Dashboard, UI Layout Editor, Sprite Editor, Map Editor, Battle Tester, Icon Manager, and an in-game Gizmo for DOM inspection.
+- **Admin Tools:** Unified Admin Hub at `/admin` with tabbed navigation embedding all 6 editors (Map, Battle, Sprite, UI Layout, Icon Manager, PvP Placement) plus info tabs (Overview, Heroes, World, Systems). Legacy admin routes (`/adminmap`, `/adminbattle`, etc.) redirect to `/admin`. Centralized `adminConfig.js` utility (`src/utils/adminConfig.js`) manages localStorage persistence with deep-merged defaults for formations, effect positions, sprite layout, action bar, zones, map positions, and PvP placements. Admin edits auto-save and automatically apply to gameplay (BattleScreen reads effect positions, gameStore reads formations from adminConfig). Also includes an in-game Gizmo for DOM inspection.
 
 ## External Dependencies
 - **React:** Frontend library.

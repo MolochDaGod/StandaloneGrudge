@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
 import { locations } from '../data/enemies';
+import AdminMap from './AdminMap';
+import AdminBattle from './AdminBattle';
+import AdminSprite from './AdminSprite';
+import AdminUI from './AdminUI';
+import AdminIcons from './AdminIcons';
+import AdminPvP from './AdminPvP';
 
 const ADMIN_TOOLS = [
-  { id: 'map', label: 'Map Editor', path: '/adminmap', desc: 'Position world map nodes with drag-and-drop', color: '#f59e0b', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z', bg: '/backgrounds/world_map.png' },
-  { id: 'battle', label: 'Battle Editor', path: '/adminbattle', desc: 'Configure formations, sprites, and action bar layout', color: '#ef4444', icon: 'M6.92 5H5l3.5 10 1.42-4.09L6.92 5zM11.5 1l-1 3h3l-1-3h-1zM17.08 5h-1.92l-3 5.91L13.5 15 17.08 5zM7 21h2v-4H7v4zm4 0h2v-6h-2v6zm4 0h2v-3h-2v3z', bg: '/backgrounds/scene_field.png' },
-  { id: 'sprite', label: 'Sprite Editor', path: '/adminsprite', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z', bg: '/backgrounds/wc_purple.png' },
-  { id: 'ui', label: 'UI Layout Editor', path: '/adminui', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z', bg: '/backgrounds/wc_blue.png' },
-  { id: 'icons', label: 'Icon Manager', path: '/adminicons', desc: 'Browse, replace, and manage all game icons, skills, and materials', color: '#06b6d4', icon: 'M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4z', bg: '/backgrounds/wc_gold.png' },
-  { id: 'pvp', label: 'PvP Placement', path: '/adminpvp', desc: 'Place and position units on arena backgrounds for PvP battles', color: '#ec4899', icon: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z', bg: '/backgrounds/arena.png' },
+  { id: 'map', label: 'Map Editor', desc: 'Position world map nodes with drag-and-drop', color: '#f59e0b', icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z', bg: '/backgrounds/world_map.png' },
+  { id: 'battle', label: 'Battle Editor', desc: 'Configure formations, sprites, and action bar layout', color: '#ef4444', icon: 'M6.92 5H5l3.5 10 1.42-4.09L6.92 5zM11.5 1l-1 3h3l-1-3h-1zM17.08 5h-1.92l-3 5.91L13.5 15 17.08 5zM7 21h2v-4H7v4zm4 0h2v-6h-2v6zm4 0h2v-3h-2v3z', bg: '/backgrounds/scene_field.png' },
+  { id: 'sprite', label: 'Sprite Editor', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z', bg: '/backgrounds/wc_purple.png' },
+  { id: 'ui', label: 'UI Layout', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z', bg: '/backgrounds/wc_blue.png' },
+  { id: 'icons', label: 'Icon Manager', desc: 'Browse, replace, and manage all game icons', color: '#06b6d4', icon: 'M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4z', bg: '/backgrounds/wc_gold.png' },
+  { id: 'pvp', label: 'PvP Placement', desc: 'Place and position units on arena backgrounds', color: '#ec4899', icon: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z', bg: '/backgrounds/arena.png' },
 ];
 
 const GAME_SYSTEMS = [
@@ -93,45 +99,18 @@ function HeroCard({ hero, expanded, onToggle }) {
               </div>
             ))}
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10, fontSize: '0.6rem' }}>
-            <div>
-              <span style={{ color: '#8a7d65' }}>HP: </span>
-              <span style={{ color: '#22c55e' }}>{Math.floor(hero.currentHealth || 0)} / {Math.floor(stats.health)}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>MP: </span>
-              <span style={{ color: '#3b82f6' }}>{Math.floor(hero.currentMana || 0)} / {Math.floor(stats.mana)}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>SP: </span>
-              <span style={{ color: '#f59e0b' }}>{Math.floor(hero.currentStamina || 0)} / {Math.floor(stats.stamina)}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>Grudge: </span>
-              <span style={{ color: '#dc2626' }}>{hero.grudge || 0} / 100</span>
-            </div>
+            <div><span style={{ color: '#8a7d65' }}>HP: </span><span style={{ color: '#22c55e' }}>{Math.floor(hero.currentHealth || 0)} / {Math.floor(stats.health)}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>MP: </span><span style={{ color: '#3b82f6' }}>{Math.floor(hero.currentMana || 0)} / {Math.floor(stats.mana)}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>SP: </span><span style={{ color: '#f59e0b' }}>{Math.floor(hero.currentStamina || 0)} / {Math.floor(stats.stamina)}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>Grudge: </span><span style={{ color: '#dc2626' }}>{hero.grudge || 0} / 100</span></div>
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10, fontSize: '0.6rem' }}>
-            <div>
-              <span style={{ color: '#8a7d65' }}>Boss Kills: </span>
-              <span style={{ color: '#c084fc' }}>{record.bossKills}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>Damage Dealt: </span>
-              <span style={{ color: '#ef4444' }}>{Math.floor(record.damageDealt)}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>Healing Done: </span>
-              <span style={{ color: '#22c55e' }}>{Math.floor(record.healingDone)}</span>
-            </div>
-            <div>
-              <span style={{ color: '#8a7d65' }}>Unspent Points: </span>
-              <span style={{ color: '#ffd700' }}>{hero.unspentPoints || 0}</span>
-            </div>
+            <div><span style={{ color: '#8a7d65' }}>Boss Kills: </span><span style={{ color: '#c084fc' }}>{record.bossKills}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>Damage Dealt: </span><span style={{ color: '#ef4444' }}>{Math.floor(record.damageDealt)}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>Healing Done: </span><span style={{ color: '#22c55e' }}>{Math.floor(record.healingDone)}</span></div>
+            <div><span style={{ color: '#8a7d65' }}>Unspent Points: </span><span style={{ color: '#ffd700' }}>{hero.unspentPoints || 0}</span></div>
           </div>
-
           {hero.equipment && Object.keys(hero.equipment).length > 0 && (
             <div style={{ marginTop: 10 }}>
               <div style={{ fontSize: '0.55rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 4 }}>Equipment</div>
@@ -150,6 +129,18 @@ function HeroCard({ hero, expanded, onToggle }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function EditorWrapper({ children }) {
+  return (
+    <div style={{
+      position: 'relative', width: '100%', height: 'calc(100vh - 60px)',
+      borderRadius: 8, overflow: 'hidden',
+      border: '1px solid rgba(255,215,0,0.15)',
+    }}>
+      {children}
     </div>
   );
 }
@@ -175,12 +166,35 @@ export default function AdminDashboard() {
   const harvestingCount = activeHarvests ? Object.keys(activeHarvests).length : 0;
   const totalResources = harvestResources ? Object.values(harvestResources).reduce((s, v) => s + Math.floor(v), 0) : 0;
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'heroes', label: `Heroes (${heroRoster?.length || 0})` },
-    { id: 'world', label: 'World Progress' },
-    { id: 'systems', label: 'Game Systems' },
+  const infoTabs = [
+    { id: 'overview', label: 'Overview', color: '#ffd700' },
+    { id: 'heroes', label: `Heroes (${heroRoster?.length || 0})`, color: '#3b82f6' },
+    { id: 'world', label: 'World', color: '#22c55e' },
+    { id: 'systems', label: 'Systems', color: '#8b5cf6' },
   ];
+
+  const editorTabs = ADMIN_TOOLS.map(t => ({
+    id: `editor_${t.id}`,
+    label: t.label,
+    color: t.color,
+    icon: t.icon,
+  }));
+
+  const allTabs = [...infoTabs, ...editorTabs];
+  const isEditorTab = activeTab.startsWith('editor_');
+
+  const renderEditorContent = () => {
+    const editorId = activeTab.replace('editor_', '');
+    switch (editorId) {
+      case 'map': return <EditorWrapper><AdminMap /></EditorWrapper>;
+      case 'battle': return <EditorWrapper><AdminBattle /></EditorWrapper>;
+      case 'sprite': return <EditorWrapper><AdminSprite /></EditorWrapper>;
+      case 'ui': return <EditorWrapper><AdminUI /></EditorWrapper>;
+      case 'icons': return <EditorWrapper><AdminIcons /></EditorWrapper>;
+      case 'pvp': return <EditorWrapper><AdminPvP /></EditorWrapper>;
+      default: return null;
+    }
+  };
 
   return (
     <div style={{
@@ -193,304 +207,281 @@ export default function AdminDashboard() {
         backgroundSize: 'cover', backgroundPosition: 'center',
         opacity: 0.06, pointerEvents: 'none',
       }} />
+
       <div style={{
-        position: 'fixed', inset: 0,
-        backgroundImage: 'url(/ui/game-border-frame.png)',
-        backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
-        pointerEvents: 'none', zIndex: 100, opacity: 0.35,
-      }} />
-      <div style={{
-        background: 'rgba(20,15,30,0.85)', borderBottom: '2px solid rgba(180,150,90,0.4)',
-        padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12, position: 'relative', zIndex: 10,
-        backgroundImage: 'url(/ui/bar-background.png)',
-        backgroundSize: 'cover', backgroundPosition: 'center',
+        background: 'rgba(20,15,30,0.92)', borderBottom: '2px solid rgba(180,150,90,0.4)',
+        padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        position: 'relative', zIndex: 10,
+        backdropFilter: 'blur(8px)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <h1 style={{
-            fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.5rem', margin: 0,
+            fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.2rem', margin: 0,
             textShadow: '0 0 12px rgba(255,215,0,0.3)',
           }}>
             Admin Hub
           </h1>
-          <span style={{ fontSize: '0.65rem', color: '#6b7280', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>
+          <span style={{ fontSize: '0.6rem', color: '#6b7280', padding: '2px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: 4 }}>
             Grudge Warlords
           </span>
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: 2 }}>
+            {infoTabs.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                background: activeTab === t.id ? `${t.color}22` : 'transparent',
+                border: activeTab === t.id ? `1px solid ${t.color}55` : '1px solid transparent',
+                color: activeTab === t.id ? t.color : '#6b7280',
+                borderRadius: 4, padding: '4px 10px', fontSize: '0.6rem', cursor: 'pointer',
+                fontWeight: activeTab === t.id ? 700 : 400,
+                fontFamily: "'Cinzel', serif",
+                transition: 'all 0.15s',
+              }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255,215,0,0.2)' }} />
+
+          <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: 2 }}>
+            {editorTabs.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+                background: activeTab === t.id ? `${t.color}22` : 'transparent',
+                border: activeTab === t.id ? `1px solid ${t.color}55` : '1px solid transparent',
+                color: activeTab === t.id ? t.color : '#6b7280',
+                borderRadius: 4, padding: '4px 8px', fontSize: '0.55rem', cursor: 'pointer',
+                fontWeight: activeTab === t.id ? 700 : 400,
+                display: 'flex', alignItems: 'center', gap: 4,
+                transition: 'all 0.15s',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill={activeTab === t.id ? t.color : '#6b7280'}><path d={t.icon} /></svg>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <a href="/" style={{
-          color: '#ffd700', textDecoration: 'none', fontWeight: 600, fontSize: '0.8rem',
-          padding: '6px 16px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)',
-          borderRadius: 6,
+          color: '#ffd700', textDecoration: 'none', fontWeight: 600, fontSize: '0.7rem',
+          padding: '4px 12px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)',
+          borderRadius: 6, flexShrink: 0,
         }}>
           Back to Game
         </a>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px', position: 'relative', zIndex: 10 }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: 12, marginBottom: 24,
-        }}>
-          {ADMIN_TOOLS.map(tool => (
-            <a key={tool.id} href={tool.path} style={{
-              background: 'rgba(20,15,30,0.6)', border: `1px solid ${tool.color}33`,
-              borderRadius: 10, padding: 16, textDecoration: 'none',
-              transition: 'all 0.2s', cursor: 'pointer', display: 'block',
-              position: 'relative', overflow: 'hidden',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = tool.color; e.currentTarget.style.background = `${tool.color}11`; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = `${tool.color}33`; e.currentTarget.style.background = 'rgba(20,15,30,0.6)'; }}
-            >
-              <div style={{
-                position: 'absolute', inset: 0,
-                backgroundImage: `url(${tool.bg})`,
-                backgroundSize: 'cover', backgroundPosition: 'center',
-                opacity: 0.12, pointerEvents: 'none',
-              }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill={tool.color}><path d={tool.icon} /></svg>
-                  <span style={{ fontFamily: "'Cinzel', serif", color: tool.color, fontWeight: 700, fontSize: '0.9rem' }}>
-                    {tool.label}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.6rem', color: '#94a3b8', lineHeight: 1.4 }}>{tool.desc}</div>
-              </div>
-            </a>
-          ))}
+      {isEditorTab ? (
+        <div style={{ position: 'relative', zIndex: 10 }}>
+          {renderEditorContent()}
         </div>
+      ) : (
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px', position: 'relative', zIndex: 10 }}>
 
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-              background: activeTab === t.id ? 'rgba(255,215,0,0.15)' : 'rgba(20,15,30,0.5)',
-              border: `1px solid ${activeTab === t.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}`,
-              color: activeTab === t.id ? '#ffd700' : '#94a3b8',
-              borderRadius: 6, padding: '8px 16px', fontSize: '0.75rem', cursor: 'pointer',
-              fontWeight: activeTab === t.id ? 700 : 400,
-              fontFamily: "'Cinzel', serif",
-            }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'overview' && (
-          <div>
-            <div style={{
-              background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.12)',
-              borderRadius: 10, padding: 16, marginBottom: 20,
-            }}>
-              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 8 }}>Player Info</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <div>
-                  <span style={{ fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.1rem', fontWeight: 700 }}>{playerName || 'Hero'}</span>
-                </div>
-                <span style={{ fontSize: '0.65rem', color: '#6ee7b7', background: 'rgba(110,231,183,0.1)', padding: '2px 8px', borderRadius: 4 }}>
-                  Level {level}
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
-                  {raceDefinitions[playerRace]?.name || playerRace || '---'} {classDefinitions[playerClass]?.name || playerClass || '---'}
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
-                  Screen: <span style={{ color: '#c084fc' }}>{screen}</span>
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
-              <StatCard label="Gold" value={Math.floor(gold || 0)} color="#ffd700" />
-              <StatCard label="XP" value={`${Math.floor(xp || 0)}`} color="#6ee7b7" sub={`Next: ${xpToNext}`} />
-              <StatCard label="Victories" value={victories || 0} color="#22c55e" />
-              <StatCard label="Losses" value={losses || 0} color="#ef4444" />
-              <StatCard label="Heroes" value={heroRoster?.length || 0} color="#3b82f6" sub={`${activeHeroIds?.length || 0} active`} />
-              <StatCard label="Bosses Killed" value={Array.isArray(bossesDefeated) ? bossesDefeated.length : (bossesDefeated || 0)} color="#a855f7" />
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
-              <StatCard label="Zones Cleared" value={clearedCount} color="#f59e0b" sub={`of ${locationCount}`} />
-              <StatCard label="Zones Conquered" value={conqueredZones} color="#ef4444" />
-              <StatCard label="Quests Done" value={questCount} color="#8b5cf6" />
-              <StatCard label="Harvesting" value={harvestingCount} color="#06b6d4" sub={`${totalResources} resources`} />
-              <StatCard label="Inventory" value={inventory?.length || 0} color="#94a3b8" />
-              <StatCard label="Unspent Points" value={(unspentPoints || 0) + (skillPoints || 0)} color="#fbbf24" />
-            </div>
-
-            {harvestResources && Object.values(harvestResources).some(v => v > 0) && (
+          {activeTab === 'overview' && (
+            <div>
               <div style={{
                 background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.12)',
-                borderRadius: 10, padding: 16,
+                borderRadius: 10, padding: 16, marginBottom: 20,
               }}>
-                <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 8 }}>Harvest Resources</div>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  {Object.entries(harvestResources).filter(([, v]) => v > 0).map(([k, v]) => (
-                    <div key={k} style={{
-                      background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: 6,
-                      border: '1px solid rgba(255,215,0,0.1)',
+                <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 8 }}>Player Info</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.1rem', fontWeight: 700 }}>{playerName || 'Hero'}</span>
+                  <span style={{ fontSize: '0.65rem', color: '#6ee7b7', background: 'rgba(110,231,183,0.1)', padding: '2px 8px', borderRadius: 4 }}>
+                    Level {level}
+                  </span>
+                  <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                    {raceDefinitions[playerRace]?.name || playerRace || '---'} {classDefinitions[playerClass]?.name || playerClass || '---'}
+                  </span>
+                  <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>
+                    Screen: <span style={{ color: '#c084fc' }}>{screen}</span>
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+                <StatCard label="Gold" value={Math.floor(gold || 0)} color="#ffd700" />
+                <StatCard label="XP" value={`${Math.floor(xp || 0)}`} color="#6ee7b7" sub={`Next: ${xpToNext}`} />
+                <StatCard label="Victories" value={victories || 0} color="#22c55e" />
+                <StatCard label="Losses" value={losses || 0} color="#ef4444" />
+                <StatCard label="Heroes" value={heroRoster?.length || 0} color="#3b82f6" sub={`${activeHeroIds?.length || 0} active`} />
+                <StatCard label="Bosses Killed" value={Array.isArray(bossesDefeated) ? bossesDefeated.length : (bossesDefeated || 0)} color="#a855f7" />
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+                <StatCard label="Zones Cleared" value={clearedCount} color="#f59e0b" sub={`of ${locationCount}`} />
+                <StatCard label="Zones Conquered" value={conqueredZones} color="#ef4444" />
+                <StatCard label="Quests Done" value={questCount} color="#8b5cf6" />
+                <StatCard label="Harvesting" value={harvestingCount} color="#06b6d4" sub={`${totalResources} resources`} />
+                <StatCard label="Inventory" value={inventory?.length || 0} color="#94a3b8" />
+                <StatCard label="Unspent Points" value={(unspentPoints || 0) + (skillPoints || 0)} color="#fbbf24" />
+              </div>
+
+              {harvestResources && Object.values(harvestResources).some(v => v > 0) && (
+                <div style={{
+                  background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.12)',
+                  borderRadius: 10, padding: 16,
+                }}>
+                  <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 8 }}>Harvest Resources</div>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {Object.entries(harvestResources).filter(([, v]) => v > 0).map(([k, v]) => (
+                      <div key={k} style={{
+                        background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: 6,
+                        border: '1px solid rgba(255,215,0,0.1)',
+                      }}>
+                        <div style={{ fontSize: '0.5rem', color: '#8a7d65', textTransform: 'uppercase' }}>{k}</div>
+                        <div style={{ fontSize: '1rem', color: '#ffd700', fontWeight: 700 }}>{Math.floor(v)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'heroes' && (
+            <div>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 16, fontSize: '0.65rem', color: '#94a3b8' }}>
+                <span>Total: {heroRoster?.length || 0}</span>
+                <span>Active: {activeHeroIds?.length || 0}</span>
+                <span>Active IDs: {activeHeroIds?.join(', ') || 'none'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {(heroRoster || []).map(hero => (
+                  <HeroCard
+                    key={hero.id}
+                    hero={hero}
+                    expanded={expandedHero === hero.id}
+                    onToggle={() => setExpandedHero(expandedHero === hero.id ? null : hero.id)}
+                  />
+                ))}
+                {(!heroRoster || heroRoster.length === 0) && (
+                  <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.8rem' }}>
+                    No heroes created yet. Start a new game to create heroes.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'world' && (
+            <div>
+              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
+                Zone Progress ({clearedCount} / {locationCount} cleared)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+                {(locations || []).map(loc => {
+                  const cleared = Array.isArray(locationsCleared) ? locationsCleared.includes(loc.id) : locationsCleared?.[loc.id];
+                  const conquer = zoneConquer?.[loc.id] || 0;
+                  const quests = completedQuests?.[loc.id] || [];
+                  return (
+                    <div key={loc.id} style={{
+                      background: cleared ? 'rgba(34,197,94,0.04)' : 'rgba(20,15,30,0.4)',
+                      border: `1px solid ${cleared ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                      borderRadius: 8, padding: '10px 12px',
                     }}>
-                      <div style={{ fontSize: '0.5rem', color: '#8a7d65', textTransform: 'uppercase' }}>{k}</div>
-                      <div style={{ fontSize: '1rem', color: '#ffd700', fontWeight: 700 }}>{Math.floor(v)}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: cleared ? '#6ee7b7' : '#e2e8f0' }}>{loc.name}</span>
+                        {cleared && <span style={{ fontSize: '0.5rem', color: '#22c55e' }}>CLEARED</span>}
+                      </div>
+                      <div style={{ fontSize: '0.55rem', color: '#6b7280' }}>Lv.{loc.level || '?'} | Conquer: {Math.floor(conquer)}%</div>
+                      {conquer > 0 && (
+                        <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%', width: `${Math.min(100, conquer)}%`,
+                            background: conquer >= 100 ? '#22c55e' : '#f59e0b',
+                            borderRadius: 2, transition: 'width 0.3s',
+                          }} />
+                        </div>
+                      )}
+                      {quests.length > 0 && (
+                        <div style={{ fontSize: '0.5rem', color: '#8b5cf6', marginTop: 4 }}>
+                          {quests.length} quest{quests.length > 1 ? 's' : ''} done
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'systems' && (
+            <div>
+              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>Game Systems Reference</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 10 }}>
+                {GAME_SYSTEMS.map(sys => (
+                  <div key={sys.label} style={{
+                    background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.1)',
+                    borderRadius: 8, padding: '12px 16px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 600 }}>{sys.label}</span>
+                      <span style={{ fontFamily: "'Cinzel', serif", fontSize: '1.1rem', color: '#ffd700', fontWeight: 800 }}>{sys.value}</span>
+                    </div>
+                    <div style={{ fontSize: '0.55rem', color: '#6b7280', lineHeight: 1.4 }}>{sys.detail}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>Factions</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  {[
+                    { name: 'Crusade', races: 'Humans, Barbarians', god: 'God of Light', color: '#ffd700', bg: '/backgrounds/card_divine.png' },
+                    { name: 'Legion', races: 'Orcs, Undead', god: 'God of Death', color: '#ef4444', bg: '/backgrounds/card_dark.png' },
+                    { name: 'Fabled', races: 'Elves, Dwarves', god: 'God of Nature', color: '#22c55e', bg: '/backgrounds/card_green_hills.png' },
+                  ].map(f => (
+                    <div key={f.name} style={{
+                      background: 'rgba(20,15,30,0.5)', border: `1px solid ${f.color}33`,
+                      borderRadius: 8, padding: 14, position: 'relative', overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        backgroundImage: `url(${f.bg})`,
+                        backgroundSize: 'cover', backgroundPosition: 'center',
+                        opacity: 0.15, pointerEvents: 'none',
+                      }} />
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontFamily: "'Cinzel', serif", color: f.color, fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
+                        <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{f.races}</div>
+                        <div style={{ fontSize: '0.55rem', color: '#6b7280', marginTop: 4 }}>Worships: {f.god}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {activeTab === 'heroes' && (
-          <div>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, fontSize: '0.65rem', color: '#94a3b8' }}>
-              <span>Total: {heroRoster?.length || 0}</span>
-              <span>Active: {activeHeroIds?.length || 0}</span>
-              <span>Active IDs: {activeHeroIds?.join(', ') || 'none'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {(heroRoster || []).map(hero => (
-                <HeroCard
-                  key={hero.id}
-                  hero={hero}
-                  expanded={expandedHero === hero.id}
-                  onToggle={() => setExpandedHero(expandedHero === hero.id ? null : hero.id)}
-                />
-              ))}
-              {(!heroRoster || heroRoster.length === 0) && (
-                <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.8rem' }}>
-                  No heroes created yet. Start a new game to create heroes.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'world' && (
-          <div>
-            <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
-              Zone Progress ({clearedCount} / {locationCount} cleared)
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
-              {(locations || []).map(loc => {
-                const cleared = Array.isArray(locationsCleared) ? locationsCleared.includes(loc.id) : locationsCleared?.[loc.id];
-                const conquer = zoneConquer?.[loc.id] || 0;
-                const quests = completedQuests?.[loc.id] || [];
-                return (
-                  <div key={loc.id} style={{
-                    background: cleared ? 'rgba(34,197,94,0.04)' : 'rgba(20,15,30,0.4)',
-                    border: `1px solid ${cleared ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                    borderRadius: 8, padding: '10px 12px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: cleared ? '#6ee7b7' : '#e2e8f0' }}>
-                        {loc.name}
-                      </span>
-                      {cleared && <span style={{ fontSize: '0.5rem', color: '#22c55e' }}>CLEARED</span>}
-                    </div>
-                    <div style={{ fontSize: '0.55rem', color: '#6b7280' }}>
-                      Lv.{loc.level || '?'} | Conquer: {Math.floor(conquer)}%
-                    </div>
-                    {conquer > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>Scene Types</div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {[
+                    { name: 'Camp', bg: '/backgrounds/scene_camp.png' },
+                    { name: 'Dungeon', bg: '/backgrounds/scene_dungeon.png' },
+                    { name: 'Trading Post', bg: '/backgrounds/scene_trading.png' },
+                    { name: 'Open Field', bg: '/backgrounds/scene_field.png' },
+                  ].map(s => (
+                    <div key={s.name} style={{
+                      background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 6, padding: '8px 16px', fontSize: '0.7rem', color: '#e2e8f0',
+                      position: 'relative', overflow: 'hidden', minWidth: 100,
+                    }}>
                       <div style={{
-                        height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, marginTop: 4, overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          height: '100%', width: `${Math.min(100, conquer)}%`,
-                          background: conquer >= 100 ? '#22c55e' : '#f59e0b',
-                          borderRadius: 2, transition: 'width 0.3s',
-                        }} />
-                      </div>
-                    )}
-                    {quests.length > 0 && (
-                      <div style={{ fontSize: '0.5rem', color: '#8b5cf6', marginTop: 4 }}>
-                        {quests.length} quest{quests.length > 1 ? 's' : ''} done
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'systems' && (
-          <div>
-            <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
-              Game Systems Reference
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 10 }}>
-              {GAME_SYSTEMS.map(sys => (
-                <div key={sys.label} style={{
-                  background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.1)',
-                  borderRadius: 8, padding: '12px 16px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 600 }}>{sys.label}</span>
-                    <span style={{ fontFamily: "'Cinzel', serif", fontSize: '1.1rem', color: '#ffd700', fontWeight: 800 }}>{sys.value}</span>
-                  </div>
-                  <div style={{ fontSize: '0.55rem', color: '#6b7280', lineHeight: 1.4 }}>{sys.detail}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
-                Factions
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                {[
-                  { name: 'Crusade', races: 'Humans, Barbarians', god: 'God of Light', color: '#ffd700', bg: '/backgrounds/card_divine.png' },
-                  { name: 'Legion', races: 'Orcs, Undead', god: 'God of Death', color: '#ef4444', bg: '/backgrounds/card_dark.png' },
-                  { name: 'Fabled', races: 'Elves, Dwarves', god: 'God of Nature', color: '#22c55e', bg: '/backgrounds/card_green_hills.png' },
-                ].map(f => (
-                  <div key={f.name} style={{
-                    background: 'rgba(20,15,30,0.5)', border: `1px solid ${f.color}33`,
-                    borderRadius: 8, padding: 14, position: 'relative', overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      backgroundImage: `url(${f.bg})`,
-                      backgroundSize: 'cover', backgroundPosition: 'center',
-                      opacity: 0.15, pointerEvents: 'none',
-                    }} />
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                      <div style={{ fontFamily: "'Cinzel', serif", color: f.color, fontSize: '0.9rem', fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
-                      <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{f.races}</div>
-                      <div style={{ fontSize: '0.55rem', color: '#6b7280', marginTop: 4 }}>Worships: {f.god}</div>
+                        position: 'absolute', inset: 0,
+                        backgroundImage: `url(${s.bg})`,
+                        backgroundSize: 'cover', backgroundPosition: 'center',
+                        opacity: 0.2, pointerEvents: 'none',
+                      }} />
+                      <span style={{ position: 'relative', zIndex: 1 }}>{s.name}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
-                Scene Types
-              </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  { name: 'Camp', bg: '/backgrounds/scene_camp.png' },
-                  { name: 'Dungeon', bg: '/backgrounds/scene_dungeon.png' },
-                  { name: 'Trading Post', bg: '/backgrounds/scene_trading.png' },
-                  { name: 'Open Field', bg: '/backgrounds/scene_field.png' },
-                ].map(s => (
-                  <div key={s.name} style={{
-                    background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 6, padding: '8px 16px', fontSize: '0.7rem', color: '#e2e8f0',
-                    position: 'relative', overflow: 'hidden', minWidth: 100,
-                  }}>
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      backgroundImage: `url(${s.bg})`,
-                      backgroundSize: 'cover', backgroundPosition: 'center',
-                      opacity: 0.2, pointerEvents: 'none',
-                    }} />
-                    <span style={{ position: 'relative', zIndex: 1 }}>{s.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

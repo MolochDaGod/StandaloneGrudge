@@ -16,17 +16,11 @@ import LobbyScreen from './components/LobbyScreen';
 import TrainingScreen from './components/TrainingScreen';
 import LootPopup from './components/LootPopup';
 import SettingsMenu from './components/SettingsMenu';
-import AdminMap from './components/AdminMap';
-import AdminBattle from './components/AdminBattle';
-import AdminSprite from './components/AdminSprite';
-import AdminUI from './components/AdminUI';
 import AdminDashboard from './components/AdminDashboard';
-import AdminIcons from './components/AdminIcons';
 import SceneView from './components/SceneView';
 import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
-import AdminPvP from './components/AdminPvP';
 import AdminGizmo from './components/AdminGizmo';
 import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
@@ -139,7 +133,6 @@ function GameApp() {
       case 'account': return <AccountPage />;
       case 'training': return <TrainingScreen />;
       case 'scene': return <SceneView />;
-      case 'adminpvp': return <AdminPvP />;
       default: return <TitleScreen />;
     }
   };
@@ -217,12 +210,10 @@ export default function App() {
   const path = window.location.pathname;
 
   if (path === '/admin') return <AdminDashboard />;
-  if (path === '/adminmap') return <AdminMap />;
-  if (path === '/adminbattle') return <AdminBattle />;
-  if (path === '/adminsprite') return <AdminSprite />;
-  if (path === '/adminui') return <AdminUI />;
-  if (path === '/adminicons') return <AdminIcons />;
-  if (path === '/adminpvp') return <AdminPvP />;
+  if (['/adminmap', '/adminbattle', '/adminsprite', '/adminui', '/adminicons', '/adminpvp'].includes(path)) {
+    window.location.href = '/admin';
+    return null;
+  }
   if (path === '/discordauth') return <DiscordAuth />;
 
   return <GameApp />;
