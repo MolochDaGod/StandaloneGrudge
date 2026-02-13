@@ -42,7 +42,7 @@ function HeroCard({ hero, expanded, onToggle }) {
   const cls = classDefinitions[hero.classId];
   const race = raceDefinitions[hero.raceId];
   const stats = cls ? getHeroStatsWithBonuses(hero) : null;
-  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+  const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
   const record = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
 
   return (

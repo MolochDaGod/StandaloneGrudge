@@ -76,7 +76,7 @@ function HeroCard({ hero, isLeader, conquer }) {
     }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 6 }}>
         <div style={{ filter: `drop-shadow(0 0 6px ${clsColor}50)`, flexShrink: 0 }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={2} speed={150} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={2} speed={150} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 1 }}>

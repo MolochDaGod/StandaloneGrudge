@@ -857,6 +857,40 @@ export const worgBearTransformSprite = {
 
 export const freeKnightSprite = spriteSheets['free-knight'];
 
+export const racalvinSprite = {
+  folder: 'racalvin',
+  frameWidth: 200,
+  frameHeight: 210,
+  facesLeft: false,
+  scale: 1.35,
+  idle: { src: '/sprites/racalvin/idle.png', frames: 10 },
+  walk: { src: '/sprites/racalvin/walk.png', frames: 12 },
+  attack1: { src: '/sprites/racalvin/attack1.png', frames: 7 },
+  attack2: { src: '/sprites/racalvin/attack2.png', frames: 8 },
+  attack3: { src: '/sprites/racalvin/attack3.png', frames: 12, frameWidth: 260, frameHeight: 220 },
+  cast: { src: '/sprites/racalvin/cast.png', frames: 8, frameWidth: 240 },
+  block: { src: '/sprites/racalvin/block.png', frames: 6, frameWidth: 240 },
+  hurt: { src: '/sprites/racalvin/hurt.png', frames: 6 },
+  death: { src: '/sprites/racalvin/death.png', frames: 12 },
+  heal: { src: '/sprites/racalvin/cast.png', frames: 8, frameWidth: 240 },
+};
+
+export const namedHeroes = {
+  racalvin: {
+    id: 'racalvin',
+    name: 'Racalvin',
+    title: 'The Pirate King',
+    fullName: 'Racalvin the Pirate King',
+    race: 'barbarian',
+    class: 'ranger',
+    sprite: racalvinSprite,
+    lore: 'Once a ruthless sea raider who carved his legend across every coast, Racalvin claimed the title of Pirate King through blood and cunning. His twin cutlasses and deadly sword throw have sent countless foes to watery graves. Now he wages war on land, bringing the fury of the open sea to the Grudge Wars.',
+    unlocked: true,
+    passive: 'Sword Throw: Ranged attacks hurl a spinning blade that deals bonus damage',
+    color: '#d4a017',
+  },
+};
+
 export const eliteTransformSprites = {
   warrior: {
     human: spriteSheets['free-knight'],
@@ -1656,7 +1690,10 @@ export function getRaceClassSprite(raceId, classId) {
   return classSpriteMap[classId] || classSpriteMap.warrior;
 }
 
-export function getPlayerSprite(classId, raceId) {
+export function getPlayerSprite(classId, raceId, namedHeroId) {
+  if (namedHeroId && namedHeroes[namedHeroId]) {
+    return namedHeroes[namedHeroId].sprite;
+  }
   if (raceId) return getRaceClassSprite(raceId, classId);
   return classSpriteMap[classId] || classSpriteMap.warrior;
 }

@@ -3,7 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { setBgm } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite } from '../data/spriteMap';
+import { getRaceClassSprite, namedHeroes } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 
@@ -36,15 +36,33 @@ function TitleHeroParade() {
   const containerRef = useRef(null);
 
   const spawnHero = useCallback(() => {
-    const combo = ALL_COMBOS[Math.floor(Math.random() * ALL_COMBOS.length)];
-    const sprite = getRaceClassSprite(combo.race, combo.cls);
+    const namedHeroKeys = Object.keys(namedHeroes);
+    const useNamed = Math.random() < 0.2 && namedHeroKeys.length > 0;
+
+    let combo, sprite, displayName, heroColor;
+
+    if (useNamed) {
+      const nhKey = namedHeroKeys[Math.floor(Math.random() * namedHeroKeys.length)];
+      const nh = namedHeroes[nhKey];
+      combo = { race: nh.race, cls: nh.class };
+      sprite = nh.sprite;
+      displayName = nh.fullName;
+      heroColor = nh.color || raceDefinitions[nh.race]?.color || '#fff';
+    } else {
+      combo = ALL_COMBOS[Math.floor(Math.random() * ALL_COMBOS.length)];
+      sprite = getRaceClassSprite(combo.race, combo.cls);
+      displayName = null;
+      heroColor = null;
+    }
     if (!sprite) return null;
 
     const fromLeft = Math.random() > 0.5;
     const yPos = 20 + Math.random() * 55;
     const baseSpeed = 0.3 + Math.random() * 0.5;
-    const depthScale = 0.8 + (yPos / 75) * 0.7;
-    const heroScale = (sprite.scale || 1) * depthScale * 2.2;
+    const depthScale = 0.8 + (yPos / 75) * 0.6;
+    const baseFrameW = sprite.frameWidth || 100;
+    const sizeNorm = baseFrameW > 150 ? 0.55 : baseFrameW > 100 ? 0.75 : 1;
+    const heroScale = Math.min((sprite.scale || 1) * depthScale * 2.0 * sizeNorm, 3.5);
     const id = heroIdCounter.current++;
 
     return {
@@ -61,7 +79,8 @@ function TitleHeroParade() {
       actionTimer: 3000 + Math.random() * 4000,
       opacity: 0,
       fadeIn: true,
-      raceColor: raceDefinitions[combo.race]?.color || '#fff',
+      displayName: displayName,
+      raceColor: heroColor || raceDefinitions[combo.race]?.color || '#fff',
       shadowSize: heroScale * 20,
       zIndex: Math.floor(yPos),
     };
@@ -221,7 +240,7 @@ function TitleHeroParade() {
             opacity: 0.7,
             textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${hero.raceColor}33`,
           }}>
-            {raceDefinitions[hero.race]?.name} {classDefinitions[hero.cls]?.name}
+            {hero.displayName || `${raceDefinitions[hero.race]?.name} ${classDefinitions[hero.cls]?.name}`}
           </div>
         </div>
       ))}

@@ -1956,7 +1956,7 @@ export default function WorldMap() {
                 const wanderX = offset.x * 3;
                 const wanderY = offset.y * 2;
                 const baseX = idx * (spriteW * 0.4);
-                const heroSpriteData = getPlayerSprite(hero.classId, hero.raceId);
+                const heroSpriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
                 const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale;
                 const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale;
                 const heroVisH = Math.round(heroFrameH * footCrop);
@@ -2024,9 +2024,9 @@ export default function WorldMap() {
           const hitAnchorY2 = visibleH2 / 2 + hitOffsetY2;
 
           activeHeroes2.forEach((h, idx) => {
-            heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId);
+            heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId, h.namedHeroId);
             const offset = wanderOffsets[h.id] || { x: 0, y: 0 };
-            const heroSpriteData = getPlayerSprite(h.classId, h.raceId);
+            const heroSpriteData = getPlayerSprite(h.classId, h.raceId, h.namedHeroId);
             const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale2;
             const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale2;
             speakerPositions[h.id] = {
@@ -3225,7 +3225,7 @@ export default function WorldMap() {
                     }}
                   >
                     <div style={{ width: 60, height: 60, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.7} speed={150} />
+                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.7} speed={150} />
                     </div>
                     <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}
@@ -3698,7 +3698,7 @@ export default function WorldMap() {
               const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
               const hero = activeHeroes[0];
               if (!hero) return null;
-              const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+              const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
               return (
                 <div style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))' }}>
                   <SpriteAnimation

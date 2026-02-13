@@ -80,6 +80,7 @@ function createHeroBattleUnit(hero) {
     isPlayerControlled: true,
     classId: hero.classId,
     raceId: hero.raceId,
+    namedHeroId: hero.namedHeroId || null,
     templateId: null,
     weaponType: heroWeaponType,
     bearForm: false,

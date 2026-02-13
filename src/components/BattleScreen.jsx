@@ -1013,7 +1013,7 @@ function getUnitSprite(unit) {
     if (eliteSprite) return eliteSprite;
   }
   if (unit.classId && unit.raceId) {
-    const sprite = getPlayerSprite(unit.classId, unit.raceId);
+    const sprite = getPlayerSprite(unit.classId, unit.raceId, unit.namedHeroId);
     if (unit.team === 'enemy') {
       return { ...sprite, filter: sprite.filter ? sprite.filter + ' brightness(0.8)' : 'brightness(0.8)' };
     }
@@ -3302,7 +3302,7 @@ export default function BattleScreen() {
                     {playerTeam.filter(u => u.alive).map((ally, idx) => {
                       const hpPct = Math.round((ally.health / ally.maxHealth) * 100);
                       const hpColor = hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
-                      const spriteData = getPlayerSprite(ally.classId, ally.raceId);
+                      const spriteData = getPlayerSprite(ally.classId, ally.raceId, ally.namedHeroId);
                       const idleAnim = spriteData?.idle;
                       return (
                         <button key={ally.id} onClick={() => handleHealTarget(ally.id)}

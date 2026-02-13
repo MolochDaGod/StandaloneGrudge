@@ -5,7 +5,7 @@ import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, STARTING_POINTS, calculateStats } from '../data/attributes';
 import SpriteAnimation from './SpriteAnimation';
 import WorgeMorphPreview from './WorgeMorphPreview';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { HERO_CREATE_MODAL } from '../constants/layers';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
@@ -84,12 +84,18 @@ export default function HeroCreate() {
     const { generateGrudgeUuid } = await import('../utils/grudgeUuid.js');
     const heroId = generateGrudgeUuid('hero', `${name.trim()}_${selectedRace}_${selectedClass}`);
     const stats = calculateStats(finalAttributes, heroLevel);
+    const matchedNamedHero = Object.keys(namedHeroes).find(key => {
+      const nh = namedHeroes[key];
+      return nh.race === selectedRace && nh.class === selectedClass && nh.unlocked;
+    });
+
     pendingHeroRef.current = {
       id: heroId,
       name: name.trim(),
       raceId: selectedRace,
       classId: selectedClass,
       level: heroLevel,
+      namedHeroId: matchedNamedHero || null,
       attributePoints: { ...finalAttributes },
       currentHealth: Math.floor(stats.health),
       currentMana: Math.floor(stats.mana),
@@ -378,8 +384,26 @@ export default function HeroCreate() {
                   <h3 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: 12 }}>
                     Preview - {name}
                   </h3>
+                  {(() => {
+                    const matchedNH = Object.values(namedHeroes).find(nh => nh.race === selectedRace && nh.class === selectedClass && nh.unlocked);
+                    return matchedNH ? (
+                      <div style={{
+                        background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.05))',
+                        border: '1px solid rgba(212,160,23,0.4)', borderRadius: 8,
+                        padding: '6px 10px', marginBottom: 8, textAlign: 'center',
+                      }}>
+                        <div style={{ color: '#d4a017', fontSize: '0.7rem', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
+                          Named Hero: {matchedNH.fullName}
+                        </div>
+                        <div style={{ color: 'var(--muted)', fontSize: '0.55rem', marginTop: 2 }}>{matchedNH.passive}</div>
+                      </div>
+                    ) : null;
+                  })()}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <SpriteAnimation spriteData={getPlayerSprite(selectedClass, selectedRace)} animation="idle" scale={2.6} speed={150} />
+                    <SpriteAnimation spriteData={(() => {
+                      const matchedNH = Object.values(namedHeroes).find(nh => nh.race === selectedRace && nh.class === selectedClass && nh.unlocked);
+                      return matchedNH ? matchedNH.sprite : getPlayerSprite(selectedClass, selectedRace);
+                    })()} animation="idle" scale={2.6} speed={150} />
                     <div>
                       <div style={{ color: 'var(--text)', fontWeight: 700 }}>{name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>

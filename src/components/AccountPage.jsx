@@ -109,7 +109,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const hasPoints = (hero.unspentPoints || 0) > 0 || (hero.skillPoints || 0) > 0;
 
   const raceBg = RACE_BG[hero.raceId] || RACE_BG.human;
-  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+  const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
   const cardScale = getCardScale(spriteData);
 
   return (
@@ -521,7 +521,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>

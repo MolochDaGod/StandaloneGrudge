@@ -224,7 +224,7 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
 
   const cls = classDefinitions[hero.classId];
   const race = raceDefinitions[hero.raceId];
-  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+  const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
 
   const panelWidth = compact ? 340 : 420;
   const panelHeight = compact ? 280 : 320;

@@ -368,7 +368,7 @@ export default function AdminBattle() {
 
   const getUnitSprite = (unit) => {
     if (unit.team === 'player') {
-      return getPlayerSprite(unit.classId, unit.raceId);
+      return getPlayerSprite(unit.classId, unit.raceId, unit.namedHeroId);
     }
     return getEnemySprite(unit.raceId, unit.classId);
   };

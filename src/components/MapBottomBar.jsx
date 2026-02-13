@@ -282,7 +282,7 @@ function CharacterPopup({ onClose }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <div style={{ width: 64, height: 64, overflow: 'hidden', borderRadius: 10, border: '2px solid #a855f7', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-              <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId)} animation="idle" scale={0.8} speed={150} />
+              <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.8} speed={150} />
             </div>
             <div>
               <div className="font-cinzel" style={{ color: '#c084fc', fontSize: '0.85rem', fontWeight: 700 }}>{hero.name}</div>
@@ -723,7 +723,7 @@ export default function MapBottomBar({
                   const heroRace = raceDefinitions[hero.raceId];
                   const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
                   const isSelected = selectedPartyHero === hero.id;
-                  const spriteData = getPlayerSprite(hero.classId, hero.raceId);
+                  const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
                   const circleSize = 32;
                   const fw = spriteData?.frameWidth || 100;
                   const spriteScale = (circleSize / fw) * 1.1;
