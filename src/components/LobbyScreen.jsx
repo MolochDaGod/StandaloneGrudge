@@ -100,8 +100,10 @@ export default function LobbyScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="font-cinzel" style={{
             fontSize: '1.2rem',
-            background: 'linear-gradient(135deg, #6ee7b7, #ffd700)',
+            background: 'linear-gradient(90deg, #6ee7b7 0%, #ffd700 30%, #fff 50%, #ffd700 70%, #6ee7b7 100%)',
+            backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            animation: 'titleShimmer 8s linear infinite',
           }}>
             GRUDGE WARLORDS
           </span>
@@ -203,24 +205,68 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
+        position: 'relative',
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 20px',
-        background: active ? 'rgba(110,231,183,0.1)' : hovered ? 'rgba(255,255,255,0.03)' : 'transparent',
+        background: active ? 'rgba(110,231,183,0.1)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
         border: 'none',
         borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-        color: active ? 'var(--accent)' : 'var(--muted)',
+        color: active ? 'var(--accent)' : hovered ? '#ccc' : 'var(--muted)',
         fontSize: '0.75rem',
         fontFamily: "'Cinzel', serif",
         letterSpacing: 2,
         cursor: 'pointer',
-        transition: 'all 0.2s',
+        transition: 'all 0.25s ease',
         width: '100%',
         textAlign: 'left',
+        transform: hovered && !active ? 'translateX(3px)' : 'translateX(0)',
+        boxShadow: active ? 'inset 4px 0 12px rgba(110,231,183,0.1)' : 'none',
       }}
     >
       <EssentialIcon name={essentialIcon} size={16} />
       {label}
     </button>
+  );
+}
+
+function WarRoomCard({ onClick, borderColor, hoverBorderColor, hoverShadow, bgImage, tagColor, tag, titleColor, title, subtitle, cardStyle, disabled }) {
+  const [hovered, setHovered] = useState(false);
+  const isActive = !disabled && onClick;
+
+  return (
+    <div
+      onClick={isActive ? onClick : undefined}
+      style={{
+        ...cardStyle,
+        borderColor: hovered && isActive ? (hoverBorderColor || borderColor) : borderColor,
+        opacity: disabled ? 0.6 : 1,
+        cursor: disabled ? 'default' : 'pointer',
+        transform: hovered && isActive ? 'scale(1.03) translateY(-2px)' : 'scale(1)',
+        boxShadow: hovered && isActive ? (hoverShadow || 'none') : 'none',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'transform 0.5s ease', transform: hovered && isActive ? 'scale(1.08)' : 'scale(1)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
+      {hovered && isActive && (
+        <div style={{
+          position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+          animation: 'lobbyCardShine 0.8s ease forwards',
+          pointerEvents: 'none', zIndex: 2,
+        }} />
+      )}
+      <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
+        <div style={{ color: tagColor, fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>{tag}</div>
+        <div className="font-cinzel" style={{ color: titleColor, fontSize: '1rem' }}>{title}</div>
+        {subtitle && (
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
+            {subtitle}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -236,7 +282,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
     position: 'relative',
     cursor: 'pointer',
     border: '1px solid rgba(110,231,183,0.15)',
-    transition: 'transform 0.2s, border-color 0.2s',
+    transition: 'transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-end',
@@ -244,81 +290,71 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
 
   return (
     <div>
-      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 16 }}>
+      <h2 className="font-cinzel" style={{
+        fontSize: '1.4rem', marginBottom: 16,
+        background: 'linear-gradient(90deg, var(--accent), #ffd700, var(--accent))',
+        backgroundSize: '200% auto',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        animation: 'titleShimmer 6s linear infinite',
+      }}>
         War Room
       </h2>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div
+        <WarRoomCard
           onClick={onNewGame}
-          style={{ ...cardStyle, borderColor: 'rgba(250,172,71,0.3)' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(250,172,71,0.6)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(250,172,71,0.3)'; }}
-        >
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/character_create.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
-          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
-            <div style={{ color: 'rgba(250,172,71,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>NEW JOURNEY</div>
-            <div className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1rem' }}>New Campaign</div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
-              Choose your race and class
-            </div>
-          </div>
-        </div>
+          borderColor="rgba(250,172,71,0.3)"
+          hoverBorderColor="rgba(250,172,71,0.6)"
+          hoverShadow="0 0 24px rgba(250,172,71,0.2), 0 8px 32px rgba(0,0,0,0.4)"
+          bgImage="/backgrounds/character_create.png"
+          tagColor="rgba(250,172,71,0.7)"
+          tag="NEW JOURNEY"
+          titleColor="#FAAC47"
+          title="New Campaign"
+          subtitle="Choose your race and class"
+          cardStyle={cardStyle}
+        />
 
-        <div
+        <WarRoomCard
           onClick={hasExistingSave ? onContinue : undefined}
-          style={{ ...cardStyle, borderColor: hasExistingSave ? 'rgba(110,231,183,0.3)' : 'rgba(255,255,255,0.08)', opacity: hasExistingSave ? 1 : 0.5 }}
-          onMouseEnter={e => { if (hasExistingSave) { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(110,231,183,0.6)'; } }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = hasExistingSave ? 'rgba(110,231,183,0.3)' : 'rgba(255,255,255,0.08)'; }}
-        >
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/dark_forest.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
-          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
-            <div style={{ color: 'rgba(110,231,183,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>
-              {hasExistingSave ? 'SAVED CAMPAIGN' : 'NO SAVE DATA'}
-            </div>
-            <div className="font-cinzel" style={{ color: hasExistingSave ? 'var(--accent)' : 'rgba(255,255,255,0.3)', fontSize: '1rem' }}>
-              {hasExistingSave ? playerName : 'Continue'}
-            </div>
-            {hasExistingSave && (
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
-                Lv.{playerLevel} {playerRace} {playerClass} &bull; <InlineIcon name="gold" size={10} /> {gold}
-              </div>
-            )}
-          </div>
-        </div>
+          borderColor={hasExistingSave ? 'rgba(110,231,183,0.3)' : 'rgba(255,255,255,0.08)'}
+          hoverBorderColor="rgba(110,231,183,0.6)"
+          hoverShadow="0 0 24px rgba(110,231,183,0.2), 0 8px 32px rgba(0,0,0,0.4)"
+          bgImage="/backgrounds/dark_forest.png"
+          tagColor="rgba(110,231,183,0.7)"
+          tag={hasExistingSave ? 'SAVED CAMPAIGN' : 'NO SAVE DATA'}
+          titleColor={hasExistingSave ? 'var(--accent)' : 'rgba(255,255,255,0.3)'}
+          title={hasExistingSave ? playerName : 'Continue'}
+          subtitle={hasExistingSave ? <>Lv.{playerLevel} {playerRace} {playerClass} &bull; <InlineIcon name="gold" size={10} /> {gold}</> : null}
+          cardStyle={cardStyle}
+          disabled={!hasExistingSave}
+        />
 
-        <div
+        <WarRoomCard
           onClick={() => setShowInfo(true)}
-          style={{ ...cardStyle, borderColor: 'rgba(219,99,49,0.3)' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = 'rgba(219,99,49,0.6)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(219,99,49,0.3)'; }}
-        >
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/storm_ruins.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
-          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
-            <div style={{ color: 'rgba(219,99,49,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>COMPENDIUM</div>
-            <div className="font-cinzel" style={{ color: '#DB6331', fontSize: '1rem' }}>Grudge Online</div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', marginTop: 4 }}>
-              Guides, lore & combat info
-            </div>
-          </div>
-        </div>
+          borderColor="rgba(219,99,49,0.3)"
+          hoverBorderColor="rgba(219,99,49,0.6)"
+          hoverShadow="0 0 24px rgba(219,99,49,0.2), 0 8px 32px rgba(0,0,0,0.4)"
+          bgImage="/backgrounds/storm_ruins.png"
+          tagColor="rgba(219,99,49,0.7)"
+          tag="COMPENDIUM"
+          titleColor="#DB6331"
+          title="Grudge Online"
+          subtitle="Guides, lore & combat info"
+          cardStyle={cardStyle}
+        />
 
-        <div
-          style={{ ...cardStyle, borderColor: 'rgba(139,55,46,0.3)', opacity: 0.6, cursor: 'default' }}
-        >
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/backgrounds/shadow_citadel.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)' }} />
-          <div style={{ position: 'relative', padding: 16, zIndex: 1 }}>
-            <div style={{ color: 'rgba(139,55,46,0.7)', fontSize: '0.6rem', letterSpacing: 3, marginBottom: 4 }}>WEB3</div>
-            <div className="font-cinzel" style={{ color: '#8B372E', fontSize: '1rem' }}>Wallet</div>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', marginTop: 4 }}>
-              GBUX &bull; SOL &bull; Coming Soon
-            </div>
-          </div>
-        </div>
+        <WarRoomCard
+          borderColor="rgba(139,55,46,0.3)"
+          bgImage="/backgrounds/shadow_citadel.png"
+          tagColor="rgba(139,55,46,0.7)"
+          tag="WEB3"
+          titleColor="#8B372E"
+          title="Wallet"
+          subtitle={<>GBUX &bull; SOL &bull; Coming Soon</>}
+          cardStyle={cardStyle}
+          disabled
+        />
       </div>
 
       <HeroSlideshow />

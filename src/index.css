@@ -564,3 +564,38 @@ body {
   0% { opacity: 0.3; transform: scale(0.9); }
   100% { opacity: 0.9; transform: scale(1.15); }
 }
+
+@keyframes titleShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes subtitleReveal {
+  0% { opacity: 0; letter-spacing: 12px; filter: blur(4px); }
+  100% { opacity: 0.8; letter-spacing: 3px; filter: blur(0); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(250,172,71,0.4); box-shadow: 0 0 12px rgba(250,172,71,0.15), inset 0 0 12px rgba(250,172,71,0.05); }
+  50% { border-color: rgba(250,172,71,0.7); box-shadow: 0 0 24px rgba(250,172,71,0.3), inset 0 0 24px rgba(250,172,71,0.1); }
+}
+
+@keyframes floatIdle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes scanLine {
+  0% { top: -5%; }
+  100% { top: 105%; }
+}
+
+@keyframes lobbyCardShine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes taglinePulse {
+  0%, 100% { opacity: 0.7; text-shadow: 0 0 8px rgba(110,231,183,0.2); }
+  50% { opacity: 1; text-shadow: 0 0 16px rgba(110,231,183,0.4), 0 0 32px rgba(110,231,183,0.15); }
+}

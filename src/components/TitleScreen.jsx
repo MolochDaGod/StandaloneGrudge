@@ -648,29 +648,44 @@ export default function TitleScreen() {
         <TitleHeroParade />
         <TitleParticles />
 
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
+          background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)',
+          mixBlendMode: 'multiply',
+        }} />
+
+        <div style={{
+          position: 'absolute', left: 0, right: 0, height: '2px', zIndex: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(250,172,71,0.15), transparent)',
+          animation: 'scanLine 8s linear infinite',
+          pointerEvents: 'none',
+        }} />
+
         <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
           <div style={{
             fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: 8,
             textTransform: 'uppercase', marginBottom: 24, opacity: 0.5,
-            animation: 'fadeIn 1.5s ease both',
+            animation: 'subtitleReveal 1.8s ease 0.2s both',
           }}>
             Grudge Studio Presents
           </div>
 
           <h1 className="font-cinzel" style={{
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-            background: 'linear-gradient(135deg, #FAAC47, #DB6331, #8B372E)',
+            background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
+            backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             marginBottom: 8, lineHeight: 1.1,
-            animation: 'titleGlow 4s ease-in-out infinite, scaleIn 0.8s ease 0.1s both',
+            animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
+            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
           }}>
             GRUDGE<br/>WARLORDS
           </h1>
 
           <div style={{
             fontSize: '0.85rem', color: 'var(--accent)', letterSpacing: 3,
-            textTransform: 'uppercase', marginBottom: 50, opacity: 0.8,
-            animation: 'fadeIn 1s ease 0.2s both',
+            textTransform: 'uppercase', marginBottom: 50,
+            animation: 'subtitleReveal 1.2s ease 0.6s both, taglinePulse 4s ease-in-out 2s infinite',
           }}>
             The Void King Awaits
           </div>
@@ -734,9 +749,11 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
   const [pressed, setPressed] = useState(false);
 
   const baseStyle = {
+    position: 'relative',
+    overflow: 'hidden',
     background: primary
       ? hovered
-        ? 'rgba(250,172,71,0.25)'
+        ? 'linear-gradient(135deg, rgba(250,172,71,0.3), rgba(219,99,49,0.15))'
         : 'linear-gradient(135deg, rgba(250,172,71,0.15), rgba(219,99,49,0.05))'
       : subtle
         ? 'transparent'
@@ -744,7 +761,7 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
           ? 'rgba(255,255,255,0.08)'
           : 'rgba(255,255,255,0.03)',
     border: primary
-      ? '2px solid var(--accent)'
+      ? '2px solid rgba(250,172,71,0.5)'
       : subtle
         ? '1px solid rgba(255,255,255,0.1)'
         : '1px solid rgba(255,255,255,0.15)',
@@ -756,19 +773,21 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
     cursor: 'pointer',
     fontFamily: "'Cinzel', serif",
     letterSpacing: primary ? 3 : 2,
-    transition: 'all 0.2s ease',
+    transition: 'all 0.25s ease',
     width: 280,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.03)' : 'scale(1)',
+    transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.04) translateY(-1px)' : 'scale(1)',
     boxShadow: hovered && primary
-      ? '0 0 30px rgba(250,172,71,0.3), 0 0 60px rgba(219,99,49,0.1)'
+      ? '0 0 30px rgba(250,172,71,0.35), 0 0 60px rgba(219,99,49,0.15), 0 4px 20px rgba(0,0,0,0.4)'
       : hovered && !subtle
-        ? '0 0 15px rgba(255,255,255,0.1)'
-        : 'none',
+        ? '0 0 20px rgba(255,255,255,0.1), 0 4px 15px rgba(0,0,0,0.3)'
+        : primary
+          ? '0 2px 8px rgba(0,0,0,0.3)'
+          : 'none',
     animation: primary
-      ? `slideUp 0.5s ease ${delay}s both, ${hovered ? '' : 'glowPulse 3s ease-in-out infinite 2s'}`
+      ? `slideUp 0.5s ease ${delay}s both, ${hovered ? '' : 'borderGlow 3s ease-in-out infinite 2s'}`
       : `slideUp 0.5s ease ${delay}s both`,
   };
 
@@ -781,6 +800,12 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
     >
+      {hovered && <div style={{
+        position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+        animation: 'lobbyCardShine 0.6s ease forwards',
+        pointerEvents: 'none',
+      }} />}
       {icon}{label}
     </button>
   );
