@@ -1831,6 +1831,13 @@ export default function BattleScreen() {
               const wpId = Date.now() + Math.random();
               setHitEffects(prev => [...prev, { id: wpId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windProjectile, filter: 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== wpId)), 500);
+              if (effectSprites.windHit) {
+                setTimeout(() => {
+                  const whId = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: whId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windHit, filter: 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== whId)), 400);
+                }, 300);
+              }
             }
             const hfxP = getHitEffect(attacker, abilityName, true);
             if (hfxP.sprite && target.position) {
