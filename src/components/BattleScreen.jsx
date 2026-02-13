@@ -184,10 +184,10 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
 const EFFECT_MASK = 'radial-gradient(ellipse at center, black 50%, transparent 80%)';
 const EFFECT_BLEND = { WebkitMaskImage: EFFECT_MASK, maskImage: EFFECT_MASK, mixBlendMode: 'screen' };
 
-function EffectSprite({ x, y, sprite, filter: filterProp }) {
+function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
-  const displaySize = 120;
+  const displaySize = size || 120;
 
   const hasCustomLayout = sprite.cols !== undefined;
   const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(sprite.frames));
@@ -1160,6 +1160,16 @@ function getBeamTrail(unit, abilityName) {
   return beamTrails.red;
 }
 
+const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
+function getUnitEffectSize(unit) {
+  if (!unit) return 140;
+  const base = 200;
+  const bossScale = (unit.team === 'enemy' && unit.isBoss) ? (unit.bossScale || 1.6) : 1;
+  const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+  const unitWidth = base * bossScale * comboScale;
+  return Math.round(unitWidth * 0.85);
+}
+
 function getHitEffectByColor(color) {
   if (!color) return effectSprites.hitEffect1;
   const c = color.toLowerCase();
@@ -1427,14 +1437,14 @@ export default function BattleScreen() {
     setTimeout(() => setSlashImpactFx(prev => prev.filter(s => s.id !== id)), 500);
   }, []);
 
-  const spawnFollowUpEffects = useCallback((followUp, x, y, filterOverride) => {
+  const spawnFollowUpEffects = useCallback((followUp, x, y, filterOverride, effectSize) => {
     if (!followUp || !Array.isArray(followUp)) return;
     followUp.forEach(fu => {
       const sprite = effectSprites[fu.effect];
       if (!sprite) return;
       setTimeout(() => {
         const fid = Date.now() + Math.random();
-        setHitEffects(prev => [...prev, { id: fid, x, y, sprite, filter: fu.filter || filterOverride || null }]);
+        setHitEffects(prev => [...prev, { id: fid, x, y, sprite, filter: fu.filter || filterOverride || null, size: effectSize }]);
         const dur = (sprite.frames || 6) * 50 + 200;
         setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== fid)), dur);
       }, fu.delay || 0);
@@ -1537,10 +1547,10 @@ export default function BattleScreen() {
                 const hfx = getHitEffect(attacker, abilityName, ranged, abilityId);
                 if (hfx.sprite && hitTarget.position) {
                   const hid = Date.now() + Math.random();
-                  setHitEffects(prev => [...prev, { id: hid, x: hitTarget.position.x, y: bodyY(hitTarget), sprite: hfx.sprite, filter: hfx.filter }]);
+                  setHitEffects(prev => [...prev, { id: hid, x: hitTarget.position.x, y: bodyY(hitTarget), sprite: hfx.sprite, filter: hfx.filter, size: getUnitEffectSize(hitTarget) }]);
                   const effectDur = (hfx.sprite.frames || 36) * 30 + 100;
                   setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-                  if (hfx.followUp) spawnFollowUpEffects(hfx.followUp, hitTarget.position.x, bodyY(hitTarget), hfx.filter);
+                  if (hfx.followUp) spawnFollowUpEffects(hfx.followUp, hitTarget.position.x, bodyY(hitTarget), hfx.filter, getUnitEffectSize(hitTarget));
                 }
                 if (hit.isCrit) {
                   playCrit();
@@ -1604,9 +1614,9 @@ export default function BattleScreen() {
             const hfxR = getHitEffect(attacker, abilityName, false);
             if (hfxR.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR.sprite, filter: hfxR.filter }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR.sprite, filter: hfxR.filter, size: getUnitEffectSize(target) }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
-              if (hfxR.followUp) spawnFollowUpEffects(hfxR.followUp, target.position.x, bodyY(target), hfxR.filter);
+              if (hfxR.followUp) spawnFollowUpEffects(hfxR.followUp, target.position.x, bodyY(target), hfxR.filter, getUnitEffectSize(target));
             }
             if (isCrit) { playCrit(); spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId)); } else { playHurt(); spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId)); }
             spawnWeaponContact(target.position.x, bodyY(target), 1);
@@ -1621,7 +1631,7 @@ export default function BattleScreen() {
             setDashPositions(prev => ({ ...prev, [attackerId]: { x: blinkX, y: blinkY } }));
             addParticle('cast', blinkX, bodyY(target), '#7c3aed');
             const teleId1 = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: teleId1, x: blinkX, y: bodyY(target), sprite: effectSprites.magickaHit }]);
+            setHitEffects(prev => [...prev, { id: teleId1, x: blinkX, y: bodyY(target), sprite: effectSprites.magickaHit, size: getUnitEffectSize(target) }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId1)), 1200);
             setUnitAnims(prev => ({ ...prev, [attackerId]: 'attack1' }));
             playSwordHit();
@@ -1630,7 +1640,7 @@ export default function BattleScreen() {
           setTimeout(() => {
             addParticle('cast', attacker.position.x, bodyY(attacker), '#7c3aed');
             const teleId2 = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: teleId2, x: attacker.position.x, y: bodyY(attacker), sprite: effectSprites.magickaHit }]);
+            setHitEffects(prev => [...prev, { id: teleId2, x: attacker.position.x, y: bodyY(attacker), sprite: effectSprites.magickaHit, size: getUnitEffectSize(attacker) }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId2)), 1200);
             setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
             setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
@@ -1678,10 +1688,10 @@ export default function BattleScreen() {
             const hfxR2 = getHitEffect(attacker, abilityName, true);
             if (hfxR2.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR2.sprite, filter: hfxR2.filter }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR2.sprite, filter: hfxR2.filter, size: getUnitEffectSize(target) }]);
               const effectDur = (hfxR2.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-              if (hfxR2.followUp) spawnFollowUpEffects(hfxR2.followUp, target.position.x, bodyY(target), hfxR2.filter);
+              if (hfxR2.followUp) spawnFollowUpEffects(hfxR2.followUp, target.position.x, bodyY(target), hfxR2.filter, getUnitEffectSize(target));
             }
             if (isCrit) {
               playCrit();
@@ -1726,10 +1736,10 @@ export default function BattleScreen() {
             const hfxIce = getHitEffect(attacker, abilityName, true);
             if (hfxIce.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxIce.sprite, filter: hfxIce.filter || 'hue-rotate(180deg) brightness(1.3)' }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxIce.sprite, filter: hfxIce.filter || 'hue-rotate(180deg) brightness(1.3)', size: getUnitEffectSize(target) }]);
               const effectDur = (hfxIce.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-              if (hfxIce.followUp) spawnFollowUpEffects(hfxIce.followUp, target.position.x, bodyY(target), hfxIce.filter);
+              if (hfxIce.followUp) spawnFollowUpEffects(hfxIce.followUp, target.position.x, bodyY(target), hfxIce.filter, getUnitEffectSize(target));
             }
             if (isCrit) {
               playCrit();
@@ -1777,10 +1787,10 @@ export default function BattleScreen() {
             const hfxW = getHitEffect(attacker, abilityName, true);
             if (hfxW.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxW.sprite, filter: hfxW.filter || 'hue-rotate(160deg) brightness(1.3)' }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxW.sprite, filter: hfxW.filter || 'hue-rotate(160deg) brightness(1.3)', size: getUnitEffectSize(target) }]);
               const effectDur = (hfxW.sprite.frames || 36) * 30 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-              if (hfxW.followUp) spawnFollowUpEffects(hfxW.followUp, target.position.x, bodyY(target), hfxW.filter);
+              if (hfxW.followUp) spawnFollowUpEffects(hfxW.followUp, target.position.x, bodyY(target), hfxW.filter, getUnitEffectSize(target));
             }
             if (isCrit) {
               playCrit();
@@ -1819,16 +1829,16 @@ export default function BattleScreen() {
             addParticle('hit', target.position.x, bodyY(target), '#22c55e');
             if (target.position && effectSprites.windProjectile) {
               const wpId = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: wpId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windProjectile, filter: 'hue-rotate(90deg) saturate(2)' }]);
+              setHitEffects(prev => [...prev, { id: wpId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windProjectile, filter: 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== wpId)), 500);
             }
             const hfxP = getHitEffect(attacker, abilityName, true);
             if (hfxP.sprite && target.position) {
               const hid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxP.sprite, filter: hfxP.filter || 'hue-rotate(90deg) saturate(2)' }]);
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxP.sprite, filter: hfxP.filter || 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
               const effectDur = (hfxP.sprite.frames || 18) * 35 + 100;
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-              if (hfxP.followUp) spawnFollowUpEffects(hfxP.followUp, target.position.x, bodyY(target), hfxP.filter || 'hue-rotate(90deg) saturate(2)');
+              if (hfxP.followUp) spawnFollowUpEffects(hfxP.followUp, target.position.x, bodyY(target), hfxP.filter || 'hue-rotate(90deg) saturate(2)', getUnitEffectSize(target));
             }
             if (isCrit) {
               playCrit();
@@ -1886,10 +1896,10 @@ export default function BattleScreen() {
                 const hfxR3 = getHitEffect(attacker, abilityName, true);
                 if (hfxR3.sprite && target.position) {
                   const hid = Date.now() + Math.random();
-                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR3.sprite, filter: hfxR3.filter }]);
+                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR3.sprite, filter: hfxR3.filter, size: getUnitEffectSize(target) }]);
                   const effectDur = (hfxR3.sprite.frames || 36) * 30 + 100;
                   setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-                  if (hfxR3.followUp) spawnFollowUpEffects(hfxR3.followUp, target.position.x, bodyY(target), hfxR3.filter);
+                  if (hfxR3.followUp) spawnFollowUpEffects(hfxR3.followUp, target.position.x, bodyY(target), hfxR3.filter, getUnitEffectSize(target));
                 }
                 if (isCrit) {
                   playCrit();
@@ -1948,10 +1958,10 @@ export default function BattleScreen() {
               const hfxLeap = getHitEffect(attacker, abilityName, false);
               if (hfxLeap.sprite && target.position) {
                 const hid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target) + 2, sprite: hfxLeap.sprite, filter: hfxLeap.filter }]);
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target) + 2, sprite: hfxLeap.sprite, filter: hfxLeap.filter, size: getUnitEffectSize(target) }]);
                 const effectDur = (hfxLeap.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-                if (hfxLeap.followUp) spawnFollowUpEffects(hfxLeap.followUp, target.position.x, bodyY(target) + 2, hfxLeap.filter);
+                if (hfxLeap.followUp) spawnFollowUpEffects(hfxLeap.followUp, target.position.x, bodyY(target) + 2, hfxLeap.filter, getUnitEffectSize(target));
               }
               if (isCrit) {
                 playCrit();
@@ -2007,10 +2017,10 @@ export default function BattleScreen() {
               const hfxR4 = getHitEffect(attacker, abilityName, false);
               if (hfxR4.sprite && target.position) {
                 const hid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR4.sprite, filter: hfxR4.filter }]);
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR4.sprite, filter: hfxR4.filter, size: getUnitEffectSize(target) }]);
                 const effectDur = (hfxR4.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-                if (hfxR4.followUp) spawnFollowUpEffects(hfxR4.followUp, target.position.x, bodyY(target), hfxR4.filter);
+                if (hfxR4.followUp) spawnFollowUpEffects(hfxR4.followUp, target.position.x, bodyY(target), hfxR4.filter, getUnitEffectSize(target));
               }
               if (isCrit) {
                 playCrit();
@@ -2049,10 +2059,10 @@ export default function BattleScreen() {
               const hfxR5 = getHitEffect(attacker, abilityName, false);
               if (hfxR5.sprite && target.position) {
                 const hid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR5.sprite, filter: hfxR5.filter }]);
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR5.sprite, filter: hfxR5.filter, size: getUnitEffectSize(target) }]);
                 const effectDur = (hfxR5.sprite.frames || 36) * 30 + 100;
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
-                if (hfxR5.followUp) spawnFollowUpEffects(hfxR5.followUp, target.position.x, bodyY(target), hfxR5.filter);
+                if (hfxR5.followUp) spawnFollowUpEffects(hfxR5.followUp, target.position.x, bodyY(target), hfxR5.filter, getUnitEffectSize(target));
               }
               if (isCrit) {
                 playCrit();
@@ -2103,13 +2113,13 @@ export default function BattleScreen() {
         if (target.position) addParticle('heal', target.position.x, bodyY(target));
         if (hfxR6.sprite && target.position) {
           const hid = Date.now() + Math.random();
-          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(target) }]);
           setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
-          if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, target.position.x, bodyY(target), hfxR6.filter);
+          if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, target.position.x, bodyY(target), hfxR6.filter, getUnitEffectSize(target));
           if (hfxR6.postHeal && target.position) {
             setTimeout(() => {
               const phid = Date.now() + Math.random();
-              setHitEffects(prev => [...prev, { id: phid, x: target.position.x, y: bodyY(target), sprite: hfxR6.postHeal }]);
+              setHitEffects(prev => [...prev, { id: phid, x: target.position.x, y: bodyY(target), sprite: hfxR6.postHeal, size: getUnitEffectSize(target) }]);
               setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
             }, 400);
           }
@@ -2121,13 +2131,13 @@ export default function BattleScreen() {
           addParticle('heal', attacker.position.x, bodyY(attacker));
           if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(attacker) }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
-            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter, getUnitEffectSize(attacker));
             if (hfxR6.postHeal && attacker.position) {
               setTimeout(() => {
                 const phid = Date.now() + Math.random();
-                setHitEffects(prev => [...prev, { id: phid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.postHeal }]);
+                setHitEffects(prev => [...prev, { id: phid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.postHeal, size: getUnitEffectSize(attacker) }]);
                 setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
               }, 400);
             }
@@ -2146,9 +2156,9 @@ export default function BattleScreen() {
           addParticle('cast', attacker.position.x, bodyY(attacker), isMorphAbility ? '#22c55e' : '#6ee7b7');
           if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter }]);
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(attacker) }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
-            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter, getUnitEffectSize(attacker));
           }
         }
       }
@@ -2371,7 +2381,6 @@ export default function BattleScreen() {
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
-          const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
           const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 }, elf_warrior: { x: 0, y: 20 }, elf_worge: { x: -20, y: 40 }, undead_warrior: { x: -30, y: 30 }, undead_worge: { x: 0, y: 40 } };
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
           const comboOffset = BATTLE_POSITION_OFFSETS[`${unit.raceId}_${unit.classId}`] || { x: 0, y: 0 };
@@ -2733,7 +2742,7 @@ export default function BattleScreen() {
         ))}
 
         {hitEffects.map(e => (
-          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} />
+          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} size={e.size} />
         ))}
 
         {critFx.map(c => (
