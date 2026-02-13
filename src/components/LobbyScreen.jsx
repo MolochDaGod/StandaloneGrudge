@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, worgTransformSprite, effectSprites } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import {
@@ -714,6 +714,9 @@ function HeroSlideshow() {
   const [spriteY, setSpriteY] = useState(0);
   const [spriteRotation, setSpriteRotation] = useState(0);
   const [showBubble, setShowBubble] = useState(false);
+  const [dummyAnim, setDummyAnim] = useState('idle');
+  const [dummyVisible, setDummyVisible] = useState(true);
+  const [dummyShake, setDummyShake] = useState(0);
 
   const [editorMode, setEditorMode] = useState(false);
   const [editorX, setEditorX] = useState(0);
@@ -916,6 +919,9 @@ function HeroSlideshow() {
     setSpriteX(-30);
     setSpriteY(0);
     setSpriteRotation(0);
+    setDummyAnim('idle');
+    setDummyVisible(true);
+    setDummyShake(0);
 
     const IDLE_ENTER_COMBOS = ['undead_ranger'];
     const comboId = `${combo.raceId}_${combo.classId}`;
@@ -1051,7 +1057,13 @@ function HeroSlideshow() {
         setSpriteY(0);
         setSpriteRotation(0);
         setAnim('attack1');
-        addTimer(() => setShowVfx(true), 150);
+        addTimer(() => {
+          setShowVfx(true);
+          setDummyAnim('hurt');
+          setDummyShake(1);
+          addTimer(() => setDummyShake(0), 300);
+          addTimer(() => setDummyAnim('idle'), 400);
+        }, 150);
       }, attackStart);
 
       const atkDuration = (spriteData?.attack1?.frames || 7) * 80;
@@ -1081,7 +1093,13 @@ function HeroSlideshow() {
 
       addTimer(() => {
         setAnim(chosenAttack);
-        addTimer(() => setShowVfx(true), 200);
+        addTimer(() => {
+          setShowVfx(true);
+          setDummyAnim('hurt');
+          setDummyShake(1);
+          addTimer(() => setDummyShake(0), 300);
+          addTimer(() => setDummyAnim('idle'), 400);
+        }, 200);
       }, walkDuration + 800);
 
       addTimer(() => {
@@ -1111,7 +1129,13 @@ function HeroSlideshow() {
 
         addTimer(() => {
           setTransformAnim(tAtk);
-          addTimer(() => setShowVfx(true), 200);
+          addTimer(() => {
+            setShowVfx(true);
+            setDummyAnim('hurt');
+            setDummyShake(1);
+            addTimer(() => setDummyShake(0), 300);
+            addTimer(() => setDummyAnim('idle'), 400);
+          }, 200);
         }, walkDuration + 800 + attackDuration + 2000);
 
         addTimer(() => {
@@ -1339,6 +1363,27 @@ function HeroSlideshow() {
             </div>
 
             <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx} />
+
+            {dummyVisible && (
+              <div style={{
+                position: 'absolute',
+                right: '8%',
+                bottom: 60,
+                transform: 'scaleX(-1)',
+                transformOrigin: 'bottom center',
+                zIndex: 6,
+                animation: dummyShake ? 'ssDummyShake 0.1s linear 3' : 'none',
+              }}>
+                <SpriteAnimation
+                  spriteData={spriteSheets['training-dummy']}
+                  animation={dummyAnim}
+                  scale={5}
+                  loop={dummyAnim === 'idle'}
+                  speed={dummyAnim === 'idle' ? 200 : 120}
+                  onAnimationEnd={dummyAnim !== 'idle' ? () => setDummyAnim('idle') : null}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -1428,6 +1473,13 @@ function HeroSlideshow() {
         @keyframes ssFadeUp {
           0% { opacity: 0; transform: translateY(8px); }
           100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ssDummyShake {
+          0% { transform: scaleX(-1) translateX(0); }
+          25% { transform: scaleX(-1) translateX(-6px); }
+          50% { transform: scaleX(-1) translateX(6px); }
+          75% { transform: scaleX(-1) translateX(-4px); }
+          100% { transform: scaleX(-1) translateX(0); }
         }
       `}</style>
 
