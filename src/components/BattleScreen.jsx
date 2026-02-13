@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
@@ -2452,6 +2452,76 @@ export default function BattleScreen() {
 
         {battleUnits.map((unit, idx) => {
           if (!unit.position) return null;
+
+          if (unit.isTotem) {
+            if (!unit.alive) return null;
+            const totemSprite = totemSpriteMap[unit.totemType];
+            if (!totemSprite) return null;
+            const totemDef = TOTEM_DEFINITIONS[unit.totemType];
+            const totemScale = 2.5;
+            const fw = totemSprite.frameWidth || 32;
+            const fh = totemSprite.frameHeight || 32;
+            return (
+              <div
+                key={unit.id}
+                style={{
+                  position: 'absolute',
+                  left: `${unit.position.x}%`,
+                  top: `${unit.position.y}%`,
+                  transform: 'translate(-50%, -100%)',
+                  zIndex: Math.floor(unit.position.y) + 1,
+                  pointerEvents: 'none',
+                  animation: 'unitSlideIn 0.5s ease forwards',
+                }}
+              >
+                <div style={{
+                  position: 'relative',
+                  filter: `drop-shadow(0 0 6px ${totemDef?.color || '#fff'}60)`,
+                }}>
+                  <SpriteAnimation
+                    spriteData={totemSprite}
+                    animation="idle"
+                    scale={totemScale}
+                    flip={unit.team === 'enemy'}
+                    speed={160}
+                    loop={true}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: -6,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: fw * totemScale * 0.8,
+                    height: 4,
+                    borderRadius: 2,
+                    background: '#222',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${(unit.health / unit.maxHealth) * 100}%`,
+                      height: '100%',
+                      background: totemDef?.color || '#22c55e',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    top: -16,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.6rem',
+                    color: totemDef?.color || '#fff',
+                    fontFamily: 'Cinzel, serif',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 0 4px #000, 0 1px 2px #000',
+                  }}>
+                    {unit.name}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           const dash = dashPositions[unit.id];
           const posX = dash ? dash.x : unit.position.x;
           const posY = dash ? dash.y : unit.position.y;
