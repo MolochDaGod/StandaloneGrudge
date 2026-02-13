@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
@@ -7,6 +7,7 @@ import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
 import { useDraggableNodes } from '../hooks/useSceneDrag';
+import useWASD from '../hooks/useWASD';
 
 const RESOURCE_NODES = [
   { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', x: 18, y: 30, color: '#fbbf24', img: '/images/buildings/gold_mine.png' },
@@ -17,6 +18,15 @@ const RESOURCE_NODES = [
 ];
 
 const SELL_PRICES = { gold: 1, herbs: 2, wood: 2, ore: 4, crystals: 8 };
+
+const CAMP_AMBIENCE = [
+  "The campfire crackles warmly...",
+  "A distant wolf howls...",
+  "The night sky glimmers with stars.",
+  "Ironhand hammers at the anvil.",
+  "Sage Aldor reads ancient scrolls.",
+  "The wind carries the scent of pine.",
+];
 
 const SPAWN_POS = { x: 45, y: 75 };
 
@@ -39,24 +49,46 @@ export default function CampScene() {
 
   const [selectedNode, setSelectedNode] = useState(null);
   const [showSellPanel, setShowSellPanel] = useState(false);
-  const [heroX, setHeroX] = useState(SPAWN_POS.x);
-  const [heroY, setHeroY] = useState(SPAWN_POS.y);
-  const [walking, setWalking] = useState(false);
-  const [facingLeft, setFacingLeft] = useState(false);
-  const walkTimeout = useRef(null);
+  const [ambientMsg, setAmbientMsg] = useState(null);
 
-  const allNodes = [
+  const allDragNodes = [
     ...RESOURCE_NODES.map(n => ({ id: n.id, x: n.x, y: n.y })),
     ...(SCENE_NPCS.camp || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
   ];
-  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allDragNodes);
+
+  const interactNodes = RESOURCE_NODES.filter(n => {
+    const storeNode = harvestNodes.find(sn => sn.id === n.id);
+    return storeNode && level >= storeNode.unlockLevel;
+  }).map(n => {
+    const pos = positions[n.id] || { x: n.x, y: n.y };
+    return { ...n, x: pos.x, y: pos.y };
+  });
+
+  const handleInteract = useCallback((node) => {
+    if (adminMode) return;
+    if (selectedNode === node.id) {
+      setSelectedNode(null);
+    } else {
+      setSelectedNode(node.id);
+    }
+  }, [adminMode, selectedNode]);
+
+  const { heroX, heroY, walking, facingLeft, nearbyNode } = useWASD(SPAWN_POS, interactNodes, handleInteract);
 
   React.useEffect(() => {
     const interval = setInterval(() => tickHarvests(), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (selectedNode || showSellPanel) return;
+      setAmbientMsg(CAMP_AMBIENCE[Math.floor(Math.random() * CAMP_AMBIENCE.length)]);
+      setTimeout(() => setAmbientMsg(null), 3500);
+    }, 10000 + Math.random() * 5000);
+    return () => clearInterval(interval);
+  }, [selectedNode, showSellPanel]);
 
   const availableHeroes = heroRoster.filter(h => {
     const isHarvesting = Object.values(activeHarvests).includes(h.id);
@@ -65,26 +97,13 @@ export default function CampScene() {
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
-  const walkToNode = (node) => {
-    if (walkTimeout.current) clearTimeout(walkTimeout.current);
-    const targetX = node.x - 6;
-    const targetY = node.y + 8;
-    setFacingLeft(targetX < heroX);
-    setWalking(true);
-    setHeroX(targetX);
-    setHeroY(targetY);
-    walkTimeout.current = setTimeout(() => {
-      setWalking(false);
-      setSelectedNode(node.id);
-    }, 600);
-  };
-
   const handleNodeClick = (node) => {
+    if (adminMode) return;
     if (selectedNode === node.id) {
       setSelectedNode(null);
       return;
     }
-    walkToNode(node);
+    setSelectedNode(node.id);
   };
 
   return (
@@ -116,12 +135,39 @@ export default function CampScene() {
         </div>
       </div>
 
+      <div style={{
+        position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+        zIndex: SCENE.HEADER, display: 'flex', gap: 6, alignItems: 'center',
+        background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
+        <span style={{ color: '#4ade80', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        {nearbyNode && (
+          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+            [{nearbyNode.name}]
+          </span>
+        )}
+      </div>
+
+      {ambientMsg && (
+        <div style={{
+          position: 'absolute', top: '14%', left: '50%', transform: 'translateX(-50%)',
+          zIndex: SCENE.TOOLTIP, background: 'rgba(10,15,30,0.8)', border: '1px solid rgba(110,231,183,0.3)',
+          borderRadius: 8, padding: '4px 12px',
+          color: '#94a3b8', fontSize: '0.5rem', fontStyle: 'italic',
+          textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
+          animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
+        }}>
+          {ambientMsg}
+        </div>
+      )}
+
       {primarySprite && (
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
           zIndex: SCENE.LABELS,
-          transition: 'left 0.6s ease, top 0.6s ease',
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -139,10 +185,11 @@ export default function CampScene() {
         const assignedHero = assignedHeroId ? heroRoster.find(h => h.id === assignedHeroId) : null;
         const resourceAmount = Math.floor(harvestResources[node.resource] || 0);
         const pos = positions[node.id] || { x: node.x, y: node.y };
+        const isNearby = nearbyNode?.id === node.id;
 
         return (
           <div key={node.id}
-            onClick={() => !adminMode && handleNodeClick(node)}
+            onClick={() => handleNodeClick(node)}
             onMouseDown={(e) => onNodeDragStart(node.id, e)}
             style={{
               position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
@@ -155,11 +202,14 @@ export default function CampScene() {
             <div style={{
               width: 72, height: 72, borderRadius: 10,
               background: `radial-gradient(circle, ${node.color}25, rgba(0,0,0,0.3))`,
-              border: `2px solid ${node.color}80`,
+              border: isNearby ? `2px solid ${node.color}` : `2px solid ${node.color}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 16px ${node.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
-              animation: assignedHero ? 'pulse 2s infinite' : 'none',
+              boxShadow: isNearby
+                ? `0 0 24px ${node.color}60, inset 0 0 20px rgba(0,0,0,0.3)`
+                : `0 0 16px ${node.color}40, inset 0 0 20px rgba(0,0,0,0.3)`,
+              animation: assignedHero ? 'pulse 2s infinite' : isNearby ? 'pulse 1.2s infinite' : 'none',
               overflow: 'hidden',
+              transition: 'box-shadow 0.3s ease, border 0.3s ease',
             }}>
               <img src={node.img} alt={node.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
@@ -186,6 +236,13 @@ export default function CampScene() {
               }}>
                 {assignedHero.name}
               </div>
+            )}
+            {isNearby && !selectedNode && (
+              <div style={{
+                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
+                animation: 'pulse 1s infinite',
+              }}>Press E</div>
             )}
             {adminMode && (
               <div style={{
@@ -295,7 +352,7 @@ export default function CampScene() {
               cursor: adminMode ? 'grab' : 'default',
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
-            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            <NpcSprite npcId={npc.npc} scale={2.5} flip={npc.flip} name={npc.name} />
             {adminMode && (
               <div style={{
                 color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
@@ -307,7 +364,7 @@ export default function CampScene() {
       })}
 
       <div onClick={exitScene} style={{
-        position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 16, left: 16,
         zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{

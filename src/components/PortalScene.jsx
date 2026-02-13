@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
@@ -7,6 +7,7 @@ import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
+import useWASD from '../hooks/useWASD';
 
 const PORTAL_NODES = [
   { id: 'forge', name: 'Void Forge', icon: 'hammer', x: 25, y: 30, color: '#f97316', description: 'Upgrade equipment using resources' },
@@ -23,6 +24,15 @@ const ENCHANT_RECIPES = [
   { id: 'empower', name: 'Empower Magic', stat: 'mana', bonus: 20, cost: { crystals: 8, herbs: 5 }, icon: 'crystal' },
   { id: 'vitalize', name: 'Vitalize', stat: 'health', bonus: 30, cost: { herbs: 10, wood: 5 }, icon: 'heart' },
   { id: 'quicken', name: 'Quicken', stat: 'speed', bonus: 3, cost: { crystals: 5, herbs: 3 }, icon: 'lightning' },
+];
+
+const VOID_WHISPERS = [
+  "The void stirs... ancient power beckons.",
+  "Reality fractures around you...",
+  "Dark energy pulses through the nexus.",
+  "Whispers of the Void Archon echo...",
+  "The abyss gazes back at you...",
+  "Power untold awaits the worthy...",
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -42,56 +52,51 @@ export default function PortalScene() {
   const addGold = useGameStore(s => s.addGold);
 
   const [activePanel, setActivePanel] = useState(null);
-  const [heroX, setHeroX] = useState(SPAWN_POS.x);
-  const [heroY, setHeroY] = useState(SPAWN_POS.y);
-  const [walking, setWalking] = useState(false);
-  const [facingLeft, setFacingLeft] = useState(false);
   const [selectedHero, setSelectedHero] = useState(null);
   const [message, setMessage] = useState(null);
   const [shopItems, setShopItems] = useState(null);
-  const walkTimeout = useRef(null);
+  const [whisper, setWhisper] = useState(null);
+
+  const handleInteract = useCallback((node) => {
+    if (activePanel) return;
+
+    if (node.id === 'void_dungeon') {
+      useGameStore.getState().startDungeon('void_threshold', 'void');
+      return;
+    }
+    if (node.id === 'lava_dungeon') {
+      useGameStore.getState().startDungeon('corrupted_spire', 'lava');
+      return;
+    }
+
+    if (node.id === 'soul_shop') {
+      setShopItems(generateShopInventory(Math.max(level, 15)));
+    }
+
+    setActivePanel(node.id);
+    const activeHeroes = heroRoster.filter(h => h.isActive);
+    if (!selectedHero && activeHeroes.length > 0) {
+      setSelectedHero(activeHeroes[0].id);
+    }
+  }, [activePanel, level, heroRoster, selectedHero]);
+
+  const { heroX, heroY, walking, facingLeft, nearbyNode } = useWASD(SPAWN_POS, PORTAL_NODES, handleInteract);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
   const activeHeroes = heroRoster.filter(h => h.isActive);
 
-  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (activePanel || message) return;
+      setWhisper(VOID_WHISPERS[Math.floor(Math.random() * VOID_WHISPERS.length)]);
+      setTimeout(() => setWhisper(null), 3500);
+    }, 7000 + Math.random() * 5000);
+    return () => clearInterval(interval);
+  }, [activePanel, message]);
 
   const showMsg = (text) => {
     setMessage(text);
     setTimeout(() => setMessage(null), 2500);
-  };
-
-  const handleNodeClick = (node) => {
-    if (activePanel) return;
-    if (walkTimeout.current) clearTimeout(walkTimeout.current);
-    const targetX = node.x - 4;
-    const targetY = node.y + 8;
-    setFacingLeft(targetX < heroX);
-    setWalking(true);
-    setHeroX(targetX);
-    setHeroY(targetY);
-
-    walkTimeout.current = setTimeout(() => {
-      setWalking(false);
-
-      if (node.id === 'void_dungeon') {
-        useGameStore.getState().startDungeon('void_threshold', 'void');
-        return;
-      }
-      if (node.id === 'lava_dungeon') {
-        useGameStore.getState().startDungeon('corrupted_spire', 'lava');
-        return;
-      }
-
-      if (node.id === 'soul_shop') {
-        setShopItems(generateShopInventory(Math.max(level, 15)));
-      }
-
-      setActivePanel(node.id);
-      if (!selectedHero && activeHeroes.length > 0) {
-        setSelectedHero(activeHeroes[0].id);
-      }
-    }, 500);
   };
 
   const canAfford = (cost) => {
@@ -347,43 +352,84 @@ export default function PortalScene() {
         </div>
       </div>
 
-      {!activePanel && PORTAL_NODES.map(node => (
-        <div key={node.id} onClick={() => handleNodeClick(node)} style={{
-          position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
-          transform: 'translate(-50%, -50%)', cursor: 'pointer',
-          zIndex: SCENE.NODES, textAlign: 'center',
+      <div style={{
+        position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+        zIndex: SCENE.HEADER, display: 'flex', gap: 6, alignItems: 'center',
+        background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
+        border: '1px solid rgba(192,38,211,0.3)',
+      }}>
+        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
+        <span style={{ color: '#c026d3', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        {nearbyNode && (
+          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+            [{nearbyNode.name}]
+          </span>
+        )}
+      </div>
+
+      {whisper && !activePanel && (
+        <div style={{
+          position: 'absolute', top: '12%', left: '50%', transform: 'translateX(-50%)',
+          zIndex: SCENE.TOOLTIP, background: 'rgba(10,10,25,0.85)', border: '1px solid rgba(192,38,211,0.3)',
+          borderRadius: 8, padding: '4px 12px',
+          color: '#c026d3', fontSize: '0.5rem', fontStyle: 'italic',
+          textShadow: '0 1px 6px rgba(192,38,211,0.5)', whiteSpace: 'nowrap',
+          animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
         }}>
-          <div style={{
-            width: 72, height: 72, borderRadius: 10,
-            background: `radial-gradient(circle, ${node.color}30, rgba(0,0,0,0.3))`,
-            border: `2px solid ${node.color}80`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.6rem',
-            boxShadow: `0 0 20px ${node.color}50, inset 0 0 20px rgba(0,0,0,0.3)`,
-            animation: 'pulse 2s infinite',
-          }}>
-            <InlineIcon name={node.icon} />
-          </div>
-          <div className="font-cinzel" style={{
-            color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
-            textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`, whiteSpace: 'nowrap',
-          }}>
-            {node.name}
-          </div>
-          <div style={{
-            color: '#94a3b8', fontSize: '0.55rem', whiteSpace: 'nowrap',
-            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-          }}>
-            {node.description}
-          </div>
+          {whisper}
         </div>
-      ))}
+      )}
+
+      {!activePanel && PORTAL_NODES.map(node => {
+        const isNearby = nearbyNode?.id === node.id;
+        return (
+          <div key={node.id} onClick={() => handleInteract(node)} style={{
+            position: 'absolute', left: `${node.x}%`, top: `${node.y}%`,
+            transform: 'translate(-50%, -50%)', cursor: 'pointer',
+            zIndex: SCENE.NODES, textAlign: 'center',
+          }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: 10,
+              background: `radial-gradient(circle, ${node.color}30, rgba(0,0,0,0.3))`,
+              border: isNearby ? `2px solid ${node.color}` : `2px solid ${node.color}80`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.6rem',
+              boxShadow: isNearby
+                ? `0 0 30px ${node.color}60, inset 0 0 20px rgba(0,0,0,0.3)`
+                : `0 0 20px ${node.color}50, inset 0 0 20px rgba(0,0,0,0.3)`,
+              animation: isNearby ? 'pulse 1.2s infinite' : 'pulse 2s infinite',
+              transition: 'box-shadow 0.3s ease, border 0.3s ease',
+            }}>
+              <InlineIcon name={node.icon} />
+            </div>
+            <div className="font-cinzel" style={{
+              color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`, whiteSpace: 'nowrap',
+            }}>
+              {node.name}
+            </div>
+            <div style={{
+              color: '#94a3b8', fontSize: '0.55rem', whiteSpace: 'nowrap',
+              textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+            }}>
+              {node.description}
+            </div>
+            {isNearby && (
+              <div style={{
+                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
+                animation: 'pulse 1s infinite',
+              }}>Press E</div>
+            )}
+          </div>
+        );
+      })}
 
       {primarySprite && !activePanel && (
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: SCENE.HERO, transition: 'left 0.5s ease, top 0.5s ease',
+          zIndex: SCENE.HERO,
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -413,12 +459,12 @@ export default function PortalScene() {
           position: 'absolute', left: `${npc.x}%`, top: `${npc.y}%`,
           transform: 'translate(-50%, -50%)', zIndex: SCENE.AMBIENT_FX, pointerEvents: 'none',
         }}>
-          <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+          <NpcSprite npcId={npc.npc} scale={2.5} flip={npc.flip} name={npc.name} />
         </div>
       ))}
 
       <div onClick={exitScene} style={{
-        position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 12, left: 12,
         zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{

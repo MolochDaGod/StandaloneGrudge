@@ -1,19 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
+import { getPlayerSprite, SCENE_NPCS, npcSpriteMap } from '../data/spriteMap';
 import { getItemPrice, getSellPrice } from '../data/equipment';
 import { InlineIcon } from '../data/uiSprites';
 import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
 import { useDraggableNodes } from '../hooks/useSceneDrag';
+import useWASD from '../hooks/useWASD';
 
 const TRADER_NODES = [
-  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/sprites/buildings/shop_cart.png' },
-  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor', img: '/sprites/buildings/shop_cart.png' },
-  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable', img: '/sprites/buildings/potion_cart.png' },
-  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory', img: '/sprites/buildings/shop_cart.png' },
+  { id: 'weapons', name: 'Weapons', icon: 'crossed_swords', x: 18, y: 42, color: '#ef4444', filter: 'weapon', img: '/images/buildings/weapons_shop.png' },
+  { id: 'armor', name: 'Armor', icon: 'shield', x: 82, y: 42, color: '#3b82f6', filter: 'armor', img: '/images/buildings/armor_shop.png' },
+  { id: 'potions', name: 'Potions', icon: 'crystal', x: 22, y: 68, color: '#a78bfa', filter: 'consumable', img: '/images/buildings/potions_shop.png' },
+  { id: 'relics', name: 'Relics', icon: 'diamond', x: 78, y: 68, color: '#fbbf24', filter: 'accessory', img: '/images/buildings/relics_shop.png' },
+];
+
+const NPC_BARKS = [
+  "Fresh wares, traveler!",
+  "Best prices in the realm...",
+  "Looking for something special?",
+  "Trade? Barter? I deal in both!",
+  "You won't find this elsewhere!",
+  "The finest goods, I assure you.",
+  "Ah, a discerning customer!",
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -29,44 +40,58 @@ export default function TradingPostScene() {
   const sellItem = useGameStore(s => s.sellItem);
   const playerRace = useGameStore(s => s.playerRace);
   const playerClass = useGameStore(s => s.playerClass);
-  const sceneReturnTo = useGameStore(s => s.sceneReturnTo);
 
   const [selectedTrader, setSelectedTrader] = useState(null);
-  const [heroX, setHeroX] = useState(SPAWN_POS.x);
-  const [heroY, setHeroY] = useState(SPAWN_POS.y);
-  const [walking, setWalking] = useState(false);
-  const [facingLeft, setFacingLeft] = useState(false);
   const [tab, setTab] = useState('buy');
-  const walkTimeout = useRef(null);
+  const [npcBark, setNpcBark] = useState(null);
+  const [barkPos, setBarkPos] = useState({ x: 50, y: 30 });
+  const barkTimer = useRef(null);
 
-  const allNodes = [
+  const allDragNodes = [
     ...TRADER_NODES.map(n => ({ id: n.id, x: n.x, y: n.y })),
     ...(SCENE_NPCS.trading || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
   ];
-  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allDragNodes);
+
+  const interactNodes = TRADER_NODES.map(t => {
+    const pos = positions[t.id] || { x: t.x, y: t.y };
+    return { ...t, x: pos.x, y: pos.y };
+  });
+
+  const handleInteract = useCallback((node) => {
+    if (adminMode) return;
+    const trader = TRADER_NODES.find(t => t.id === node.id);
+    if (trader) {
+      setSelectedTrader(trader.id);
+    }
+  }, [adminMode]);
+
+  const { heroX, heroY, walking, facingLeft, nearbyNode } = useWASD(SPAWN_POS, interactNodes, handleInteract);
 
   useEffect(() => {
     if (shopInventory.length === 0) refreshShop();
   }, []);
 
-  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
+  useEffect(() => {
+    const npcList = SCENE_NPCS.trading || [];
+    if (npcList.length === 0) return;
+    const interval = setInterval(() => {
+      if (selectedTrader) return;
+      const npc = npcList[Math.floor(Math.random() * npcList.length)];
+      const pos = positions[npc.id] || { x: npc.x, y: npc.y };
+      setBarkPos({ x: pos.x, y: pos.y - 8 });
+      setNpcBark(NPC_BARKS[Math.floor(Math.random() * NPC_BARKS.length)]);
+      if (barkTimer.current) clearTimeout(barkTimer.current);
+      barkTimer.current = setTimeout(() => setNpcBark(null), 3000);
+    }, 6000 + Math.random() * 4000);
+    return () => { clearInterval(interval); if (barkTimer.current) clearTimeout(barkTimer.current); };
+  }, [positions, selectedTrader]);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
   const handleTraderClick = (traderId) => {
-    if (walkTimeout.current) clearTimeout(walkTimeout.current);
-    const trader = TRADER_NODES.find(t => t.id === traderId);
-    if (!trader) return;
-    const targetX = trader.x - 6;
-    const targetY = trader.y + 6;
-    setFacingLeft(targetX < heroX);
-    setWalking(true);
-    setHeroX(targetX);
-    setHeroY(targetY);
-    walkTimeout.current = setTimeout(() => {
-      setWalking(false);
-      setSelectedTrader(traderId);
-    }, 500);
+    if (adminMode) return;
+    setSelectedTrader(traderId);
   };
 
   const getFilteredShop = () => {
@@ -114,11 +139,27 @@ export default function TradingPostScene() {
         </span>
       </div>
 
+      <div style={{
+        position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+        zIndex: SCENE.HEADER, display: 'flex', gap: 6, alignItems: 'center',
+        background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
+        <span style={{ color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        {nearbyNode && (
+          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+            [{nearbyNode.name}]
+          </span>
+        )}
+      </div>
+
       {TRADER_NODES.map(trader => {
         const pos = positions[trader.id] || { x: trader.x, y: trader.y };
+        const isNearby = nearbyNode?.id === trader.id;
         return (
           <div key={trader.id}
-            onClick={() => !adminMode && handleTraderClick(trader.id)}
+            onClick={() => handleTraderClick(trader.id)}
             onMouseDown={(e) => onNodeDragStart(trader.id, e)}
             style={{
               position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
@@ -128,18 +169,33 @@ export default function TradingPostScene() {
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
             <div style={{
-              width: 96, height: 96,
+              width: 80, height: 80,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              filter: selectedTrader === trader.id ? `drop-shadow(0 0 12px ${trader.color})` : `drop-shadow(0 0 6px ${trader.color}60)`,
-              animation: selectedTrader === trader.id ? 'pulse 1.5s infinite' : 'none',
-              transition: 'filter 0.3s ease',
+              borderRadius: 8,
+              background: `radial-gradient(circle, ${trader.color}20, rgba(0,0,0,0.2))`,
+              border: isNearby ? `2px solid ${trader.color}` : `1px solid ${trader.color}40`,
+              filter: selectedTrader === trader.id
+                ? `drop-shadow(0 0 12px ${trader.color})`
+                : isNearby
+                  ? `drop-shadow(0 0 10px ${trader.color}90)`
+                  : `drop-shadow(0 0 4px ${trader.color}40)`,
+              animation: isNearby ? 'pulse 1.2s infinite' : 'none',
+              transition: 'filter 0.3s ease, border 0.3s ease',
+              boxShadow: isNearby ? `0 0 20px ${trader.color}50, inset 0 0 15px rgba(0,0,0,0.3)` : 'none',
             }}>
-              <img src={trader.img} alt={trader.name} style={{ width: 88, height: 88, objectFit: 'contain', imageRendering: 'pixelated' }} />
+              <img src={trader.img} alt={trader.name} style={{ width: 68, height: 68, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
             <div className="font-cinzel" style={{
-              color: trader.color, fontSize: '0.9rem', fontWeight: 700, marginTop: 4,
+              color: trader.color, fontSize: '0.8rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
             }}>{trader.name}</div>
+            {isNearby && !selectedTrader && (
+              <div style={{
+                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
+                animation: 'pulse 1s infinite',
+              }}>Press E</div>
+            )}
             {adminMode && (
               <div style={{
                 color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
@@ -155,7 +211,6 @@ export default function TradingPostScene() {
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
           zIndex: SCENE.LABELS,
-          transition: 'left 0.5s ease, top 0.5s ease',
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -163,6 +218,22 @@ export default function TradingPostScene() {
             scale={3}
             flip={facingLeft}
           />
+        </div>
+      )}
+
+      {npcBark && (
+        <div style={{
+          position: 'absolute', left: `${barkPos.x}%`, top: `${barkPos.y}%`,
+          transform: 'translate(-50%, -100%)',
+          zIndex: SCENE.TOOLTIP,
+          background: 'rgba(10,15,30,0.9)', border: '1px solid #fbbf24',
+          borderRadius: 8, padding: '4px 10px',
+          color: '#fbbf24', fontSize: '0.5rem', fontStyle: 'italic',
+          textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
+          animation: 'fadeIn 0.3s ease',
+          pointerEvents: 'none',
+        }}>
+          "{npcBark}"
         </div>
       )}
 
@@ -178,7 +249,7 @@ export default function TradingPostScene() {
             <div className="font-cinzel" style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '0.75rem' }}>
               {TRADER_NODES.find(t => t.id === selectedTrader)?.name} Trader
             </div>
-            <button onClick={() => { setSelectedTrader(null); setHeroX(SPAWN_POS.x); setHeroY(SPAWN_POS.y); }} style={{
+            <button onClick={() => setSelectedTrader(null)} style={{
               background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem',
             }}>✕</button>
           </div>
@@ -273,7 +344,7 @@ export default function TradingPostScene() {
               cursor: adminMode ? 'grab' : 'default',
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
-            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            <NpcSprite npcId={npc.npc} scale={2.5} flip={npc.flip} name={npc.name} />
             {adminMode && (
               <div style={{
                 color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
@@ -285,7 +356,7 @@ export default function TradingPostScene() {
       })}
 
       <div onClick={exitScene} style={{
-        position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 16, left: 16,
         zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{
@@ -301,7 +372,7 @@ export default function TradingPostScene() {
         <div style={{
           color: '#fbbf24', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)',
-        }}>Return to City</div>
+        }}>Return</div>
       </div>
     </div>
   );

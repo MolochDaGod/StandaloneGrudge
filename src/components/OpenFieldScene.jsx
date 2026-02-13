@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../stores/gameStore';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, SCENE_NPCS } from '../data/spriteMap';
@@ -7,6 +7,7 @@ import { setBgm } from '../utils/audioManager';
 import NpcSprite from './NpcSprite';
 import { SCENE } from '../constants/layers';
 import { useDraggableNodes } from '../hooks/useSceneDrag';
+import useWASD from '../hooks/useWASD';
 
 const FIELD_EVENTS = [
   { id: 'patrol', name: 'Wandering Foe', icon: 'battle', x: 65, y: 40, type: 'battle', color: '#ef4444', img: '/images/hunt_battle.png' },
@@ -14,6 +15,15 @@ const FIELD_EVENTS = [
   { id: 'shrine', name: 'Healing Shrine', icon: 'sparkle', x: 75, y: 65, type: 'heal', color: '#6ee7b3', img: '/images/buildings/healing_shrine.png' },
   { id: 'camp_rest', name: 'Rest Spot', icon: 'fire', x: 40, y: 70, type: 'rest', color: '#f97316', img: '/images/buildings/campfire.png' },
   { id: 'merchant', name: 'Traveling Merchant', icon: 'diamond', x: 20, y: 55, type: 'shop', color: '#FAAC47', img: '/sprites/buildings/shop_cart.png' },
+];
+
+const FIELD_ENCOUNTERS = [
+  { msg: "A mysterious fog rolls in...", color: '#a78bfa' },
+  { msg: "You hear rustling in the bushes!", color: '#ef4444' },
+  { msg: "A bird of prey circles overhead.", color: '#94a3b8' },
+  { msg: "Distant drums echo through the valley.", color: '#f97316' },
+  { msg: "You spot tracks in the dirt...", color: '#fbbf24' },
+  { msg: "The wind shifts... danger is near.", color: '#ef4444' },
 ];
 
 const SPAWN_POS = { x: 50, y: 82 };
@@ -34,66 +44,66 @@ export default function OpenFieldScene() {
   const addGold = useGameStore(s => s.addGold);
   const sceneReturnTo = useGameStore(s => s.sceneReturnTo);
 
-  const [heroX, setHeroX] = useState(SPAWN_POS.x);
-  const [heroY, setHeroY] = useState(SPAWN_POS.y);
-  const [walking, setWalking] = useState(false);
-  const [facingLeft, setFacingLeft] = useState(false);
   const [interacted, setInteracted] = useState([]);
   const [message, setMessage] = useState(null);
-  const walkTimeout = useRef(null);
+  const [encounter, setEncounter] = useState(null);
 
-  const allNodes = [
+  const allDragNodes = [
     ...FIELD_EVENTS.map(n => ({ id: n.id, x: n.x, y: n.y })),
     ...(SCENE_NPCS.field || []).map(n => ({ id: n.id, x: n.x, y: n.y })),
   ];
-  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allNodes);
+  const { positions, onMouseDown: onNodeDragStart, containerRef: sceneRef, adminMode } = useDraggableNodes(allDragNodes);
+
+  const interactNodes = FIELD_EVENTS.filter(e => !interacted.includes(e.id)).map(e => {
+    const pos = positions[e.id] || { x: e.x, y: e.y };
+    return { ...e, x: pos.x, y: pos.y };
+  });
+
+  const doInteract = useCallback((evt) => {
+    if (adminMode) return;
+    if (interacted.includes(evt.id)) return;
+
+    if (evt.type === 'battle') {
+      const loc = sceneReturnTo || 'verdant_plains';
+      useGameStore.setState({ currentLocation: loc });
+      startBattle(loc);
+    } else if (evt.type === 'loot') {
+      const lootGold = 15 + Math.floor(Math.random() * 30);
+      addGold(lootGold);
+      setInteracted(prev => [...prev, evt.id]);
+      setMessage(`Found ${lootGold} gold in the chest!`);
+      setTimeout(() => setMessage(null), 2500);
+    } else if (evt.type === 'heal') {
+      useGameStore.setState({
+        playerHealth: playerMaxHealth,
+        playerMana: playerMaxMana,
+      });
+      setInteracted(prev => [...prev, evt.id]);
+      setMessage('Health and Mana fully restored!');
+      setTimeout(() => setMessage(null), 2500);
+    } else if (evt.type === 'rest') {
+      restAtInn(0);
+      setInteracted(prev => [...prev, evt.id]);
+      setMessage('Rested by the campfire. Stats restored!');
+      setTimeout(() => setMessage(null), 2500);
+    } else if (evt.type === 'shop') {
+      enterScene('trading', sceneReturnTo || 'world');
+    }
+  }, [adminMode, interacted, sceneReturnTo, startBattle, addGold, playerMaxHealth, playerMaxMana, restAtInn, enterScene]);
+
+  const { heroX, heroY, walking, facingLeft, nearbyNode } = useWASD(SPAWN_POS, interactNodes, doInteract);
 
   const primarySprite = getPlayerSprite(playerRace, playerClass);
 
-  useEffect(() => { return () => { if (walkTimeout.current) clearTimeout(walkTimeout.current); }; }, []);
-
-  const handleEventClick = (evt) => {
-    if (interacted.includes(evt.id)) return;
-    if (walkTimeout.current) clearTimeout(walkTimeout.current);
-
-    const targetX = evt.x - 6;
-    const targetY = evt.y;
-    setFacingLeft(targetX < heroX);
-    setWalking(true);
-    setHeroX(targetX);
-    setHeroY(targetY);
-
-    walkTimeout.current = setTimeout(() => {
-      setWalking(false);
-
-      if (evt.type === 'battle') {
-        const loc = sceneReturnTo || 'verdant_plains';
-        useGameStore.setState({ currentLocation: loc });
-        startBattle(loc);
-      } else if (evt.type === 'loot') {
-        const lootGold = 15 + Math.floor(Math.random() * 30);
-        addGold(lootGold);
-        setInteracted(prev => [...prev, evt.id]);
-        setMessage(`Found ${lootGold} gold in the chest!`);
-        setTimeout(() => setMessage(null), 2500);
-      } else if (evt.type === 'heal') {
-        useGameStore.setState({
-          playerHealth: playerMaxHealth,
-          playerMana: playerMaxMana,
-        });
-        setInteracted(prev => [...prev, evt.id]);
-        setMessage('Health and Mana fully restored!');
-        setTimeout(() => setMessage(null), 2500);
-      } else if (evt.type === 'rest') {
-        restAtInn(0);
-        setInteracted(prev => [...prev, evt.id]);
-        setMessage('Rested by the campfire. Stats restored!');
-        setTimeout(() => setMessage(null), 2500);
-      } else if (evt.type === 'shop') {
-        enterScene('trading', sceneReturnTo || 'world');
-      }
-    }, 600);
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (message) return;
+      const enc = FIELD_ENCOUNTERS[Math.floor(Math.random() * FIELD_ENCOUNTERS.length)];
+      setEncounter(enc);
+      setTimeout(() => setEncounter(null), 3500);
+    }, 8000 + Math.random() * 6000);
+    return () => clearInterval(interval);
+  }, [message]);
 
   return (
     <div ref={sceneRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
@@ -126,12 +136,41 @@ export default function OpenFieldScene() {
         </div>
       </div>
 
+      <div style={{
+        position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+        zIndex: SCENE.HEADER, display: 'flex', gap: 6, alignItems: 'center',
+        background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
+        <span style={{ color: '#e2e8f0', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        {nearbyNode && (
+          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+            [{nearbyNode.name}]
+          </span>
+        )}
+      </div>
+
+      {encounter && !message && (
+        <div style={{
+          position: 'absolute', top: '14%', left: '50%', transform: 'translateX(-50%)',
+          zIndex: SCENE.TOOLTIP, background: 'rgba(10,15,30,0.85)', border: `1px solid ${encounter.color}40`,
+          borderRadius: 8, padding: '4px 12px',
+          color: encounter.color, fontSize: '0.5rem', fontStyle: 'italic',
+          textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
+          animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
+        }}>
+          {encounter.msg}
+        </div>
+      )}
+
       {FIELD_EVENTS.map(evt => {
         const done = interacted.includes(evt.id);
         const pos = positions[evt.id] || { x: evt.x, y: evt.y };
+        const isNearby = nearbyNode?.id === evt.id;
         return (
           <div key={evt.id}
-            onClick={() => !adminMode && handleEventClick(evt)}
+            onClick={() => !adminMode && doInteract(evt)}
             onMouseDown={(e) => onNodeDragStart(evt.id, e)}
             style={{
               position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`,
@@ -147,12 +186,16 @@ export default function OpenFieldScene() {
               background: done
                 ? 'rgba(100,100,100,0.2)'
                 : evt.type === 'shop' ? 'none' : `radial-gradient(circle, ${evt.color}25, rgba(0,0,0,0.3))`,
-              border: evt.type === 'shop' ? 'none' : `2px solid ${done ? '#555' : evt.color}80`,
+              border: done ? '2px solid #55580'
+                : isNearby ? `2px solid ${evt.color}` : evt.type === 'shop' ? 'none' : `2px solid ${evt.color}80`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: !done && evt.type !== 'shop' ? `0 0 16px ${evt.color}40, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
-              animation: !done ? 'pulse 2s infinite' : 'none',
+              boxShadow: !done && isNearby
+                ? `0 0 24px ${evt.color}60, inset 0 0 20px rgba(0,0,0,0.3)`
+                : !done && evt.type !== 'shop' ? `0 0 16px ${evt.color}40, inset 0 0 20px rgba(0,0,0,0.3)` : 'none',
+              animation: isNearby && !done ? 'pulse 1.2s infinite' : !done ? 'pulse 2s infinite' : 'none',
               overflow: 'hidden',
               filter: done ? 'grayscale(0.8)' : evt.type === 'shop' ? `drop-shadow(0 0 8px ${evt.color}80)` : 'none',
+              transition: 'box-shadow 0.3s ease, border 0.3s ease',
             }}>
               {done ? <span style={{ fontSize: '1.5rem', color: '#6ee7b3' }}>✓</span> : <img src={evt.img} alt={evt.name} style={{ width: evt.type === 'shop' ? 88 : 60, height: evt.type === 'shop' ? 88 : 60, objectFit: 'contain', imageRendering: evt.type === 'shop' ? 'pixelated' : 'auto' }} />}
             </div>
@@ -163,6 +206,13 @@ export default function OpenFieldScene() {
             }}>
               {evt.name}
             </div>
+            {isNearby && !done && (
+              <div style={{
+                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
+                animation: 'pulse 1s infinite',
+              }}>Press E</div>
+            )}
             {adminMode && (
               <div style={{
                 color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
@@ -177,7 +227,7 @@ export default function OpenFieldScene() {
         <div style={{
           position: 'absolute', left: `${heroX}%`, top: `${heroY}%`,
           transform: `translate(-50%, -50%)`,
-          zIndex: SCENE.HERO, transition: 'left 0.6s ease, top 0.6s ease',
+          zIndex: SCENE.HERO,
         }}>
           <SpriteAnimation
             spriteData={primarySprite}
@@ -213,7 +263,7 @@ export default function OpenFieldScene() {
               cursor: adminMode ? 'grab' : 'default',
               outline: adminMode ? '2px dashed #f59e0b' : 'none',
             }}>
-            <NpcSprite npcId={npc.npc} scale={3} flip={npc.flip} name={npc.name} />
+            <NpcSprite npcId={npc.npc} scale={2.5} flip={npc.flip} name={npc.name} />
             {adminMode && (
               <div style={{
                 color: '#f59e0b', fontSize: '0.45rem', fontWeight: 700, textAlign: 'center',
@@ -225,7 +275,7 @@ export default function OpenFieldScene() {
       })}
 
       <div onClick={exitScene} style={{
-        position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 16, left: 16,
         zIndex: SCENE.BACK_BUTTON, cursor: 'pointer', textAlign: 'center',
       }}>
         <div style={{

@@ -33,7 +33,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
     - **Loot:** Tier-based drops.
     - **Consumables:** 6 potion types.
     - **Trading:** Camp merchant system.
-    - **Scene System:** 4 interactive scene views (Camp, Dungeon, Trading Post, Open Field).
+    - **Scene System:** 5 interactive scene views (Camp, Dungeon, Trading Post, Open Field, Portal/Void Nexus). All non-dungeon scenes support WASD keyboard movement and E to interact via shared `useWASD` hook (`src/hooks/useWASD.js`). Proximity detection highlights nearby interactables with "Press E" prompts. Each scene has unique AI ambient flavor (NPC barks, atmospheric encounters, void whispers).
 - **Audio System:** Web Audio API for synthesized combat sounds, file-based attack SFX (swish_2/3/4.wav for melee, bow.wav for ranger), and file-based background music (7 tracks). Audio caching via sfxCache for performance.
 - **Particle Effects:** CSS-animated in-battle particles, canvas-based title screen particles, and CSS keyframe animations for UI.
 - **World Map:** RTS-style 2D map with zoom/pan, 32 unlockable locations across 5 terrain regions, and a dynamic day/night cycle. Features BFS pathfinding, portal fast travel, and god fights.
