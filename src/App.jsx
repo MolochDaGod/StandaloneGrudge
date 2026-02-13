@@ -115,8 +115,7 @@ function GameApp() {
   const fullBleedScreens = ['title', 'world', 'battle', 'intro', 'lobby'];
   const isFullBleed = fullBleedScreens.includes(screen);
 
-  const frameHiddenScreens = ['intro'];
-  const showFrame = !frameHiddenScreens.includes(screen);
+  const showFrame = false;
 
   const renderScreen = () => {
     switch (screen) {

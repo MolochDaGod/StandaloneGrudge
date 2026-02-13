@@ -2209,7 +2209,7 @@ export default function WorldMap() {
       </div>
 
         {selectedLoc && outerRef.current && createPortal(
-          <div ref={menuRef} style={{
+          <div ref={menuRef} className="ornate-popup" style={{
             position: 'absolute',
             top: '50%',
             transform: 'translateY(-50%)',
@@ -2375,7 +2375,7 @@ export default function WorldMap() {
         )}
 
         {portalMenu && outerRef.current && createPortal(
-          <div style={{
+          <div className="ornate-popup" style={{
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             zIndex: MAP_LAYERS.POPUPS,
@@ -2500,7 +2500,7 @@ export default function WorldMap() {
           const cityArenas = arenaTemplates.filter(a => a.cityId === city.id && level >= a.levelRange[0]);
 
           return createPortal(
-            <div ref={menuRef} style={{
+            <div ref={menuRef} className="ornate-popup" style={{
               position: 'absolute',
               top: '50%',
               transform: 'translateY(-50%)',
@@ -2976,7 +2976,7 @@ export default function WorldMap() {
         })()}
 
         {selectedEvent && outerRef.current && createPortal(
-          <div ref={menuRef} style={{
+          <div ref={menuRef} className="ornate-popup" style={{
             position: 'absolute',
             top: '50%',
             transform: 'translateY(-50%)',
