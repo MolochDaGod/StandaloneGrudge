@@ -45,90 +45,235 @@ function StatCard({ label, value, color = '#ffd700', sub }) {
   );
 }
 
+const FACTION_MAP = {
+  human: { name: 'Crusade', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
+  barbarian: { name: 'Crusade', color: '#fbbf24', icon: '/icons/pack/factions/crusade-emblem.png' },
+  orc: { name: 'Legion', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
+  undead: { name: 'Legion', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
+  elf: { name: 'Fabled', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
+  dwarf: { name: 'Fabled', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
+};
+
+const CLASS_ICON_MAP = {
+  warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+  mage: '/sprites/ui/icons/icon_mage.png',
+  worge: '/sprites/ui/icons/icon_worge.png',
+  ranger: '/sprites/ui/icons/icon_ranger.png',
+};
+
+const STAT_COLORS = {
+  strength: '#ef4444', agility: '#22c55e', intellect: '#8b5cf6', vitality: '#f59e0b',
+  luck: '#fbbf24', defense: '#6b7280', speed: '#3b82f6', charisma: '#ec4899',
+};
+
 function HeroCard({ hero, expanded, onToggle }) {
   const cls = classDefinitions[hero.classId];
   const race = raceDefinitions[hero.raceId];
   const stats = cls ? getHeroStatsWithBonuses(hero) : null;
   const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
   const record = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+  const faction = FACTION_MAP[hero.raceId] || FACTION_MAP.human;
+  const classIcon = CLASS_ICON_MAP[hero.classId];
 
   return (
-    <div style={{
-      background: expanded ? 'rgba(255,215,0,0.04)' : 'rgba(20,15,30,0.4)',
-      border: `1px solid ${expanded ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.06)'}`,
-      borderRadius: 8, overflow: 'hidden', transition: 'all 0.2s',
+    <div onClick={onToggle} style={{
+      position: 'relative', overflow: 'hidden', cursor: 'pointer',
+      borderRadius: 12, minHeight: expanded ? 340 : 200,
+      border: `1px solid ${faction.color}33`,
+      transition: 'all 0.3s ease',
+      display: 'flex', flexDirection: 'column',
     }}>
-      <div onClick={onToggle} style={{
-        padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
-      }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `radial-gradient(ellipse at center, ${faction.color}15 0%, rgba(10,10,20,0.95) 70%)`,
+      }} />
+
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: `url(${faction.icon})`,
+        backgroundSize: '160%', backgroundPosition: 'center 30%', backgroundRepeat: 'no-repeat',
+        opacity: 0.06,
+        filter: 'blur(1px)',
+      }} />
+
+      {classIcon && (
         <div style={{
-          width: 40, height: 40, borderRadius: '50%', overflow: 'hidden',
-          border: '2px solid rgba(255,215,0,0.3)', background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.5} speed={180} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: "'Cinzel', serif", color: '#ffd700', fontWeight: 700, fontSize: '0.85rem' }}>{hero.name}</span>
-            <span style={{ fontSize: '0.55rem', color: '#6ee7b7', background: 'rgba(110,231,183,0.1)', padding: '1px 6px', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
-              Lv.{hero.level}
-            </span>
-          </div>
-          <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>
-            {race?.name || hero.raceId} {cls?.name || hero.classId}
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 12, fontSize: '0.6rem', color: '#94a3b8' }}>
-          <span>W:{record.wins}</span>
-          <span>L:{record.losses}</span>
-          <span>K:{record.kills}</span>
-        </div>
-        <span style={{ color: '#6b7280', fontSize: '1rem', transition: 'transform 0.2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}>
-          &#9660;
-        </span>
+          position: 'absolute', top: 10, right: 10, zIndex: 3,
+          width: 36, height: 36, opacity: 0.5,
+          backgroundImage: `url(${classIcon})`,
+          backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+          filter: 'drop-shadow(0 0 6px rgba(0,0,0,0.8))',
+        }} />
+      )}
+
+      <div style={{
+        position: 'absolute', left: '50%', top: expanded ? '22%' : '28%',
+        transform: 'translateX(-50%)',
+        zIndex: 1, opacity: 0.9,
+        filter: `drop-shadow(0 4px 20px ${faction.color}40)`,
+        transition: 'top 0.3s ease',
+      }}>
+        <SpriteAnimation spriteData={spriteData} animation="idle" scale={4} speed={180} />
       </div>
 
-      {expanded && stats && (
-        <div style={{ padding: '0 14px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 10 }}>
+      <div style={{
+        position: 'absolute', left: '50%', top: expanded ? '22%' : '28%',
+        transform: 'translateX(-50%)',
+        width: 120, height: 120, borderRadius: '50%',
+        background: `radial-gradient(circle, ${faction.color}18 0%, transparent 70%)`,
+        zIndex: 0,
+        transition: 'top 0.3s ease',
+      }} />
+
+      <div style={{
+        position: 'relative', zIndex: 2, padding: '16px 20px 0',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+      }}>
+        <div>
+          <div style={{
+            fontFamily: "'Cinzel', serif", color: '#ffd700', fontWeight: 800,
+            fontSize: '1.4rem', lineHeight: 1.1,
+            textShadow: `0 0 20px ${faction.color}60, 0 2px 8px rgba(0,0,0,0.8)`,
+          }}>
+            {hero.name}
+          </div>
+          <div style={{
+            fontSize: '0.85rem', color: faction.color, fontWeight: 600,
+            marginTop: 4, letterSpacing: '0.05em',
+            textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+          }}>
+            {race?.name || hero.raceId} {cls?.name || hero.classId}
+          </div>
+          <div style={{
+            display: 'flex', gap: 8, marginTop: 6, alignItems: 'center',
+          }}>
+            <span style={{
+              fontSize: '0.75rem', color: '#6ee7b7', fontWeight: 700,
+              background: 'rgba(110,231,183,0.12)', padding: '2px 10px', borderRadius: 10,
+              border: '1px solid rgba(110,231,183,0.25)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            }}>
+              Lv.{hero.level}
+            </span>
+            <span style={{
+              fontSize: '0.65rem', color: faction.color, opacity: 0.7,
+              fontStyle: 'italic',
+            }}>
+              {faction.name}
+            </span>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex', gap: 10, fontSize: '0.75rem', fontWeight: 600,
+          textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+        }}>
+          <span style={{ color: '#22c55e' }}>{record.wins}W</span>
+          <span style={{ color: '#ef4444' }}>{record.losses}L</span>
+          <span style={{ color: '#fbbf24' }}>{record.kills}K</span>
+        </div>
+      </div>
+
+      <div style={{ flex: 1 }} />
+
+      {stats && (
+        <div style={{
+          position: 'relative', zIndex: 2,
+          background: 'linear-gradient(180deg, transparent 0%, rgba(5,5,15,0.85) 30%, rgba(5,5,15,0.95) 100%)',
+          padding: expanded ? '28px 16px 14px' : '20px 16px 12px',
+          transition: 'padding 0.3s ease',
+        }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 4,
+          }}>
             {['strength', 'agility', 'intellect', 'vitality', 'luck', 'defense', 'speed', 'charisma'].map(k => (
-              <div key={k} style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: 4, textAlign: 'center' }}>
-                <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase' }}>{k.slice(0, 3)}</div>
-                <div style={{ fontSize: '0.8rem', color: '#ffd700', fontWeight: 700 }}>{stats[k] || 0}</div>
+              <div key={k} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '0.5rem', color: STAT_COLORS[k], textTransform: 'uppercase',
+                  fontWeight: 700, letterSpacing: '0.05em', opacity: 0.8,
+                }}>{k.slice(0, 3)}</div>
+                <div style={{
+                  fontSize: '1rem', color: '#e2e8f0', fontWeight: 800,
+                  fontFamily: "'Cinzel', serif",
+                  textShadow: `0 0 8px ${STAT_COLORS[k]}40`,
+                }}>{stats[k] || 0}</div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10, fontSize: '0.6rem' }}>
-            <div><span style={{ color: '#8a7d65' }}>HP: </span><span style={{ color: '#22c55e' }}>{Math.floor(hero.currentHealth || 0)} / {Math.floor(stats.health)}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>MP: </span><span style={{ color: '#3b82f6' }}>{Math.floor(hero.currentMana || 0)} / {Math.floor(stats.mana)}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>SP: </span><span style={{ color: '#f59e0b' }}>{Math.floor(hero.currentStamina || 0)} / {Math.floor(stats.stamina)}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>Grudge: </span><span style={{ color: '#dc2626' }}>{hero.grudge || 0} / 100</span></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10, fontSize: '0.6rem' }}>
-            <div><span style={{ color: '#8a7d65' }}>Boss Kills: </span><span style={{ color: '#c084fc' }}>{record.bossKills}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>Damage Dealt: </span><span style={{ color: '#ef4444' }}>{Math.floor(record.damageDealt)}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>Healing Done: </span><span style={{ color: '#22c55e' }}>{Math.floor(record.healingDone)}</span></div>
-            <div><span style={{ color: '#8a7d65' }}>Unspent Points: </span><span style={{ color: '#ffd700' }}>{hero.unspentPoints || 0}</span></div>
-          </div>
-          {hero.equipment && Object.keys(hero.equipment).length > 0 && (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: '0.55rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 4 }}>Equipment</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-                {Object.entries(hero.equipment).filter(([, eq]) => eq).map(([slot, eq]) => (
-                  <div key={slot} style={{
-                    background: 'rgba(110,231,183,0.04)', border: '1px solid rgba(110,231,183,0.12)',
-                    borderRadius: 4, padding: '3px 6px', fontSize: '0.55rem',
-                  }}>
-                    <span style={{ color: '#6b7280', textTransform: 'capitalize' }}>{slot}: </span>
-                    <span style={{ color: '#6ee7b7' }}>{eq.name || `T${eq.tier}`}</span>
-                  </div>
-                ))}
+
+          {expanded && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+                fontSize: '0.75rem',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.5rem', color: '#22c55e', textTransform: 'uppercase', fontWeight: 600, opacity: 0.7 }}>HP</div>
+                  <div style={{ color: '#22c55e', fontWeight: 700 }}>{Math.floor(hero.currentHealth || 0)}<span style={{ opacity: 0.5 }}>/{Math.floor(stats.health)}</span></div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.5rem', color: '#3b82f6', textTransform: 'uppercase', fontWeight: 600, opacity: 0.7 }}>MP</div>
+                  <div style={{ color: '#3b82f6', fontWeight: 700 }}>{Math.floor(hero.currentMana || 0)}<span style={{ opacity: 0.5 }}>/{Math.floor(stats.mana)}</span></div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.5rem', color: '#f59e0b', textTransform: 'uppercase', fontWeight: 600, opacity: 0.7 }}>SP</div>
+                  <div style={{ color: '#f59e0b', fontWeight: 700 }}>{Math.floor(hero.currentStamina || 0)}<span style={{ opacity: 0.5 }}>/{Math.floor(stats.stamina)}</span></div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.5rem', color: '#dc2626', textTransform: 'uppercase', fontWeight: 600, opacity: 0.7 }}>Grudge</div>
+                  <div style={{ color: '#dc2626', fontWeight: 700 }}>{hero.grudge || 0}<span style={{ opacity: 0.5 }}>/100</span></div>
+                </div>
               </div>
+
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+                fontSize: '0.7rem', marginTop: 10,
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>Boss Kills</div>
+                  <div style={{ color: '#c084fc', fontWeight: 700 }}>{record.bossKills}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>Damage</div>
+                  <div style={{ color: '#ef4444', fontWeight: 700 }}>{Math.floor(record.damageDealt).toLocaleString()}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>Healing</div>
+                  <div style={{ color: '#22c55e', fontWeight: 700 }}>{Math.floor(record.healingDone).toLocaleString()}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>Unspent</div>
+                  <div style={{ color: '#ffd700', fontWeight: 700 }}>{hero.unspentPoints || 0}</div>
+                </div>
+              </div>
+
+              {hero.equipment && Object.keys(hero.equipment).filter(s => hero.equipment[s]).length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{
+                    display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center',
+                  }}>
+                    {Object.entries(hero.equipment).filter(([, eq]) => eq).map(([slot, eq]) => (
+                      <span key={slot} style={{
+                        background: 'rgba(110,231,183,0.06)', border: '1px solid rgba(110,231,183,0.15)',
+                        borderRadius: 6, padding: '2px 8px', fontSize: '0.6rem',
+                        color: '#6ee7b7',
+                      }}>
+                        {eq.name || `T${eq.tier} ${slot}`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
+
+      <div style={{
+        position: 'absolute', bottom: 8, right: 12, zIndex: 3,
+        color: '#6b7280', fontSize: '0.7rem', opacity: 0.5,
+        transition: 'transform 0.3s', transform: expanded ? 'rotate(180deg)' : 'rotate(0)',
+      }}>&#9660;</div>
     </div>
   );
 }
@@ -347,7 +492,7 @@ export default function AdminDashboard() {
                 <span>Active: {activeHeroIds?.length || 0}</span>
                 <span>Active IDs: {activeHeroIds?.join(', ') || 'none'}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
                 {(heroRoster || []).map(hero => (
                   <HeroCard
                     key={hero.id}
@@ -357,7 +502,7 @@ export default function AdminDashboard() {
                   />
                 ))}
                 {(!heroRoster || heroRoster.length === 0) && (
-                  <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.8rem' }}>
+                  <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.8rem', gridColumn: '1 / -1' }}>
                     No heroes created yet. Start a new game to create heroes.
                   </div>
                 )}
