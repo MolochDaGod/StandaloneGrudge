@@ -120,16 +120,16 @@ export default function CampScene() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Camp
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#fbbf24', fontSize: '0.75rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+          <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
             {gold} Gold
           </span>
           <button onClick={() => setShowSellPanel(!showSellPanel)} style={{
             background: 'rgba(0,0,0,0.6)', border: '1px solid #fbbf24', borderRadius: 8,
-            padding: '4px 12px', color: '#fbbf24', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700,
+            padding: '4px 12px', color: '#fbbf24', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
             backdropFilter: 'blur(4px)',
           }}>Sell Resources</button>
         </div>
@@ -141,10 +141,10 @@ export default function CampScene() {
         background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
         border: '1px solid rgba(255,255,255,0.1)',
       }}>
-        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
-        <span style={{ color: '#4ade80', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>WASD move</span>
+        <span style={{ color: '#4ade80', fontSize: '0.7rem', fontWeight: 700 }}>E interact</span>
         {nearbyNode && (
-          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+          <span style={{ color: '#6ee7b3', fontSize: '0.7rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
             [{nearbyNode.name}]
           </span>
         )}
@@ -155,7 +155,7 @@ export default function CampScene() {
           position: 'absolute', top: '14%', left: '50%', transform: 'translateX(-50%)',
           zIndex: SCENE.TOOLTIP, background: 'rgba(10,15,30,0.8)', border: '1px solid rgba(110,231,183,0.3)',
           borderRadius: 8, padding: '4px 12px',
-          color: '#94a3b8', fontSize: '0.5rem', fontStyle: 'italic',
+          color: '#94a3b8', fontSize: '0.75rem', fontStyle: 'italic',
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
         }}>
@@ -214,7 +214,7 @@ export default function CampScene() {
               <img src={node.img} alt={node.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
             <div className="font-cinzel" style={{
-              color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              color: node.color, fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`,
               whiteSpace: 'nowrap',
             }}>
@@ -222,7 +222,7 @@ export default function CampScene() {
             </div>
             {resourceAmount > 0 && (
               <div style={{
-                color: '#fff', fontSize: '0.45rem', fontWeight: 600,
+                color: '#fff', fontSize: '0.7rem', fontWeight: 600,
                 background: 'rgba(0,0,0,0.7)', borderRadius: 4, padding: '1px 4px',
                 marginTop: 1,
               }}>
@@ -231,7 +231,7 @@ export default function CampScene() {
             )}
             {assignedHero && (
               <div style={{
-                color: '#6ee7b3', fontSize: '0.4rem', fontWeight: 600, marginTop: 1,
+                color: '#6ee7b3', fontSize: '0.65rem', fontWeight: 600, marginTop: 1,
                 textShadow: '0 1px 3px rgba(0,0,0,0.8)',
               }}>
                 {assignedHero.name}
@@ -239,7 +239,7 @@ export default function CampScene() {
             )}
             {isNearby && !selectedNode && (
               <div style={{
-                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, marginTop: 2,
                 background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
                 animation: 'pulse 1s infinite',
               }}>Press E</div>
@@ -260,26 +260,26 @@ export default function CampScene() {
               }} onClick={e => e.stopPropagation()}>
                 {assignedHero ? (
                   <div>
-                    <div style={{ color: '#6ee7b3', fontSize: '0.55rem', marginBottom: 4 }}>
+                    <div style={{ color: '#6ee7b3', fontSize: '0.8rem', marginBottom: 4 }}>
                       {assignedHero.name} harvesting
                     </div>
                     <button onClick={() => recallHarvest(node.id)} style={{
                       width: '100%', background: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444',
                       borderRadius: 6, padding: '3px 8px', color: '#ef4444', cursor: 'pointer',
-                      fontSize: '0.5rem', fontWeight: 700,
+                      fontSize: '0.75rem', fontWeight: 700,
                     }}>Recall</button>
                   </div>
                 ) : (
                   <div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.5rem', marginBottom: 4 }}>Assign Hero:</div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: 4 }}>Assign Hero:</div>
                     {availableHeroes.length === 0 ? (
-                      <div style={{ color: '#666', fontSize: '0.45rem' }}>No heroes available</div>
+                      <div style={{ color: '#666', fontSize: '0.7rem' }}>No heroes available</div>
                     ) : (
                       availableHeroes.map(hero => (
                         <button key={hero.id} onClick={() => { assignHarvest(node.id, hero.id); setSelectedNode(null); }} style={{
                           width: '100%', background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.3)',
                           borderRadius: 4, padding: '2px 6px', color: '#6ee7b3', cursor: 'pointer',
-                          fontSize: '0.5rem', fontWeight: 600, marginBottom: 2, textAlign: 'left',
+                          fontSize: '0.75rem', fontWeight: 600, marginBottom: 2, textAlign: 'left',
                         }}>
                           {hero.name} (Lv{hero.level})
                         </button>
@@ -300,7 +300,7 @@ export default function CampScene() {
           borderRadius: 12, padding: 16, minWidth: 220, zIndex: SCENE.POPUP,
           backdropFilter: 'blur(8px)',
         }}>
-          <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '0.8rem', marginBottom: 8, textAlign: 'center' }}>
+          <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1.05rem', marginBottom: 8, textAlign: 'center' }}>
             Sell Resources
           </div>
           {Object.entries(SELL_PRICES).map(([res, price]) => {
@@ -311,22 +311,22 @@ export default function CampScene() {
                 padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
               }}>
                 <div>
-                  <span style={{ color: '#e2e8f0', fontSize: '0.6rem', textTransform: 'capitalize' }}>{res}</span>
-                  <span style={{ color: '#94a3b8', fontSize: '0.5rem', marginLeft: 6 }}>x{amount}</span>
-                  <span style={{ color: '#fbbf24', fontSize: '0.45rem', marginLeft: 4 }}>({price}g ea)</span>
+                  <span style={{ color: '#e2e8f0', fontSize: '0.85rem', textTransform: 'capitalize' }}>{res}</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginLeft: 6 }}>x{amount}</span>
+                  <span style={{ color: '#fbbf24', fontSize: '0.7rem', marginLeft: 4 }}>({price}g ea)</span>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button disabled={amount < 10} onClick={() => sellResource(res, 10)} style={{
                     background: amount >= 10 ? 'rgba(251,191,36,0.2)' : 'rgba(50,50,50,0.3)',
                     border: '1px solid rgba(251,191,36,0.3)', borderRadius: 4,
                     padding: '2px 6px', color: amount >= 10 ? '#fbbf24' : '#555', cursor: amount >= 10 ? 'pointer' : 'default',
-                    fontSize: '0.45rem', fontWeight: 700,
+                    fontSize: '0.7rem', fontWeight: 700,
                   }}>x10</button>
                   <button disabled={amount < 1} onClick={() => sellResource(res, amount)} style={{
                     background: amount >= 1 ? 'rgba(251,191,36,0.2)' : 'rgba(50,50,50,0.3)',
                     border: '1px solid rgba(251,191,36,0.3)', borderRadius: 4,
                     padding: '2px 6px', color: amount >= 1 ? '#fbbf24' : '#555', cursor: amount >= 1 ? 'pointer' : 'default',
-                    fontSize: '0.45rem', fontWeight: 700,
+                    fontSize: '0.7rem', fontWeight: 700,
                   }}>All</button>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function CampScene() {
           <button onClick={() => setShowSellPanel(false)} style={{
             width: '100%', background: 'rgba(100,100,100,0.2)', border: '1px solid #555',
             borderRadius: 6, padding: '4px 0', color: '#aaa', cursor: 'pointer',
-            fontSize: '0.55rem', marginTop: 8,
+            fontSize: '0.8rem', marginTop: 8,
           }}>Close</button>
         </div>
       )}
@@ -378,7 +378,7 @@ export default function CampScene() {
           <InlineIcon name="portal" />
         </div>
         <div style={{
-          color: '#6ee7b3', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,
+          color: '#6ee7b3', fontSize: '0.75rem', fontWeight: 700, marginTop: 3,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)',
         }}>Return to Map</div>
       </div>

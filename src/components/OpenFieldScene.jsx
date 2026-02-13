@@ -118,11 +118,11 @@ export default function OpenFieldScene() {
         position: 'absolute', top: 8, left: 16, right: 16,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#e2e8f0', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        <div className="font-cinzel" style={{ color: '#e2e8f0', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Open Field
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <div style={{ color: '#fbbf24', fontSize: '0.55rem' }}>
+          <div style={{ color: '#fbbf24', fontSize: '0.8rem' }}>
             {gold} Gold
           </div>
           <div style={{
@@ -142,10 +142,10 @@ export default function OpenFieldScene() {
         background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
         border: '1px solid rgba(255,255,255,0.1)',
       }}>
-        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
-        <span style={{ color: '#e2e8f0', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>WASD move</span>
+        <span style={{ color: '#e2e8f0', fontSize: '0.7rem', fontWeight: 700 }}>E interact</span>
         {nearbyNode && (
-          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+          <span style={{ color: '#6ee7b3', fontSize: '0.7rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
             [{nearbyNode.name}]
           </span>
         )}
@@ -156,7 +156,7 @@ export default function OpenFieldScene() {
           position: 'absolute', top: '14%', left: '50%', transform: 'translateX(-50%)',
           zIndex: SCENE.TOOLTIP, background: 'rgba(10,15,30,0.85)', border: `1px solid ${encounter.color}40`,
           borderRadius: 8, padding: '4px 12px',
-          color: encounter.color, fontSize: '0.5rem', fontStyle: 'italic',
+          color: encounter.color, fontSize: '0.75rem', fontStyle: 'italic',
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
         }}>
@@ -201,14 +201,14 @@ export default function OpenFieldScene() {
             </div>
             <div className="font-cinzel" style={{
               color: done ? '#666' : evt.color,
-              fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${evt.color}40`, whiteSpace: 'nowrap',
             }}>
               {evt.name}
             </div>
             {isNearby && !done && (
               <div style={{
-                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, marginTop: 2,
                 background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
                 animation: 'pulse 1s infinite',
               }}>Press E</div>
@@ -243,7 +243,7 @@ export default function OpenFieldScene() {
           position: 'absolute', top: '18%', left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(10,15,30,0.9)', border: '1px solid #fbbf24',
           borderRadius: 8, padding: '6px 14px', zIndex: SCENE.TOOLTIP,
-          color: '#fbbf24', fontSize: '0.6rem', fontWeight: 600,
+          color: '#fbbf24', fontSize: '0.85rem', fontWeight: 600,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.3s ease',
         }}>
@@ -289,7 +289,7 @@ export default function OpenFieldScene() {
           <InlineIcon name="portal" />
         </div>
         <div className="font-cinzel" style={{
-          color: '#6ee7b3', fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+          color: '#6ee7b3', fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
           textShadow: '0 2px 6px rgba(0,0,0,0.95), 0 0 10px rgba(110,231,183,0.4)',
         }}>Return</div>
       </div>

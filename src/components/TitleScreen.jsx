@@ -86,9 +86,9 @@ function TitleBossShowcase() {
     const shuffled = [...BOSS_ROSTER].sort(() => Math.random() - 0.5);
     const picked = shuffled.slice(0, 3);
     const positions = [
-      { x: 10, y: 18, flip: false },
+      { x: 14, y: 18, flip: false },
       { x: 50, y: 65, flip: Math.random() > 0.5 },
-      { x: 90, y: 20, flip: true },
+      { x: 82, y: 20, flip: true },
     ];
 
     const initial = picked.map((boss, i) => {
@@ -277,10 +277,10 @@ function TitleBossShowcase() {
 
             <div style={{
               position: 'absolute',
-              bottom: -22,
+              bottom: -26,
               left: '50%',
               transform: 'translateX(-50%)',
-              fontSize: '0.55rem',
+              fontSize: '0.85rem',
               color: boss.color,
               textTransform: 'uppercase',
               letterSpacing: 2,
@@ -388,7 +388,7 @@ function TitleHeroParade() {
           if (!h) continue;
         }
         usedCombos.add(`${h.race}-${h.cls}`);
-        h.x = 8 + (i / (initialCount - 1)) * 80 + (Math.random() - 0.5) * 10;
+        h.x = Math.min(85, Math.max(15, 15 + (i / (initialCount - 1)) * 70 + (Math.random() - 0.5) * 10));
         h.opacity = 0;
         h.fadeIn = true;
         const actions = ['idle', 'walk', 'attack1'];
@@ -455,7 +455,7 @@ function TitleHeroParade() {
           }
 
           return updated;
-        }).filter(h => h.x > -20 && h.x < 120);
+        }).filter(h => h.x > -10 && h.x < 110);
 
         if (next.length < prev.length) changed = true;
         return changed ? next : prev;
@@ -516,10 +516,10 @@ function TitleHeroParade() {
 
           <div style={{
             position: 'absolute',
-            bottom: -16,
+            bottom: -20,
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: '0.5rem',
+            fontSize: '0.8rem',
             color: hero.raceColor,
             textTransform: 'uppercase',
             letterSpacing: 1.5,
@@ -663,7 +663,7 @@ export default function TitleScreen() {
 
         <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
           <div style={{
-            fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: 8,
+            fontSize: '0.9rem', color: 'var(--muted)', letterSpacing: 8,
             textTransform: 'uppercase', marginBottom: 24, opacity: 0.5,
             animation: 'subtitleReveal 1.8s ease 0.2s both',
           }}>
@@ -683,7 +683,7 @@ export default function TitleScreen() {
           </h1>
 
           <div style={{
-            fontSize: '0.85rem', color: 'var(--accent)', letterSpacing: 3,
+            fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: 3,
             textTransform: 'uppercase', marginBottom: 50,
             animation: 'subtitleReveal 1.2s ease 0.6s both, taglinePulse 4s ease-in-out 2s infinite',
           }}>
@@ -713,7 +713,7 @@ export default function TitleScreen() {
           </div>
 
           <div style={{
-            color: 'var(--muted)', fontSize: '0.7rem', marginTop: 40, opacity: 0.4,
+            color: 'var(--muted)', fontSize: '0.9rem', marginTop: 40, opacity: 0.4,
             letterSpacing: 1,
             animation: 'fadeIn 1s ease 0.8s both',
           }}>
@@ -724,7 +724,7 @@ export default function TitleScreen() {
         <div style={{
           position: 'absolute', bottom: 8, left: 0, right: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
-          color: 'var(--muted)', fontSize: '0.65rem', opacity: 0.3,
+          color: 'var(--muted)', fontSize: '0.8rem', opacity: 0.3,
           animation: 'fadeIn 1s ease 0.6s both',
           zIndex: 3,
         }}>
@@ -768,7 +768,7 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
     borderRadius: 8,
     padding: primary ? '14px 50px' : '10px 40px',
     color: primary ? 'var(--accent)' : subtle ? 'var(--muted)' : '#ccc',
-    fontSize: primary ? '1rem' : '0.85rem',
+    fontSize: primary ? '1.1rem' : '1rem',
     fontWeight: 600,
     cursor: 'pointer',
     fontFamily: "'Cinzel', serif",

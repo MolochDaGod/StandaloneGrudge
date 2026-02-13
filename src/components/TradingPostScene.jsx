@@ -131,10 +131,10 @@ export default function TradingPostScene() {
         position: 'absolute', top: 8, left: 16, right: 16,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '0.9rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
           Trading Post
         </div>
-        <span style={{ color: '#fbbf24', fontSize: '0.75rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+        <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
           {gold} Gold
         </span>
       </div>
@@ -145,10 +145,10 @@ export default function TradingPostScene() {
         background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
         border: '1px solid rgba(255,255,255,0.1)',
       }}>
-        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
-        <span style={{ color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>WASD move</span>
+        <span style={{ color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700 }}>E interact</span>
         {nearbyNode && (
-          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+          <span style={{ color: '#6ee7b3', fontSize: '0.7rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
             [{nearbyNode.name}]
           </span>
         )}
@@ -186,12 +186,12 @@ export default function TradingPostScene() {
               <img src={trader.img} alt={trader.name} style={{ width: 68, height: 68, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
             <div className="font-cinzel" style={{
-              color: trader.color, fontSize: '0.8rem', fontWeight: 700, marginTop: 4,
+              color: trader.color, fontSize: '1.05rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
             }}>{trader.name}</div>
             {isNearby && !selectedTrader && (
               <div style={{
-                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, marginTop: 2,
                 background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
                 animation: 'pulse 1s infinite',
               }}>Press E</div>
@@ -228,7 +228,7 @@ export default function TradingPostScene() {
           zIndex: SCENE.TOOLTIP,
           background: 'rgba(10,15,30,0.9)', border: '1px solid #fbbf24',
           borderRadius: 8, padding: '4px 10px',
-          color: '#fbbf24', fontSize: '0.5rem', fontStyle: 'italic',
+          color: '#fbbf24', fontSize: '0.75rem', fontStyle: 'italic',
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.3s ease',
           pointerEvents: 'none',
@@ -246,11 +246,11 @@ export default function TradingPostScene() {
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
           <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="font-cinzel" style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '0.75rem' }}>
+            <div className="font-cinzel" style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '1rem' }}>
               {TRADER_NODES.find(t => t.id === selectedTrader)?.name} Trader
             </div>
             <button onClick={() => setSelectedTrader(null)} style={{
-              background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem',
+              background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.3rem',
             }}>✕</button>
           </div>
 
@@ -260,7 +260,7 @@ export default function TradingPostScene() {
                 flex: 1, padding: '5px 0', background: tab === t ? 'rgba(251,191,36,0.15)' : 'transparent',
                 border: 'none', borderBottom: tab === t ? '2px solid #fbbf24' : '2px solid transparent',
                 color: tab === t ? '#fbbf24' : '#888', cursor: 'pointer',
-                fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
+                fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase',
               }}>{t}</button>
             ))}
           </div>
@@ -268,7 +268,7 @@ export default function TradingPostScene() {
           <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
             {tab === 'buy' ? (
               getFilteredShop().length === 0 ? (
-                <div style={{ color: '#666', fontSize: '0.55rem', textAlign: 'center', padding: 16 }}>No items available</div>
+                <div style={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', padding: 16 }}>No items available</div>
               ) : (
                 getFilteredShop().map(item => {
                   const price = getItemPrice(item);
@@ -279,16 +279,16 @@ export default function TradingPostScene() {
                       padding: '4px 6px', borderBottom: '1px solid rgba(255,255,255,0.03)',
                     }}>
                       <div>
-                        <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.55rem', fontWeight: 600 }}>
+                        <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.8rem', fontWeight: 600 }}>
                           {item.icon ? <InlineIcon name={item.icon} /> : <InlineIcon name="bag" />} {item.name}
                         </span>
-                        <span style={{ color: '#666', fontSize: '0.4rem', marginLeft: 4 }}>T{item.tier}</span>
+                        <span style={{ color: '#666', fontSize: '0.65rem', marginLeft: 4 }}>T{item.tier}</span>
                       </div>
                       <button disabled={!canAfford} onClick={() => buyItem(item.id)} style={{
                         background: canAfford ? 'rgba(251,191,36,0.2)' : 'rgba(50,50,50,0.3)',
                         border: '1px solid rgba(251,191,36,0.3)', borderRadius: 4,
                         padding: '2px 8px', color: canAfford ? '#fbbf24' : '#555',
-                        cursor: canAfford ? 'pointer' : 'default', fontSize: '0.45rem', fontWeight: 700,
+                        cursor: canAfford ? 'pointer' : 'default', fontSize: '0.7rem', fontWeight: 700,
                       }}>{price}g</button>
                     </div>
                   );
@@ -296,7 +296,7 @@ export default function TradingPostScene() {
               )
             ) : (
               getSellItems().length === 0 ? (
-                <div style={{ color: '#666', fontSize: '0.55rem', textAlign: 'center', padding: 16 }}>No items to sell</div>
+                <div style={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', padding: 16 }}>No items to sell</div>
               ) : (
                 getSellItems().map(item => {
                   const price = getSellPrice(item);
@@ -306,14 +306,14 @@ export default function TradingPostScene() {
                       padding: '4px 6px', borderBottom: '1px solid rgba(255,255,255,0.03)',
                     }}>
                       <div>
-                        <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.55rem', fontWeight: 600 }}>
+                        <span style={{ color: tierColors[item.tier] || '#ccc', fontSize: '0.8rem', fontWeight: 600 }}>
                           {item.icon ? <InlineIcon name={item.icon} /> : <InlineIcon name="bag" />} {item.name}
                         </span>
                       </div>
                       <button onClick={() => sellItem(item.id)} style={{
                         background: 'rgba(110,231,183,0.2)', border: '1px solid rgba(110,231,183,0.3)',
                         borderRadius: 4, padding: '2px 8px', color: '#6ee7b3',
-                        cursor: 'pointer', fontSize: '0.45rem', fontWeight: 700,
+                        cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700,
                       }}>{price}g</button>
                     </div>
                   );
@@ -326,7 +326,7 @@ export default function TradingPostScene() {
             <button onClick={refreshShop} style={{
               background: 'rgba(100,100,100,0.2)', border: '1px solid #555',
               borderRadius: 4, padding: '3px 10px', color: '#aaa', cursor: 'pointer',
-              fontSize: '0.5rem',
+              fontSize: '0.75rem',
             }}>Refresh Stock</button>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function TradingPostScene() {
           <InlineIcon name="portal" />
         </div>
         <div style={{
-          color: '#fbbf24', fontSize: '0.5rem', fontWeight: 700, marginTop: 3,
+          color: '#fbbf24', fontSize: '0.75rem', fontWeight: 700, marginTop: 3,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)',
         }}>Return</div>
       </div>

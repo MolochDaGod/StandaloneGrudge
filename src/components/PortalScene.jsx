@@ -178,7 +178,7 @@ export default function PortalScene() {
     const closeBtn = (
       <button onClick={() => { setActivePanel(null); setShopItems(null); }} style={{
         background: 'rgba(239,68,68,0.3)', border: '1px solid #ef4444',
-        borderRadius: 6, padding: '2px 10px', color: '#ef4444', cursor: 'pointer', fontSize: '0.6rem',
+        borderRadius: 6, padding: '2px 10px', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem',
       }}>Close</button>
     );
 
@@ -186,7 +186,7 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#f97316', fontSize: '0.75rem' }}>Void Forge - Upgrade Equipment</span>
+            <span className="font-cinzel" style={{ color: '#f97316', fontSize: '1rem' }}>Void Forge - Upgrade Equipment</span>
             {closeBtn}
           </div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -194,7 +194,7 @@ export default function PortalScene() {
               <button key={h.id} onClick={() => setSelectedHero(h.id)} style={{
                 background: selectedHero === h.id ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${selectedHero === h.id ? '#f97316' : '#333'}`,
-                borderRadius: 6, padding: '3px 8px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.55rem',
+                borderRadius: 6, padding: '3px 8px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.8rem',
               }}>{h.name}</button>
             ))}
           </div>
@@ -209,12 +209,12 @@ export default function PortalScene() {
                     background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)',
                     borderRadius: 6, padding: '4px 6px', cursor: 'pointer',
                   }}>
-                    <div style={{ color: '#f97316', fontSize: '0.5rem', fontWeight: 700 }}>{slot}</div>
-                    <div style={{ color: '#e2e8f0', fontSize: '0.45rem' }}>{item.name} (T{item.tier || 1})</div>
-                    <div style={{ color: '#94a3b8', fontSize: '0.4rem' }}>Tap to upgrade</div>
+                    <div style={{ color: '#f97316', fontSize: '0.75rem', fontWeight: 700 }}>{slot}</div>
+                    <div style={{ color: '#e2e8f0', fontSize: '0.7rem' }}>{item.name} (T{item.tier || 1})</div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.65rem' }}>Tap to upgrade</div>
                   </div>
                 ))}
-                {slots.length === 0 && <div style={{ color: '#666', fontSize: '0.5rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>No equipment to upgrade</div>}
+                {slots.length === 0 && <div style={{ color: '#666', fontSize: '0.75rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>No equipment to upgrade</div>}
               </div>
             );
           })()}
@@ -226,12 +226,12 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#a78bfa', fontSize: '0.75rem' }}>Arcane Enchanter</span>
+            <span className="font-cinzel" style={{ color: '#a78bfa', fontSize: '1rem' }}>Arcane Enchanter</span>
             {closeBtn}
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
             {Object.entries(harvestResources).filter(([k]) => k !== 'gold').map(([res, amt]) => (
-              <span key={res} style={{ color: '#94a3b8', fontSize: '0.45rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4 }}>
+              <span key={res} style={{ color: '#94a3b8', fontSize: '0.7rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4 }}>
                 {res}: {Math.floor(amt)}
               </span>
             ))}
@@ -241,7 +241,7 @@ export default function PortalScene() {
               <button key={h.id} onClick={() => setSelectedHero(h.id)} style={{
                 background: selectedHero === h.id ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${selectedHero === h.id ? '#a78bfa' : '#333'}`,
-                borderRadius: 6, padding: '3px 8px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.55rem',
+                borderRadius: 6, padding: '3px 8px', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.8rem',
               }}>{h.name}</button>
             ))}
           </div>
@@ -255,10 +255,10 @@ export default function PortalScene() {
               }}>
                 <div>
                   <InlineIcon name={recipe.icon} /> 
-                  <span style={{ color: '#e2e8f0', fontSize: '0.55rem', fontWeight: 600 }}>{recipe.name}</span>
-                  <span style={{ color: '#6ee7b3', fontSize: '0.45rem', marginLeft: 6 }}>+{recipe.bonus} {recipe.stat}</span>
+                  <span style={{ color: '#e2e8f0', fontSize: '0.8rem', fontWeight: 600 }}>{recipe.name}</span>
+                  <span style={{ color: '#6ee7b3', fontSize: '0.7rem', marginLeft: 6 }}>+{recipe.bonus} {recipe.stat}</span>
                 </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.4rem' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.65rem' }}>
                   {Object.entries(recipe.cost).map(([r, a]) => `${a} ${r}`).join(', ')}
                 </div>
               </div>
@@ -273,9 +273,9 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#ef4444', fontSize: '0.75rem' }}>Soul Vendor</span>
+            <span className="font-cinzel" style={{ color: '#ef4444', fontSize: '1rem' }}>Soul Vendor</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ color: '#fbbf24', fontSize: '0.55rem' }}>{gold} gold</span>
+              <span style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{gold} gold</span>
               {closeBtn}
             </div>
           </div>
@@ -288,13 +288,13 @@ export default function PortalScene() {
                   border: `1px solid ${gold >= price ? 'rgba(239,68,68,0.3)' : '#333'}`,
                   borderRadius: 6, padding: '4px 6px', cursor: gold >= price ? 'pointer' : 'not-allowed',
                 }}>
-                  <div style={{ color: '#e2e8f0', fontSize: '0.5rem', fontWeight: 600 }}>{item.name}</div>
-                  <div style={{ color: '#94a3b8', fontSize: '0.4rem' }}>{item.type} T{item.tier || 1}</div>
-                  <div style={{ color: '#fbbf24', fontSize: '0.45rem' }}>{price} gold</div>
+                  <div style={{ color: '#e2e8f0', fontSize: '0.75rem', fontWeight: 600 }}>{item.name}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.65rem' }}>{item.type} T{item.tier || 1}</div>
+                  <div style={{ color: '#fbbf24', fontSize: '0.7rem' }}>{price} gold</div>
                 </div>
               );
             })}
-            {items.length === 0 && <div style={{ color: '#666', fontSize: '0.5rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>Shop is empty</div>}
+            {items.length === 0 && <div style={{ color: '#666', fontSize: '0.75rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>Shop is empty</div>}
           </div>
         </div>
       );
@@ -304,22 +304,22 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#fbbf24', fontSize: '0.75rem' }}>Salvage Pit</span>
+            <span className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1rem' }}>Salvage Pit</span>
             {closeBtn}
           </div>
-          <div style={{ fontSize: '0.45rem', color: '#94a3b8', marginBottom: 6 }}>Break down items for gold and resources</div>
+          <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: 6 }}>Break down items for gold and resources</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxHeight: '80%', overflow: 'auto' }}>
             {inventory.map((item, idx) => (
               <div key={idx} onClick={() => handleSalvage(idx)} style={{
                 background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
                 borderRadius: 6, padding: '4px 6px', cursor: 'pointer',
               }}>
-                <div style={{ color: '#e2e8f0', fontSize: '0.5rem', fontWeight: 600 }}>{item.name}</div>
-                <div style={{ color: '#94a3b8', fontSize: '0.4rem' }}>{item.type} T{item.tier || 1}</div>
-                <div style={{ color: '#fbbf24', fontSize: '0.4rem' }}>Tap to salvage</div>
+                <div style={{ color: '#e2e8f0', fontSize: '0.75rem', fontWeight: 600 }}>{item.name}</div>
+                <div style={{ color: '#94a3b8', fontSize: '0.65rem' }}>{item.type} T{item.tier || 1}</div>
+                <div style={{ color: '#fbbf24', fontSize: '0.65rem' }}>Tap to salvage</div>
               </div>
             ))}
-            {inventory.length === 0 && <div style={{ color: '#666', fontSize: '0.5rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>No items to salvage</div>}
+            {inventory.length === 0 && <div style={{ color: '#666', fontSize: '0.75rem', gridColumn: '1/3', textAlign: 'center', padding: 12 }}>No items to salvage</div>}
           </div>
         </div>
       );
@@ -341,13 +341,13 @@ export default function PortalScene() {
         position: 'absolute', top: 6, left: 12, right: 12,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#c026d3', fontSize: '0.85rem', textShadow: '0 2px 8px rgba(192,38,211,0.6)' }}>
+        <div className="font-cinzel" style={{ color: '#c026d3', fontSize: '1.1rem', textShadow: '0 2px 8px rgba(192,38,211,0.6)' }}>
           Void Nexus
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ color: '#fbbf24', fontSize: '0.5rem' }}>{gold} gold</span>
+          <span style={{ color: '#fbbf24', fontSize: '0.75rem' }}>{gold} gold</span>
           {Object.entries(harvestResources).filter(([k]) => k !== 'gold').map(([r, a]) => (
-            <span key={r} style={{ color: '#94a3b8', fontSize: '0.4rem' }}>{r}: {Math.floor(a)}</span>
+            <span key={r} style={{ color: '#94a3b8', fontSize: '0.65rem' }}>{r}: {Math.floor(a)}</span>
           ))}
         </div>
       </div>
@@ -358,10 +358,10 @@ export default function PortalScene() {
         background: 'rgba(0,0,0,0.6)', borderRadius: 8, padding: '3px 10px',
         border: '1px solid rgba(192,38,211,0.3)',
       }}>
-        <span style={{ color: '#94a3b8', fontSize: '0.45rem' }}>WASD move</span>
-        <span style={{ color: '#c026d3', fontSize: '0.45rem', fontWeight: 700 }}>E interact</span>
+        <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>WASD move</span>
+        <span style={{ color: '#c026d3', fontSize: '0.7rem', fontWeight: 700 }}>E interact</span>
         {nearbyNode && (
-          <span style={{ color: '#6ee7b3', fontSize: '0.45rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+          <span style={{ color: '#6ee7b3', fontSize: '0.7rem', fontWeight: 700, animation: 'pulse 1s infinite' }}>
             [{nearbyNode.name}]
           </span>
         )}
@@ -372,7 +372,7 @@ export default function PortalScene() {
           position: 'absolute', top: '12%', left: '50%', transform: 'translateX(-50%)',
           zIndex: SCENE.TOOLTIP, background: 'rgba(10,10,25,0.85)', border: '1px solid rgba(192,38,211,0.3)',
           borderRadius: 8, padding: '4px 12px',
-          color: '#c026d3', fontSize: '0.5rem', fontStyle: 'italic',
+          color: '#c026d3', fontSize: '0.75rem', fontStyle: 'italic',
           textShadow: '0 1px 6px rgba(192,38,211,0.5)', whiteSpace: 'nowrap',
           animation: 'fadeIn 0.5s ease', pointerEvents: 'none',
         }}>
@@ -403,20 +403,20 @@ export default function PortalScene() {
               <InlineIcon name={node.icon} />
             </div>
             <div className="font-cinzel" style={{
-              color: node.color, fontSize: '0.85rem', fontWeight: 700, marginTop: 4,
+              color: node.color, fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`, whiteSpace: 'nowrap',
             }}>
               {node.name}
             </div>
             <div style={{
-              color: '#94a3b8', fontSize: '0.55rem', whiteSpace: 'nowrap',
+              color: '#94a3b8', fontSize: '0.8rem', whiteSpace: 'nowrap',
               textShadow: '0 1px 3px rgba(0,0,0,0.8)',
             }}>
               {node.description}
             </div>
             {isNearby && (
               <div style={{
-                color: '#fbbf24', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+                color: '#fbbf24', fontSize: '0.7rem', fontWeight: 700, marginTop: 2,
                 background: 'rgba(0,0,0,0.7)', padding: '1px 6px', borderRadius: 4,
                 animation: 'pulse 1s infinite',
               }}>Press E</div>
@@ -447,7 +447,7 @@ export default function PortalScene() {
           position: 'absolute', top: '15%', left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(10,15,30,0.9)', border: '1px solid #c026d3',
           borderRadius: 8, padding: '6px 14px', zIndex: SCENE.POPUP,
-          color: '#c026d3', fontSize: '0.6rem', fontWeight: 600,
+          color: '#c026d3', fontSize: '0.85rem', fontWeight: 600,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap',
         }}>
           {message}
@@ -478,7 +478,7 @@ export default function PortalScene() {
           <InlineIcon name="portal" />
         </div>
         <div style={{
-          color: '#c026d3', fontSize: '0.45rem', fontWeight: 700, marginTop: 2,
+          color: '#c026d3', fontSize: '0.7rem', fontWeight: 700, marginTop: 2,
           textShadow: '0 1px 4px rgba(0,0,0,0.8)',
         }}>Return</div>
       </div>
