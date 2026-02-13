@@ -21,6 +21,37 @@ const CATEGORY_COLORS = {
   Secret: '#f59e0b',
 };
 
+const META_KEYS = new Set([
+  'frameWidth', 'frameHeight', 'filter', 'facesLeft', 'showGuideGrid',
+  'tint', 'blendMode', 'dwarfScale', 'name', 'src', 'category',
+]);
+
+function getAnimationKeys(spriteData) {
+  if (!spriteData) return [];
+  return Object.keys(spriteData).filter(k => !META_KEYS.has(k) && spriteData[k]?.frames != null);
+}
+
+const ANIM_COLORS = {
+  idle: '#22c55e',
+  walk: '#3b82f6',
+  run: '#06b6d4',
+  attack1: '#ef4444',
+  attack2: '#f97316',
+  attack3: '#f59e0b',
+  attack: '#ef4444',
+  hurt: '#ec4899',
+  death: '#6b7280',
+  jump: '#8b5cf6',
+  fall: '#a855f7',
+  roll: '#14b8a6',
+  doublejump: '#7c3aed',
+  land: '#64748b',
+  wallslide: '#475569',
+  attack1_effect: '#fbbf24',
+  attack2_effect: '#fb923c',
+  attack3_effect: '#f87171',
+};
+
 function capitalize(str) {
   return str.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -133,6 +164,7 @@ export default function AdminSize({ onClose }) {
     return data;
   });
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedAnim, setSelectedAnim] = useState('idle');
   const [editScale, setEditScale] = useState(1.0);
   const [editHue, setEditHue] = useState(0);
   const [editSat, setEditSat] = useState(1);
@@ -150,6 +182,7 @@ export default function AdminSize({ onClose }) {
 
   const selectSprite = useCallback((id) => {
     setSelectedId(id);
+    setSelectedAnim('idle');
     const override = currentData[id] || { scale: 1.0, filter: '' };
     setEditScale(override.scale);
     const parsed = parseFilter(override.filter);
@@ -216,7 +249,7 @@ export default function AdminSize({ onClose }) {
             fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1.1rem', fontWeight: 800,
             textShadow: '0 0 12px rgba(255,215,0,0.3)',
           }}>
-            Sprite Size & Color
+            Sprite Size, Color & Animations
           </span>
           <div style={{ display: 'flex', gap: 6 }}>
             {CONTEXTS.map(ctx => (
@@ -288,6 +321,7 @@ export default function AdminSize({ onClose }) {
                   const spriteDataWithFilter = override.filter
                     ? { ...sprite.spriteData, filter: override.filter }
                     : sprite.spriteData;
+                  const animKeys = getAnimationKeys(sprite.spriteData);
                   return (
                     <div
                       key={sprite.id}
@@ -305,12 +339,12 @@ export default function AdminSize({ onClose }) {
                       }}
                     >
                       <div style={{
-                        height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        height: 80, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                         overflow: 'hidden',
                       }}>
                         <SpriteAnimation
                           spriteData={spriteDataWithFilter}
-                          animation="idle"
+                          animation={isSelected ? selectedAnim : 'idle'}
                           scale={baseScale}
                           loop={true}
                           speed={150}
@@ -324,9 +358,14 @@ export default function AdminSize({ onClose }) {
                       }}>
                         {sprite.label}
                       </div>
+                      <div style={{
+                        fontSize: '0.45rem', color: '#6b7280', marginTop: 2,
+                      }}>
+                        {animKeys.length} anims
+                      </div>
                       {override.scale !== 1.0 && (
                         <div style={{
-                          fontSize: '0.5rem', color: '#ffd700', marginTop: 2,
+                          fontSize: '0.5rem', color: '#ffd700', marginTop: 1,
                         }}>
                           {override.scale.toFixed(2)}x
                         </div>
@@ -339,7 +378,11 @@ export default function AdminSize({ onClose }) {
           );
         })}
 
-        {selectedSprite && (
+        {selectedSprite && (() => {
+          const animKeys = getAnimationKeys(selectedSprite.spriteData);
+          const previewAnim = animKeys.includes(selectedAnim) ? selectedAnim : 'idle';
+          const loopAnims = ['idle', 'walk', 'run', 'wallslide'];
+          return (
           <div style={{
             marginTop: 8,
             background: 'rgba(20,15,30,0.8)',
@@ -355,29 +398,81 @@ export default function AdminSize({ onClose }) {
                 minWidth: 180,
               }}>
                 <div style={{
-                  fontSize: '0.7rem', color: '#ffd700', fontWeight: 700, marginBottom: 8,
+                  fontSize: '0.7rem', color: '#ffd700', fontWeight: 700, marginBottom: 4,
                   fontFamily: "'Cinzel', serif",
                 }}>
                   {selectedSprite.label}
                 </div>
                 <div style={{
+                  fontSize: '0.55rem', color: ANIM_COLORS[previewAnim] || '#94a3b8', fontWeight: 600, marginBottom: 8,
+                }}>
+                  {previewAnim} ({selectedSprite.spriteData[previewAnim]?.frames || '?'}f)
+                </div>
+                <div style={{
                   background: 'rgba(10,8,20,0.8)',
                   border: '1px solid rgba(255,215,0,0.15)',
                   borderRadius: 8, padding: 12,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  minHeight: 160,
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                  minHeight: 160, minWidth: 160,
                 }}>
                   <SpriteAnimation
+                    key={`${selectedId}-${previewAnim}`}
                     spriteData={editFilter ? { ...selectedSprite.spriteData, filter: editFilter } : selectedSprite.spriteData}
-                    animation="idle"
+                    animation={previewAnim}
                     scale={(150 / (selectedSprite.spriteData.frameHeight || selectedSprite.spriteData.frameWidth || 100)) * editScale}
-                    loop={true}
+                    loop={loopAnims.includes(previewAnim)}
                     speed={150}
+                    onAnimationEnd={!loopAnims.includes(previewAnim) ? () => {} : null}
                   />
+                </div>
+                <div style={{
+                  fontSize: '0.5rem', color: '#6b7280', marginTop: 6,
+                }}>
+                  Frame: {selectedSprite.spriteData.frameWidth || '?'}x{selectedSprite.spriteData.frameHeight || '?'}
                 </div>
               </div>
 
               <div style={{ flex: 1, minWidth: 280 }}>
+                <div style={{
+                  fontSize: '0.65rem', color: '#8a7d65', fontWeight: 600, textTransform: 'uppercase', marginBottom: 6,
+                }}>
+                  Animations ({animKeys.length})
+                </div>
+                <div style={{
+                  display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 14,
+                }}>
+                  {animKeys.map(aKey => {
+                    const animData = selectedSprite.spriteData[aKey];
+                    const isActive = previewAnim === aKey;
+                    const color = ANIM_COLORS[aKey] || '#94a3b8';
+                    return (
+                      <button
+                        key={aKey}
+                        onClick={() => setSelectedAnim(aKey)}
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          border: isActive ? `1px solid ${color}` : '1px solid rgba(255,255,255,0.08)',
+                          background: isActive ? `${color}22` : 'rgba(20,15,30,0.6)',
+                          color: isActive ? color : '#6b7280',
+                          fontSize: '0.55rem', fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.12s',
+                          display: 'flex', alignItems: 'center', gap: 4,
+                        }}
+                      >
+                        <span>{aKey}</span>
+                        <span style={{
+                          fontSize: '0.45rem', opacity: 0.7,
+                          background: 'rgba(0,0,0,0.3)', borderRadius: 3, padding: '0 3px',
+                        }}>
+                          {animData?.frames || '?'}f
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
                 }}>
@@ -492,7 +587,8 @@ export default function AdminSize({ onClose }) {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
