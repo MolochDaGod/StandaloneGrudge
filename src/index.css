@@ -104,6 +104,14 @@ body {
   opacity: var(--frame-opacity, 1);
   image-rendering: auto;
   transition: opacity 0.4s ease;
+  -webkit-mask-image:
+    linear-gradient(to bottom, black 0%, black 16%, transparent 26%, transparent 74%, black 84%, black 100%),
+    linear-gradient(to right, black 0%, black 12%, transparent 22%, transparent 78%, black 88%, black 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, black 0%, black 16%, transparent 26%, transparent 74%, black 84%, black 100%),
+    linear-gradient(to right, black 0%, black 12%, transparent 22%, transparent 78%, black 88%, black 100%);
+  mask-composite: intersect;
 }
 
 .game-frame.hide-frame::after {
