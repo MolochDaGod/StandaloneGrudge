@@ -1237,6 +1237,7 @@ export const effectSprites = {
   windHit: { src: '/effects/wind_hit.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
   windProjectile: { src: '/effects/wind_projectile.png', cols: 3, rows: 2, frameW: 32, frameH: 32, frames: 6 },
   resurrect: { src: '/effects/resurrect_sprite.png', cols: 6, rows: 4, frameW: 256, frameH: 256, frames: 24 },
+  worgeTornado: { src: '/effects/worge_tornado.png', cols: 4, rows: 2, frameW: 384, frameH: 512, frames: 8 },
   loading: { src: '/effects/pixel/15_loading_spritesheet.png', size: 1100, frames: 121 },
   slashRanged: { src: '/sprites/effects/slash_ranged.png', cols: 11, rows: 1, frameW: 100, frameH: 100, frames: 11 },
   slashRedSm: { src: '/effects/slash/slash_red_sm.png', cols: 8, rows: 1, frameW: 32, frameH: 32, frames: 8 },
