@@ -311,7 +311,7 @@ export default function CharacterCreate() {
                       {id === 'worge' ? (
                         <WorgeMorphPreview raceId={selectedRace} scale={finalScale} speed={150} />
                       ) : (
-                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={finalScale} speed={150} />
+                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={finalScale} speed={150} containerless={false} />
                       )}
                     </div>
 
@@ -436,7 +436,7 @@ export default function CharacterCreate() {
                 flexShrink: 0,
                 overflow: 'hidden',
               }}>
-                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.1} speed={150} />
+                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.1} speed={150} containerless={false} />
               </div>
               <div style={{ flex: 1, minWidth: 180, textAlign: 'center' }}>
                 <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>

@@ -93,7 +93,7 @@ export default function SpriteAnimation({
   loop = true,
   speed = 120,
   equipmentOverlays = null,
-  containerless = false,
+  containerless = true,
 }) {
   const [frame, setFrame] = useState(0);
   const intervalRef = useRef(null);

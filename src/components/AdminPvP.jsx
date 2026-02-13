@@ -432,6 +432,7 @@ export default function AdminPvP() {
                   flip={flipSprite}
                   loop={!paused}
                   speed={150}
+                  containerless={false}
                 />
 
                 {isSelected && (

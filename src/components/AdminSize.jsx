@@ -348,6 +348,7 @@ export default function AdminSize({ onClose }) {
                           scale={baseScale}
                           loop={true}
                           speed={150}
+                          containerless={false}
                         />
                       </div>
                       <div style={{
@@ -423,6 +424,7 @@ export default function AdminSize({ onClose }) {
                     loop={loopAnims.includes(previewAnim)}
                     speed={150}
                     onAnimationEnd={!loopAnims.includes(previewAnim) ? () => {} : null}
+                    containerless={false}
                   />
                 </div>
                 <div style={{

@@ -318,7 +318,7 @@ export default function HeroCreate() {
                     {id === 'worge' ? (
                       <WorgeMorphPreview raceId={selectedRace} namedHeroId={(() => { const nh = Object.values(namedHeroes).find(n => n.race === selectedRace && n.class === 'worge' && n.unlocked); return nh?.id || null; })()} scale={0.8} speed={150} />
                     ) : (
-                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8} speed={150} />
+                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8} speed={150} containerless={false} />
                     )}
                   </div>
                   <div>
@@ -426,7 +426,7 @@ export default function HeroCreate() {
                     <SpriteAnimation spriteData={(() => {
                       const matchedNH = Object.values(namedHeroes).find(nh => nh.race === selectedRace && nh.class === selectedClass && nh.unlocked);
                       return matchedNH ? matchedNH.sprite : getPlayerSprite(selectedClass, selectedRace);
-                    })()} animation="idle" scale={2.6} speed={150} />
+                    })()} animation="idle" scale={2.6} speed={150} containerless={false} />
                     <div>
                       <div style={{ color: 'var(--text)', fontWeight: 700 }}>{name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>

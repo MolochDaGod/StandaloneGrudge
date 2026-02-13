@@ -152,7 +152,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
             filter: isSelected ? `drop-shadow(0 0 8px ${cls?.color || 'var(--accent)'}40)` : 'none',
             transition: 'filter 0.3s',
           }}>
-            <SpriteAnimation spriteData={spriteData} animation="idle" scale={cardScale} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
+            <SpriteAnimation spriteData={spriteData} animation="idle" scale={cardScale} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} containerless={false} />
           </div>
 
           <div style={{
@@ -521,7 +521,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} containerless={false} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>

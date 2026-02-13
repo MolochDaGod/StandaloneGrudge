@@ -870,6 +870,7 @@ export default function AdminBattle() {
                         scale={scale}
                         flip={flipSprite}
                         filter={spriteData.filter}
+                        containerless={false}
                       />
                     )}
                   </div>

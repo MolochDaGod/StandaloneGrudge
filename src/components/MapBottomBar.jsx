@@ -282,7 +282,7 @@ function CharacterPopup({ onClose }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <div style={{ width: 64, height: 64, overflow: 'hidden', borderRadius: 10, border: '2px solid #a855f7', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-              <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.8} speed={150} />
+              <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.8} speed={150} containerless={false} />
             </div>
             <div>
               <div className="font-cinzel" style={{ color: '#c084fc', fontSize: '0.85rem', fontWeight: 700 }}>{hero.name}</div>
@@ -759,7 +759,7 @@ export default function MapBottomBar({
                           opacity: 0.7,
                         }} />
                         <div style={{ position: 'relative', zIndex: 1 }}>
-                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} />
+                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} containerless={false} />
                         </div>
                       </div>
 

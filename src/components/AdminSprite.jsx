@@ -646,7 +646,7 @@ export default function AdminSprite() {
                   <div style={{ position: 'relative', display: 'inline-block' }}>
                     {activeSpriteData && (
                       <div style={{ position: 'relative' }}>
-                        <SpriteAnimation spriteData={activeSpriteData} animation={animation} scale={scale} flip={flip} loop={true} speed={speed} />
+                        <SpriteAnimation spriteData={activeSpriteData} animation={animation} scale={scale} flip={flip} loop={true} speed={speed} containerless={false} />
                         {showMarkers && (
                           <>
                             <div style={{ position: 'absolute', left: spriteCenter.x + layout.shadowOffsetX - layout.shadowWidth / 2, top: spriteCenter.y + layout.shadowOffsetY, width: layout.shadowWidth, height: layout.shadowHeight, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', pointerEvents: 'none', border: '1px dashed rgba(255,255,255,0.3)' }} />
