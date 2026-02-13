@@ -1172,7 +1172,7 @@ export default function WorldMap() {
 
   const HealthBar = ({ current, max, color, label }) => (
     <div style={{ marginBottom: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--muted)', marginBottom: 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 1 }}>
         <span>{label}</span><span>{current}/{max}</span>
       </div>
       <div style={{ height: 5, background: 'var(--border)', borderRadius: 3 }}>
@@ -1701,7 +1701,7 @@ export default function WorldMap() {
                     }} />
                     <div style={{
                       position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)',
-                      fontSize: '0.5rem', fontWeight: 700, color: icon.color,
+                      fontSize: '0.75rem', fontWeight: 700, color: icon.color,
                       textShadow: `0 0 6px ${icon.color}`, whiteSpace: 'nowrap',
                       pointerEvents: 'none', opacity: 0.8,
                       letterSpacing: '0.05em',
@@ -1784,7 +1784,7 @@ export default function WorldMap() {
                     background: isConquered ? 'var(--gold)' : 'rgba(14,22,48,0.95)',
                     border: `1px solid ${isConquered ? 'var(--gold)' : icon.color}`,
                     borderRadius: 6, padding: '1px 4px',
-                    fontSize: '0.5rem', fontWeight: 700,
+                    fontSize: '0.75rem', fontWeight: 700,
                     color: isConquered ? '#000' : icon.color,
                     whiteSpace: 'nowrap',
                     boxShadow: isConquered ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
@@ -1814,7 +1814,7 @@ export default function WorldMap() {
                 marginTop: 4, whiteSpace: 'nowrap', textAlign: 'center',
               }}>
                 <div className="font-cinzel" style={{
-                  fontSize: '0.65rem', fontWeight: 700,
+                  fontSize: '0.9rem', fontWeight: 700,
                   color: isUnlocked ? (isConquered ? 'var(--gold)' : cleared ? 'var(--gold)' : '#fff') : 'rgba(150,150,170,0.5)',
                   textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
                 }}>
@@ -1822,7 +1822,7 @@ export default function WorldMap() {
                 </div>
                 {isUnlocked && (
                   <div style={{
-                    fontSize: '0.55rem', color: icon.color,
+                    fontSize: '0.8rem', color: icon.color,
                     textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                   }}>
                     Lv.{loc.levelRange[0]}-{loc.levelRange[1]}
@@ -1832,7 +1832,7 @@ export default function WorldMap() {
                 )}
                 {!isUnlocked && loc.unlockLevel && (
                   <div style={{
-                    fontSize: '0.5rem', color: 'rgba(150,150,170,0.4)',
+                    fontSize: '0.75rem', color: 'rgba(150,150,170,0.4)',
                     textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                   }}>
                     Lv.{loc.unlockLevel}
@@ -1875,7 +1875,7 @@ export default function WorldMap() {
                     : 'rgba(30,30,50,0.8)',
                   border: `3px solid ${isCityUnlocked ? (isSelected ? '#fff' : '#4ade80') : 'rgba(80,80,100,0.4)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: isCityUnlocked ? '1.1rem' : '0.8rem',
+                  fontSize: isCityUnlocked ? '1.1rem' : '1.05rem',
                   opacity: isCityUnlocked ? 1 : 0.4,
                   boxShadow: isSelected
                     ? '0 0 20px rgba(74,222,128,0.5), 0 0 40px rgba(74,222,128,0.3)'
@@ -1897,19 +1897,19 @@ export default function WorldMap() {
                 marginTop: 4, whiteSpace: 'nowrap', textAlign: 'center',
               }}>
                 <div className="font-cinzel" style={{
-                  fontSize: '0.65rem', fontWeight: 700,
+                  fontSize: '0.9rem', fontWeight: 700,
                   color: isCityUnlocked ? '#4ade80' : 'rgba(150,150,170,0.5)',
                   textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
                 }}>
                   {city.name}
                 </div>
                 {isCityUnlocked && (
-                  <div style={{ fontSize: '0.5rem', color: 'rgba(74,222,128,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'rgba(74,222,128,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
                     City
                   </div>
                 )}
                 {!isCityUnlocked && (city.unlockLevel || city.unlockBoss) && (
-                  <div style={{ fontSize: '0.45rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(150,150,170,0.4)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
                     {city.unlockBoss ? <><InlineIcon name="lock" size={12} /> Boss</> : `Lv.${city.unlockLevel}`}
                   </div>
                 )}
@@ -1992,7 +1992,7 @@ export default function WorldMap() {
                     </div>
                     <div style={{
                       textAlign: 'center',
-                      fontSize: '0.55rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                      fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
                       textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: -2,
                     }}>{hero.name}</div>
                   </div>
@@ -2079,13 +2079,13 @@ export default function WorldMap() {
                 whiteSpace: 'nowrap',
                 animation: 'fadeIn 0.1s ease-out',
               }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: 2 }}>{loc.name}</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
                   Lv.{loc.levelRange[0]}-{loc.levelRange[1]} · {Math.floor(conquer)}% conquered
                   {conquer >= 100 && <div style={{ color: 'var(--gold)', fontWeight: 700, marginTop: 2 }}>🏆 100% CONQUERED</div>}
                 </div>
-                {hasBoss && <div style={{ fontSize: '0.55rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
-                {bossDown && <div style={{ fontSize: '0.55rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
+                {hasBoss && <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: 2 }}>⚠ Boss Active</div>}
+                {bossDown && <div style={{ fontSize: '0.8rem', color: '#22c55e', marginTop: 2 }}>✅ Boss Defeated</div>}
               </div>
             );
           }
@@ -2104,8 +2104,8 @@ export default function WorldMap() {
                 whiteSpace: 'nowrap',
                 animation: 'fadeIn 0.1s ease-out',
               }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4ade80' }}>{hoveredNode.name}</div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>City</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#4ade80' }}>{hoveredNode.name}</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>City</div>
               </div>
             );
           }
@@ -2188,7 +2188,7 @@ export default function WorldMap() {
                   textAlign: 'center', whiteSpace: 'nowrap',
                 }}>
                   <div style={{
-                    fontSize: '0.5rem', fontWeight: 800, color: event.color,
+                    fontSize: '0.75rem', fontWeight: 800, color: event.color,
                     textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${event.color}60`,
                     letterSpacing: '0.1em',
                   }}>
@@ -2231,16 +2231,16 @@ export default function WorldMap() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <img src={locationIcons[selectedLoc.id]?.img} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${locationIcons[selectedLoc.id]?.color || 'var(--accent)'}` }} />
                 <div>
-                  <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700 }}>
+                  <div className="font-cinzel" style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 700 }}>
                     {selectedLoc.name}
                   </div>
-                  <div style={{ fontSize: '0.55rem', color: 'var(--muted)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
                     Level {selectedLoc.levelRange[0]}-{selectedLoc.levelRange[1]}
                     {isCleared && <span style={{ color: 'var(--gold)', marginLeft: 6 }}>Cleared</span>}
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                 {selectedLoc.description}
               </div>
               {(() => {
@@ -2251,8 +2251,8 @@ export default function WorldMap() {
                 return (
                   <div style={{ marginTop: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                      <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>Conquered</span>
-                      <span style={{ fontSize: '0.6rem', fontWeight: 700, color: selConquer >= 100 ? 'var(--gold)' : locationIcons[selectedLoc.id]?.color }}>{selConquer}%</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>Conquered</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: selConquer >= 100 ? 'var(--gold)' : locationIcons[selectedLoc.id]?.color }}>{selConquer}%</span>
                     </div>
                   <div style={{ height: 6, background: 'rgba(0,0,0,0.4)', borderRadius: 3, overflow: 'visible', position: 'relative' }}>
                     <div style={{
@@ -2271,8 +2271,8 @@ export default function WorldMap() {
                     )}
                   </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-                      <span style={{ fontSize: '0.5rem', color: '#ef4444' }}>XP -{xpMod}%</span>
-                      <span style={{ fontSize: '0.5rem', color: '#22c55e' }}>Harvest +{harvestMod}%</span>
+                      <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>XP -{xpMod}%</span>
+                      <span style={{ fontSize: '0.75rem', color: '#22c55e' }}>Harvest +{harvestMod}%</span>
                     </div>
                   </div>
                 );
@@ -2350,7 +2350,7 @@ export default function WorldMap() {
                       <div style={{
                         padding: '6px 10px', margin: '4px 0', borderRadius: 8,
                         background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
-                        color: 'var(--success)', fontSize: '0.7rem', textAlign: 'center',
+                        color: 'var(--success)', fontSize: '0.9rem', textAlign: 'center',
                         fontFamily: "'Cinzel', serif", fontWeight: 600,
                       }}>Boss Defeated</div>
                     )}
@@ -2366,7 +2366,7 @@ export default function WorldMap() {
               padding: '5px 16px 8px', borderTop: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center',
             }}>
-              <span style={{ fontSize: '0.5rem', color: 'rgba(150,150,170,0.3)', fontFamily: "'Cinzel', serif" }}>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(150,150,170,0.3)', fontFamily: "'Cinzel', serif" }}>
                 Press 1-{selectedLoc?.boss && !bossDefeated ? '4' : '3'} &bull; Esc to close
               </span>
             </div>
@@ -2397,7 +2397,7 @@ export default function WorldMap() {
               <div className="font-cinzel" style={{ color: '#a78bfa', fontSize: '1rem', fontWeight: 700 }}>
                 Portal Network
               </div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--muted)', marginTop: 2 }}>
                 Fast travel to another portal
               </div>
             </div>
@@ -2433,7 +2433,7 @@ export default function WorldMap() {
                     border: `1px solid ${destUnlocked ? 'rgba(167,139,250,0.2)' : 'rgba(80,80,100,0.2)'}`,
                     borderRadius: 10, cursor: destUnlocked ? 'pointer' : 'not-allowed',
                     color: destUnlocked ? '#fff' : 'rgba(150,150,170,0.4)',
-                    fontSize: '0.8rem', fontWeight: 600, textAlign: 'left',
+                    fontSize: '1.05rem', fontWeight: 600, textAlign: 'left',
                     transition: 'all 0.15s',
                     opacity: destUnlocked ? 1 : 0.5,
                   }}
@@ -2452,7 +2452,7 @@ export default function WorldMap() {
                       <div style={{ color: destUnlocked ? (destIcon?.color || '#a78bfa') : 'rgba(150,150,170,0.4)' }}>
                         {destLoc?.name || destId.replace(/_/g, ' ')}
                       </div>
-                      <div style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: 400 }}>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 400 }}>
                         {destUnlocked ? `Lv.${destLoc?.levelRange?.[0]}-${destLoc?.levelRange?.[1]}` : <><InlineIcon name="lock" size={12} /> Locked</>}
                       </div>
                     </div>
@@ -2468,7 +2468,7 @@ export default function WorldMap() {
               <button onClick={() => setPortalMenu(null)} style={{
                 padding: '6px 20px', background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
-                color: 'var(--muted)', cursor: 'pointer', fontSize: '0.7rem',
+                color: 'var(--muted)', cursor: 'pointer', fontSize: '0.9rem',
               }}>Close</button>
             </div>
           </div>,
@@ -2522,13 +2522,13 @@ export default function WorldMap() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                   <span style={{ fontSize: '1.1rem' }}>{city.icon}</span>
                   <div>
-                    <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '0.8rem', fontWeight: 700 }}>
+                    <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '1.05rem', fontWeight: 700 }}>
                       {city.name}
                     </div>
-                    <div style={{ fontSize: '0.5rem', color: 'var(--muted)' }}>City</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>City</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.6rem', color: 'var(--muted)', lineHeight: 1.3 }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.3 }}>
                   {city.description}
                 </div>
               </div>
@@ -2572,15 +2572,15 @@ export default function WorldMap() {
                 <div style={{ padding: '8px' }}>
                   <button onClick={() => setCitySubmenu(null)} style={{
                     background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: '0.9rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     ← Back
                   </button>
-                  <div className="font-cinzel" style={{ color: '#f97316', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                  <div className="font-cinzel" style={{ color: '#f97316', fontSize: '1.05rem', fontWeight: 700, padding: '0 8px 6px' }}>
                     Arena Challenges
                   </div>
                   {cityArenas.length === 0 && (
-                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.9rem', textAlign: 'center', fontStyle: 'italic' }}>
                       No challenges available at your level.
                     </div>
                   )}
@@ -2595,11 +2595,11 @@ export default function WorldMap() {
                       onMouseLeave={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.15)'; }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <span style={{ color: '#f97316', fontWeight: 700, fontSize: '0.75rem' }}>🏟️ {arena.title}</span>
-                        <span style={{ color: 'var(--muted)', fontSize: '0.55rem' }}>Lv.{arena.levelRange[0]}-{arena.levelRange[1]}</span>
+                        <span style={{ color: '#f97316', fontWeight: 700, fontSize: '1rem' }}>🏟️ {arena.title}</span>
+                        <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Lv.{arena.levelRange[0]}-{arena.levelRange[1]}</span>
                       </div>
-                      <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6 }}>{arena.description}</div>
-                      <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem' }}>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: 6 }}>{arena.description}</div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: '0.8rem' }}>
                         <span style={{ color: 'var(--gold)' }}><InlineIcon name="gold" size={12} /> {arena.rewards.gold}g</span>
                         <span style={{ color: 'var(--accent)' }}><InlineIcon name="sparkle" size={12} /> {arena.rewards.xp} XP</span>
                         <span style={{ color: 'var(--muted)' }}>👹 {arena.enemies.length} enemies</span>
@@ -2613,15 +2613,15 @@ export default function WorldMap() {
                 <div style={{ padding: '8px' }}>
                   <button onClick={() => setCitySubmenu(null)} style={{
                     background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: '0.9rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     ← Back
                   </button>
-                  <div className="font-cinzel" style={{ color: '#c084fc', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                  <div className="font-cinzel" style={{ color: '#c084fc', fontSize: '1.05rem', fontWeight: 700, padding: '0 8px 6px' }}>
                     Available Missions
                   </div>
                   {cityMissions.length === 0 && (
-                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.9rem', textAlign: 'center', fontStyle: 'italic' }}>
                       No missions available at your level.
                     </div>
                   )}
@@ -2639,13 +2639,13 @@ export default function WorldMap() {
                         onMouseLeave={e => { e.currentTarget.style.background = isCompleted ? 'rgba(34,197,94,0.06)' : 'rgba(192,132,252,0.06)'; e.currentTarget.style.borderColor = isCompleted ? 'rgba(34,197,94,0.2)' : 'rgba(192,132,252,0.15)'; }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                          <span style={{ color: isCompleted ? '#22c55e' : '#c084fc', fontWeight: 700, fontSize: '0.75rem' }}>
+                          <span style={{ color: isCompleted ? '#22c55e' : '#c084fc', fontWeight: 700, fontSize: '1rem' }}>
                             <InlineIcon name="scroll" size={12} /> {mission.title}
                           </span>
-                          {isCompleted && <span style={{ color: '#22c55e', fontSize: '0.55rem', fontWeight: 600 }}>✓ Done</span>}
+                          {isCompleted && <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 600 }}>✓ Done</span>}
                         </div>
-                        <div style={{ color: 'var(--muted)', fontSize: '0.65rem', marginBottom: 6, lineHeight: 1.3 }}>{mission.description}</div>
-                        <div style={{ display: 'flex', gap: 8, fontSize: '0.55rem', flexWrap: 'wrap' }}>
+                        <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: 6, lineHeight: 1.3 }}>{mission.description}</div>
+                        <div style={{ display: 'flex', gap: 8, fontSize: '0.8rem', flexWrap: 'wrap' }}>
                           <span style={{ color: 'var(--gold)' }}><InlineIcon name="gold" size={12} /> {mission.rewards.gold}g</span>
                           <span style={{ color: 'var(--accent)' }}><InlineIcon name="sparkle" size={12} /> {mission.rewards.xp} XP</span>
                           <span style={{ color: 'var(--muted)' }}><InlineIcon name="battle" size={12} /> {mission.rounds.length} round{mission.rounds.length > 1 ? 's' : ''}</span>
@@ -2661,17 +2661,17 @@ export default function WorldMap() {
                 <div style={{ padding: '8px' }}>
                   <button onClick={() => { setCitySubmenu(null); setUpgradeHeroId(null); setUpgradeMsg(null); }} style={{
                     background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: '0.9rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
                   }}>
                     ← Back
                   </button>
-                  <div className="font-cinzel" style={{ color: '#22d3ee', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px' }}>
+                  <div className="font-cinzel" style={{ color: '#22d3ee', fontSize: '1.05rem', fontWeight: 700, padding: '0 8px 6px' }}>
                     Equipment Upgrade
                   </div>
 
                   {!upgradeHeroId ? (
                     <div>
-                      <div style={{ color: 'var(--muted)', fontSize: '0.65rem', padding: '0 8px 8px' }}>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.9rem', padding: '0 8px 8px' }}>
                         Select a hero to upgrade their gear:
                       </div>
                       {heroRoster.map(hero => (
@@ -2684,10 +2684,10 @@ export default function WorldMap() {
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,211,238,0.15)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,211,238,0.06)'; }}
                         >
-                          <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '0.75rem' }}>
+                          <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '1rem' }}>
                             {hero.name}
                           </span>
-                          <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>
+                          <span style={{ color: 'var(--muted)', fontSize: '0.85rem', marginLeft: 8 }}>
                             Lv.{hero.level} {classDefinitions[hero.classId]?.name}
                           </span>
                         </div>
@@ -2697,7 +2697,7 @@ export default function WorldMap() {
                     <div>
                       <button onClick={() => { setUpgradeHeroId(null); setUpgradeMsg(null); }} style={{
                         background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                        fontSize: '0.6rem', padding: '2px 8px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: '0.85rem', padding: '2px 8px', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4,
                       }}>
                         ← Heroes
                       </button>
@@ -2706,12 +2706,12 @@ export default function WorldMap() {
                           background: upgradeMsg.success ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
                           border: `1px solid ${upgradeMsg.success ? '#22c55e' : '#ef4444'}`,
                           borderRadius: 6, padding: '6px 10px', marginBottom: 8,
-                          color: upgradeMsg.success ? '#22c55e' : '#ef4444', fontSize: '0.65rem',
+                          color: upgradeMsg.success ? '#22c55e' : '#ef4444', fontSize: '0.9rem',
                         }}>
                           {upgradeMsg.text}
                         </div>
                       )}
-                      <div style={{ color: 'var(--gold)', fontSize: '0.65rem', padding: '0 4px 6px' }}>
+                      <div style={{ color: 'var(--gold)', fontSize: '0.9rem', padding: '0 4px 6px' }}>
                         Gold: {gold}g
                       </div>
                       {(() => {
@@ -2724,7 +2724,7 @@ export default function WorldMap() {
                               background: 'rgba(0,0,0,0.2)', borderRadius: 6, padding: '8px 10px', marginBottom: 4,
                               border: '1px solid rgba(255,255,255,0.05)', opacity: 0.5,
                             }}>
-                              <span style={{ color: 'var(--muted)', fontSize: '0.65rem', textTransform: 'capitalize' }}>
+                              <span style={{ color: 'var(--muted)', fontSize: '0.9rem', textTransform: 'capitalize' }}>
                                 {slot}: Empty
                               </span>
                             </div>
@@ -2746,7 +2746,7 @@ export default function WorldMap() {
                                     {item.name}
                                   </span>
                                   <span style={{
-                                    fontSize: '0.6rem', marginLeft: 6, padding: '1px 5px',
+                                    fontSize: '0.85rem', marginLeft: 6, padding: '1px 5px',
                                     background: tierDef.color + '20', color: tierDef.color,
                                     borderRadius: 4, fontWeight: 600,
                                   }}>
@@ -2754,11 +2754,11 @@ export default function WorldMap() {
                                   </span>
                                 </div>
                               </div>
-                              <div style={{ color: '#22c55e', fontSize: '0.6rem', marginBottom: 4 }}>
+                              <div style={{ color: '#22c55e', fontSize: '0.85rem', marginBottom: 4 }}>
                                 {Object.entries(item.stats || {}).slice(0, 3).map(([k, v]) => `+${v} ${k}`).join(', ')}
                               </div>
                               {isMaxTier ? (
-                                <div style={{ color: '#f472b6', fontSize: '0.6rem', fontWeight: 600 }}>
+                                <div style={{ color: '#f472b6', fontSize: '0.85rem', fontWeight: 600 }}>
                                   Max Tier Reached
                                 </div>
                               ) : (
@@ -2776,7 +2776,7 @@ export default function WorldMap() {
                                     background: canAfford ? 'linear-gradient(135deg, #0891b2, #22d3ee)' : 'rgba(100,100,100,0.3)',
                                     color: canAfford ? '#000' : 'var(--muted)',
                                     border: 'none', borderRadius: 6, padding: '4px 12px',
-                                    fontSize: '0.65rem', fontWeight: 700, cursor: canAfford ? 'pointer' : 'not-allowed',
+                                    fontSize: '0.9rem', fontWeight: 700, cursor: canAfford ? 'pointer' : 'not-allowed',
                                     width: '100%',
                                   }}
                                 >
@@ -2803,34 +2803,34 @@ export default function WorldMap() {
                   }} />
                   <button onClick={() => { setCitySubmenu(null); setTradeTab('buy'); }} style={{
                     background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                    fontSize: '0.65rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
+                    fontSize: '0.9rem', padding: '4px 8px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4,
                     position: 'relative', zIndex: 1,
                   }}>
                     ← Back
                   </button>
-                  <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, padding: '0 8px 6px', position: 'relative', zIndex: 1 }}>
+                  <div className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.05rem', fontWeight: 700, padding: '0 8px 6px', position: 'relative', zIndex: 1 }}>
                     Merchant
                   </div>
-                  <div style={{ color: 'var(--gold)', fontSize: '0.65rem', padding: '0 8px 6px' }}>
+                  <div style={{ color: 'var(--gold)', fontSize: '0.9rem', padding: '0 8px 6px' }}>
                     Gold: {gold}g
                   </div>
 
                   <div style={{ display: 'flex', gap: 4, padding: '0 8px 8px' }}>
                     <button onClick={() => setTradeTab('buy')} style={{
                       flex: 1, padding: '5px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
-                      fontSize: '0.7rem', fontWeight: 700,
+                      fontSize: '0.9rem', fontWeight: 700,
                       background: tradeTab === 'buy' ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'rgba(255,255,255,0.06)',
                       color: tradeTab === 'buy' ? '#000' : 'var(--muted)',
                     }}>Buy</button>
                     <button onClick={() => setTradeTab('sell')} style={{
                       flex: 1, padding: '5px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
-                      fontSize: '0.7rem', fontWeight: 700,
+                      fontSize: '0.9rem', fontWeight: 700,
                       background: tradeTab === 'sell' ? 'linear-gradient(135deg, #16a34a, #22c55e)' : 'rgba(255,255,255,0.06)',
                       color: tradeTab === 'sell' ? '#000' : 'var(--muted)',
                     }}>Sell</button>
                     <button onClick={() => refreshShop()} style={{
                       padding: '5px 10px', border: 'none', borderRadius: 6, cursor: 'pointer',
-                      fontSize: '0.65rem', fontWeight: 600,
+                      fontSize: '0.9rem', fontWeight: 600,
                       background: 'rgba(255,255,255,0.06)', color: 'var(--muted)',
                     }}>Refresh</button>
                   </div>
@@ -2839,7 +2839,7 @@ export default function WorldMap() {
                     {tradeTab === 'buy' && (
                       <>
                         {shopInventory.length === 0 && (
-                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.9rem', textAlign: 'center', fontStyle: 'italic' }}>
                             The merchant has nothing for sale. Try refreshing.
                           </div>
                         )}
@@ -2860,7 +2860,7 @@ export default function WorldMap() {
                                   <InlineIcon name={item.icon} size={12} /> {item.name}
                                 </span>
                                 {!isConsumable && (
-                                  <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                  <span style={{ fontSize: '0.8rem', color: tierDef.color, fontWeight: 600 }}>
                                     T{item.tier} {tierDef.name}
                                   </span>
                                 )}
@@ -2874,7 +2874,7 @@ export default function WorldMap() {
                                   <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
                                     {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
                                   </div>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.8rem', color: '#a5b4fc', marginBottom: 6 }}>
                                     {item.stats && Object.entries(item.stats).map(([k, v]) => (
                                       <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
                                     ))}
@@ -2886,7 +2886,7 @@ export default function WorldMap() {
                                 disabled={!canAfford}
                                 style={{
                                   width: '100%', padding: '4px 0', border: 'none', borderRadius: 6, cursor: canAfford ? 'pointer' : 'not-allowed',
-                                  fontSize: '0.65rem', fontWeight: 700,
+                                  fontSize: '0.9rem', fontWeight: 700,
                                   background: canAfford ? 'linear-gradient(135deg, #d97706, #f59e0b)' : 'rgba(100,100,100,0.3)',
                                   color: canAfford ? '#000' : 'var(--muted)',
                                 }}
@@ -2902,7 +2902,7 @@ export default function WorldMap() {
                     {tradeTab === 'sell' && (
                       <>
                         {inventory.length === 0 && (
-                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.7rem', textAlign: 'center', fontStyle: 'italic' }}>
+                          <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '0.9rem', textAlign: 'center', fontStyle: 'italic' }}>
                             Your inventory is empty.
                           </div>
                         )}
@@ -2921,7 +2921,7 @@ export default function WorldMap() {
                                   <InlineIcon name={item.icon} size={12} /> {item.name}
                                 </span>
                                 {!isConsumable && (
-                                  <span style={{ fontSize: '0.55rem', color: tierDef.color, fontWeight: 600 }}>
+                                  <span style={{ fontSize: '0.8rem', color: tierDef.color, fontWeight: 600 }}>
                                     T{item.tier} {tierDef.name}
                                   </span>
                                 )}
@@ -2935,7 +2935,7 @@ export default function WorldMap() {
                                   <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginBottom: 4, textTransform: 'capitalize' }}>
                                     {item.slot}{item.weaponType ? ` - ${item.weaponType}` : ''}{item.armorType ? ` - ${item.armorType}` : ''}
                                   </div>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.55rem', color: '#a5b4fc', marginBottom: 6 }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 8px', fontSize: '0.8rem', color: '#a5b4fc', marginBottom: 6 }}>
                                     {item.stats && Object.entries(item.stats).map(([k, v]) => (
                                       <span key={k}>+{v} {k.replace(/([A-Z])/g, ' $1').trim()}</span>
                                     ))}
@@ -2946,7 +2946,7 @@ export default function WorldMap() {
                                 onClick={() => sellItem(item.id)}
                                 style={{
                                   width: '100%', padding: '4px 0', border: 'none', borderRadius: 6, cursor: 'pointer',
-                                  fontSize: '0.65rem', fontWeight: 700,
+                                  fontSize: '0.9rem', fontWeight: 700,
                                   background: 'linear-gradient(135deg, #16a34a, #22c55e)',
                                   color: '#000',
                                 }}
@@ -2966,7 +2966,7 @@ export default function WorldMap() {
                 padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
                 textAlign: 'center',
               }}>
-                <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'rgba(150,150,170,0.4)' }}>
                   Click anywhere to close
                 </span>
               </div>
@@ -3005,22 +3005,22 @@ export default function WorldMap() {
                   <div className="font-cinzel" style={{ color: selectedEvent.color, fontSize: '0.95rem', fontWeight: 700 }}>
                     {selectedEvent.name}
                   </div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
                     Level {selectedEvent.level} Event
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.4 }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                 {selectedEvent.description}
               </div>
               <div style={{
-                marginTop: 8, fontSize: '0.65rem', color: '#a5b4fc',
+                marginTop: 8, fontSize: '0.9rem', color: '#a5b4fc',
                 background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '6px 10px',
               }}>
                 <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--gold)' }}>Rewards:</div>
                 {getRewardDescription(selectedEvent)}
               </div>
-              <div style={{ marginTop: 6, fontSize: '0.55rem', color: 'var(--muted)' }}>
+              <div style={{ marginTop: 6, fontSize: '0.8rem', color: 'var(--muted)' }}>
                 <InlineIcon name="battle" size={12} /> {selectedEvent.enemyCount} enem{selectedEvent.enemyCount === 1 ? 'y' : 'ies'}
               </div>
             </div>
@@ -3036,7 +3036,7 @@ export default function WorldMap() {
               padding: '6px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.05)',
               textAlign: 'center',
             }}>
-              <span style={{ fontSize: '0.6rem', color: 'rgba(150,150,170,0.4)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'rgba(150,150,170,0.4)' }}>
                 Click anywhere to close
               </span>
             </div>
@@ -3077,8 +3077,8 @@ export default function WorldMap() {
               <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.5} speed={150} />
             </div>
             <div>
-              <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 700 }}>{playerName}</div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>Lv.{level} {raceDef?.name} {cls?.name}</div>
+              <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem', fontWeight: 700 }}>{playerName}</div>
+              <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Lv.{level} {raceDef?.name} {cls?.name}</div>
             </div>
             <div style={{ minWidth: 100, marginLeft: 4 }}>
               <HealthBar current={playerHealth} max={playerMaxHealth} color="#22c55e" label="HP" />
@@ -3091,8 +3091,8 @@ export default function WorldMap() {
               background: 'rgba(0,0,0,0.4)', borderRadius: 8, padding: '4px 10px',
               border: '1px solid rgba(255,215,0,0.2)',
             }}>
-              <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.8rem' }}><InlineIcon name="gold" size={12} /> {gold}</span>
-              <span style={{ color: 'var(--muted)', fontSize: '0.6rem', marginLeft: 8 }}>XP: {xp}/{xpToNext}</span>
+              <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '1.05rem' }}><InlineIcon name="gold" size={12} /> {gold}</span>
+              <span style={{ color: 'var(--muted)', fontSize: '0.85rem', marginLeft: 8 }}>XP: {xp}/{xpToNext}</span>
             </div>
 
             <div style={{
@@ -3101,14 +3101,14 @@ export default function WorldMap() {
               border: '1px solid rgba(110,231,183,0.15)',
             }}>
               <InlineIcon name="trophy" size={12} />
-              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.7rem', fontFamily: 'monospace' }}>{victories}</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.9rem', fontFamily: 'monospace' }}>{victories}</span>
             </div>
 
             {level >= 15 && (
               <button onClick={() => enterScene('portal', 'world')} style={{
                 background: 'rgba(192,38,211,0.15)', border: '1px solid rgba(192,38,211,0.4)',
                 borderRadius: 8, padding: '4px 10px', color: '#c026d3',
-                cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 <InlineIcon name="portal" size={12} /> Nexus
               </button>
@@ -3129,7 +3129,7 @@ export default function WorldMap() {
               background: markerMode ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${markerMode ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.1)'}`,
               borderRadius: 8, padding: '4px 6px', color: markerMode ? 'var(--gold)' : 'rgba(255,255,255,0.3)',
-              cursor: 'pointer', fontSize: '0.55rem', fontWeight: 600,
+              cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
             }}>#</button>
           </div>
         </div>
@@ -3160,7 +3160,7 @@ export default function WorldMap() {
             maxHeight: 'calc(100% - 35% - 80px)', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <h4 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.85rem', margin: 0 }}>
+              <h4 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem', margin: 0 }}>
                 War Party
               </h4>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -3168,7 +3168,7 @@ export default function WorldMap() {
                   <button onClick={() => setScreen('heroCreate')} style={{
                     background: 'linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1))',
                     border: '1px solid var(--gold)', borderRadius: 6, padding: '3px 10px',
-                    color: 'var(--gold)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 700,
+                    color: 'var(--gold)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700,
                   }}>+ Recruit</button>
                 )}
                 <button onClick={() => setShowWarParty(false)} style={{
@@ -3178,13 +3178,13 @@ export default function WorldMap() {
             </div>
 
             <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.55rem', color: 'var(--accent)', background: 'rgba(110,231,183,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent)', background: 'rgba(110,231,183,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(110,231,183,0.2)' }}>
                 <InlineIcon name="battle" size={12} /> {activeHeroIds.length}/3 Active
               </span>
-              <span style={{ fontSize: '0.55rem', color: 'var(--gold)', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(251,191,36,0.2)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--gold)', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(251,191,36,0.2)' }}>
                 <InlineIcon name="pickaxe" size={12} /> {harvestingHeroIds.length} Harvesting
               </span>
-              <span style={{ fontSize: '0.55rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
                 <InlineIcon name="moon" size={12} /> {idleHeroes.length} Idle
               </span>
             </div>
@@ -3227,10 +3227,10 @@ export default function WorldMap() {
                     <div style={{ width: 60, height: 60, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.7} speed={150} />
                     </div>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}
                     </div>
-                    <div style={{ fontSize: '0.45rem', color: 'var(--muted)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
                       Lv.{hero.level} {heroRace?.name} {heroCls?.name}
                     </div>
                     {heroStats && (
@@ -3239,7 +3239,7 @@ export default function WorldMap() {
                       </div>
                     )}
                     <div style={{
-                      fontSize: '0.45rem', marginTop: 2, fontWeight: 600,
+                      fontSize: '0.7rem', marginTop: 2, fontWeight: 600,
                       color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)',
                     }}>
                       {isActive ? <><InlineIcon name="battle" size={12} /> ACTIVE</> : isHarvesting ? <>{harvestInfo?.[2] ? <InlineIcon name="pickaxe" size={12} /> : <InlineIcon name="pickaxe" size={12} />} {harvestInfo?.[1] || 'Harvesting'}</> : <><InlineIcon name="moon" size={12} /> IDLE</>}
@@ -3247,7 +3247,7 @@ export default function WorldMap() {
                     {isHarvesting && (
                       <div style={{
                         position: 'absolute', top: 2, right: 2,
-                        fontSize: '0.4rem', color: '#ef4444', cursor: 'pointer',
+                        fontSize: '0.6rem', color: '#ef4444', cursor: 'pointer',
                         background: 'rgba(239,68,68,0.15)', borderRadius: 3, padding: '1px 3px',
                       }}>✕</div>
                     )}
@@ -3262,8 +3262,8 @@ export default function WorldMap() {
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <div style={{ fontSize: '1.2rem', color: 'var(--gold)' }}>+</div>
-                  <div style={{ fontSize: '0.55rem', color: 'var(--gold)' }}>Recruit</div>
-                  <div style={{ fontSize: '0.45rem', color: 'var(--muted)' }}>{heroRoster.length}/{maxHeroSlots}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--gold)' }}>Recruit</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{heroRoster.length}/{maxHeroSlots}</div>
                 </div>
               )}
             </div>
@@ -3275,10 +3275,10 @@ export default function WorldMap() {
                   marginBottom: 10,
                 }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <div className="font-cinzel" style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700 }}>
+                  <div className="font-cinzel" style={{ fontSize: '0.9rem', color: 'var(--gold)', fontWeight: 700 }}>
                     <InlineIcon name="pickaxe" size={12} /> Harvest Sites
                   </div>
-                  <div style={{ display: 'flex', gap: 4, fontSize: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 4, fontSize: '0.75rem', flexWrap: 'wrap' }}>
                     {Object.entries(harvestResources).filter(([, v]) => v > 0).map(([k, v]) => (
                       <span key={k} style={{ background: 'rgba(0,0,0,0.4)', padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(251,191,36,0.15)', color: 'var(--gold)' }}>
                         {k === 'gold' ? <InlineIcon name="gold" size={12} /> : k === 'herbs' ? <InlineIcon name="nature" size={12} /> : k === 'wood' ? <InlineIcon name="wood" size={12} /> : k === 'ore' ? <InlineIcon name="ore" size={12} /> : <InlineIcon name="diamond" size={12} />} {Math.floor(v)}
@@ -3300,17 +3300,17 @@ export default function WorldMap() {
                         <span style={{ fontSize: '0.9rem' }}>{node.icon}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ color: 'var(--text)', fontSize: '0.65rem', fontWeight: 600 }}>{node.name}</div>
-                            <div style={{ color: 'var(--muted)', fontSize: '0.45rem' }}>+{node.baseRate} {node.resource}/s</div>
+                            <div style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600 }}>{node.name}</div>
+                            <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>+{node.baseRate} {node.resource}/s</div>
                           </div>
                           {assignedHero ? (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3 }}>
-                              <span style={{ color: 'var(--gold)', fontSize: '0.55rem', fontWeight: 600 }}>
+                              <span style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 600 }}>
                                 {assignedHero.name} (Lv.{assignedHero.level})
                               </span>
                               <button onClick={(e) => { e.stopPropagation(); recallHarvest(node.id); }} style={{
                                 background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
-                                borderRadius: 4, padding: '1px 5px', color: '#ef4444', cursor: 'pointer', fontSize: '0.5rem',
+                                borderRadius: 4, padding: '1px 5px', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem',
                               }}>Recall</button>
                             </div>
                           ) : (
@@ -3322,7 +3322,7 @@ export default function WorldMap() {
                                   style={{
                                     background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border)',
                                     borderRadius: 4, padding: '2px 5px', color: 'var(--text)',
-                                    fontSize: '0.55rem', width: '100%', cursor: 'pointer',
+                                    fontSize: '0.8rem', width: '100%', cursor: 'pointer',
                                   }}
                                 >
                                   <option value="">Assign idle hero...</option>
@@ -3331,7 +3331,7 @@ export default function WorldMap() {
                                   ))}
                                 </select>
                               ) : (
-                                <div style={{ color: 'var(--muted)', fontSize: '0.5rem', fontStyle: 'italic' }}>No idle heroes available</div>
+                                <div style={{ color: 'var(--muted)', fontSize: '0.75rem', fontStyle: 'italic' }}>No idle heroes available</div>
                               )}
                             </div>
                           )}
@@ -3340,7 +3340,7 @@ export default function WorldMap() {
                     );
                   })}
                 </div>
-                <div style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.45rem', fontStyle: 'italic', textAlign: 'center' }}>
+                <div style={{ marginTop: 6, color: 'var(--muted)', fontSize: '0.7rem', fontStyle: 'italic', textAlign: 'center' }}>
                   Idle heroes can be assigned to gather resources. Tap a harvesting hero to recall them.
                 </div>
               </>
@@ -3359,19 +3359,19 @@ export default function WorldMap() {
             maxHeight: 'calc(100% - 35% - 80px)', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <h4 className="font-cinzel" style={{ color: '#f87171', fontSize: '0.85rem', margin: 0 }}>
+              <h4 className="font-cinzel" style={{ color: '#f87171', fontSize: '1.1rem', margin: 0 }}>
                 <InlineIcon name="skull" size={12} /> Gruda Arena
               </h4>
               <button onClick={() => setShowGruda(false)} style={{
                 background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.9rem',
               }}>×</button>
             </div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.6rem', marginBottom: 10 }}>
+            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: 10 }}>
               Challenge others by sharing your heroes. They'll fight arena enemies with your exact builds.
             </div>
 
             <div style={{ marginBottom: 10 }}>
-              <div style={{ color: 'var(--text)', fontSize: '0.7rem', fontWeight: 600, marginBottom: 6 }}>Active Heroes ({activeHeroIds.length})</div>
+              <div style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600, marginBottom: 6 }}>Active Heroes ({activeHeroIds.length})</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {heroRoster.filter(h => activeHeroIds.includes(h.id)).map(hero => {
                   const heroCls = classDefinitions[hero.classId];
@@ -3381,10 +3381,10 @@ export default function WorldMap() {
                       background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
                       borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4,
                     }}>
-                      <span style={{ fontSize: '0.85rem' }}>{heroCls?.icon}</span>
+                      <span style={{ fontSize: '1.1rem' }}>{heroCls?.icon}</span>
                       <div>
-                        <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text)' }}>{hero.name}</div>
-                        <div style={{ fontSize: '0.45rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroRace?.name} {heroCls?.name}</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)' }}>{hero.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Lv.{hero.level} {heroRace?.name} {heroCls?.name}</div>
                       </div>
                     </div>
                   );
@@ -3404,7 +3404,7 @@ export default function WorldMap() {
               }} style={{
                 background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
                 borderRadius: 6, padding: '6px 12px', color: '#fca5a5',
-                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 {grudaCopied === 'link' ? '✓ Link Copied!' : '🔗 Copy Share Link'}
               </button>
@@ -3420,7 +3420,7 @@ export default function WorldMap() {
               }} style={{
                 background: 'rgba(110,231,183,0.08)', border: '1px solid rgba(110,231,183,0.2)',
                 borderRadius: 6, padding: '6px 12px', color: 'var(--accent)',
-                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 {grudaCopied === 'code' ? '✓ Code Copied!' : '📋 Copy Share Code'}
               </button>
@@ -3434,7 +3434,7 @@ export default function WorldMap() {
                 background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(251,191,36,0.1))',
                 border: '1px solid rgba(251,191,36,0.3)',
                 borderRadius: 6, padding: '6px 12px', color: 'var(--gold)',
-                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 <InlineIcon name="battle" size={12} /> Play Gruda
               </button>
@@ -3448,7 +3448,7 @@ export default function WorldMap() {
                 background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(239,68,68,0.15))',
                 border: '1px solid rgba(168,85,247,0.4)',
                 borderRadius: 6, padding: '6px 12px', color: '#c084fc',
-                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 🌐 Open Arena Lobby
               </button>
@@ -3457,7 +3457,7 @@ export default function WorldMap() {
                 background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.15))',
                 border: '1px solid rgba(250,172,71,0.4)',
                 borderRadius: 6, padding: '6px 12px', color: 'var(--gold)',
-                cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600,
+                cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
               }}>
                 <InlineIcon name="medal" size={12} /> Leaderboard
               </button>
@@ -3506,7 +3506,7 @@ export default function WorldMap() {
                 border: '2px solid rgba(251,191,36,0.5)',
                 borderRadius: 8, padding: '10px 16px', color: 'var(--gold)',
                 cursor: grudaCopied === 'submitting' ? 'wait' : 'pointer',
-                fontSize: '0.75rem', fontWeight: 700, fontFamily: "'Cinzel', serif",
+                fontSize: '1rem', fontWeight: 700, fontFamily: "'Cinzel', serif",
                 letterSpacing: '1px',
               }}>
                 {grudaCopied === 'submitting' ? '⏳ Submitting...'
@@ -3516,7 +3516,7 @@ export default function WorldMap() {
               </button>
             </div>
 
-            <div style={{ marginTop: 8, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.5rem', color: 'var(--muted)' }}>
+            <div style={{ marginTop: 8, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: '0.75rem', color: 'var(--muted)' }}>
               Submit your team snapshot to the Ranked PvP Arena. Other players can challenge your team. Earn gold, resources, and equipment for each win. After 3 losses your team moves to Unranked. Posting a new team replaces your ranked entry.
             </div>
           </div>
@@ -3745,7 +3745,7 @@ export default function WorldMap() {
               animation: 'fadeIn 0.8s ease-out',
             }}>
               <div style={{
-                fontSize: '0.7rem', color: 'rgba(200,200,220,0.6)',
+                fontSize: '0.9rem', color: 'rgba(200,200,220,0.6)',
                 letterSpacing: '0.3em', textTransform: 'uppercase',
               }}>Entering</div>
             </div>
@@ -3757,7 +3757,7 @@ export default function WorldMap() {
               animation: 'bossNameReveal 0.8s ease-out',
             }}>
               <div style={{
-                fontSize: bossWalkUp.isGodFight ? '0.65rem' : '0.55rem',
+                fontSize: bossWalkUp.isGodFight ? '0.9rem' : '0.8rem',
                 color: bossWalkUp.glow.replace(/[\d.]+\)$/, '0.8)'),
                 letterSpacing: '0.3em', textTransform: 'uppercase',
                 marginBottom: 6,
@@ -4165,18 +4165,18 @@ export default function WorldMap() {
       }}>
         <button onClick={() => { setCamZoom(z => { const nz = Math.min(5, z + 0.5); setCamPos(p => clampCam(p, nz)); return nz; }); }} style={{
           background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
-          fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '1.1rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>+</button>
-        <span style={{ color: 'var(--gold)', fontSize: '0.5rem', fontWeight: 700, textAlign: 'center' }}>
+        <span style={{ color: 'var(--gold)', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center' }}>
           {Math.round(camZoom * 100)}%
         </span>
         <button onClick={() => { setCamZoom(z => { const nz = Math.max(1, z - 0.5); setCamPos(p => clampCam(p, nz)); return nz; }); }} style={{
           background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', cursor: 'pointer',
-          fontSize: '0.85rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '1.1rem', width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>-</button>
         <button onClick={() => { setCamZoom(1); setCamPos({ x: 0, y: 0 }); }} style={{
           background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--gold)', cursor: 'pointer',
-          fontSize: '0.45rem', fontWeight: 700, width: 28, height: 20, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.7rem', fontWeight: 700, width: 28, height: 20, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>FIT</button>
       </div>
 
@@ -4220,7 +4220,7 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
         border: `1px solid ${disabled ? 'rgba(80,80,100,0.2)' : `${color}33`}`,
         borderRadius: 8, cursor: disabled ? 'not-allowed' : 'pointer',
         color: disabled ? 'rgba(150,150,170,0.4)' : '#fff',
-        fontSize: '0.75rem', fontWeight: 600, textAlign: 'left',
+        fontSize: '1rem', fontWeight: 600, textAlign: 'left',
         transition: 'all 0.2s',
         animation: glow ? 'glow 2s infinite' : 'none',
         opacity: disabled ? 0.5 : 1,
@@ -4236,7 +4236,7 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
           background: 'linear-gradient(135deg, #2a2040, #1a1530)',
           border: `1px solid ${color}66`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.5rem', fontWeight: 800, color: color,
+          fontSize: '0.75rem', fontWeight: 800, color: color,
           fontFamily: "'Cinzel', serif",
           boxShadow: `0 0 6px ${color}30`,
           zIndex: 2,
@@ -4265,11 +4265,11 @@ function MenuButton({ icon, iconSrc, label, sublabel, color, onClick, glow, disa
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           color: disabled ? 'rgba(150,150,170,0.4)' : color,
-          fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '0.7rem',
+          fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '0.9rem',
           textShadow: disabled ? 'none' : `0 0 8px ${color}40`,
           letterSpacing: '0.02em',
         }}>{label}</div>
-        {sublabel && <div style={{ fontSize: '0.5rem', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.3 }}>
+        {sublabel && <div style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.3 }}>
           {sublabel}{disabled ? ' (Coming soon)' : ''}
         </div>}
       </div>
@@ -4281,7 +4281,7 @@ function Stat({ label, value, color }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ color, fontWeight: 700, fontSize: '0.9rem' }}>{value}</div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>{label}</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{label}</div>
     </div>
   );
 }

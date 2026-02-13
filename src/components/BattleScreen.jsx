@@ -2392,16 +2392,16 @@ export default function BattleScreen() {
       }}>
         <div style={{ padding: '4px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'var(--accent)', fontSize: '0.7rem' }}>
+            <span className="font-cinzel" style={{ color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'var(--accent)', fontSize: '0.9rem' }}>
               {isBoss ? 'BOSS BATTLE' : battleState?.isMission ? `MISSION (${battleState.missionRound}/${battleState.missionTotalRounds})` : battleState?.isArena ? 'ARENA' : 'BATTLE'}
             </span>
-            <span style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>Turn {battleState?.turnCount || 1}</span>
+            <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Turn {battleState?.turnCount || 1}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {currentUnit && !isVictory && !isDefeat && (
               <div style={{
                 color: currentUnit.team === 'player' ? 'var(--accent)' : 'var(--danger)',
-                fontSize: '0.6rem', fontWeight: 600,
+                fontSize: '0.85rem', fontWeight: 600,
                 padding: '2px 8px',
                 background: currentUnit.team === 'player' ? 'rgba(110,231,183,0.15)' : 'rgba(239,68,68,0.15)',
                 borderRadius: 6,
@@ -2416,9 +2416,9 @@ export default function BattleScreen() {
               }} style={{
                 background: 'linear-gradient(135deg, rgba(192,132,252,0.3), rgba(192,132,252,0.1))',
                 border: '1px solid #c084fc', borderRadius: 8,
-                padding: '3px 10px', color: '#c084fc', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 700,
+                padding: '3px 10px', color: '#c084fc', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
                 animation: 'glow 2s infinite',
-              }}>Next Round <span style={{ opacity: 0.5, fontSize: '0.5rem' }}>[Space]</span></button>
+              }}>Next Round <span style={{ opacity: 0.5, fontSize: '0.75rem' }}>[Space]</span></button>
             )}
             {(isVictory || isDefeat) && (
               <button onClick={() => {
@@ -2426,8 +2426,8 @@ export default function BattleScreen() {
                 else returnToWorld();
               }} style={{
                 background: 'var(--border)', border: 'none', borderRadius: 8,
-                padding: '3px 10px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.65rem'
-              }}>Return <span style={{ opacity: 0.5, fontSize: '0.5rem' }}>[Space]</span></button>
+                padding: '3px 10px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.9rem'
+              }}>Return <span style={{ opacity: 0.5, fontSize: '0.75rem' }}>[Space]</span></button>
             )}
           </div>
         </div>
@@ -2439,7 +2439,7 @@ export default function BattleScreen() {
             <div key={i} style={{
               color: i === arr.length - 1 ? 'var(--text)' : 'var(--muted)',
               padding: '0.5px 0', opacity: i === arr.length - 1 ? 1 : 0.5,
-              fontSize: '0.55rem',
+              fontSize: '0.8rem',
             }}>{msg}</div>
           ))}
         </div>
@@ -2702,7 +2702,7 @@ export default function BattleScreen() {
                 transition: 'all 0.3s ease',
               }}>
                 <div style={{
-                  fontSize: '0.5rem', fontWeight: 600,
+                  fontSize: '0.75rem', fontWeight: 600,
                   color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 65,
                   marginBottom: 1,
@@ -2725,7 +2725,7 @@ export default function BattleScreen() {
                     />
                     {(unit.grudge || 0) >= 100 && (
                       <div style={{
-                        fontSize: '0.35rem', color: '#ef4444', fontWeight: 800,
+                        fontSize: '0.55rem', color: '#ef4444', fontWeight: 800,
                         textAlign: 'center', animation: 'pulse 1s infinite',
                         textShadow: '0 0 4px #ef4444',
                       }}>GRUDGE!</div>
@@ -2736,13 +2736,13 @@ export default function BattleScreen() {
                   <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
                     {unit.focusStacks > 0 && (
                       <span style={{
-                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
+                        fontSize: '0.6rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(239,68,68,0.3)', color: '#ef4444',
                       }}><InlineIcon name="target" size={10} />{unit.focusStacks}</span>
                     )}
                     {(unit.buffs || []).slice(0, 3).map((b, i) => (
                       <span key={i} style={{
-                        fontSize: '0.4rem', padding: '0 2px', borderRadius: 2,
+                        fontSize: '0.6rem', padding: '0 2px', borderRadius: 2,
                         background: 'rgba(110,231,183,0.3)', color: 'var(--accent)',
                       }}>{b.source?.slice(0, 4)}</span>
                     ))}
@@ -2904,7 +2904,7 @@ export default function BattleScreen() {
                 {f.label && (
                   <div style={{
                     color: f.color, fontWeight: 900,
-                    fontSize: isCrit ? '0.75rem' : '0.6rem',
+                    fontSize: isCrit ? '1rem' : '0.85rem',
                     fontFamily: "'Cinzel', serif",
                     textShadow: `0 0 8px ${f.color}, 0 1px 3px rgba(0,0,0,0.9)`,
                     letterSpacing: 2, marginBottom: -2,
@@ -2920,7 +2920,7 @@ export default function BattleScreen() {
               position: 'absolute',
               left: `${f.x}%`, top: `${f.y}%`,
               color: f.color, fontWeight: 900,
-              fontSize: isBuff ? '0.85rem' : isMiss ? '0.85rem' : '1.1rem',
+              fontSize: isBuff ? '1.1rem' : isMiss ? '1.1rem' : '1.1rem',
               textShadow: isBuff
                 ? `0 0 10px ${f.color}, 0 0 20px ${f.color}88, 0 2px 4px rgba(0,0,0,0.9)`
                 : `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
@@ -2972,7 +2972,7 @@ export default function BattleScreen() {
               </div>
               {isVictory && (
                 <div style={{
-                  color: 'var(--accent)', marginTop: 10, fontSize: '0.85rem',
+                  color: 'var(--accent)', marginTop: 10, fontSize: '1.1rem',
                   animation: 'fadeIn 0.5s ease 0.4s both',
                 }}>
                   +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)} XP |
@@ -2981,7 +2981,7 @@ export default function BattleScreen() {
               )}
               {isDefeat && (
                 <div style={{
-                  color: 'var(--muted)', marginTop: 10, fontSize: '0.8rem',
+                  color: 'var(--muted)', marginTop: 10, fontSize: '1.05rem',
                   animation: 'fadeIn 0.5s ease 0.5s both',
                 }}>
                   Recover at 50% HP, lose 10% gold.
@@ -2995,7 +2995,7 @@ export default function BattleScreen() {
                   <button onClick={() => startBattle(currentLocation)} style={{
                     background: 'linear-gradient(135deg, var(--accent), #10b981)',
                     border: 'none', borderRadius: 10, padding: '10px 20px',
-                    color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem',
+                    color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '1.1rem',
                     transition: 'all 0.2s', boxShadow: '0 0 15px rgba(110,231,183,0.3)',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 25px rgba(110,231,183,0.5)'; }}
@@ -3010,14 +3010,14 @@ export default function BattleScreen() {
                   border: isDefeat ? '2px solid var(--danger)' : 'none',
                   borderRadius: 10, padding: '10px 20px',
                   color: isDefeat ? 'var(--danger)' : 'var(--text)',
-                  fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem',
+                  fontWeight: 600, cursor: 'pointer', fontSize: '1.1rem',
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
-                  <span style={{ fontSize: '0.55rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
                 </button>
               </div>
             </div>
@@ -3037,7 +3037,7 @@ export default function BattleScreen() {
           border: `2px solid ${autoBattleEnabled ? '#f59e0b' : '#4a4a5a'}`,
           borderRadius: 10, padding: '8px 14px',
           color: autoBattleEnabled ? '#fbbf24' : '#888',
-          cursor: 'pointer', fontSize: '0.7rem', fontWeight: 800,
+          cursor: 'pointer', fontSize: '0.9rem', fontWeight: 800,
           letterSpacing: '0.08em',
           backdropFilter: 'blur(4px)',
           boxShadow: autoBattleEnabled ? '0 0 16px rgba(251,191,36,0.3), 0 0 32px rgba(251,191,36,0.1)' : 'none',
@@ -3119,23 +3119,26 @@ export default function BattleScreen() {
       )}
 
       <div style={{
-          flex: '0 0 140px', height: 140, minHeight: 140, maxHeight: 140,
+          flex: '0 0 155px', height: 155, minHeight: 155, maxHeight: 155,
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           zIndex: BATTLE.HEADER,
           display: 'flex', flexDirection: 'row',
           transition: 'border-color 0.3s',
           position: 'relative',
           overflow: 'hidden',
-          background: 'rgba(8,12,24,0.95)',
+          background: 'linear-gradient(180deg, rgba(15,12,8,0.98) 0%, rgba(8,12,24,0.98) 100%)',
+          boxShadow: '0 -4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139,115,85,0.15)',
         }}>
           <div style={{
-            flex: '0 0 140px', width: 140,
-            padding: '6px 6px',
-            display: 'flex', flexDirection: 'column', gap: 3,
+            flex: '0 0 150px', width: 150,
+            padding: '6px 8px',
+            display: 'flex', flexDirection: 'column', gap: 4,
             justifyContent: 'center',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
+            borderRight: '1px solid rgba(139,115,85,0.15)',
             overflow: 'hidden',
+            background: 'rgba(0,0,0,0.15)',
           }}>
+            <div style={{ fontSize: '0.6rem', color: '#8b7355', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 1, fontFamily: 'var(--font-heading)' }}>Party</div>
             {playerTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
               const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hpGreen' : hpPct > 30 ? 'stamina' : 'hp';
@@ -3148,18 +3151,20 @@ export default function BattleScreen() {
                 <div key={unit.id} style={{
                   opacity: unit.alive ? 1 : 0.4,
                   borderLeft: isCurrentTurn ? '2px solid var(--accent)' : '2px solid transparent',
-                  paddingLeft: 3,
+                  paddingLeft: 4,
                   transition: 'border-color 0.3s',
+                  background: isCurrentTurn ? 'rgba(110,231,183,0.05)' : 'transparent',
+                  borderRadius: 3, padding: '2px 4px',
                 }}>
                   <div style={{
-                    fontSize: '0.5rem', fontWeight: 700,
+                    fontSize: '0.75rem', fontWeight: 700,
                     color: isCurrentTurn ? 'var(--accent)' : '#93c5fd',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginBottom: 1,
                     display: 'flex', alignItems: 'center', gap: 3,
                   }}>
                     <span>{unit.name}</span>
-                    {isCurrentTurn && <span style={{ fontSize: '0.4rem', color: 'var(--accent)', animation: 'pulse 1s infinite' }}>ACT</span>}
+                    {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: 'var(--accent)', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
                   </div>
                   <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
                   <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
@@ -3170,7 +3175,7 @@ export default function BattleScreen() {
                     <ActionTimerBar progress={actionProgress} width={grudgePct >= 100 ? 70 : 90} height={4} isActive={isCurrentTurn} />
                     <PixelBar current={grudgePct} max={100} preset="grudge" height={4} width={grudgePct >= 100 ? 42 : 28} />
                     {grudgePct >= 100 && (
-                      <span style={{ fontSize: '0.35rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
+                      <span style={{ fontSize: '0.55rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
                     )}
                   </div>
                 </div>
@@ -3220,7 +3225,7 @@ export default function BattleScreen() {
                       background: '#1a1a2e', border: '1px solid rgba(139,115,85,0.4)',
                       borderRadius: '50%', width: 12, height: 12,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.4rem', fontWeight: 700, color: '#d4a96a',
+                      fontSize: '0.6rem', fontWeight: 700, color: '#d4a96a',
                     }}>{equippedCount}</div>
                   )}
                   {hoveredGearUnitId === unit.id && hero && (() => {
@@ -3250,7 +3255,7 @@ export default function BattleScreen() {
                         minWidth: pW + 20,
                       }}>
                         <div style={{
-                          textAlign: 'center', fontSize: '0.55rem', fontWeight: 700,
+                          textAlign: 'center', fontSize: '0.8rem', fontWeight: 700,
                           color: '#d4a96a', letterSpacing: 1, marginBottom: 5,
                           textTransform: 'uppercase', fontFamily: 'var(--font-heading)',
                         }}>{unit.name}</div>
@@ -3299,7 +3304,7 @@ export default function BattleScreen() {
                             const tDef = TIERS[item.tier] || TIERS[1];
                             return (
                               <div key={slot} style={{
-                                fontSize: '0.45rem', color: tDef.color,
+                                fontSize: '0.7rem', color: tDef.color,
                                 whiteSpace: 'nowrap',
                               }}>
                                 {item.name}
@@ -3326,7 +3331,7 @@ export default function BattleScreen() {
             <div style={{
               textAlign: 'center', padding: '8px 0',
               color: isVictory ? 'var(--gold)' : 'var(--danger)',
-              fontSize: '0.85rem', fontWeight: 700,
+              fontSize: '1.1rem', fontWeight: 700,
             }}>
               {isVictory ? 'Victory!' : 'Defeated...'}
             </div>
@@ -3373,13 +3378,13 @@ export default function BattleScreen() {
                       borderRadius: 6, padding: '3px 10px', textAlign: 'center', minWidth: 110,
                     }}>
                       <div style={{
-                        fontSize: '0.6rem', fontWeight: 800, color: '#d4a96a',
+                        fontSize: '0.85rem', fontWeight: 800, color: '#d4a96a',
                         letterSpacing: 1, textTransform: 'uppercase',
                       }}>
                         <InlineIcon name={rowCfg?.icon || 'crossed_swords'} size={10} /> {rowCfg?.name || 'Battle Line'}
                       </div>
                       {modEntries.length > 0 ? (
-                        <div style={{ fontSize: '0.45rem', color: '#a08b6d', marginTop: 1, lineHeight: 1.3 }}>
+                        <div style={{ fontSize: '0.7rem', color: '#a08b6d', marginTop: 1, lineHeight: 1.3 }}>
                           {modEntries.map(([key, val]) => {
                             const isPositive = key.includes('Bonus') || key.includes('Chance') || (key.includes('Mult') && val > 1);
                             const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace('Mult', '').replace('Penalty', '');
@@ -3393,7 +3398,7 @@ export default function BattleScreen() {
                           })}
                         </div>
                       ) : (
-                        <div style={{ fontSize: '0.45rem', color: '#6b7280', marginTop: 1 }}>No modifiers</div>
+                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: 1 }}>No modifiers</div>
                       )}
                     </div>
                     <button
@@ -3417,65 +3422,85 @@ export default function BattleScreen() {
                 );
               })()}
               <div style={{
-                display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 5,
+                display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 5,
+                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '4px 8px',
+                border: '1px solid rgba(139,115,85,0.2)',
               }}>
                 <button onClick={autoAttack} style={{
-                  background: 'rgba(0,0,0,0.4)',
+                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
+                  backgroundColor: 'rgba(80,30,30,0.5)',
                   border: '2px solid #8b4444', borderRadius: 4,
-                  padding: '4px 12px', color: '#ef4444', cursor: 'pointer',
-                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '6px 14px', color: '#ef4444', cursor: 'pointer',
+                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
+                  minWidth: 56,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,68,68,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; }}
-                ><SpriteIcon src={UI_ICONS.actionAttack} size={16} scale={2} /> Attack</button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(239,68,68,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#8b4444'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
+                ><SpriteIcon src={UI_ICONS.actionAttack} size={16} scale={2} /><span>Attack</span></button>
                 <button onClick={defendTurn} style={{
-                  background: 'rgba(0,0,0,0.4)',
+                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
+                  backgroundColor: 'rgba(30,40,80,0.5)',
                   border: '2px solid #445a8b', borderRadius: 4,
-                  padding: '4px 12px', color: '#60a5fa', cursor: 'pointer',
-                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 4,
+                  padding: '6px 14px', color: '#60a5fa', cursor: 'pointer',
+                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
+                  minWidth: 56,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(68,90,139,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; }}
-                ><SpriteIcon src={UI_ICONS.actionDefend} size={16} scale={2} /> Defend</button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(96,165,250,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#445a8b'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
+                ><SpriteIcon src={UI_ICONS.actionDefend} size={16} scale={2} /><span>Defend</span></button>
                 <button onClick={skipTurn} style={{
-                  background: 'rgba(0,0,0,0.3)',
+                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
+                  backgroundColor: 'rgba(40,40,50,0.5)',
                   border: '2px solid #5c5c6a', borderRadius: 4,
-                  padding: '4px 12px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
-                  fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                  padding: '6px 14px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
+                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
+                  minWidth: 56,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(80,80,100,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
-                >Skip</button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#5c5c6a'; e.currentTarget.style.transform = 'none'; }}
+                ><InlineIcon name="moon" size={16} /><span>Skip</span></button>
                 {(() => {
                   const consumables = inventory.filter(i => i.slot === 'consumable');
                   if (consumables.length === 0) return null;
                   return (
                     <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
-                      background: showItemsPanel ? 'rgba(74,222,128,0.3)' : 'rgba(0,0,0,0.3)',
+                      backgroundImage: showItemsPanel ? `url(${UI_SLOTS.hotbarActive})` : `url(${UI_SLOTS.hotbar})`,
+                      backgroundSize: 'cover', imageRendering: 'pixelated',
+                      backgroundColor: showItemsPanel ? 'rgba(34,120,60,0.5)' : 'rgba(30,50,40,0.5)',
                       border: `2px solid ${showItemsPanel ? '#4ade80' : '#4a7a5a'}`, borderRadius: 4,
-                      padding: '4px 12px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
-                      fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
-                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '6px 14px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
+                      fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
+                      minWidth: 56,
+                      boxShadow: showItemsPanel ? '0 0 12px rgba(74,222,128,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
                     }}
-                    onMouseEnter={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(74,222,128,0.15)'; }}
-                    onMouseLeave={e => { if (!showItemsPanel) e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; }}
-                    ><InlineIcon name="crystal" size={12} /> Items ({consumables.length})</button>
+                    onMouseEnter={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#86efac'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                    onMouseLeave={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#4a7a5a'; e.currentTarget.style.transform = 'none'; } }}
+                    ><SpriteIcon src={UI_ICONS.actionItem} size={16} scale={2} /><span>Items ({consumables.length})</span></button>
                   );
                 })()}
                 {(currentUnit.grudge || 0) >= 100 && (
                   <button onClick={useGrudge} style={{
-                    background: 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(239,68,68,0.3))',
+                    backgroundImage: `url(${UI_SLOTS.hotbarActive})`, backgroundSize: 'cover', imageRendering: 'pixelated',
+                    backgroundColor: 'rgba(120,20,20,0.6)',
                     border: '2px solid #ef4444', borderRadius: 4,
-                    padding: '4px 12px', color: '#fca5a5', cursor: 'pointer',
-                    fontSize: '0.7rem', fontWeight: 700, transition: 'all 0.15s',
+                    padding: '6px 14px', color: '#fca5a5', cursor: 'pointer',
+                    fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
                     animation: 'pulse 1s infinite',
                     textShadow: '0 0 8px #ef4444',
+                    display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
+                    minWidth: 56,
+                    boxShadow: '0 0 16px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.7), rgba(239,68,68,0.5))'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.5), rgba(239,68,68,0.3))'; }}
-                  ><InlineIcon name="fire" size={12} /> REVENGE</button>
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 24px rgba(239,68,68,0.6), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 16px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
+                  ><InlineIcon name="fire" size={16} /><span>REVENGE</span></button>
                 )}
               </div>
               {showItemsPanel && (() => {
@@ -3515,7 +3540,7 @@ export default function BattleScreen() {
                         border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
                         borderRadius: 6, padding: '4px 8px', cursor: disabled ? 'not-allowed' : 'pointer',
                         color: disabled ? 'rgba(150,150,150,0.5)' : '#86efac',
-                        fontSize: '0.65rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+                        fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                         transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
                       }}
                       onMouseEnter={e => { showTooltip(disabled ? 'No fallen allies to revive' : group.description, e); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
@@ -3524,7 +3549,7 @@ export default function BattleScreen() {
                       >
                         {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
                         <span>{group.name}</span>
-                        <span style={{ color: '#4ade80', fontSize: '0.55rem' }}>x{group.count}</span>
+                        <span style={{ color: '#4ade80', fontSize: '0.8rem' }}>x{group.count}</span>
                       </button>
                       );
                     })}
@@ -3535,7 +3560,7 @@ export default function BattleScreen() {
                 <div style={{ marginBottom: 6 }}>
                   <div style={{
                     textAlign: 'center', marginBottom: 6, color: '#22c55e',
-                    fontSize: '0.65rem', letterSpacing: 1, fontWeight: 700,
+                    fontSize: '0.9rem', letterSpacing: 1, fontWeight: 700,
                   }}>
                     <InlineIcon name="heart" size={12} /> Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(Press 1-{playerTeam.filter(u => u.alive).length} or Esc to cancel)</span>
                   </div>
@@ -3560,7 +3585,7 @@ export default function BattleScreen() {
                             position: 'absolute', top: -6, left: -6,
                             background: '#22c55e', borderRadius: '50%',
                             width: 18, height: 18, display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800,
+                            justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800,
                             color: '#052e16', border: '1px solid rgba(0,0,0,0.3)',
                           }}>{idx + 1}</div>
                           <div style={{ width: 48, height: 48, margin: '0 auto 4px', overflow: 'hidden', position: 'relative' }}>
@@ -3575,7 +3600,7 @@ export default function BattleScreen() {
                               }} />
                             )}
                           </div>
-                          <div style={{ color: '#e8dcc8', fontSize: '0.65rem', fontWeight: 700, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>{ally.name}</div>
+                          <div style={{ color: '#e8dcc8', fontSize: '0.9rem', fontWeight: 700, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>{ally.name}</div>
                           <div style={{
                             background: 'rgba(0,0,0,0.5)', borderRadius: 3, height: 8, width: '100%', overflow: 'hidden',
                             border: '1px solid rgba(255,255,255,0.1)',
@@ -3586,7 +3611,7 @@ export default function BattleScreen() {
                               borderRadius: 2, transition: 'width 0.3s',
                             }} />
                           </div>
-                          <div style={{ color: hpColor, fontSize: '0.55rem', fontWeight: 600, marginTop: 2 }}>
+                          <div style={{ color: hpColor, fontSize: '0.8rem', fontWeight: 600, marginTop: 2 }}>
                             {ally.health}/{ally.maxHealth} HP
                           </div>
                         </button>
@@ -3597,7 +3622,7 @@ export default function BattleScreen() {
               )}
               {!healTargetMode && (<div style={{
                 textAlign: 'center', marginBottom: 4, color: '#a08b6d',
-                fontSize: '0.6rem', letterSpacing: 1
+                fontSize: '0.85rem', letterSpacing: 1
               }}>
                 <span style={{ color: '#d4a96a', fontWeight: 700 }}>{currentUnit.name}</span>
                 {' — '}Choose action <span style={{ color: '#d4a96a' }}>(1-{displayedAbilities.length})</span>
@@ -3619,14 +3644,15 @@ export default function BattleScreen() {
                       style={{
                         backgroundImage: disabled ? 'none' : `url(${UI_SLOTS.hotbar})`,
                         backgroundSize: 'cover', imageRendering: 'pixelated',
-                        background: disabled ? 'rgba(30,30,40,0.5)' : undefined,
-                        backgroundColor: disabled ? 'rgba(30,30,40,0.5)' : 'rgba(60,45,25,0.6)',
+                        background: disabled ? 'rgba(20,20,30,0.6)' : undefined,
+                        backgroundColor: disabled ? 'rgba(20,20,30,0.6)' : 'rgba(50,38,20,0.7)',
                         border: `2px solid ${disabled ? '#3a3a4a' : '#8b7355'}`,
-                        borderRadius: 4, padding: '5px 10px', minWidth: 90,
+                        borderRadius: 6, padding: '4px 8px', minWidth: 80,
                         color: disabled ? '#555' : '#e8dcc8',
                         cursor: disabled ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
                         position: 'relative',
+                        boxShadow: disabled ? 'none' : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
                       }}
                       onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.style.borderColor = '#d4a96a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
                       onMouseMove={e => updateTooltipPosition(e)}
@@ -3636,12 +3662,12 @@ export default function BattleScreen() {
                         position: 'absolute', top: -5, left: -5,
                         background: disabled ? '#333' : '#d4a96a', borderRadius: '50%',
                         width: 16, height: 16, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700,
+                        justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700,
                         color: disabled ? '#666' : '#2a1a0a', border: '1px solid rgba(0,0,0,0.3)'
                       }}>{idx + 1}</div>
                       <div style={{ marginBottom: 0, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))' }}><AbilityIcon ability={ability} size={28} /></div>
-                      <div style={{ fontWeight: 600, fontSize: '0.65rem', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>{ability.name}</div>
-                      <div style={{ fontSize: '0.5rem', color: '#a08b6d', marginTop: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>{ability.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#a08b6d', marginTop: 0 }}>
                         {ability.manaCost > 0 && <span style={{ color: '#6b9bd2' }}>{ability.manaCost}MP </span>}
                         {ability.staminaCost > 0 && <span style={{ color: '#d4a96a' }}>{ability.staminaCost}SP</span>}
                         {ability.manaGain > 0 && <span style={{ color: '#7bb8e8' }}>+{ability.manaGain}MP </span>}
@@ -3652,7 +3678,7 @@ export default function BattleScreen() {
                           position: 'absolute', top: 2, right: 2,
                           background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
                           width: 14, height: 14, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700, color: '#e8c8c8'
+                          justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#e8c8c8'
                         }}>{currentUnit.cooldowns[ability.id]}</div>
                       )}
                     </button>
@@ -3663,7 +3689,7 @@ export default function BattleScreen() {
           ) : (
             <div style={{
               color: currentUnit?.team === 'enemy' ? '#c45050' : '#93c5fd',
-              fontSize: '0.8rem', fontWeight: 600,
+              fontSize: '1.05rem', fontWeight: 600,
               animation: 'pulse 1s infinite', textAlign: 'center'
             }}>
               {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
@@ -3673,13 +3699,15 @@ export default function BattleScreen() {
           </div>
 
           <div style={{
-            flex: '0 0 140px', width: 140,
-            padding: '6px 6px',
-            display: 'flex', flexDirection: 'column', gap: 3,
+            flex: '0 0 150px', width: 150,
+            padding: '6px 8px',
+            display: 'flex', flexDirection: 'column', gap: 4,
             justifyContent: 'center',
-            borderLeft: '1px solid rgba(255,255,255,0.06)',
+            borderLeft: '1px solid rgba(139,115,85,0.15)',
             overflow: 'hidden',
+            background: 'rgba(0,0,0,0.15)',
           }}>
+            <div style={{ fontSize: '0.6rem', color: '#8b4444', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 1, fontFamily: 'var(--font-heading)', textAlign: 'right' }}>Enemies</div>
             {enemyTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
               const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hp' : hpPct > 30 ? 'stamina' : 'hpGreen';
@@ -3691,17 +3719,19 @@ export default function BattleScreen() {
                 <div key={unit.id} style={{
                   opacity: unit.alive ? 1 : 0.4,
                   borderRight: isCurrentTurn ? '2px solid var(--danger)' : '2px solid transparent',
-                  paddingRight: 3,
+                  paddingRight: 4,
                   transition: 'border-color 0.3s',
+                  background: isCurrentTurn ? 'rgba(239,68,68,0.05)' : 'transparent',
+                  borderRadius: 3, padding: '2px 4px',
                 }}>
                   <div style={{
-                    fontSize: '0.5rem', fontWeight: 700,
+                    fontSize: '0.75rem', fontWeight: 700,
                     color: isCurrentTurn ? 'var(--danger)' : '#fca5a5',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginBottom: 1, textAlign: 'right',
                     display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3,
                   }}>
-                    {isCurrentTurn && <span style={{ fontSize: '0.4rem', color: '#ef4444', animation: 'pulse 1s infinite' }}>ACT</span>}
+                    {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
                     <span>{unit.name}</span>
                   </div>
                   <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
