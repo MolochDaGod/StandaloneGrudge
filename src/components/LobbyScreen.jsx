@@ -1567,6 +1567,7 @@ function CharactersTab({ heroRoster, panelStyle }) {
                 spriteData={getRaceClassSprite(hero.race, hero.classId)}
                 animation="idle"
                 scale={0.48}
+                containerless={false}
               />
             </div>
             <div style={{ flex: 1 }}>
