@@ -904,7 +904,7 @@ export const racalvinSprite = {
   frameWidth: 200,
   frameHeight: 210,
   facesLeft: false,
-  scale: 1.35,
+  scale: 0.45,
   idle: { src: '/sprites/racalvin/idle.png', frames: 10 },
   walk: { src: '/sprites/racalvin/walk.png', frames: 12 },
   attack1: { src: '/sprites/racalvin/attack1.png', frames: 7 },

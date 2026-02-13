@@ -326,7 +326,7 @@ function TitleHeroParade() {
 
   const spawnHero = useCallback(() => {
     const namedHeroKeys = Object.keys(namedHeroes);
-    const useNamed = Math.random() < 0.2 && namedHeroKeys.length > 0;
+    const useNamed = Math.random() < 0.05 && namedHeroKeys.length > 0;
 
     let combo, sprite, displayName, heroColor;
 
