@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { EssentialIcon } from '../data/uiSprites';
-import { SETTINGS_PANEL } from '../constants/layers';
+import { SETTINGS_PANEL, SETTINGS_BUTTON } from '../constants/layers';
 import {
   setMusicMuted, setSfxMuted, setMusicVolume, setSfxVolume,
   getMusicMuted, getSfxMuted, getMusicVolume, getSfxVolume,
@@ -21,10 +21,12 @@ export default function SettingsMenu() {
   const level = useGameStore(s => s.level);
   const victories = useGameStore(s => s.victories);
   const panelRef = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
+      if (buttonRef.current && buttonRef.current.contains(e.target)) return;
       if (panelRef.current && !panelRef.current.contains(e.target)) {
         setOpen(false);
         setConfirmReset(false);
@@ -100,8 +102,31 @@ export default function SettingsMenu() {
     accentColor: 'var(--accent)',
   };
 
+  const hiddenScreens = ['title', 'intro'];
+  const showButton = !hiddenScreens.includes(screen);
+
   return (
     <>
+      {showButton && (
+        <button
+          ref={buttonRef}
+          onClick={() => { setOpen(o => { setConfirmReset(false); return !o; }); }}
+          style={{
+            position: 'fixed', top: 12, right: 14, zIndex: SETTINGS_BUTTON,
+            width: 38, height: 38, borderRadius: 8,
+            background: open ? 'rgba(110,231,183,0.15)' : 'rgba(0,0,0,0.5)',
+            border: open ? '1px solid rgba(110,231,183,0.4)' : '1px solid rgba(255,255,255,0.12)',
+            color: open ? 'var(--accent)' : 'var(--muted)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(110,231,183,0.12)'; e.currentTarget.style.borderColor = 'rgba(110,231,183,0.3)'; e.currentTarget.style.color = 'var(--accent)'; }}
+          onMouseLeave={e => { if (!open) { e.currentTarget.style.background = 'rgba(0,0,0,0.5)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'var(--muted)'; } }}
+        >
+          <EssentialIcon name="Gear" size={18} />
+        </button>
+      )}
       {open && (
         <div ref={panelRef} style={{
           position: 'fixed', top: 56, right: 14, zIndex: SETTINGS_PANEL,

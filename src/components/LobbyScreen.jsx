@@ -109,18 +109,6 @@ export default function LobbyScreen() {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => window.dispatchEvent(new Event('toggleSettings'))} style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 6, padding: '4px 14px',
-            color: 'var(--muted)', fontSize: '0.75rem',
-            cursor: 'pointer', fontFamily: "'Cinzel', serif",
-            display: 'flex', alignItems: 'center', gap: 6,
-            transition: 'all 0.2s',
-          }}>
-            <EssentialIcon name="Gear" size={14} />
-            SETTINGS
-          </button>
           <button onClick={handleMuteToggle} style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.1)',
