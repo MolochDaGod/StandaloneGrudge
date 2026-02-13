@@ -462,6 +462,19 @@ export const spriteSheets = {
     hurt: { src: '/sprites/lightning-mage/hurt.png', frames: 3 },
     death: { src: '/sprites/lightning-mage/death.png', frames: 5 },
   },
+  'elf-mage': {
+    folder: 'Elf-mage',
+    frameWidth: 231,
+    frameHeight: 190,
+    idle: { src: '/sprites/Elf-mage/Idle.png', frames: 6 },
+    attack1: { src: '/sprites/Elf-mage/Attack1.png', frames: 8 },
+    attack2: { src: '/sprites/Elf-mage/Attack2.png', frames: 8 },
+    hurt: { src: '/sprites/Elf-mage/Hit.png', frames: 4 },
+    death: { src: '/sprites/Elf-mage/Death.png', frames: 7 },
+    run: { src: '/sprites/Elf-mage/Run.png', frames: 8 },
+    jump: { src: '/sprites/Elf-mage/Jump.png', frames: 2 },
+    fall: { src: '/sprites/Elf-mage/Fall.png', frames: 2 },
+  },
   'wanderer-magician': {
     folder: 'wanderer-magician',
     frameWidth: 128,
@@ -989,7 +1002,7 @@ export const eliteTransformSprites = {
   },
   mage: {
     human: spriteSheets['fire-wizard'],
-    elf: spriteSheets['lightning-mage'],
+    elf: { ...spriteSheets['elf-mage'], scale: 0.7 },
     dwarf: spriteSheets['wanderer-magician'],
     barbarian: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(15deg) saturate(1.3) brightness(1.1)' },
     orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', scale: 0.7 },

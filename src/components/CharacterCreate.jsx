@@ -230,22 +230,39 @@ export default function CharacterCreate() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 3 && (() => {
+          const CLASS_ICONS = {
+            warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+            mage: '/sprites/ui/icons/icon_mage.png',
+            worge: '/sprites/ui/icons/icon_worge.png',
+            ranger: '/sprites/ui/icons/icon_ranger.png',
+          };
+          const ATTR_COLORS = {
+            Strength: '#ef4444', Vitality: '#22c55e', Endurance: '#f59e0b',
+            Dexterity: '#3b82f6', Agility: '#06b6d4', Intellect: '#8b5cf6',
+            Wisdom: '#ec4899', Tactics: '#f97316',
+          };
+          const maxAttr = 9;
+          return (
           <div style={{ animation: 'fadeIn 0.4s ease' }}>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.3rem', marginBottom: 4 }}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <h2 className="font-cinzel" style={{
+                color: 'var(--gold)', fontSize: '1.5rem', marginBottom: 6,
+                textShadow: '0 0 20px rgba(255,215,0,0.3)', letterSpacing: 2
+              }}>
                 Choose Your Class
               </h2>
               {selectedRaceDef && (
                 <span style={{
                   background: `${selectedRaceDef.color}20`, border: `1px solid ${selectedRaceDef.color}40`,
-                  padding: '3px 12px', borderRadius: 20, fontSize: '0.75rem', color: selectedRaceDef.color
+                  padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', color: selectedRaceDef.color
                 }}>
                   <img src={selectedRaceDef.icon} alt={selectedRaceDef.name} style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', verticalAlign: 'middle', marginRight: 4 }} />{selectedRaceDef.name}
                 </span>
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {Object.entries(classDefinitions).map(([id, cls]) => {
                 const isSelected = selectedFaction === id;
                 const previewAttrs = { ...cls.startingAttributes };
@@ -254,86 +271,151 @@ export default function CharacterCreate() {
                     if (previewAttrs[attr] !== undefined) previewAttrs[attr] += val;
                   });
                 }
+                const topAttrs = Object.entries(previewAttrs).sort((a, b) => b[1] - a[1]).slice(0, 4);
                 return (
                   <div key={id} onClick={() => setSelectedFaction(id)} style={{
+                    position: 'relative', overflow: 'hidden', cursor: 'pointer',
                     background: isSelected
-                      ? `linear-gradient(135deg, ${cls.color}20, ${cls.color}10)`
-                      : 'linear-gradient(135deg, rgba(20,26,43,0.95), rgba(20,26,43,0.7))',
-                    border: `2px solid ${isSelected ? cls.color : cls.color + '40'}`,
-                    borderRadius: 14, padding: 14, cursor: 'pointer',
-                    transition: 'all 0.25s', textAlign: 'center', position: 'relative',
-                    boxShadow: isSelected ? `0 0 20px ${cls.color}30, inset 0 0 30px ${cls.color}10` : 'none',
+                      ? `linear-gradient(135deg, ${cls.color}18, rgba(10,14,30,0.95) 60%)`
+                      : 'linear-gradient(135deg, rgba(16,20,36,0.95), rgba(10,14,30,0.85))',
+                    border: `2px solid ${isSelected ? cls.color : cls.color + '30'}`,
+                    borderRadius: 16, padding: '0',
+                    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+                    boxShadow: isSelected
+                      ? `0 0 30px ${cls.color}25, 0 0 60px ${cls.color}10, inset 0 0 40px ${cls.color}08`
+                      : '0 2px 8px rgba(0,0,0,0.3)',
                     transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                   }}
-                  onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color; e.currentTarget.style.transform = 'translateY(-3px)'; }}}
-                  onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = `${cls.color}40`; e.currentTarget.style.transform = 'none'; }}}
+                  onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '80'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 4px 20px ${cls.color}20`; }}}
+                  onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '30'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; }}}
                   >
-                    {isSelected && <div style={{
-                      position: 'absolute', top: 6, right: 10, color: cls.color, fontSize: '0.9rem', fontWeight: 700
-                    }}>&#10003;</div>}
                     <div style={{
-                      display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-                      marginBottom: 6, width: 100, height: 100, margin: '0 auto 6px',
-                      border: `1px solid ${cls.color}50`, borderRadius: 10,
-                      background: 'rgba(0,0,0,0.25)',
-                      overflow: 'hidden',
-                    }}>
-                      {id === 'worge' ? (
-                        <WorgeMorphPreview raceId={selectedRace} scale={0.9} speed={150} />
-                      ) : (
-                        <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.9} speed={150} />
-                      )}
+                      position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)',
+                      width: 160, height: 160, opacity: isSelected ? 0.12 : 0.05,
+                      backgroundImage: `url(${CLASS_ICONS[id]})`,
+                      backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
+                      transition: 'opacity 0.3s', pointerEvents: 'none',
+                    }} />
+
+                    {isSelected && (
+                      <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                        background: `linear-gradient(90deg, transparent, ${cls.color}, transparent)`,
+                        animation: 'shimmer 2s infinite',
+                      }} />
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: 14, position: 'relative', zIndex: 1 }}>
+                      <div style={{
+                        width: 110, height: 110, flexShrink: 0,
+                        display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+                        borderRadius: 12, overflow: 'hidden', position: 'relative',
+                        background: `radial-gradient(ellipse at bottom, ${cls.color}15, transparent 70%)`,
+                        border: `1px solid ${isSelected ? cls.color + '50' : cls.color + '20'}`,
+                      }}>
+                        {id === 'worge' ? (
+                          <WorgeMorphPreview raceId={selectedRace} scale={1.4} speed={150} />
+                        ) : (
+                          <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={1.4} speed={150} />
+                        )}
+                        {isSelected && <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0, height: 30,
+                          background: `linear-gradient(transparent, ${cls.color}20)`,
+                          pointerEvents: 'none',
+                        }} />}
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <img src={CLASS_ICONS[id]} alt={cls.name} style={{
+                            width: 22, height: 22, imageRendering: 'pixelated',
+                            filter: isSelected ? `drop-shadow(0 0 4px ${cls.color})` : 'none',
+                          }} />
+                          <h3 className="font-cinzel" style={{
+                            color: isSelected ? cls.color : '#e2e8f0', margin: 0, fontSize: '1.05rem',
+                            textShadow: isSelected ? `0 0 10px ${cls.color}40` : 'none',
+                            transition: 'all 0.3s',
+                          }}>{cls.name}</h3>
+                          {isSelected && <span style={{
+                            color: cls.color, fontSize: '0.85rem', fontWeight: 700, marginLeft: 'auto',
+                          }}>&#10003;</span>}
+                        </div>
+                        <p style={{
+                          color: 'var(--muted)', fontSize: '0.72rem', margin: '0 0 8px 0',
+                          lineHeight: 1.3, opacity: 0.8
+                        }}>{cls.description}</p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {topAttrs.map(([attr, val]) => (
+                            <div key={attr} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '0.6rem', color: ATTR_COLORS[attr] || '#94a3b8', width: 28, textAlign: 'right', fontWeight: 600 }}>
+                                {attr.slice(0, 3)}
+                              </span>
+                              <div style={{
+                                flex: 1, height: 6, borderRadius: 3, overflow: 'hidden',
+                                background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                              }}>
+                                <div style={{
+                                  width: `${Math.min((val / maxAttr) * 100, 100)}%`, height: '100%',
+                                  borderRadius: 3, transition: 'width 0.4s ease',
+                                  background: `linear-gradient(90deg, ${ATTR_COLORS[attr] || '#94a3b8'}80, ${ATTR_COLORS[attr] || '#94a3b8'})`,
+                                  boxShadow: isSelected ? `0 0 6px ${ATTR_COLORS[attr] || '#94a3b8'}40` : 'none',
+                                }} />
+                              </div>
+                              <span style={{ fontSize: '0.6rem', color: '#94a3b8', width: 12, fontWeight: 600 }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{
-                      display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', marginBottom: 6
-                    }}>
-                      {Object.entries(previewAttrs).filter(([, v]) => v > 0).map(([attr, val]) => (
-                        <span key={attr} style={{
-                          background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 4,
-                          fontSize: '0.6rem', color: 'var(--accent)'
-                        }}>{attr.slice(0, 3)} {val}</span>
-                      ))}
-                    </div>
-                    <h3 className="font-cinzel" style={{ color: cls.color, marginBottom: 4, fontSize: '1rem' }}>{cls.name}</h3>
-                    <p style={{ color: 'var(--muted)', fontSize: '0.75rem', marginBottom: 0 }}>{cls.description}</p>
                   </div>
                 );
               })}
             </div>
 
-            <div style={{
-              marginTop: 16, background: 'rgba(14,22,48,0.8)',
-              border: `1px solid ${selectedCls ? selectedCls.color + '40' : 'var(--border)'}`,
-              borderRadius: 10, padding: 14, textAlign: 'center',
-              minHeight: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {selectedCls ? (
-                <p style={{ color: 'var(--text)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.8, margin: 0 }}>
-                  "{selectedCls.lore}"
+            {selectedCls && (
+              <div style={{
+                marginTop: 16, position: 'relative', overflow: 'hidden',
+                background: `linear-gradient(135deg, rgba(14,22,48,0.9), rgba(10,14,30,0.95))`,
+                border: `1px solid ${selectedCls.color}30`,
+                borderRadius: 12, padding: '14px 18px', textAlign: 'center',
+              }}>
+                <div style={{
+                  position: 'absolute', inset: 0, opacity: 0.04,
+                  backgroundImage: `url(${CLASS_ICONS[selectedFaction]})`,
+                  backgroundSize: '80px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
+                  pointerEvents: 'none',
+                }} />
+                <p style={{
+                  color: selectedCls.color, fontSize: '0.75rem', fontStyle: 'italic',
+                  opacity: 0.9, margin: 0, lineHeight: 1.5, position: 'relative', zIndex: 1,
+                  textShadow: `0 0 20px ${selectedCls.color}20`,
+                }}>
+                  &ldquo;{selectedCls.lore}&rdquo;
                 </p>
-              ) : (
-                <p style={{ color: 'var(--muted)', fontSize: '0.8rem', fontStyle: 'italic', opacity: 0.5, margin: 0 }}>
-                  Select a class to learn more
-                </p>
-              )}
-            </div>
+              </div>
+            )}
 
             <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 12 }}>
               <button onClick={() => goBack(2)} style={{
-                background: 'var(--border)', border: 'none', borderRadius: 10,
+                background: 'rgba(30,40,60,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
                 padding: '12px 28px', color: 'var(--text)', fontWeight: 600,
-                cursor: 'pointer', fontSize: '0.9rem'
+                cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s',
               }}>Back</button>
               <button onClick={handleStep3} disabled={!selectedFaction} style={{
-                background: selectedFaction ? 'linear-gradient(135deg, var(--accent), #10b981)' : 'var(--border)',
-                border: 'none', borderRadius: 10, padding: '12px 40px',
-                color: selectedFaction ? '#0b1020' : 'var(--muted)',
+                background: selectedFaction ? `linear-gradient(135deg, ${selectedCls?.color || 'var(--accent)'}, ${selectedCls?.color || 'var(--accent)'}aa)` : 'var(--border)',
+                border: selectedFaction ? `1px solid ${selectedCls?.color || 'var(--accent)'}60` : '1px solid transparent',
+                borderRadius: 10, padding: '12px 40px',
+                color: selectedFaction ? '#fff' : 'var(--muted)',
                 fontWeight: 700, fontSize: '1rem', cursor: selectedFaction ? 'pointer' : 'not-allowed',
-                fontFamily: "'Cinzel', serif", letterSpacing: 1, transition: 'all 0.3s'
+                fontFamily: "'Cinzel', serif", letterSpacing: 1, transition: 'all 0.3s',
+                boxShadow: selectedFaction ? `0 0 20px ${selectedCls?.color || 'var(--accent)'}30` : 'none',
+                textShadow: selectedFaction ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
               }}>Continue</button>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {step === 4 && playerClass && (() => {
           const cls = classDefinitions[playerClass];
