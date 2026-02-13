@@ -76,6 +76,38 @@ const resourceToHarvestId = {
   wood: 'lumber_yard', ore: 'ore_vein', crystals: 'crystal_cave', gold: 'gold_mine', herbs: 'herb_garden',
 };
 
+function EventEnemySprite({ spriteData, scale, index, eventId }) {
+  const [anim, setAnim] = React.useState('idle');
+  const timerRef = React.useRef(null);
+  const resetRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const scheduleAttack = () => {
+      const delay = 4000 + Math.random() * 6000 + index * 2000;
+      timerRef.current = setTimeout(() => {
+        setAnim('attack1');
+        const attackDuration = (spriteData?.attack1?.frames || 6) * 140;
+        resetRef.current = setTimeout(() => {
+          setAnim('idle');
+          scheduleAttack();
+        }, attackDuration);
+      }, delay);
+    };
+    scheduleAttack();
+    return () => { clearTimeout(timerRef.current); clearTimeout(resetRef.current); };
+  }, [spriteData, index]);
+
+  return (
+    <SpriteAnimation
+      spriteData={spriteData}
+      animation={anim}
+      scale={scale}
+      speed={anim === 'idle' ? (180 + index * 40) : 140}
+      loop={true}
+    />
+  );
+}
+
 const seededRng = (seed) => {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
@@ -2143,7 +2175,7 @@ export default function WorldMap() {
                     zIndex: i,
                     pointerEvents: 'none',
                   }}>
-                    <SpriteAnimation spriteData={spriteData} animation="idle" scale={evSpriteScale} speed={180 + i * 40} />
+                    <EventEnemySprite spriteData={spriteData} scale={evSpriteScale} index={i} eventId={event.id} />
                   </div>
                 ))}
               </div>
