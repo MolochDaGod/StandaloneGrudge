@@ -243,11 +243,12 @@ export default function CharacterCreate() {
             Wisdom: '#ec4899', Tactics: '#f97316',
           };
           const maxAttr = 9;
+          const cardH = 200;
           return (
           <div style={{ animation: 'fadeIn 0.4s ease' }}>
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ textAlign: 'center', marginBottom: 14 }}>
               <h2 className="font-cinzel" style={{
-                color: 'var(--gold)', fontSize: '1.5rem', marginBottom: 6,
+                color: 'var(--gold)', fontSize: '1.4rem', marginBottom: 6,
                 textShadow: '0 0 20px rgba(255,215,0,0.3)', letterSpacing: 2
               }}>
                 Choose Your Class
@@ -262,7 +263,7 @@ export default function CharacterCreate() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {Object.entries(classDefinitions).map(([id, cls]) => {
                 const isSelected = selectedFaction === id;
                 const previewAttrs = { ...cls.startingAttributes };
@@ -272,107 +273,96 @@ export default function CharacterCreate() {
                   });
                 }
                 const topAttrs = Object.entries(previewAttrs).sort((a, b) => b[1] - a[1]).slice(0, 4);
+                const spriteData = id !== 'worge' ? getPlayerSprite(id, selectedRace) : null;
+                const frameH = spriteData?.frameHeight || 128;
+                const targetH = cardH - 20;
+                const baseScale = Math.min(Math.max(targetH / frameH, 1), 4);
+                const finalScale = baseScale * (spriteData?.scale || 1);
                 return (
                   <div key={id} onClick={() => setSelectedFaction(id)} style={{
                     position: 'relative', overflow: 'hidden', cursor: 'pointer',
+                    height: cardH,
                     background: isSelected
-                      ? `linear-gradient(135deg, ${cls.color}18, rgba(10,14,30,0.95) 60%)`
-                      : 'linear-gradient(135deg, rgba(16,20,36,0.95), rgba(10,14,30,0.85))',
-                    border: `2px solid ${isSelected ? cls.color : cls.color + '30'}`,
-                    borderRadius: 16, padding: '0',
+                      ? `linear-gradient(180deg, ${cls.color}15, rgba(10,14,30,0.95) 50%)`
+                      : 'linear-gradient(180deg, rgba(16,20,36,0.95), rgba(10,14,30,0.85))',
+                    border: `2px solid ${isSelected ? cls.color : cls.color + '25'}`,
+                    borderRadius: 14, padding: 0,
                     transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
                     boxShadow: isSelected
-                      ? `0 0 30px ${cls.color}25, 0 0 60px ${cls.color}10, inset 0 0 40px ${cls.color}08`
+                      ? `0 0 25px ${cls.color}25, inset 0 0 30px ${cls.color}08`
                       : '0 2px 8px rgba(0,0,0,0.3)',
-                    transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                   }}
-                  onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '80'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 4px 20px ${cls.color}20`; }}}
-                  onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '30'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; }}}
+                  onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '70'; e.currentTarget.style.boxShadow = `0 4px 16px ${cls.color}15`; }}}
+                  onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = cls.color + '25'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)'; }}}
                   >
-                    <div style={{
-                      position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)',
-                      width: 160, height: 160, opacity: isSelected ? 0.12 : 0.05,
-                      backgroundImage: `url(${CLASS_ICONS[id]})`,
-                      backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-                      transition: 'opacity 0.3s', pointerEvents: 'none',
-                    }} />
-
                     {isSelected && (
                       <div style={{
                         position: 'absolute', top: 0, left: 0, right: 0, height: 2,
                         background: `linear-gradient(90deg, transparent, ${cls.color}, transparent)`,
-                        animation: 'shimmer 2s infinite',
+                        animation: 'shimmer 2s infinite', zIndex: 3,
                       }} />
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', gap: 14, position: 'relative', zIndex: 1 }}>
-                      <div style={{
-                        width: 110, height: 110, flexShrink: 0,
-                        display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-                        borderRadius: 12, overflow: 'hidden', position: 'relative',
-                        background: `radial-gradient(ellipse at bottom, ${cls.color}15, transparent 70%)`,
-                        border: `1px solid ${isSelected ? cls.color + '50' : cls.color + '20'}`,
-                      }}>
-                        {(() => {
-                          const spriteData = id !== 'worge' ? getPlayerSprite(id, selectedRace) : null;
-                          const frameH = spriteData?.frameHeight || 128;
-                          const targetH = 110;
-                          const baseScale = Math.min(Math.max(targetH / frameH, 0.8), 3);
-                          const finalScale = baseScale * (spriteData?.scale || 1);
-                          return id === 'worge' ? (
-                            <WorgeMorphPreview raceId={selectedRace} scale={1.4} speed={150} />
-                          ) : (
-                            <SpriteAnimation spriteData={spriteData} animation="idle" scale={finalScale} speed={150} />
-                          );
-                        })()}
-                        {isSelected && <div style={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0, height: 30,
-                          background: `linear-gradient(transparent, ${cls.color}20)`,
-                          pointerEvents: 'none',
-                        }} />}
+                    <div style={{
+                      position: 'absolute', right: 0, bottom: 20, zIndex: 1,
+                      display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+                      width: '65%', height: '100%', pointerEvents: 'none',
+                    }}>
+                      {id === 'worge' ? (
+                        <WorgeMorphPreview raceId={selectedRace} scale={finalScale} speed={150} />
+                      ) : (
+                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={finalScale} speed={150} />
+                      )}
+                    </div>
+
+                    <div style={{
+                      position: 'absolute', right: 0, bottom: 0, left: 0, height: 30,
+                      background: `linear-gradient(transparent, rgba(5,8,20,0.7))`,
+                      pointerEvents: 'none', zIndex: 2,
+                    }} />
+
+                    <div style={{ position: 'relative', zIndex: 2, padding: '10px 10px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                        <img src={CLASS_ICONS[id]} alt={cls.name} style={{
+                          width: 18, height: 18, imageRendering: 'pixelated',
+                          filter: isSelected ? `drop-shadow(0 0 3px ${cls.color})` : 'none',
+                        }} />
+                        <h3 className="font-cinzel" style={{
+                          color: isSelected ? cls.color : '#e2e8f0', margin: 0, fontSize: '0.9rem',
+                          textShadow: isSelected ? `0 0 8px ${cls.color}40` : '0 1px 3px rgba(0,0,0,0.8)',
+                        }}>{cls.name}</h3>
+                        {isSelected && <span style={{ color: cls.color, fontSize: '0.75rem', fontWeight: 700 }}>&#10003;</span>}
                       </div>
+                      <p style={{
+                        color: 'var(--muted)', fontSize: '0.62rem', margin: '0 0 8px 0',
+                        lineHeight: 1.3, opacity: 0.75, maxWidth: '70%',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                      }}>{cls.description}</p>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <img src={CLASS_ICONS[id]} alt={cls.name} style={{
-                            width: 22, height: 22, imageRendering: 'pixelated',
-                            filter: isSelected ? `drop-shadow(0 0 4px ${cls.color})` : 'none',
-                          }} />
-                          <h3 className="font-cinzel" style={{
-                            color: isSelected ? cls.color : '#e2e8f0', margin: 0, fontSize: '1.05rem',
-                            textShadow: isSelected ? `0 0 10px ${cls.color}40` : 'none',
-                            transition: 'all 0.3s',
-                          }}>{cls.name}</h3>
-                          {isSelected && <span style={{
-                            color: cls.color, fontSize: '0.85rem', fontWeight: 700, marginLeft: 'auto',
-                          }}>&#10003;</span>}
-                        </div>
-                        <p style={{
-                          color: 'var(--muted)', fontSize: '0.72rem', margin: '0 0 8px 0',
-                          lineHeight: 1.3, opacity: 0.8
-                        }}>{cls.description}</p>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {topAttrs.map(([attr, val]) => (
-                            <div key={attr} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontSize: '0.6rem', color: ATTR_COLORS[attr] || '#94a3b8', width: 28, textAlign: 'right', fontWeight: 600 }}>
-                                {attr.slice(0, 3)}
-                              </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: '55%' }}>
+                        {topAttrs.map(([attr, val]) => (
+                          <div key={attr} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{
+                              fontSize: '0.55rem', color: ATTR_COLORS[attr] || '#94a3b8',
+                              width: 22, textAlign: 'right', fontWeight: 600,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                            }}>
+                              {attr.slice(0, 3)}
+                            </span>
+                            <div style={{
+                              flex: 1, height: 5, borderRadius: 3, overflow: 'hidden',
+                              background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.06)',
+                            }}>
                               <div style={{
-                                flex: 1, height: 6, borderRadius: 3, overflow: 'hidden',
-                                background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)',
-                              }}>
-                                <div style={{
-                                  width: `${Math.min((val / maxAttr) * 100, 100)}%`, height: '100%',
-                                  borderRadius: 3, transition: 'width 0.4s ease',
-                                  background: `linear-gradient(90deg, ${ATTR_COLORS[attr] || '#94a3b8'}80, ${ATTR_COLORS[attr] || '#94a3b8'})`,
-                                  boxShadow: isSelected ? `0 0 6px ${ATTR_COLORS[attr] || '#94a3b8'}40` : 'none',
-                                }} />
-                              </div>
-                              <span style={{ fontSize: '0.6rem', color: '#94a3b8', width: 12, fontWeight: 600 }}>{val}</span>
+                                width: `${Math.min((val / maxAttr) * 100, 100)}%`, height: '100%',
+                                borderRadius: 3, transition: 'width 0.4s ease',
+                                background: `linear-gradient(90deg, ${ATTR_COLORS[attr] || '#94a3b8'}80, ${ATTR_COLORS[attr] || '#94a3b8'})`,
+                                boxShadow: isSelected ? `0 0 4px ${ATTR_COLORS[attr] || '#94a3b8'}40` : 'none',
+                              }} />
                             </div>
-                          ))}
-                        </div>
+                            <span style={{ fontSize: '0.55rem', color: '#94a3b8', width: 10, fontWeight: 600 }}>{val}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -380,30 +370,33 @@ export default function CharacterCreate() {
               })}
             </div>
 
-            {selectedCls && (
-              <div style={{
-                marginTop: 16, position: 'relative', overflow: 'hidden',
-                background: `linear-gradient(135deg, rgba(14,22,48,0.9), rgba(10,14,30,0.95))`,
-                border: `1px solid ${selectedCls.color}30`,
-                borderRadius: 12, padding: '14px 18px', textAlign: 'center',
-              }}>
-                <div style={{
-                  position: 'absolute', inset: 0, opacity: 0.04,
-                  backgroundImage: `url(${CLASS_ICONS[selectedFaction]})`,
-                  backgroundSize: '80px', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
-                  pointerEvents: 'none',
-                }} />
+            <div style={{
+              marginTop: 12, position: 'relative', overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(14,22,48,0.9), rgba(10,14,30,0.95))',
+              border: `1px solid ${selectedCls ? selectedCls.color + '30' : 'var(--border)'}`,
+              borderRadius: 12, padding: '12px 16px', textAlign: 'center',
+              minHeight: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              {selectedCls ? (<>
                 <p style={{
-                  color: selectedCls.color, fontSize: '0.75rem', fontStyle: 'italic',
-                  opacity: 0.9, margin: 0, lineHeight: 1.5, position: 'relative', zIndex: 1,
+                  color: selectedCls.color, fontSize: '0.72rem', fontStyle: 'italic',
+                  opacity: 0.9, margin: 0, lineHeight: 1.5,
                   textShadow: `0 0 20px ${selectedCls.color}20`,
                 }}>
                   &ldquo;{selectedCls.lore}&rdquo;
                 </p>
-              </div>
-            )}
+                <img src={CLASS_ICONS[selectedFaction]} alt="" style={{
+                  width: 32, height: 32, imageRendering: 'pixelated', opacity: 0.6,
+                  filter: `drop-shadow(0 0 6px ${selectedCls.color}60)`,
+                }} />
+              </>) : (
+                <p style={{ color: 'var(--muted)', fontSize: '0.75rem', fontStyle: 'italic', opacity: 0.5, margin: 0 }}>
+                  Select a class to learn more
+                </p>
+              )}
+            </div>
 
-            <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 12 }}>
+            <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', justifyContent: 'center', gap: 12 }}>
               <button onClick={() => goBack(2)} style={{
                 background: 'rgba(30,40,60,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
                 padding: '12px 28px', color: 'var(--text)', fontWeight: 600,
