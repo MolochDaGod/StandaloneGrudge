@@ -258,6 +258,7 @@ export const spriteSheets = {
     folder: 'wizard-pack',
     frameWidth: 231,
     frameHeight: 190,
+    facesLeft: true,
     idle: { src: '/sprites/wizard-pack/idle.png', frames: 6 },
     attack1: { src: '/sprites/wizard-pack/attack1.png', frames: 8 },
     attack2: { src: '/sprites/wizard-pack/attack2.png', frames: 8 },
