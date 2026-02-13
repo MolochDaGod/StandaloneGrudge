@@ -12,6 +12,7 @@ const ADMIN_TOOLS = [
   { id: 'sprite', label: 'Sprite Editor', path: '/adminsprite', desc: 'Preview and configure character sprites, effects, projectiles', color: '#a855f7', icon: 'M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM5 17l3.5-4.5 2.5 3.01L14.5 11l4.5 6H5z', bg: '/backgrounds/wc_purple.png' },
   { id: 'ui', label: 'UI Layout Editor', path: '/adminui', desc: 'Drag-and-drop positioning of HUD elements across screens', color: '#3b82f6', icon: 'M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z', bg: '/backgrounds/wc_blue.png' },
   { id: 'icons', label: 'Icon Manager', path: '/adminicons', desc: 'Browse, replace, and manage all game icons, skills, and materials', color: '#06b6d4', icon: 'M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4z', bg: '/backgrounds/wc_gold.png' },
+  { id: 'pvp', label: 'PvP Placement', path: '/adminpvp', desc: 'Place and position units on arena backgrounds for PvP battles', color: '#ec4899', icon: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z', bg: '/backgrounds/arena.png' },
 ];
 
 const GAME_SYSTEMS = [

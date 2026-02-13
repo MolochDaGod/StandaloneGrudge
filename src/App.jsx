@@ -26,6 +26,7 @@ import SceneView from './components/SceneView';
 import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
+import AdminPvP from './components/AdminPvP';
 import AdminGizmo from './components/AdminGizmo';
 import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
@@ -138,6 +139,7 @@ function GameApp() {
       case 'account': return <AccountPage />;
       case 'training': return <TrainingScreen />;
       case 'scene': return <SceneView />;
+      case 'adminpvp': return <AdminPvP />;
       default: return <TitleScreen />;
     }
   };
@@ -220,6 +222,7 @@ export default function App() {
   if (path === '/adminsprite') return <AdminSprite />;
   if (path === '/adminui') return <AdminUI />;
   if (path === '/adminicons') return <AdminIcons />;
+  if (path === '/adminpvp') return <AdminPvP />;
   if (path === '/discordauth') return <DiscordAuth />;
 
   return <GameApp />;
