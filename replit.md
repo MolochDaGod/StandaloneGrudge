@@ -20,7 +20,7 @@ The application is a React 19 frontend developed with Vite, with an Express back
 **Technical Implementations:**
 - **Character System:** Supports 24 unique Warlord combinations (6 races, 4 classes), 8 attributes, and 0-20 level progression.
 - **Battle System:** Multi-unit tactical combat on a 2D plane with speed-based initiative, supporting up to 3 active heroes against AI enemies. Includes context-aware damage numbers, screen shake, and AoE (Area of Effect) abilities that hit all enemies with staggered visual effects. AoE is flagged via `isAoE: true` on ability definitions; the engine resolves damage against all alive opposing units. Debuff-type AoE abilities (Demoralizing Shout, Primal Roar) apply status effects to all enemies.
-- **Sprite System:** `SpriteAnimation` component for sprite sheet animations with dynamic scaling, transformations, hue overlays for equipment, and fallback animations.
+- **Sprite System:** `SpriteAnimation` component for sprite sheet animations with dynamic scaling, transformations, hue overlays for equipment, and fallback animations. All sprites (battle + lobby slideshow) are scaled by frameHeight to a uniform 200px display height, matching the training dummy. No per-combo scale overrides.
 - **Hero Slideshow (LobbyScreen):** Presents all 24 race/class combinations with unique animations, VFX, faction/class icons, titles, lore, and slogans.
 - **Pixel Art UI Bars:** `PixelBar` component renders sprite-based bars (HP, Mana, Stamina, Grudge, Action Timer, XP).
 - **Custom VFX Effects:** 14 high-quality custom effect sprite sheets for abilities and skills.
