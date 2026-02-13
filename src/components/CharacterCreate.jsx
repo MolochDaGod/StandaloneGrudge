@@ -313,11 +313,18 @@ export default function CharacterCreate() {
                         background: `radial-gradient(ellipse at bottom, ${cls.color}15, transparent 70%)`,
                         border: `1px solid ${isSelected ? cls.color + '50' : cls.color + '20'}`,
                       }}>
-                        {id === 'worge' ? (
-                          <WorgeMorphPreview raceId={selectedRace} scale={1.4} speed={150} />
-                        ) : (
-                          <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={1.4} speed={150} />
-                        )}
+                        {(() => {
+                          const spriteData = id !== 'worge' ? getPlayerSprite(id, selectedRace) : null;
+                          const frameH = spriteData?.frameHeight || 128;
+                          const targetH = 110;
+                          const baseScale = Math.min(Math.max(targetH / frameH, 0.8), 3);
+                          const finalScale = baseScale * (spriteData?.scale || 1);
+                          return id === 'worge' ? (
+                            <WorgeMorphPreview raceId={selectedRace} scale={1.4} speed={150} />
+                          ) : (
+                            <SpriteAnimation spriteData={spriteData} animation="idle" scale={finalScale} speed={150} />
+                          );
+                        })()}
                         {isSelected && <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0, height: 30,
                           background: `linear-gradient(transparent, ${cls.color}20)`,
