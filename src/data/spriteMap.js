@@ -258,6 +258,17 @@ export const spriteSheets = {
     death: { src: '/sprites/wizard/death.png', frames: 4 },
     walk: { src: '/sprites/wizard/walk.png', frames: 8 },
   },
+  'gunslinger': {
+    folder: 'gunslinger',
+    frameWidth: 128,
+    frameHeight: 128,
+    facesLeft: true,
+    idle: { src: '/sprites/gunslinger/idle.png', frames: 4 },
+    attack1: { src: '/sprites/gunslinger/attack.png', frames: 6 },
+    hurt: { src: '/sprites/gunslinger/hurt.png', frames: 2 },
+    death: { src: '/sprites/gunslinger/death.png', frames: 6 },
+    walk: { src: '/sprites/gunslinger/walk.png', frames: 6 },
+  },
   'wizard-pack': {
     folder: 'wizard-pack',
     frameWidth: 231,
@@ -1200,6 +1211,8 @@ export const enemySpriteMap = {
   stormhead_boss: { ...spriteSheets['stormhead'], scale: 1.8 },
   stormhead_miniboss: { ...spriteSheets['stormhead'], scale: 1.3 },
   stormhead_ally: { ...spriteSheets['stormhead'], scale: 0.9, filter: 'hue-rotate(120deg) saturate(1.2) brightness(1.1)' },
+  gunslinger: spriteSheets['gunslinger'],
+  gunslinger_boss: { ...spriteSheets['gunslinger'], scale: 1.6 },
 };
 
 export const effectSprites = {
