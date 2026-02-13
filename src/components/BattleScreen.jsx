@@ -1221,7 +1221,7 @@ function getBeamTrail(unit, abilityName) {
   return beamTrails.red;
 }
 
-const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75, barbarian_warrior: 2.5 };
+const BATTLE_SCALE_OVERRIDES = {};
 function getUnitEffectSize(unit) {
   if (!unit) return 140;
   const base = 200;
@@ -2607,14 +2607,13 @@ export default function BattleScreen() {
           const isEnemyClickable = unit.team === 'enemy' && unit.alive && isPlayerTurn;
           const flipSprite = spriteData?.facesLeft ? unit.team === 'player' : unit.team === 'enemy';
           const introDelay = introComplete ? 0 : (idx * 100);
-          const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
+          const baseFrameSize = spriteData?.frameHeight || spriteData?.frameWidth || 100;
           const targetDisplaySize = 200;
           const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
-          const BATTLE_POSITION_OFFSETS = { human_warrior: { x: -30, y: 30 }, elf_warrior: { x: 0, y: 20 }, elf_worge: { x: -20, y: 40 }, undead_warrior: { x: -30, y: 30 }, undead_worge: { x: 0, y: 40 } };
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
-          const comboOffset = BATTLE_POSITION_OFFSETS[`${unit.raceId}_${unit.classId}`] || { x: 0, y: 0 };
+          const comboOffset = { x: 0, y: 0 };
           const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
