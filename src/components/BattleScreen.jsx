@@ -2617,9 +2617,8 @@ export default function BattleScreen() {
           const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
-          const footCrop = 0.82;
-          const visibleHeight = Math.round(spriteSize * footCrop);
-          const footY = visibleHeight;
+          const hitW = Math.round(spriteSize * 0.5);
+          const hitH = Math.round(spriteSize * 0.75);
 
           return (
             <div
@@ -2636,8 +2635,8 @@ export default function BattleScreen() {
                 animation: introComplete ? 'none' : `unitSlideIn 0.6s ease ${introDelay}ms forwards`,
                 zIndex: Math.floor(posY),
                 pointerEvents: (unit.alive && anim !== 'death') ? 'auto' : 'none',
-                width: spriteSize,
-                height: footY,
+                width: hitW,
+                height: hitH,
                 overflow: 'visible',
                 outline: 'none',
                 border: 'none',
@@ -2660,8 +2659,9 @@ export default function BattleScreen() {
                   {(morphingUnits[unit.id] === 'blink1' || morphingUnits[unit.id] === 'blink2') && (
                     <div style={{
                       position: 'absolute',
-                      top: 0, left: 0,
-                      width: '100%', height: '100%',
+                      bottom: 0, left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: spriteSize, height: spriteSize,
                       background: morphingUnits[unit.id] === 'blink1'
                         ? 'radial-gradient(ellipse, rgba(34,197,94,0.8) 0%, rgba(250,204,21,0.4) 50%, transparent 80%)'
                         : 'radial-gradient(ellipse, rgba(250,204,21,0.8) 0%, rgba(34,197,94,0.4) 50%, transparent 80%)',
@@ -2682,8 +2682,9 @@ export default function BattleScreen() {
                 <>
                   {[1, 2, 3].map(i => (
                     <div key={`trail-${i}`} style={{
-                      position: 'absolute', top: 0, left: 0,
-                      width: spriteSize, height: spriteSize,
+                      position: 'absolute', bottom: 0, left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 0, height: 0, overflow: 'visible',
                       animation: `nightborneTrail${i} 0.6s ease-out infinite`,
                       animationDelay: `${i * 0.08}s`,
                       pointerEvents: 'none',
@@ -2701,9 +2702,9 @@ export default function BattleScreen() {
                     </div>
                   ))}
                   <div style={{
-                    position: 'absolute', top: '50%', left: '50%',
+                    position: 'absolute', bottom: spriteSize * 0.3, left: '50%',
                     width: spriteSize * 1.4, height: spriteSize * 1.4,
-                    marginLeft: -spriteSize * 0.7, marginTop: -spriteSize * 0.7,
+                    transform: 'translateX(-50%)',
                     borderRadius: '50%',
                     animation: 'nightborneAura 2s ease-in-out infinite',
                     pointerEvents: 'none',
@@ -2712,8 +2713,9 @@ export default function BattleScreen() {
                   {Array.from({ length: 6 }).map((_, pi) => (
                     <div key={`nb-p-${pi}`} style={{
                       position: 'absolute',
-                      left: `${30 + Math.random() * 40}%`,
-                      top: `${20 + Math.random() * 60}%`,
+                      bottom: spriteSize * (0.2 + Math.random() * 0.6),
+                      left: '50%',
+                      marginLeft: -spriteSize * 0.2 + Math.random() * spriteSize * 0.4,
                       width: 3, height: 3,
                       borderRadius: '50%',
                       background: `rgba(${140 + Math.floor(Math.random() * 80)}, 0, 255, 0.8)`,
@@ -2729,8 +2731,13 @@ export default function BattleScreen() {
               )}
 
               <div style={{
-                position: 'absolute', top: 0, left: 0,
-                width: spriteSize, height: spriteSize,
+                position: 'absolute',
+                bottom: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 0,
+                height: 0,
+                overflow: 'visible',
                 filter: anim === 'hurt'
                   ? 'brightness(2) sepia(1) saturate(10) hue-rotate(-10deg) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
                   : isBearForm && unit.alive
@@ -2753,7 +2760,7 @@ export default function BattleScreen() {
               </div>
 
               {unit.alive && unit.stunned && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
                   onMouseDown={adminMode ? (e) => handleAdminDragStart('stun', e) : undefined}
                   title={adminMode ? `Stun: offsetY=${adminOverrides.stun.offsetY}, size=${adminOverrides.stun.size}` : undefined}
                 >
@@ -2769,7 +2776,7 @@ export default function BattleScreen() {
               )}
 
               {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
                   onMouseDown={adminMode ? (e) => handleAdminDragStart('poison', e) : undefined}
                   title={adminMode ? `Poison: offsetY=${adminOverrides.poison.offsetY}, size=${adminOverrides.poison.size}` : undefined}
                 >
@@ -2785,7 +2792,7 @@ export default function BattleScreen() {
               )}
 
               {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
                   onMouseDown={adminMode ? (e) => handleAdminDragStart('dot', e) : undefined}
                   title={adminMode ? `DoT: offsetY=${adminOverrides.dot.offsetY}, size=${adminOverrides.dot.size}` : undefined}
                 >
@@ -2801,7 +2808,7 @@ export default function BattleScreen() {
               )}
 
               {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: spriteSize, height: spriteSize, pointerEvents: adminMode ? 'auto' : 'none' }}
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
                   onMouseDown={adminMode ? (e) => handleAdminDragStart('buff', e) : undefined}
                   title={adminMode ? `Buff: offsetY=${adminOverrides.buff.offsetY}, size=${adminOverrides.buff.size}` : undefined}
                 >
@@ -2818,7 +2825,7 @@ export default function BattleScreen() {
 
               {isSelected && unit.alive && (
                 <div style={{
-                  position: 'absolute', top: footY - 8, left: '50%', transform: 'translateX(-50%)',
+                  position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
                   width: 50, height: 12, borderRadius: '50%',
                   background: 'rgba(239,68,68,0.35)',
                   border: '2px solid var(--danger)',
@@ -2828,7 +2835,7 @@ export default function BattleScreen() {
               )}
 
               <div style={{
-                position: 'absolute', top: footY - 2, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: -2, left: '50%', transform: 'translateX(-50%)',
                 width: 40, height: 8, borderRadius: '50%',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
                 zIndex: 1,
@@ -2837,7 +2844,7 @@ export default function BattleScreen() {
               <div
                 onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
                 style={{
-                position: 'absolute', top: footY + 4, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: -20, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
                 background: isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.35)', 
                 borderRadius: 4, padding: '2px 5px',

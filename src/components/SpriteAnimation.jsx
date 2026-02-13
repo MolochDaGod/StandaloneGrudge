@@ -160,54 +160,68 @@ export default function SpriteAnimation({
 
   return (
     <div style={{
-      width: displayWidth,
-      height: displayHeight,
-      overflow: 'hidden',
-      imageRendering: 'pixelated',
-      transform: [flip ? 'scaleX(-1)' : '', dwarfTransform].filter(Boolean).join(' ') || 'none',
-      transformOrigin: dwarfTransform ? 'bottom center' : undefined,
       position: 'relative',
-      mixBlendMode: blendMode,
-      outline: 'none',
-      border: 'none',
+      width: 0,
+      height: 0,
+      overflow: 'visible',
+      imageRendering: 'pixelated',
     }}>
       <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: '50%',
+        transform: [
+          'translateX(-50%)',
+          flip ? 'scaleX(-1)' : '',
+          dwarfTransform,
+        ].filter(Boolean).join(' '),
+        transformOrigin: 'bottom center',
         width: displayWidth,
         height: displayHeight,
-        backgroundImage: `url(${anim.src})`,
-        backgroundSize: `${totalFrames * displayWidth}px ${displayHeight}px`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: `-${frame * displayWidth}px 0`,
-        imageRendering: 'pixelated',
-        filter: cssFilter || 'none',
-        willChange: 'background-position',
-      }} />
-      {spriteData?.showGuideGrid && (
+        overflow: 'hidden',
+        mixBlendMode: blendMode,
+        pointerEvents: 'none',
+        outline: 'none',
+        border: 'none',
+      }}>
         <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundImage: 'url(/attached_assets/image_1770792986896.png)',
-          backgroundSize: '100% 100%',
-          pointerEvents: 'none',
-          opacity: 0.3,
-          zIndex: 20
-        }} />
-      )}
-      {tintColor && (
-        <div style={{
-          position: 'absolute',
-          top: 0, left: 0,
           width: displayWidth,
           height: displayHeight,
-          background: tintColor,
-          mixBlendMode: 'multiply',
-          pointerEvents: 'none',
+          backgroundImage: `url(${anim.src})`,
+          backgroundSize: `${totalFrames * displayWidth}px ${displayHeight}px`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: `-${frame * displayWidth}px 0`,
+          imageRendering: 'pixelated',
+          filter: cssFilter || 'none',
+          willChange: 'background-position',
         }} />
-      )}
-      {overlayElements}
+        {spriteData?.showGuideGrid && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundImage: 'url(/attached_assets/image_1770792986896.png)',
+            backgroundSize: '100% 100%',
+            pointerEvents: 'none',
+            opacity: 0.3,
+            zIndex: 20
+          }} />
+        )}
+        {tintColor && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0,
+            width: displayWidth,
+            height: displayHeight,
+            background: tintColor,
+            mixBlendMode: 'multiply',
+            pointerEvents: 'none',
+          }} />
+        )}
+        {overlayElements}
+      </div>
     </div>
   );
 }
