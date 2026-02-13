@@ -762,23 +762,12 @@ function HeroSlideshow() {
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
 
-  const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
+  const BATTLE_SCALE_OVERRIDES = {};
   const SPRITE_SCALE_OVERRIDES = {
   };
   const SPRITE_Y_OFFSETS = {
-    human_mage: 30,
-    undead_warrior: 60,
-    human_warrior: 110,
-    human_worge: 0,
-    orc_mage: 20,
-    orc_worge: 50,
-    orc_ranger: 70,
   };
   const SPRITE_X_OFFSETS = {
-    human_warrior: -30,
-    orc_mage: -70,
-    orc_ranger: -30,
-    elf_mage: -30,
   };
   const comboKey = `${combo.raceId}_${combo.classId}`;
   const savedPos = loadSpritePosition(comboKey);
@@ -788,7 +777,7 @@ function HeroSlideshow() {
 
   const battleTargetSize = 200;
   const spriteFrameH = spriteData?.frameHeight || 100;
-  const baseFrameSize = spriteData?.frameWidth || spriteFrameH;
+  const baseFrameSize = spriteFrameH;
   const battleComboScale = BATTLE_SCALE_OVERRIDES[comboKey] || 1;
   const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale;
   const spriteScale = scaleOverride ? battleScale * scaleOverride : battleScale;

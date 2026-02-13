@@ -803,7 +803,7 @@ export default function AdminBattle() {
               const pos = unit.position;
               const spriteData = getUnitSprite(unit);
               const flipSprite = unit.team === 'enemy';
-              const baseFrameSize = spriteData?.frameWidth || spriteData?.frameHeight || 100;
+              const baseFrameSize = spriteData?.frameHeight || spriteData?.frameWidth || 100;
               const isBossUnit = unit.isBoss;
               const scale = (spriteSize / baseFrameSize) * (isBossUnit ? bossScale : 1);
               const unitSpriteSize = Math.round(baseFrameSize * scale);
