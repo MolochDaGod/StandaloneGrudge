@@ -102,7 +102,7 @@ export const WEAPON_SKILLS = {
     ],
     slot23: [
       { id: 'ws_rend', name: 'Rend', icon: 'target', description: 'Rip into the enemy causing heavy bleed for 3 turns', type: 'physical', damage: 1.4, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
-      { id: 'ws_whirlwind', name: 'Whirlwind', icon: 'chaos', description: 'Spin your axe in a devastating arc', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
+      { id: 'ws_whirlwind', name: 'Whirlwind', icon: 'chaos', description: 'Spin your axe hitting all enemies', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy', isAoE: true },
       { id: 'ws_sunder_armor', name: 'Sunder Armor', icon: 'bomb', description: 'Smash through defenses, reducing enemy damage for 2 turns', type: 'physical', damage: 1.2, manaCost: 0, staminaCost: 18, cooldown: 3, target: 'enemy', effect: { stat: 'damage', multiplier: 0.7, duration: 2 } },
     ],
   },
@@ -112,8 +112,8 @@ export const WEAPON_SKILLS = {
       { id: 'ws_gs_overhead', name: 'Overhead Slash', icon: 'crossed_swords', description: 'A powerful overhead swing', type: 'physical', damage: 1.2, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 6, staminaGain: 7 },
     ],
     slot23: [
-      { id: 'ws_gs_cleave', name: 'Greatsword Cleave', icon: 'bomb', description: 'Massive cleaving strike dealing 2x damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 2, target: 'enemy' },
-      { id: 'ws_gs_whirlwind', name: 'Steel Tempest', icon: 'chaos', description: 'Spin with your greatsword creating a tempest of steel', type: 'physical', damage: 1.7, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy' },
+      { id: 'ws_gs_cleave', name: 'Greatsword Cleave', icon: 'bomb', description: 'Massive cleaving strike hitting all enemies', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 2, target: 'enemy', isAoE: true },
+      { id: 'ws_gs_whirlwind', name: 'Steel Tempest', icon: 'chaos', description: 'Spin with your greatsword hitting all enemies', type: 'physical', damage: 1.7, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', isAoE: true },
       { id: 'ws_gs_execute', name: 'Decapitate', icon: 'skull', description: 'Aim for the neck, dealing bonus damage to low HP targets', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy', executeDamage: 2.5, executeThreshold: 0.3 },
     ],
   },
@@ -134,9 +134,9 @@ export const WEAPON_SKILLS = {
       { id: 'ws_h2_bash', name: 'Hammer Bash', icon: 'hammer', description: 'Bash with the flat of the hammer', type: 'physical', damage: 1.0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 5, staminaGain: 8 },
     ],
     slot23: [
-      { id: 'ws_h2_shockwave', name: 'Shockwave', icon: 'bomb', description: 'Slam the ground sending a shockwave', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy', effect: { type: 'stun', duration: 1 } },
+      { id: 'ws_h2_shockwave', name: 'Shockwave', icon: 'bomb', description: 'Slam the ground sending a shockwave hitting all enemies', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy', isAoE: true, effect: { type: 'stun', duration: 1 } },
       { id: 'ws_h2_pulverize', name: 'Pulverize', icon: 'skull', description: 'Crush the target with immense force', type: 'physical', damage: 2.3, manaCost: 0, staminaCost: 30, cooldown: 4, target: 'enemy' },
-      { id: 'ws_h2_earthshatter', name: 'Earthshatter', icon: 'fire', description: 'Shatter the earth reducing enemy defense for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { stat: 'defense', flat: -15, duration: 3 } },
+      { id: 'ws_h2_earthshatter', name: 'Earthshatter', icon: 'fire', description: 'Shatter the earth hitting all enemies and reducing defense for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', isAoE: true, effect: { stat: 'defense', flat: -15, duration: 3 } },
     ],
   },
   hammer1h: {
@@ -156,7 +156,7 @@ export const WEAPON_SKILLS = {
       { id: 'ws_staff_pulse', name: 'Arcane Pulse', icon: 'sparkle', description: 'Emit a pulse of raw magic', type: 'magical', damage: 0.9, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 9, staminaGain: 3 },
     ],
     slot23: [
-      { id: 'ws_staff_nova', name: 'Arcane Nova', icon: 'sparkle', description: 'Release a burst of arcane energy', type: 'magical', damage: 2.0, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy' },
+      { id: 'ws_staff_nova', name: 'Arcane Nova', icon: 'sparkle', description: 'Release a burst of arcane energy hitting all enemies', type: 'magical', damage: 2.0, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', isAoE: true },
       { id: 'ws_staff_barrier', name: 'Arcane Barrier', icon: 'shield', description: 'Raise a magical barrier boosting defense for 3 turns', type: 'buff', damage: 0, manaCost: 25, staminaCost: 0, cooldown: 4, target: 'self', effect: { stat: 'defense', flat: 18, duration: 3 } },
       { id: 'ws_staff_drain', name: 'Spirit Drain', icon: 'chaos', description: 'Drain life force from the target', type: 'magical', damage: 1.4, manaCost: 20, staminaCost: 0, cooldown: 3, target: 'enemy', drainPercent: 0.15 },
     ],
@@ -169,7 +169,7 @@ export const WEAPON_SKILLS = {
     slot23: [
       { id: 'ws_backstab', name: 'Backstab', icon: 'sword', description: 'Strike from the shadows for critical damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', guaranteedCrit: true },
       { id: 'ws_envenom', name: 'Envenom', icon: 'skull', description: 'Apply deadly poison dealing damage over 4 turns', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.18, duration: 4 } },
-      { id: 'ws_fan_of_knives', name: 'Fan of Knives', icon: 'star', description: 'Hurl a fan of knives at the target', type: 'physical', damage: 1.7, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy' },
+      { id: 'ws_fan_of_knives', name: 'Fan of Knives', icon: 'star', description: 'Hurl a fan of knives hitting all enemies', type: 'physical', damage: 1.7, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy', isAoE: true },
     ],
   },
   bow: {
@@ -178,7 +178,7 @@ export const WEAPON_SKILLS = {
       { id: 'ws_bow_aim', name: 'Steady Shot', icon: 'target', description: 'A carefully aimed arrow', type: 'physical', damage: 1.0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 5, staminaGain: 6 },
     ],
     slot23: [
-      { id: 'ws_bow_volley', name: 'Arrow Volley', icon: 'bow', description: 'Rain arrows for heavy damage', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
+      { id: 'ws_bow_volley', name: 'Arrow Volley', icon: 'bow', description: 'Rain arrows on all enemies', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy', isAoE: true },
       { id: 'ws_bow_pierce', name: 'Piercing Arrow', icon: 'lance', description: 'Fire an armor-piercing arrow', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy', armorPiercing: true },
       { id: 'ws_bow_poison', name: 'Poison Arrow', icon: 'skull', description: 'Arrow tipped with deadly venom', type: 'physical', damage: 0.9, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.15, duration: 3 } },
     ],
@@ -190,7 +190,7 @@ export const WEAPON_SKILLS = {
     ],
     slot23: [
       { id: 'ws_xbow_heavy', name: 'Heavy Bolt', icon: 'bomb', description: 'Fire a heavy bolt that staggers the target', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { stat: 'damage', multiplier: 0.8, duration: 1 } },
-      { id: 'ws_xbow_explosive', name: 'Explosive Bolt', icon: 'bomb', description: 'Fire an explosive bolt dealing massive damage', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy' },
+      { id: 'ws_xbow_explosive', name: 'Explosive Bolt', icon: 'bomb', description: 'Fire an explosive bolt that damages all enemies', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy', isAoE: true },
       { id: 'ws_xbow_net', name: 'Net Bolt', icon: 'target', description: 'Fire a net bolt that stuns for 1 turn', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } },
     ],
   },
@@ -201,8 +201,8 @@ export const WEAPON_SKILLS = {
     ],
     slot23: [
       { id: 'ws_gun_sniper', name: 'Sniper Round', icon: 'target', description: 'A carefully aimed shot that always crits', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', guaranteedCrit: true },
-      { id: 'ws_gun_buckshot', name: 'Buckshot', icon: 'bomb', description: 'Blast with scattered shot for heavy damage', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
-      { id: 'ws_gun_suppressive', name: 'Suppressive Fire', icon: 'fire', description: 'Lay down fire reducing enemy damage for 2 turns', type: 'physical', damage: 1.0, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', effect: { stat: 'damage', multiplier: 0.65, duration: 2 } },
+      { id: 'ws_gun_buckshot', name: 'Buckshot', icon: 'bomb', description: 'Blast scattered shot hitting all enemies', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy', isAoE: true },
+      { id: 'ws_gun_suppressive', name: 'Suppressive Fire', icon: 'fire', description: 'Lay down fire on all enemies, reducing damage for 2 turns', type: 'physical', damage: 1.0, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', isAoE: true, effect: { stat: 'damage', multiplier: 0.65, duration: 2 } },
     ],
   },
   lance: {
@@ -213,7 +213,7 @@ export const WEAPON_SKILLS = {
     slot23: [
       { id: 'ws_lance_charge', name: 'Lance Charge', icon: 'energy', description: 'Charge forward with devastating force', type: 'physical', damage: 2.2, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
       { id: 'ws_lance_impale', name: 'Impale', icon: 'skull', description: 'Impale the target causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 20, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.14, duration: 3 } },
-      { id: 'ws_lance_sweep', name: 'Sweeping Strike', icon: 'chaos', description: 'Sweep your lance in a wide arc', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy' },
+      { id: 'ws_lance_sweep', name: 'Sweeping Strike', icon: 'chaos', description: 'Sweep your lance hitting all enemies', type: 'physical', damage: 1.8, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', isAoE: true },
     ],
   },
   tome: {

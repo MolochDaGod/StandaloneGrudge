@@ -11,7 +11,7 @@ export const classDefinitions = {
       { id: 'power_strike', name: 'Power Strike', icon: 'bomb', description: 'A devastating blow dealing 2x damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 2, target: 'enemy' },
       { id: 'war_cry', name: 'War Cry', icon: 'battle', description: 'Boost your damage by 30% for 3 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 30, cooldown: 5, target: 'self', effect: { stat: 'damage', multiplier: 1.3, duration: 3 } },
       { id: 'shield_bash', name: 'Shield Bash', icon: 'shield', description: 'Stun the enemy for 1 turn', type: 'physical', damage: 0.8, manaCost: 0, staminaCost: 20, cooldown: 4, target: 'enemy', effect: { type: 'stun', duration: 1 } },
-      { id: 'cleave', name: 'Cleave', icon: 'target', description: 'Slash deep, causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'cleave', name: 'Cleave', icon: 'target', description: 'Slash deep, hitting all enemies and causing bleed for 3 turns', type: 'physical', damage: 1.5, manaCost: 0, staminaCost: 22, cooldown: 3, target: 'enemy', isAoE: true, effect: { type: 'dot', damage: 0.12, duration: 3 } },
       { id: 'demon_blade', name: 'Demon Blade', icon: 'sword', description: 'Transform into a Demon Swordsman for 3 turns, gaining +40% damage and +15 defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 40, cooldown: 8, target: 'self', isDemonBlade: true, effect: { stat: 'damage', multiplier: 1.4, duration: 3 }, defenseBoost: { stat: 'defense', flat: 15, duration: 3 } },
     ],
     signatureAbility: { id: 'invincible', name: 'Invincible', icon: 'shield', description: 'Become invulnerable for 2 turns, absorbing all damage', type: 'buff', damage: 0, manaCost: 0, staminaCost: 35, cooldown: 8, target: 'self', isInvincible: true, effect: { stat: 'defense', flat: 999, duration: 2 } }
@@ -27,7 +27,7 @@ export const classDefinitions = {
       { id: 'arcane_bolt', name: 'Arcane Bolt', icon: 'sparkle', description: 'A focused arcane pulse that restores resources', type: 'magical', damage: 1.0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 8, staminaGain: 5 },
       { id: 'fireball', name: 'Fireball', icon: 'fire', description: 'Hurls fire dealing massive damage + burn', type: 'magical', damage: 2.5, manaCost: 35, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.1, duration: 2 } },
       { id: 'heal', name: 'Divine Heal', icon: 'heart', description: 'Restore 30% of max HP', type: 'heal', damage: 0, manaCost: 40, staminaCost: 0, cooldown: 4, target: 'self', healPercent: 0.30 },
-      { id: 'ice_storm', name: 'Ice Storm', icon: 'ice', description: 'Freezes the enemy, reducing their damage', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', effect: { stat: 'damage', multiplier: 0.6, duration: 2 } },
+      { id: 'ice_storm', name: 'Ice Storm', icon: 'ice', description: 'Freezes all enemies, reducing their damage', type: 'magical', damage: 1.8, manaCost: 30, staminaCost: 0, cooldown: 3, target: 'enemy', isAoE: true, effect: { stat: 'damage', multiplier: 0.6, duration: 2 } },
     ],
     signatureAbility: { id: 'mana_shield', name: 'Mana Shield', icon: 'shield', description: 'Convert mana into a protective barrier', type: 'buff', damage: 0, manaCost: 50, staminaCost: 0, cooldown: 5, target: 'self', effect: { stat: 'defense', flat: 25, duration: 3 } }
   },
@@ -63,7 +63,7 @@ export const classDefinitions = {
       { id: 'aimed_shot', name: 'Aimed Shot', icon: 'target', description: 'A carefully aimed shot that always crits', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 20, cooldown: 2, target: 'enemy', guaranteedCrit: true },
       { id: 'poison_arrow', name: 'Poison Arrow', icon: 'skull', description: 'Poisons the enemy for damage over time', type: 'physical', damage: 0.7, manaCost: 0, staminaCost: 15, cooldown: 3, target: 'enemy', effect: { type: 'dot', damage: 0.2, duration: 3 } },
       { id: 'evasive_maneuver', name: 'Evasive Roll', icon: 'energy', description: 'Increase evasion by 50% for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'evasion', flat: 50, duration: 2 } },
-      { id: 'volley', name: 'Arrow Volley', icon: 'bow', description: 'Rain arrows for heavy damage', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy' },
+      { id: 'volley', name: 'Arrow Volley', icon: 'bow', description: 'Rain arrows on all enemies for heavy damage', type: 'physical', damage: 2.4, manaCost: 0, staminaCost: 28, cooldown: 4, target: 'enemy', isAoE: true },
     ],
     signatureAbility: { id: 'focus', name: 'Focus', icon: 'target', description: 'Passive: +10% crit per turn (max 5 stacks). Critting spends stacks. Active: Double stacks and guarantee next crit.', type: 'focus', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', isFocus: true }
   }

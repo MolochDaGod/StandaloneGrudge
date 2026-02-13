@@ -1499,7 +1499,75 @@ export default function BattleScreen() {
       return null;
     };
 
-    if (abilityType === 'physical' || abilityType === 'magical') {
+    if (abilityType === 'physical' || abilityType === 'magical' || abilityType === 'debuff') {
+      if (lastAction.isAoE && lastAction.aoEHits && lastAction.aoEHits.length > 0) {
+        const isDebuffOnly = abilityType === 'debuff';
+        const ranged = isRangedUnit(attacker) || abilityType === 'magical' || isDebuffOnly;
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        if ((abilityType === 'magical' || isDebuffOnly) && attacker.position) {
+          addParticle('cast', attacker.position.x, bodyY(attacker), isDebuffOnly ? '#a855f7' : getProjectileColor(attacker, abilityName));
+          spawnCastingFx(attacker.position.x, bodyY(attacker) - 12);
+          playMagicCast();
+        }
+        if (!ranged && attacker.position && target?.position) {
+          const centerX = target.position.x + (attacker.team === 'player' ? -4 : 4);
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: centerX, y: target.position.y } }));
+        }
+        if (abilityType === 'physical' && !ranged) { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
+
+        const aoEHits = lastAction.aoEHits;
+        const hitDelay = ranged ? 550 : 350;
+        const stagger = 120;
+
+        aoEHits.forEach((hit, idx) => {
+          const hitTarget = battleUnits.find(u => u.id === hit.targetId);
+          if (!hitTarget || !hitTarget.position) return;
+          const delay = hitDelay + idx * stagger;
+
+          setTimeout(() => {
+            if (isDebuffOnly) {
+              addParticle('cast', hitTarget.position.x, bodyY(hitTarget), '#a855f7');
+              setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'hurt' }));
+              setTimeout(() => setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'idle' })), 400);
+            } else {
+              showDamageFloat(hitTarget, hit.totalDmg, hit.evaded, hit.blocked, hit.isCrit);
+              if (!hit.evaded && !hit.absorbed) {
+                setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'hurt' }));
+                addParticle('hit', hitTarget.position.x, bodyY(hitTarget), '#ef4444');
+                const hfx = getHitEffect(attacker, abilityName, ranged, abilityId);
+                if (hfx.sprite && hitTarget.position) {
+                  const hid = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: hid, x: hitTarget.position.x, y: bodyY(hitTarget), sprite: hfx.sprite, filter: hfx.filter }]);
+                  const effectDur = (hfx.sprite.frames || 36) * 30 + 100;
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                  if (hfx.followUp) spawnFollowUpEffects(hfx.followUp, hitTarget.position.x, bodyY(hitTarget), hfx.filter);
+                }
+                if (hit.isCrit) {
+                  playCrit();
+                  spawnSlashImpact(hitTarget.position.x, bodyY(hitTarget), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                } else {
+                  if (idx === 0) playHurt();
+                  spawnSlashImpact(hitTarget.position.x, bodyY(hitTarget), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+                }
+                if (hitTarget.position) spawnWeaponContact(hitTarget.position.x, bodyY(hitTarget), 1);
+                setTimeout(() => setUnitAnims(prev => ({ ...prev, [hit.targetId]: hitTarget.health > 0 ? 'idle' : 'death' })), 400);
+              } else if (hit.evaded) {
+                if (idx === 0) playDodge();
+                if (hitTarget.position) spawnDodgeFlash(hitTarget.position.x, bodyY(hitTarget));
+              }
+            }
+          }, delay * spd);
+        });
+
+        const totalDuration = hitDelay + aoEHits.length * stagger + 500;
+        setTimeout(() => {
+          if (!ranged) setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+          setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+        }, (totalDuration - 200) * spd);
+        setTimeout(() => advanceTurn(), totalDuration * spd);
+        return;
+      }
+
       if (!target) { setTimeout(() => advanceTurn(), 200); return; }
 
       const isDaggerToss = abilityId === 'dagger_toss' || abilityId === 'ws_dagger_stab' || abilityId === 'ws_dagger_slash' || abilityId === 'ws_backstab' || abilityId === 'ws_envenom' || abilityId === 'ws_fan_of_knives';

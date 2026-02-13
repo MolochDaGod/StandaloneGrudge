@@ -1362,60 +1362,71 @@ const useGameStore = create(persist((set, get) => ({
         targetId = fallback.id;
         actionResult.targetId = targetId;
       }
-      const actualTarget = units.find(u => u.id === targetId);
-      if (!actualTarget) return;
 
-      const result = calculateAttackDamage(attacker, actualTarget, ability);
-      actionResult = { ...actionResult, ...result };
-
-      if (result.absorbed) {
-        log.push(`[DEF] ${actualTarget.name} is INVINCIBLE! ${ability.name} is absorbed!`);
-      } else if (result.evaded) {
-        log.push(`[DODGE] ${actualTarget.name} dodges ${attacker.name}'s ${ability.name}!`);
-      } else if (result.blocked) {
-        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`[DEF] ${actualTarget.name} blocks! ${ability.name} deals ${result.totalDmg} damage.`);
-      } else if (result.isCrit) {
-        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`[CRIT] ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}!`);
-      } else {
-        actualTarget.health = Math.max(0, actualTarget.health - result.totalDmg);
-        log.push(`[ATK] ${attacker.name}'s ${ability.name} deals ${result.totalDmg} to ${actualTarget.name}.`);
-      }
-
-      if (actualTarget.team === 'player' && result.totalDmg > 0 && !result.evaded && !result.absorbed) {
-        const grudgeGain = Math.min(30, Math.max(5, Math.floor(result.totalDmg / actualTarget.maxHealth * 100)));
-        actualTarget.grudge = Math.min(100, (actualTarget.grudge || 0) + grudgeGain);
-        if (actualTarget.grudge >= 100) {
-          log.push(`${actualTarget.name}'s GRUDGE is full! Revenge awaits!`);
+      const applyHitToTarget = (t, dmgResult) => {
+        if (dmgResult.absorbed) {
+          log.push(`[DEF] ${t.name} is INVINCIBLE! ${ability.name} is absorbed!`);
+        } else if (dmgResult.evaded) {
+          log.push(`[DODGE] ${t.name} dodges ${attacker.name}'s ${ability.name}!`);
+        } else if (dmgResult.blocked) {
+          t.health = Math.max(0, t.health - dmgResult.totalDmg);
+          log.push(`[DEF] ${t.name} blocks! ${ability.name} deals ${dmgResult.totalDmg} damage.`);
+        } else if (dmgResult.isCrit) {
+          t.health = Math.max(0, t.health - dmgResult.totalDmg);
+          log.push(`[CRIT] ${attacker.name}'s ${ability.name} deals ${dmgResult.totalDmg} to ${t.name}!`);
+        } else {
+          t.health = Math.max(0, t.health - dmgResult.totalDmg);
+          log.push(`[ATK] ${attacker.name}'s ${ability.name} deals ${dmgResult.totalDmg} to ${t.name}.`);
         }
-      }
+        if (t.team === 'player' && dmgResult.totalDmg > 0 && !dmgResult.evaded && !dmgResult.absorbed) {
+          const grudgeGain = Math.min(30, Math.max(5, Math.floor(dmgResult.totalDmg / t.maxHealth * 100)));
+          t.grudge = Math.min(100, (t.grudge || 0) + grudgeGain);
+          if (t.grudge >= 100) log.push(`${t.name}'s GRUDGE is full! Revenge awaits!`);
+        }
+        if (t.health <= 0) { t.alive = false; log.push(`${t.name} has been slain!`); }
+        if (ability.effect?.type === 'stun' && t.alive) { t.stunned = true; log.push(`[STUN] ${t.name} is stunned!`); }
+        if (ability.effect?.type === 'dot' && t.alive) { t.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name }); log.push(`${t.name} is bleeding!`); }
+        if (ability.effect?.type === 'burn' && t.alive) { t.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name }); log.push(`${t.name} is burning!`); }
+        if (ability.effect?.type === 'poison' && t.alive) { t.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name }); log.push(`${t.name} is poisoned!`); }
+        if (ability.effect?.type === 'confuse' && t.alive) { t.buffs.push({ type: 'confuse', duration: ability.effect.duration, source: ability.name }); }
+        if (ability.effect?.type === 'lower_attack' && t.alive) { t.buffs.push({ type: 'lower_attack', percent: ability.effect.percent, duration: ability.effect.duration, source: ability.name }); }
+        if (ability.effect?.stat && ability.effect?.multiplier && ability.effect.multiplier < 1 && t.alive) { t.buffs.push({ ...ability.effect, source: ability.name }); }
+        if (ability.effect?.stat && ability.effect?.flat && ability.effect.flat < 0 && t.alive) { t.buffs.push({ ...ability.effect, source: ability.name }); }
+      };
 
-      if (actualTarget.health <= 0) {
-        actualTarget.alive = false;
-        log.push(`${actualTarget.name} has been slain!`);
-      }
-
-      if (ability.effect?.type === 'stun' && actualTarget.alive) {
-        actualTarget.stunned = true;
-        log.push(`[STUN] ${actualTarget.name} is stunned!`);
-      }
-      if (ability.effect?.type === 'dot' && actualTarget.alive) {
-        actualTarget.dots.push({ damage: ability.effect.damage, duration: ability.effect.duration, source: ability.name });
-        log.push(`${actualTarget.name} is bleeding!`);
-      }
-      if (ability.effect?.stat && ability.effect?.multiplier && ability.effect.multiplier < 1 && actualTarget.alive) {
-        actualTarget.buffs.push({ ...ability.effect, source: ability.name });
-      }
-
-      if (result.drained > 0) {
-        attacker.health = Math.min(attacker.maxHealth, attacker.health + result.drained);
-        log.push(`${attacker.name} drains ${result.drained} HP!`);
-      }
-      if (ability.drainPercent && result.totalDmg > 0) {
-        const heal = Math.floor(result.totalDmg * ability.drainPercent);
-        attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
-        log.push(`${attacker.name} drains ${heal} HP!`);
+      if (ability.isAoE) {
+        const targets = units.filter(u => u.team !== attacker.team && u.alive && u.health > 0);
+        const aoEHits = [];
+        let totalDrained = 0;
+        targets.forEach(t => {
+          const result = calculateAttackDamage(attacker, t, ability);
+          applyHitToTarget(t, result);
+          aoEHits.push({ targetId: t.id, ...result });
+          if (result.drained > 0) totalDrained += result.drained;
+          if (ability.drainPercent && result.totalDmg > 0) totalDrained += Math.floor(result.totalDmg * ability.drainPercent);
+        });
+        if (totalDrained > 0) {
+          attacker.health = Math.min(attacker.maxHealth, attacker.health + totalDrained);
+          log.push(`${attacker.name} drains ${totalDrained} HP!`);
+        }
+        const primaryHit = aoEHits.find(h => h.targetId === targetId) || aoEHits[0] || {};
+        actionResult = { ...actionResult, ...primaryHit, isAoE: true, aoEHits };
+        if (!actionResult.targetId && aoEHits.length > 0) actionResult.targetId = aoEHits[0].targetId;
+      } else {
+        const actualTarget = units.find(u => u.id === targetId);
+        if (!actualTarget) return;
+        const result = calculateAttackDamage(attacker, actualTarget, ability);
+        actionResult = { ...actionResult, ...result };
+        applyHitToTarget(actualTarget, result);
+        if (result.drained > 0) {
+          attacker.health = Math.min(attacker.maxHealth, attacker.health + result.drained);
+          log.push(`${attacker.name} drains ${result.drained} HP!`);
+        }
+        if (ability.drainPercent && result.totalDmg > 0) {
+          const heal = Math.floor(result.totalDmg * ability.drainPercent);
+          attacker.health = Math.min(attacker.maxHealth, attacker.health + heal);
+          log.push(`${attacker.name} drains ${heal} HP!`);
+        }
       }
 
     } else if (ability.type === 'heal') {
@@ -1499,6 +1510,28 @@ const useGameStore = create(persist((set, get) => ({
         attacker.buffs.push({ ...ability.effect, source: ability.name });
         actionResult.targetId = currentUnitId;
         log.push(`${attacker.name} uses ${ability.name}!`);
+      }
+    } else if (ability.type === 'debuff') {
+      const applyDebuffToTarget = (t) => {
+        if (ability.effect) {
+          if (ability.effect.type === 'lower_attack') { t.buffs.push({ type: 'lower_attack', percent: ability.effect.percent, duration: ability.effect.duration, source: ability.name }); }
+          else if (ability.effect.type === 'confuse') { t.buffs.push({ type: 'confuse', duration: ability.effect.duration, source: ability.name }); }
+          else if (ability.effect.type === 'stun') { t.stunned = true; }
+          else { t.buffs.push({ ...ability.effect, source: ability.name }); }
+        }
+        if (ability.secondaryEffect) { t.buffs.push({ ...ability.secondaryEffect, source: ability.name }); }
+        log.push(`${t.name} is affected by ${ability.name}!`);
+      };
+      if (ability.isAoE) {
+        const targets = units.filter(u => u.team !== attacker.team && u.alive && u.health > 0);
+        const aoEHits = [];
+        targets.forEach(t => { applyDebuffToTarget(t); aoEHits.push({ targetId: t.id, totalDmg: 0, evaded: false }); });
+        actionResult.isAoE = true;
+        actionResult.aoEHits = aoEHits;
+        actionResult.targetId = targets[0]?.id || targetId;
+      } else {
+        const t = units.find(u => u.id === targetId && u.alive);
+        if (t) { applyDebuffToTarget(t); actionResult.targetId = t.id; }
       }
     }
 
