@@ -116,6 +116,10 @@ export default function HeroCreate() {
   };
 
   if (showCinematic) {
+    const pendingNH = pendingHeroRef.current?.namedHeroId;
+    const nhData = pendingNH ? namedHeroes[pendingNH] : null;
+    const videoSrc = nhData?.unlockVideo || '/videos/hero_creation_cinematic.mp4';
+    const isNamedUnlock = !!nhData?.unlockVideo;
     return (
       <div style={{
         position: 'fixed', inset: 0, zIndex: HERO_CREATE_MODAL,
@@ -126,7 +130,7 @@ export default function HeroCreate() {
       }}>
         <video
           ref={videoRef}
-          src="/videos/hero_creation_cinematic.mp4"
+          src={videoSrc}
           autoPlay
           muted
           playsInline
@@ -137,6 +141,23 @@ export default function HeroCreate() {
             objectFit: 'cover',
           }}
         />
+        {isNamedUnlock && (
+          <div style={{
+            position: 'absolute', top: 32, left: 0, right: 0, textAlign: 'center',
+            animation: 'fadeIn 1.5s ease-out',
+          }}>
+            <div style={{
+              color: '#d4a017', fontSize: '1.4rem', fontFamily: "'Cinzel', serif",
+              fontWeight: 700, textShadow: '0 0 20px rgba(212,160,23,0.6), 0 2px 4px rgba(0,0,0,0.8)',
+              letterSpacing: 3,
+            }}>SECRET CHARACTER UNLOCKED</div>
+            <div style={{
+              color: '#ffd700', fontSize: '2rem', fontFamily: "'LifeCraft', 'Cinzel', serif",
+              fontWeight: 700, marginTop: 8,
+              textShadow: '0 0 30px rgba(255,215,0,0.5), 0 2px 6px rgba(0,0,0,0.9)',
+            }}>{nhData.fullName}</div>
+          </div>
+        )}
         <button
           onClick={finishCinematic}
           style={{
@@ -295,7 +316,7 @@ export default function HeroCreate() {
                     background: 'rgba(0,0,0,0.25)', flexShrink: 0,
                   }}>
                     {id === 'worge' ? (
-                      <WorgeMorphPreview raceId={selectedRace} scale={0.8} speed={150} />
+                      <WorgeMorphPreview raceId={selectedRace} namedHeroId={(() => { const nh = Object.values(namedHeroes).find(n => n.race === selectedRace && n.class === 'worge' && n.unlocked); return nh?.id || null; })()} scale={0.8} speed={150} />
                     ) : (
                       <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8} speed={150} />
                     )}

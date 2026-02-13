@@ -953,21 +953,27 @@ export const worgBearTransformSprite = {
 export const freeKnightSprite = spriteSheets['free-knight'];
 
 export const racalvinSprite = {
-  folder: 'racalvin',
-  frameWidth: 200,
-  frameHeight: 210,
+  folder: 'pirate-grunt',
+  frameWidth: 45,
+  frameHeight: 49,
   facesLeft: false,
-  scale: 0.45,
-  idle: { src: '/sprites/racalvin/idle.png', frames: 10 },
-  walk: { src: '/sprites/racalvin/walk.png', frames: 12 },
-  attack1: { src: '/sprites/racalvin/attack1.png', frames: 7 },
-  attack2: { src: '/sprites/racalvin/attack2.png', frames: 8 },
-  attack3: { src: '/sprites/racalvin/attack3.png', frames: 12, frameWidth: 260, frameHeight: 220 },
-  cast: { src: '/sprites/racalvin/cast.png', frames: 8, frameWidth: 240 },
-  block: { src: '/sprites/racalvin/block.png', frames: 6, frameWidth: 240 },
-  hurt: { src: '/sprites/racalvin/hurt.png', frames: 6 },
-  death: { src: '/sprites/racalvin/death.png', frames: 12 },
-  heal: { src: '/sprites/racalvin/cast.png', frames: 8, frameWidth: 240 },
+  scale: 1.8,
+  idle: { src: '/sprites/pirate-grunt/idle.png', frames: 16 },
+  walk: { src: '/sprites/pirate-grunt/walk.png', frames: 12, frameWidth: 49, frameHeight: 51 },
+  attack1: { src: '/sprites/pirate-grunt/attack1.png', frames: 15, frameWidth: 54, frameHeight: 51 },
+  attack2: { src: '/sprites/pirate-grunt/attack2.png', frames: 15, frameWidth: 54, frameHeight: 49 },
+  attack3: { src: '/sprites/pirate-grunt/attack3.png', frames: 20, frameWidth: 55, frameHeight: 54 },
+  cast: { src: '/sprites/pirate-grunt/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
+  block: { src: '/sprites/pirate-grunt/block.png', frames: 11, frameWidth: 67, frameHeight: 48 },
+  hurt: { src: '/sprites/pirate-grunt/hurt.png', frames: 15, frameWidth: 50, frameHeight: 46 },
+  death: { src: '/sprites/pirate-grunt/death.png', frames: 12, frameWidth: 53, frameHeight: 45 },
+  heal: { src: '/sprites/pirate-grunt/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
+};
+
+export const racalvinWorgSprite = {
+  ...spriteSheets.werewolf,
+  filter: 'brightness(0.3) saturate(1.6) contrast(1.3)',
+  scale: 1.2,
 };
 
 export const namedHeroes = {
@@ -978,8 +984,10 @@ export const namedHeroes = {
     fullName: 'Racalvin the Pirate King',
     unlockName: 'Racalvin the Pirate',
     race: 'barbarian',
-    class: 'ranger',
+    class: 'worge',
     sprite: racalvinSprite,
+    worgSprite: racalvinWorgSprite,
+    unlockVideo: '/video/racalvin_unlock.mp4',
     lore: 'Once a ruthless sea raider who carved his legend across every coast, Racalvin claimed the title of Pirate King through blood and cunning. His twin cutlasses and deadly sword throw have sent countless foes to watery graves. Now he wages war on land, bringing the fury of the open sea to the Grudge Wars.',
     unlocked: true,
     passive: 'Sword Throw: Ranged attacks hurl a spinning blade that deals bonus damage',
@@ -1803,11 +1811,17 @@ export function getPlayerSprite(classId, raceId, namedHeroId) {
   return classSpriteMap[classId] || classSpriteMap.warrior;
 }
 
-export function getWorgTransformSprite(raceId) {
+export function getWorgTransformSprite(raceId, namedHeroId) {
+  if (namedHeroId && namedHeroes[namedHeroId]?.worgSprite) {
+    return namedHeroes[namedHeroId].worgSprite;
+  }
   return worgTransformSprite[raceId] || spriteSheets.werewolf;
 }
 
-export function getWorgBearTransformSprite(raceId) {
+export function getWorgBearTransformSprite(raceId, namedHeroId) {
+  if (namedHeroId && namedHeroes[namedHeroId]?.worgSprite) {
+    return namedHeroes[namedHeroId].worgSprite;
+  }
   return worgBearTransformSprite[raceId] || crystalMaulerSprite;
 }
 

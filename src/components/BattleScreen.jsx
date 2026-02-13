@@ -1110,9 +1110,9 @@ function MiniBar({ current, max, color, height = 5, width = 60 }) {
 function getUnitSprite(unit) {
   if (unit.classId && unit.classId === 'worge' && unit.bearForm) {
     if (unit.eliteForm) {
-      return getWorgBearTransformSprite(unit.raceId);
+      return getWorgBearTransformSprite(unit.raceId, unit.namedHeroId);
     }
-    return getWorgTransformSprite(unit.raceId);
+    return getWorgTransformSprite(unit.raceId, unit.namedHeroId);
   }
   if (unit.classId && unit.classId === 'warrior' && unit.demonBlade) {
     return warriorTransformSprite;

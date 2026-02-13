@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getWorgTransformSprite } from '../data/spriteMap';
 
-export default function WorgeMorphPreview({ raceId, scale = 3, speed = 150 }) {
+export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, speed = 150 }) {
   const [isBearForm, setIsBearForm] = useState(false);
   const [isMorphing, setIsMorphing] = useState(false);
 
@@ -19,8 +19,8 @@ export default function WorgeMorphPreview({ raceId, scale = 3, speed = 150 }) {
     return () => clearInterval(interval);
   }, []);
 
-  const normalSprite = getPlayerSprite('worge', raceId);
-  const bearSprite = getWorgTransformSprite(raceId);
+  const normalSprite = getPlayerSprite('worge', raceId, namedHeroId);
+  const bearSprite = getWorgTransformSprite(raceId, namedHeroId);
   const currentSprite = isBearForm ? bearSprite : normalSprite;
   const frameSize = currentSprite?.frameWidth || currentSprite?.frameHeight || 48;
   const displaySize = frameSize * scale;
