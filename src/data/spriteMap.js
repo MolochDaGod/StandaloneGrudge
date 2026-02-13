@@ -938,6 +938,7 @@ export const namedHeroes = {
     name: 'Racalvin',
     title: 'The Pirate King',
     fullName: 'Racalvin the Pirate King',
+    unlockName: 'Racalvin the Pirate',
     race: 'barbarian',
     class: 'ranger',
     sprite: racalvinSprite,

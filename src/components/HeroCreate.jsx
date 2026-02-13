@@ -86,7 +86,9 @@ export default function HeroCreate() {
     const stats = calculateStats(finalAttributes, heroLevel);
     const matchedNamedHero = Object.keys(namedHeroes).find(key => {
       const nh = namedHeroes[key];
-      return nh.race === selectedRace && nh.class === selectedClass && nh.unlocked;
+      const heroName = name.trim().toLowerCase();
+      const matchName = nh.unlockName ? nh.unlockName.toLowerCase() : nh.name.toLowerCase();
+      return nh.race === selectedRace && nh.class === selectedClass && nh.unlocked && heroName === matchName;
     });
 
     pendingHeroRef.current = {
