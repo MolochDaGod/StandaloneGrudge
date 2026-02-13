@@ -354,36 +354,40 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
 
 function ThunderProjectileSprite() {
   const [frame, setFrame] = React.useState(0);
-  const sprite = effectSprites.thunderProjectile2;
-  const displaySize = 48;
-  const cols = sprite.cols;
+  const sprite = effectSprites.lightningBolt || effectSprites.thunderProjectile2;
   const frameW = sprite.frameW;
-  const scaleX = displaySize / frameW;
+  const frameH = sprite.frameH || frameW;
+  const cols = sprite.cols;
+  const displayW = 80;
+  const displayH = displayW * (frameH / frameW);
+  const scaleX = displayW / frameW;
+  const scaleY = displayH / frameH;
 
   React.useEffect(() => {
     let f = 0;
     const interval = setInterval(() => {
       f = (f + 1) % sprite.frames;
       setFrame(f);
-    }, 40);
+    }, 50);
     return () => clearInterval(interval);
   }, []);
 
   const col = frame % cols;
   return (
     <div style={{
-      width: displaySize, height: displaySize, overflow: 'hidden',
+      width: displayW, height: displayH, overflow: 'hidden',
       ...EFFECT_BLEND,
+      marginTop: -(displayH / 2 - 24),
     }}>
       <div style={{
-        width: displaySize,
-        height: displaySize,
+        width: displayW,
+        height: displayH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * frameW * scaleX}px ${displaySize}px`,
-        backgroundPosition: `-${col * displaySize}px 0px`,
+        backgroundSize: `${cols * frameW * scaleX}px ${displayH}px`,
+        backgroundPosition: `-${col * displayW}px 0px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
-        filter: 'drop-shadow(0 0 8px #facc15) drop-shadow(0 0 16px #f59e0b)',
+        filter: 'drop-shadow(0 0 6px #93c5fd) drop-shadow(0 0 14px #3b82f6)',
       }} />
     </div>
   );
