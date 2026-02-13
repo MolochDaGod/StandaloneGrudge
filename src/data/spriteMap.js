@@ -254,6 +254,20 @@ export const spriteSheets = {
     death: { src: '/sprites/wizard/death.png', frames: 4 },
     walk: { src: '/sprites/wizard/walk.png', frames: 8 },
   },
+  'wizard-pack': {
+    folder: 'wizard-pack',
+    frameWidth: 231,
+    frameHeight: 190,
+    idle: { src: '/sprites/wizard-pack/idle.png', frames: 6 },
+    attack1: { src: '/sprites/wizard-pack/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/wizard-pack/attack2.png', frames: 8 },
+    hurt: { src: '/sprites/wizard-pack/hit.png', frames: 4 },
+    death: { src: '/sprites/wizard-pack/death.png', frames: 7 },
+    walk: { src: '/sprites/wizard-pack/run.png', frames: 8 },
+    run: { src: '/sprites/wizard-pack/run.png', frames: 8 },
+    jump: { src: '/sprites/wizard-pack/jump.png', frames: 2 },
+    fall: { src: '/sprites/wizard-pack/fall.png', frames: 2 },
+  },
   'evil-wizard': {
     folder: 'evil-wizard',
     idle: { src: '/sprites/evil-wizard/idle.png', frames: 8 },
@@ -827,7 +841,7 @@ export const raceClassSpriteMap = {
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
-    mage: spriteSheets['orc-rider'],
+    mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', scale: 0.7 },
     worge: spriteSheets.orc,
     ranger: spriteSheets['armored-orc'],
   },
@@ -947,7 +961,7 @@ export const eliteTransformSprites = {
     elf: spriteSheets['lightning-mage'],
     dwarf: spriteSheets['wanderer-magician'],
     barbarian: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(15deg) saturate(1.3) brightness(1.1)' },
-    orc: { ...spriteSheets['wanderer-magician'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
+    orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', scale: 0.7 },
     undead: { ...spriteSheets['lightning-mage'], filter: 'hue-rotate(180deg) saturate(1.4) brightness(0.85)' },
   },
   ranger: {
