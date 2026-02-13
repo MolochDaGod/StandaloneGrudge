@@ -1,7 +1,243 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import useGameStore from '../stores/gameStore';
 import { setBgm } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
+import SpriteAnimation from './SpriteAnimation';
+import { getRaceClassSprite } from '../data/spriteMap';
+import { raceDefinitions } from '../data/races';
+import { classDefinitions } from '../data/classes';
+
+const RACES = Object.keys(raceDefinitions);
+const CLASSES = Object.keys(classDefinitions);
+const ALL_COMBOS = RACES.flatMap(r => CLASSES.map(c => ({ race: r, cls: c })));
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const HERO_ACTIONS = [
+  { anim: 'walk', duration: 0, moving: true },
+  { anim: 'idle', duration: 2500, moving: false },
+  { anim: 'attack1', duration: 1200, moving: false },
+  { anim: 'attack2', duration: 1200, moving: false },
+  { anim: 'attack3', duration: 1400, moving: false },
+  { anim: 'cast', duration: 1200, moving: false },
+  { anim: 'block', duration: 800, moving: false },
+];
+
+function TitleHeroParade() {
+  const [heroes, setHeroes] = useState([]);
+  const heroIdCounter = useRef(0);
+  const containerRef = useRef(null);
+
+  const spawnHero = useCallback(() => {
+    const combo = ALL_COMBOS[Math.floor(Math.random() * ALL_COMBOS.length)];
+    const sprite = getRaceClassSprite(combo.race, combo.cls);
+    if (!sprite) return null;
+
+    const fromLeft = Math.random() > 0.5;
+    const yPos = 20 + Math.random() * 55;
+    const baseSpeed = 0.3 + Math.random() * 0.5;
+    const depthScale = 0.8 + (yPos / 75) * 0.7;
+    const heroScale = (sprite.scale || 1) * depthScale * 2.2;
+    const id = heroIdCounter.current++;
+
+    return {
+      id,
+      race: combo.race,
+      cls: combo.cls,
+      sprite,
+      x: fromLeft ? -15 : 115,
+      y: yPos,
+      speed: fromLeft ? baseSpeed : -baseSpeed,
+      flip: !fromLeft,
+      scale: heroScale,
+      currentAnim: 'walk',
+      actionTimer: 3000 + Math.random() * 4000,
+      opacity: 0,
+      fadeIn: true,
+      raceColor: raceDefinitions[combo.race]?.color || '#fff',
+      shadowSize: heroScale * 20,
+      zIndex: Math.floor(yPos),
+    };
+  }, []);
+
+  useEffect(() => {
+    const initialCount = 4 + Math.floor(Math.random() * 3);
+    const initial = [];
+    const usedCombos = new Set();
+    for (let i = 0; i < initialCount; i++) {
+      let h = spawnHero();
+      if (h) {
+        const key = `${h.race}-${h.cls}`;
+        if (usedCombos.has(key)) {
+          h = spawnHero();
+          if (!h) continue;
+        }
+        usedCombos.add(`${h.race}-${h.cls}`);
+        h.x = 8 + (i / (initialCount - 1)) * 80 + (Math.random() - 0.5) * 10;
+        h.opacity = 0;
+        h.fadeIn = true;
+        const actions = ['idle', 'walk', 'attack1'];
+        h.currentAnim = actions[Math.floor(Math.random() * actions.length)];
+        if (!h.sprite[h.currentAnim]) h.currentAnim = 'idle';
+        initial.push(h);
+      }
+    }
+    setHeroes(initial);
+  }, [spawnHero]);
+
+  useEffect(() => {
+    const spawnInterval = setInterval(() => {
+      setHeroes(prev => {
+        if (prev.length >= 8) return prev;
+        const h = spawnHero();
+        return h ? [...prev, h] : prev;
+      });
+    }, 3000 + Math.random() * 5000);
+
+    return () => clearInterval(spawnInterval);
+  }, [spawnHero]);
+
+  useEffect(() => {
+    let raf;
+    let lastTime = performance.now();
+
+    const tick = (now) => {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      setHeroes(prev => {
+        let changed = false;
+        const next = prev.map(h => {
+          const updated = { ...h };
+
+          if (updated.fadeIn) {
+            updated.opacity = Math.min(1, updated.opacity + dt / 1000);
+            if (updated.opacity >= 1) updated.fadeIn = false;
+            changed = true;
+          }
+
+          if (updated.currentAnim === 'walk') {
+            updated.x += updated.speed * (dt / 16);
+            changed = true;
+          }
+
+          updated.actionTimer -= dt;
+          if (updated.actionTimer <= 0) {
+            if (updated.currentAnim === 'walk') {
+              const actionPool = HERO_ACTIONS.filter(a => !a.moving && updated.sprite[a.anim]);
+              if (actionPool.length > 0) {
+                const action = actionPool[Math.floor(Math.random() * actionPool.length)];
+                updated.currentAnim = action.anim;
+                updated.actionTimer = action.duration + Math.random() * 600;
+              } else {
+                updated.actionTimer = 2000 + Math.random() * 3000;
+              }
+            } else {
+              updated.currentAnim = 'walk';
+              updated.actionTimer = 3000 + Math.random() * 5000;
+            }
+            changed = true;
+          }
+
+          return updated;
+        }).filter(h => h.x > -20 && h.x < 120);
+
+        if (next.length < prev.length) changed = true;
+        return changed ? next : prev;
+      });
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '75%',
+      pointerEvents: 'none',
+      overflow: 'hidden',
+      zIndex: 0,
+    }}>
+      {heroes.map(hero => (
+        <div key={hero.id} style={{
+          position: 'absolute',
+          left: `${hero.x}%`,
+          top: `${hero.y}%`,
+          transform: 'translateX(-50%)',
+          opacity: hero.opacity,
+          transition: 'opacity 0.8s ease',
+          zIndex: hero.zIndex,
+        }}>
+          <div style={{
+            position: 'absolute',
+            bottom: -4,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: hero.shadowSize,
+            height: hero.shadowSize * 0.3,
+            background: `radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, transparent 70%)`,
+            borderRadius: '50%',
+            filter: 'blur(2px)',
+          }} />
+
+          <div style={{
+            filter: `drop-shadow(0 0 8px ${hero.raceColor}66) drop-shadow(0 0 16px ${hero.raceColor}22) drop-shadow(0 3px 6px rgba(0,0,0,0.7))`,
+          }}>
+            <SpriteAnimation
+              spriteData={hero.sprite}
+              animation={hero.currentAnim}
+              scale={hero.scale}
+              flip={hero.flip}
+              loop={true}
+              speed={hero.currentAnim === 'walk' ? 100 : 120}
+            />
+          </div>
+
+          <div style={{
+            position: 'absolute',
+            bottom: -16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '0.5rem',
+            color: hero.raceColor,
+            textTransform: 'uppercase',
+            letterSpacing: 1.5,
+            fontFamily: "'Cinzel', serif",
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            opacity: 0.7,
+            textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${hero.raceColor}33`,
+          }}>
+            {raceDefinitions[hero.race]?.name} {classDefinitions[hero.cls]?.name}
+          </div>
+        </div>
+      ))}
+
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)',
+        pointerEvents: 'none',
+      }} />
+    </div>
+  );
+}
 
 function TitleParticles() {
   const canvasRef = useRef(null);
@@ -100,9 +336,10 @@ export default function TitleScreen() {
         opacity: fadeClass ? 1 : 0,
         transition: 'opacity 1.5s ease',
       }}>
+        <TitleHeroParade />
         <TitleParticles />
 
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
+        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
           <div style={{
             fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: 8,
             textTransform: 'uppercase', marginBottom: 24, opacity: 0.5,
@@ -165,6 +402,7 @@ export default function TitleScreen() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
           color: 'var(--muted)', fontSize: '0.65rem', opacity: 0.3,
           animation: 'fadeIn 1s ease 0.6s both',
+          zIndex: 3,
         }}>
           <span
             onClick={() => window.open('https://grudgestudio.com', '_blank')}
