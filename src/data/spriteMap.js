@@ -117,8 +117,11 @@ export const spriteSheets = {
     cast: { src: '/sprites/barbarian-warrior/idle.png', frames: 16 },
     block: { src: '/sprites/barbarian-warrior/hurt.png', frames: 8 },
     hurt: { src: '/sprites/barbarian-warrior/hurt.png', frames: 8 },
-    death: { src: '/sprites/barbarian-warrior/death.png', frames: 41 },
+    death: { src: '/sprites/barbarian-warrior/death.png', frames: 40 },
     walk: { src: '/sprites/barbarian-warrior/walk.png', frames: 8 },
+    run: { src: '/sprites/barbarian-warrior/walk.png', frames: 8 },
+    jump: { src: '/sprites/barbarian-warrior/idle.png', frames: 16 },
+    fall: { src: '/sprites/barbarian-warrior/idle.png', frames: 16 },
   },
   viking: {
     folder: 'viking',

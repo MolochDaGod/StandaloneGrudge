@@ -1221,7 +1221,7 @@ function getBeamTrail(unit, abilityName) {
   return beamTrails.red;
 }
 
-const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75 };
+const BATTLE_SCALE_OVERRIDES = { human_warrior: 2, dwarf_worge: 0.75, barbarian_warrior: 2.5 };
 function getUnitEffectSize(unit) {
   if (!unit) return 140;
   const base = 200;
