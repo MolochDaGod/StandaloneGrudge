@@ -3,13 +3,302 @@ import useGameStore from '../stores/gameStore';
 import { setBgm } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, namedHeroes } from '../data/spriteMap';
+import { getRaceClassSprite, namedHeroes, spriteSheets, effectSprites } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 
 const RACES = Object.keys(raceDefinitions);
 const CLASSES = Object.keys(classDefinitions);
 const ALL_COMBOS = RACES.flatMap(r => CLASSES.map(c => ({ race: r, cls: c })));
+
+const BOSS_ROSTER = [
+  { key: 'boss-demon', name: 'Abyssal Demon Lord', color: '#ff4444', scale: 2.8, glowColor: '#ff2200' },
+  { key: 'cthulu-boss', name: 'Eldritch Horror', color: '#44ff88', scale: 2.8, glowColor: '#00ff66' },
+  { key: 'necromancer', name: 'The Void Necromancer', color: '#aa44ff', scale: 3.0, glowColor: '#8800ff' },
+  { key: 'stormhead', name: 'Stormhead Titan', color: '#44aaff', scale: 2.8, glowColor: '#0088ff' },
+  { key: 'evil-wizard-2', name: 'Dark Sorcerer', color: '#ff44aa', scale: 3.0, glowColor: '#ff0088' },
+  { key: 'forest-boss-1', name: 'Ancient Treant', color: '#66dd44', scale: 3.2, glowColor: '#44bb22' },
+  { key: 'forest-boss-2', name: 'Fungal Colossus', color: '#dd8844', scale: 3.2, glowColor: '#cc6622' },
+  { key: 'forest-boss-3', name: 'Plague Wyrm', color: '#dddd44', scale: 3.2, glowColor: '#bbbb22' },
+];
+
+const BOSS_VFX = [
+  { key: 'felSpell', color: '#ff4400', filter: 'hue-rotate(0deg) saturate(1.5) brightness(1.3)' },
+  { key: 'nebula', color: '#8844ff', filter: 'hue-rotate(60deg) saturate(2) brightness(1.2)' },
+  { key: 'vortex', color: '#44ffaa', filter: 'hue-rotate(120deg) saturate(1.8) brightness(1.4)' },
+  { key: 'blueFire', color: '#4488ff', filter: '' },
+  { key: 'fireSpin', color: '#ff6622', filter: 'saturate(1.5) brightness(1.3)' },
+  { key: 'midnight', color: '#6644dd', filter: '' },
+  { key: 'phantom', color: '#44ddff', filter: 'hue-rotate(-30deg) saturate(1.5)' },
+  { key: 'freezing', color: '#88ccff', filter: 'brightness(1.4)' },
+  { key: 'sunburn', color: '#ffaa22', filter: 'saturate(1.8)' },
+  { key: 'magicSpell', color: '#ff44ff', filter: 'hue-rotate(30deg) saturate(1.5)' },
+];
+
+function BossVfxEffect({ sprite, displaySize, filter, opacity }) {
+  const [frame, setFrame] = useState(0);
+  const totalFrames = sprite.frames;
+  const hasCustomLayout = sprite.cols !== undefined;
+  const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(totalFrames));
+  const rows = hasCustomLayout ? sprite.rows : Math.ceil(totalFrames / cols);
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+
+  useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) f = 0;
+      setFrame(f);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  const totalW = hasCustomLayout ? cols * frameW : sprite.size;
+  const totalH = hasCustomLayout ? rows * frameH : sprite.size;
+
+  return (
+    <div style={{
+      width: displaySize,
+      height: displaySize,
+      backgroundImage: `url(${sprite.src})`,
+      backgroundSize: `${totalW * scaleX}px ${totalH * scaleY}px`,
+      backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+      backgroundRepeat: 'no-repeat',
+      imageRendering: 'pixelated',
+      filter: filter || 'none',
+      opacity: opacity || 0.85,
+      mixBlendMode: 'screen',
+      pointerEvents: 'none',
+    }} />
+  );
+}
+
+function TitleBossShowcase() {
+  const [bosses, setBosses] = useState([]);
+  const bossIdRef = useRef(0);
+
+  useEffect(() => {
+    const shuffled = [...BOSS_ROSTER].sort(() => Math.random() - 0.5);
+    const picked = shuffled.slice(0, 3);
+    const positions = [
+      { x: 10, y: 18, flip: false },
+      { x: 50, y: 65, flip: Math.random() > 0.5 },
+      { x: 90, y: 20, flip: true },
+    ];
+
+    const initial = picked.map((boss, i) => {
+      const sprite = spriteSheets[boss.key];
+      if (!sprite) return null;
+      const attackAnims = ['attack1', 'attack2', 'attack3', 'attack4', 'cast'].filter(a => sprite[a]);
+      return {
+        id: bossIdRef.current++,
+        ...boss,
+        sprite,
+        ...positions[i],
+        currentAnim: 'idle',
+        attackAnims,
+        actionTimer: 3000 + Math.random() * 3000,
+        vfx: null,
+        vfxTimer: 0,
+        opacity: 0,
+        castGlow: 0,
+        phase: 'fadein',
+      };
+    }).filter(Boolean);
+
+    setBosses(initial);
+  }, []);
+
+  useEffect(() => {
+    let raf;
+    let lastTime = performance.now();
+
+    const tick = (now) => {
+      const dt = now - lastTime;
+      lastTime = now;
+
+      setBosses(prev => {
+        let changed = false;
+        const next = prev.map(b => {
+          const updated = { ...b };
+
+          if (updated.phase === 'fadein') {
+            updated.opacity = Math.min(0.45, updated.opacity + dt / 3500);
+            if (updated.opacity >= 0.45) updated.phase = 'active';
+            changed = true;
+          }
+
+          updated.actionTimer -= dt;
+          if (updated.actionTimer <= 0) {
+            if (updated.currentAnim === 'idle') {
+              const atk = updated.attackAnims[Math.floor(Math.random() * updated.attackAnims.length)];
+              updated.currentAnim = atk;
+              updated.actionTimer = 1400 + Math.random() * 800;
+              updated.castGlow = 1.0;
+
+              const vfxPick = BOSS_VFX[Math.floor(Math.random() * BOSS_VFX.length)];
+              const eff = effectSprites[vfxPick.key];
+              if (eff) {
+                updated.vfx = { sprite: eff, filter: vfxPick.filter, color: vfxPick.color };
+                updated.vfxTimer = 2500;
+              }
+              changed = true;
+            } else {
+              updated.currentAnim = 'idle';
+              updated.actionTimer = 3000 + Math.random() * 4000;
+              updated.castGlow = 0;
+              changed = true;
+            }
+          }
+
+          if (updated.castGlow > 0) {
+            updated.castGlow = Math.max(0, updated.castGlow - dt / 1800);
+            changed = true;
+          }
+
+          if (updated.vfxTimer > 0) {
+            updated.vfxTimer -= dt;
+            if (updated.vfxTimer <= 0) {
+              updated.vfx = null;
+            }
+            changed = true;
+          }
+
+          return updated;
+        });
+        return changed ? next : prev;
+      });
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '100%',
+      pointerEvents: 'none',
+      overflow: 'hidden',
+      zIndex: 0,
+    }}>
+      {bosses.map(boss => {
+        const vfxSize = boss.scale * 80;
+        return (
+          <div key={boss.id} style={{
+            position: 'absolute',
+            left: `${boss.x}%`,
+            bottom: `${boss.y}%`,
+            transform: 'translateX(-50%)',
+            opacity: boss.opacity + boss.castGlow * 0.25,
+            zIndex: 0,
+          }}>
+            <div style={{
+              position: 'absolute',
+              bottom: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: boss.scale * 50 + boss.castGlow * 40,
+              height: boss.scale * 15 + boss.castGlow * 10,
+              background: `radial-gradient(ellipse, ${boss.glowColor}${boss.castGlow > 0 ? '44' : '22'} 0%, transparent 70%)`,
+              borderRadius: '50%',
+              filter: `blur(${8 + boss.castGlow * 8}px)`,
+              transition: 'all 0.3s ease',
+            }} />
+
+            <div style={{
+              filter: `drop-shadow(0 0 ${20 + boss.castGlow * 20}px ${boss.glowColor}${boss.castGlow > 0 ? '88' : '55'}) drop-shadow(0 0 ${40 + boss.castGlow * 30}px ${boss.glowColor}33) drop-shadow(0 5px 15px rgba(0,0,0,0.8))`,
+            }}>
+              <SpriteAnimation
+                spriteData={boss.sprite}
+                animation={boss.currentAnim}
+                scale={boss.scale}
+                flip={boss.flip}
+                loop={true}
+                speed={boss.currentAnim === 'idle' ? 140 : 100}
+              />
+            </div>
+
+            {boss.vfx && (
+              <>
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -60%)',
+                  zIndex: 1,
+                }}>
+                  <BossVfxEffect
+                    sprite={boss.vfx.sprite}
+                    displaySize={vfxSize}
+                    filter={boss.vfx.filter}
+                    opacity={0.75}
+                  />
+                </div>
+
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%) scale(1.6)',
+                  zIndex: -1,
+                }}>
+                  <BossVfxEffect
+                    sprite={boss.vfx.sprite}
+                    displaySize={vfxSize * 0.7}
+                    filter={`${boss.vfx.filter} blur(4px)`}
+                    opacity={0.35}
+                  />
+                </div>
+
+                <div style={{
+                  position: 'absolute',
+                  bottom: -20,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: vfxSize * 1.5,
+                  height: vfxSize * 0.4,
+                  background: `radial-gradient(ellipse, ${boss.vfx.color}44 0%, ${boss.vfx.color}11 40%, transparent 70%)`,
+                  borderRadius: '50%',
+                  filter: 'blur(6px)',
+                  animation: 'glowPulse 1s ease-in-out infinite',
+                }} />
+              </>
+            )}
+
+            <div style={{
+              position: 'absolute',
+              bottom: -22,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              fontSize: '0.55rem',
+              color: boss.color,
+              textTransform: 'uppercase',
+              letterSpacing: 2,
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              opacity: boss.currentAnim !== 'idle' ? 0.9 : 0.5,
+              textShadow: `0 1px 6px rgba(0,0,0,0.9), 0 0 12px ${boss.glowColor}44`,
+              transition: 'opacity 0.3s ease',
+            }}>
+              {boss.name}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function shuffleArray(arr) {
   const a = [...arr];
@@ -57,12 +346,12 @@ function TitleHeroParade() {
     if (!sprite) return null;
 
     const fromLeft = Math.random() > 0.5;
-    const yPos = 20 + Math.random() * 55;
+    const yPos = 30 + Math.random() * 45;
     const baseSpeed = 0.3 + Math.random() * 0.5;
-    const depthScale = 0.8 + (yPos / 75) * 0.6;
+    const depthScale = 0.7 + (yPos / 75) * 0.5;
     const baseFrameW = sprite.frameWidth || 100;
-    const sizeNorm = baseFrameW > 150 ? 0.55 : baseFrameW > 100 ? 0.75 : 1;
-    const heroScale = Math.min((sprite.scale || 1) * depthScale * 2.0 * sizeNorm, 3.5);
+    const sizeNorm = baseFrameW > 150 ? 0.45 : baseFrameW > 100 ? 0.65 : 1;
+    const heroScale = Math.min((sprite.scale || 1) * depthScale * 1.6 * sizeNorm, 2.5);
     const id = heroIdCounter.current++;
 
     return {
@@ -355,6 +644,7 @@ export default function TitleScreen() {
         opacity: fadeClass ? 1 : 0,
         transition: 'opacity 1.5s ease',
       }}>
+        <TitleBossShowcase />
         <TitleHeroParade />
         <TitleParticles />
 

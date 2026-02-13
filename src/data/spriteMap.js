@@ -43,7 +43,7 @@ export const classSpriteMap = {
   },
 };
 
-const spriteSheets = {
+export const spriteSheets = {
   knight: classSpriteMap.warrior,
   priest: classSpriteMap.mage,
   'stormhead': {
