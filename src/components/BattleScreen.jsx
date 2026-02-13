@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
@@ -2514,6 +2514,77 @@ export default function BattleScreen() {
                     fontFamily: 'Cinzel, serif',
                     whiteSpace: 'nowrap',
                     textShadow: '0 0 4px #000, 0 1px 2px #000',
+                  }}>
+                    {unit.name}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (unit.isCompanion) {
+            if (!unit.alive) return null;
+            const compSprite = companionSpriteMap[unit.companionType];
+            if (!compSprite) return null;
+            const compDef = COMPANION_DEFINITIONS[unit.companionType];
+            const compScale = 2.8;
+            const compFw = compSprite.frameWidth || 32;
+            const compAnim = unitAnims[unit.id] || 'idle';
+            return (
+              <div
+                key={unit.id}
+                style={{
+                  position: 'absolute',
+                  left: `${unit.position.x}%`,
+                  top: `${unit.position.y}%`,
+                  transform: 'translate(-50%, -100%)',
+                  zIndex: Math.floor(unit.position.y) + 1,
+                  pointerEvents: 'none',
+                  animation: 'unitSlideIn 0.5s ease forwards',
+                }}
+              >
+                <div style={{
+                  position: 'relative',
+                  filter: `drop-shadow(0 0 8px ${compDef?.color || '#fff'}80)`,
+                }}>
+                  <SpriteAnimation
+                    spriteData={compSprite}
+                    animation={compAnim}
+                    scale={compScale}
+                    flip={unit.team === 'enemy'}
+                    speed={140}
+                    loop={true}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: -6,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: compFw * compScale * 0.8,
+                    height: 5,
+                    borderRadius: 2,
+                    background: '#111',
+                    border: `1px solid ${compDef?.color || '#555'}40`,
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${(unit.health / unit.maxHealth) * 100}%`,
+                      height: '100%',
+                      background: compDef?.color || '#22c55e',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    top: -18,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.55rem',
+                    color: compDef?.color || '#fff',
+                    fontFamily: 'Cinzel, serif',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 0 4px #000, 0 1px 2px #000',
+                    letterSpacing: '0.04em',
                   }}>
                     {unit.name}
                   </div>

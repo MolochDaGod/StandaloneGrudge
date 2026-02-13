@@ -11,7 +11,7 @@ import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
 import { adminConfig } from '../utils/adminConfig';
-import { TOTEM_DEFINITIONS } from '../data/spriteMap';
+import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS } from '../data/spriteMap';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -295,10 +295,14 @@ function chooseAIAction(unit, allUnits) {
   }
 
   let target;
-  if (Math.random() < 0.6) {
-    target = enemies.reduce((low, e) => e.health < low.health ? e : low, enemies[0]);
+  const taunter = enemies.find(e => e.isCompanion && e.companionType === 'twig_companion' && e.alive);
+  if (taunter && Math.random() < (COMPANION_DEFINITIONS?.twig_companion?.tauntChance || 0.30)) {
+    target = taunter;
+  } else if (Math.random() < 0.6) {
+    target = enemies.filter(e => !e.isTotem).reduce((low, e) => e.health < low.health ? e : low, enemies.filter(e => !e.isTotem)[0]);
   } else {
-    target = enemies[Math.floor(Math.random() * enemies.length)];
+    const nonTotem = enemies.filter(e => !e.isTotem);
+    target = nonTotem[Math.floor(Math.random() * nonTotem.length)] || enemies[0];
   }
 
   return { abilityId: ability.id, targetId: target.id };
@@ -1107,8 +1111,8 @@ const useGameStore = create(persist((set, get) => ({
     const units = state.battleUnits;
     const order = state.battleTurnOrder;
 
-    const alivePlayerUnits = units.filter(u => u.team === 'player' && u.alive && u.health > 0 && !u.isTotem);
-    const aliveEnemyUnits = units.filter(u => u.team === 'enemy' && u.alive && u.health > 0 && !u.isTotem);
+    const alivePlayerUnits = units.filter(u => u.team === 'player' && u.alive && u.health > 0 && !u.isTotem && !u.isCompanion);
+    const aliveEnemyUnits = units.filter(u => u.team === 'enemy' && u.alive && u.health > 0 && !u.isTotem && !u.isCompanion);
 
     if (aliveEnemyUnits.length === 0) {
       get().handleVictory();
@@ -1123,7 +1127,7 @@ const useGameStore = create(persist((set, get) => ({
     let attempts = 0;
     while (attempts < order.length) {
       const unit = units.find(u => u.id === order[nextIndex]);
-      if (unit && unit.alive && unit.health > 0 && !unit.isTotem) break;
+      if (unit && unit.alive && unit.health > 0 && !unit.isTotem && !unit.isCompanion) break;
       nextIndex = (nextIndex + 1) % order.length;
       attempts++;
     }
@@ -1193,7 +1197,7 @@ const useGameStore = create(persist((set, get) => ({
     });
 
     const fearTotems = newUnits.filter(u => u.isTotem && u.totemType === 'fear_totem' && u.alive);
-    if (fearTotems.length > 0 && nextUnit && nextUnit.alive && !nextUnit.isTotem) {
+    if (fearTotems.length > 0 && nextUnit && nextUnit.alive && !nextUnit.isTotem && !nextUnit.isCompanion) {
       const enemyFearTotem = fearTotems.find(t => t.team !== nextUnit.team);
       if (enemyFearTotem) {
         const def = TOTEM_DEFINITIONS.fear_totem;
@@ -1596,6 +1600,46 @@ const useGameStore = create(persist((set, get) => ({
         actionResult.type = 'summon_totem';
         actionResult.totemType = ability.totemType;
       }
+    } else if (ability.type === 'summon_companion') {
+      const compDef = COMPANION_DEFINITIONS[ability.companionType];
+      if (compDef) {
+        const existingComp = units.find(u => u.isCompanion && u.companionType === ability.companionType && u.summonerId === currentUnitId && u.alive);
+        if (existingComp) {
+          existingComp.health = compDef.health;
+          existingComp.turnsLeft = compDef.duration;
+          log.push(`${attacker.name} refreshes ${compDef.name}!`);
+        } else {
+          const compId = `companion_${ability.companionType}_${currentUnitId}_${Date.now()}`;
+          const compX = attacker.team === 'player' ? Math.max(5, (attacker.position?.x || 20) - 10) : Math.min(95, (attacker.position?.x || 80) + 10);
+          const compY = (attacker.position?.y || 50) + (Math.random() > 0.5 ? 8 : -8);
+          const compUnit = {
+            id: compId,
+            name: compDef.name,
+            team: attacker.team,
+            isCompanion: true,
+            companionType: ability.companionType,
+            summonerId: currentUnitId,
+            health: compDef.health,
+            maxHealth: compDef.health,
+            alive: true,
+            position: { x: compX, y: Math.max(10, Math.min(90, compY)) },
+            row: compDef.behavior === 'defensive' ? 'front' : 'back',
+            turnsLeft: compDef.duration,
+            buffs: [],
+            dots: [],
+            cooldowns: {},
+            abilities: [],
+            isPlayerControlled: false,
+            physicalDamage: attacker.physicalDamage || 10,
+            defense: compDef.behavior === 'defensive' ? Math.floor((attacker.defense || 5) * 0.6) : Math.floor((attacker.defense || 5) * 0.3),
+          };
+          units.push(compUnit);
+          log.push(`${attacker.name} summons ${compDef.name}!`);
+        }
+        actionResult.targetId = currentUnitId;
+        actionResult.type = 'summon_companion';
+        actionResult.companionType = ability.companionType;
+      }
     }
 
     if (attacker.id === 'player') {
@@ -1638,6 +1682,60 @@ const useGameStore = create(persist((set, get) => ({
       }
     });
     log = [...log, ...totemEffectLog];
+
+    const companionEffectLog = [];
+    const activeCompanions = units.filter(u => u.isCompanion && u.summonerId === currentUnitId && u.alive);
+    activeCompanions.forEach(comp => {
+      const def = COMPANION_DEFINITIONS[comp.companionType];
+      if (!def) return;
+
+      if (def.behavior === 'support') {
+        const allies = units.filter(u => u.team === comp.team && u.alive && !u.isTotem && !u.isCompanion);
+        let totalHealed = 0;
+        allies.forEach(ally => {
+          const healAmt = Math.floor(ally.maxHealth * (def.healPercent || 0.06));
+          ally.health = Math.min(ally.maxHealth, ally.health + healAmt);
+          totalHealed += healAmt;
+        });
+        if (totalHealed > 0) companionEffectLog.push(`[COMPANION] ${comp.name} heals allies!`);
+        const enemies = units.filter(u => u.team !== comp.team && u.alive && !u.isTotem && !u.isCompanion);
+        if (enemies.length > 0 && def.damage) {
+          const target = enemies[Math.floor(Math.random() * enemies.length)];
+          const poisonDmg = Math.max(1, Math.floor((attacker.physicalDamage || 10) * def.damage));
+          target.health = Math.max(0, target.health - poisonDmg);
+          if (target.health <= 0) { target.alive = false; companionEffectLog.push(`${target.name} was slain by ${comp.name}'s poison!`); }
+          else { companionEffectLog.push(`[COMPANION] ${comp.name} poisons ${target.name} for ${poisonDmg}!`); }
+        }
+      }
+
+      if (def.behavior === 'aggressive') {
+        const enemies = units.filter(u => u.team !== comp.team && u.alive && !u.isTotem && !u.isCompanion);
+        if (enemies.length > 0) {
+          const target = enemies[Math.floor(Math.random() * enemies.length)];
+          const baseDmg = Math.floor((comp.physicalDamage || attacker.physicalDamage || 10) * (def.damage || 0.8));
+          const dmg = Math.max(1, baseDmg - Math.floor((target.defense || 0) * 0.3));
+          target.health = Math.max(0, target.health - dmg);
+          if (target.health <= 0) { target.alive = false; companionEffectLog.push(`${target.name} was slain by ${comp.name}!`); }
+          else { companionEffectLog.push(`[COMPANION] ${comp.name} attacks ${target.name} for ${dmg}!`); }
+        }
+      }
+
+      if (def.behavior === 'defensive') {
+        const enemies = units.filter(u => u.team !== comp.team && u.alive && !u.isTotem && !u.isCompanion);
+        if (enemies.length > 0) {
+          const target = enemies[Math.floor(Math.random() * enemies.length)];
+          const baseDmg = Math.floor((comp.physicalDamage || attacker.physicalDamage || 10) * (def.damage || 0.4));
+          const dmg = Math.max(1, baseDmg - Math.floor((target.defense || 0) * 0.3));
+          target.health = Math.max(0, target.health - dmg);
+          if (target.health <= 0) { target.alive = false; companionEffectLog.push(`${target.name} was slain by ${comp.name}!`); }
+          else { companionEffectLog.push(`[COMPANION] ${comp.name} strikes ${target.name} for ${dmg}!`); }
+        }
+      }
+
+      comp.turnsLeft = (comp.turnsLeft || 0) - 1;
+      if (comp.turnsLeft <= 0) { comp.alive = false; comp.health = 0; companionEffectLog.push(`${comp.name} fades away...`); }
+    });
+    log = [...log, ...companionEffectLog];
 
     set({
       battleUnits: units,

@@ -46,6 +46,9 @@ export const classDefinitions = {
       { id: 'summon_heal_totem', name: 'Heal Totem', icon: 'nature', description: 'Summon a totem that heals allies when you act', type: 'summon_totem', totemType: 'heal_totem', manaCost: 30, staminaCost: 0, cooldown: 6, target: 'self' },
       { id: 'summon_fire_totem', name: 'Fire Totem', icon: 'fire', description: 'Summon a totem that attacks enemies when you act', type: 'summon_totem', totemType: 'fire_totem', manaCost: 25, staminaCost: 10, cooldown: 6, target: 'self' },
       { id: 'summon_fear_totem', name: 'Fear Totem', icon: 'skull', description: 'Summon a totem that slows enemies and may cause them to skip attacks', type: 'summon_totem', totemType: 'fear_totem', manaCost: 35, staminaCost: 0, cooldown: 7, target: 'self' },
+      { id: 'summon_leaf_elemental', name: 'Call Leaf Sprite', icon: 'nature', description: 'Summon a nature spirit that heals allies and poisons foes', type: 'summon_companion', companionType: 'leaf_elemental', manaCost: 35, staminaCost: 0, cooldown: 8, target: 'self' },
+      { id: 'summon_imp', name: 'Call War Imp', icon: 'fire', description: 'Summon a vicious imp that attacks enemies with fire', type: 'summon_companion', companionType: 'imp_companion', manaCost: 30, staminaCost: 10, cooldown: 8, target: 'self' },
+      { id: 'summon_twig', name: 'Call Twig Guardian', icon: 'shield', description: 'Summon a bark guardian that taunts enemies and retaliates', type: 'summon_companion', companionType: 'twig_companion', manaCost: 25, staminaCost: 15, cooldown: 8, target: 'self' },
     ],
     signatureAbility: { id: 'bear_form', name: 'Bear Form', icon: 'wolf', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
     bearFormAbilities: {

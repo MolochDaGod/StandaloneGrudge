@@ -2018,6 +2018,114 @@ export const TOTEM_DEFINITIONS = {
   },
 };
 
+export const companionSpriteMap = {
+  leaf_elemental: {
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/companions/leaf_elemental/row6.png', frames: 5 },
+    walk: { src: '/sprites/companions/leaf_elemental/row7.png', frames: 5 },
+    attack1: { src: '/sprites/companions/leaf_elemental/row10.png', frames: 7 },
+    hurt: { src: '/sprites/companions/leaf_elemental/row9.png', frames: 5 },
+    death: { src: '/sprites/companions/leaf_elemental/row11.png', frames: 6 },
+  },
+  imp_companion: {
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/companions/imp/row6.png', frames: 7 },
+    walk: { src: '/sprites/companions/imp/row7.png', frames: 8 },
+    attack1: { src: '/sprites/companions/imp/row8.png', frames: 6 },
+    hurt: { src: '/sprites/companions/imp/row9.png', frames: 4 },
+    death: { src: '/sprites/companions/imp/row10.png', frames: 6 },
+    cast: { src: '/sprites/companions/imp/row11.png', frames: 7 },
+  },
+  twig_companion: {
+    frameWidth: 32,
+    frameHeight: 32,
+    idle: { src: '/sprites/companions/twig_blight/row0.png', frames: 4 },
+    walk: { src: '/sprites/companions/twig_blight/row1.png', frames: 8 },
+    attack1: { src: '/sprites/companions/twig_blight/row2.png', frames: 6 },
+    hurt: { src: '/sprites/companions/twig_blight/row3.png', frames: 5 },
+    death: { src: '/sprites/companions/twig_blight/row4.png', frames: 5 },
+  },
+};
+
+export const COMPANION_DEFINITIONS = {
+  leaf_elemental: {
+    id: 'leaf_elemental',
+    name: 'Leaf Sprite',
+    type: 'leaf_elemental',
+    health: 50,
+    healPercent: 0.06,
+    damage: 0.3,
+    duration: 6,
+    color: '#4ade80',
+    behavior: 'support',
+    description: 'A nature spirit that heals allies and poisons foes each turn',
+  },
+  imp_companion: {
+    id: 'imp_companion',
+    name: 'War Imp',
+    type: 'imp_companion',
+    health: 35,
+    damage: 0.8,
+    duration: 5,
+    color: '#dc2626',
+    behavior: 'aggressive',
+    description: 'A vicious imp that attacks enemies with fire each turn',
+  },
+  twig_companion: {
+    id: 'twig_companion',
+    name: 'Twig Guardian',
+    type: 'twig_companion',
+    health: 70,
+    damage: 0.4,
+    tauntChance: 0.30,
+    duration: 5,
+    color: '#92400e',
+    behavior: 'defensive',
+    description: 'A tough bark creature that draws enemy attacks and retaliates',
+  },
+};
+
+export const destructibleSpriteMap = {
+  barrel: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row0.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row1.png', frames: 7 },
+  },
+  crate: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row2.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row3.png', frames: 7 },
+  },
+  rock: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row4.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row5.png', frames: 7 },
+  },
+  sign: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row6.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row7.png', frames: 6 },
+  },
+  mushroom_prop: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row8.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row9.png', frames: 6 },
+  },
+  chest_prop: {
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/destructibles/row10.png', frames: 3 },
+    death: { src: '/sprites/destructibles/row11.png', frames: 5 },
+  },
+};
+
 export function getAbilityEffect(classId, abilityName, abilityId) {
   if (abilityId && weaponSkillEffectMap[abilityId]) return weaponSkillEffectMap[abilityId];
   const classEffects = abilityEffectMap[classId];
