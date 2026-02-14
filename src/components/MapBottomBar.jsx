@@ -11,7 +11,7 @@ import { getPlayerSprite } from '../data/spriteMap';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
 import RadarChart from './RadarChart';
 import InventoryModal from './InventoryModal';
-import { setMusicMuted, setSfxMuted } from '../utils/audioManager';
+import { setMusicMuted, setSfxMuted, getMusicMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification, attributeDefinitions, TOTAL_POINTS_AT_LEVEL, calculateCombatPower } from '../data/attributes';
 import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/uiLayoutConfig';
@@ -362,7 +362,7 @@ export default function MapBottomBar({
     unspentPoints, skillPoints,
   } = useGameStore();
 
-  const [musicMuted, setMusicMutedState] = useState(false);
+  const [musicMuted, setMusicMutedState] = useState(() => getMusicMuted());
   const [showHarvesting, setShowHarvesting] = useState(false);
   const [showGear, setShowGear] = useState(false);
   const [showCharacter, setShowCharacter] = useState(false);

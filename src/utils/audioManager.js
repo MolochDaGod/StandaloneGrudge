@@ -345,13 +345,14 @@ export function initAudio() {
   getCtx();
 }
 
-let musicMuted = false;
-let sfxMuted = false;
+let musicMuted = localStorage.getItem('grudge_musicMuted') === 'true';
+let sfxMuted = localStorage.getItem('grudge_sfxMuted') === 'true';
 let musicVolume = 0.15;
 let sfxVolume = 0.25;
 
 export function setMusicMuted(muted) {
   musicMuted = muted;
+  try { localStorage.setItem('grudge_musicMuted', muted ? 'true' : 'false'); } catch(e) {}
   if (bgmGain) bgmGain.gain.value = muted ? 0 : musicVolume;
   if (introAudio) introAudio.volume = muted ? 0 : Math.min(musicVolume, 0.45);
   if (sceneAudio) sceneAudio.volume = muted ? 0 : Math.min(musicVolume, 0.45);
@@ -359,6 +360,7 @@ export function setMusicMuted(muted) {
 
 export function setSfxMuted(muted) {
   sfxMuted = muted;
+  try { localStorage.setItem('grudge_sfxMuted', muted ? 'true' : 'false'); } catch(e) {}
   if (sfxGain) sfxGain.gain.value = muted ? 0 : sfxVolume;
 }
 
