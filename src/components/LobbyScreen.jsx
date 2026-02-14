@@ -136,20 +136,21 @@ export default function LobbyScreen() {
         position: 'relative', zIndex: 1,
       }}>
         <div style={{
-          width: 200,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(10,8,18,0.92) 30%, rgba(5,5,12,0.95) 70%, rgba(0,0,0,0.9) 100%)',
+          width: 210,
           backgroundImage: 'url(/ui/sidebar-bg.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRight: 'none',
           display: 'flex', flexDirection: 'column',
-          padding: '16px 0',
+          justifyContent: 'center',
+          padding: '20px 0',
+          gap: 14,
           position: 'relative',
           boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), 4px 0 12px rgba(0,0,0,0.5)',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(5,5,15,0.3) 40%, rgba(5,5,15,0.3) 60%, rgba(0,0,0,0.5) 100%)',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(5,5,15,0.15) 30%, rgba(5,5,15,0.15) 70%, rgba(0,0,0,0.35) 100%)',
             pointerEvents: 'none', zIndex: 0,
           }} />
           <div style={{
@@ -206,6 +207,7 @@ export default function LobbyScreen() {
 
 function NavItem({ essentialIcon, label, active, onClick }) {
   const [hovered, setHovered] = useState(false);
+  const slid = active;
   return (
     <button
       onClick={onClick}
@@ -213,25 +215,36 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative', zIndex: 1,
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 20px',
-        background: active ? 'rgba(110,231,183,0.12)' : hovered ? 'rgba(255,255,255,0.06)' : 'transparent',
-        border: 'none',
-        borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-        color: active ? 'var(--accent)' : hovered ? '#ddd' : 'var(--muted)',
-        fontSize: '0.75rem',
-        fontFamily: "'Cinzel', serif",
-        letterSpacing: 2,
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '11px 16px 11px 18px',
+        margin: '0 10px',
+        background: active
+          ? 'linear-gradient(90deg, rgba(110,231,183,0.18) 0%, rgba(110,231,183,0.06) 100%)'
+          : hovered
+            ? 'linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)'
+            : 'rgba(0,0,0,0.35)',
+        border: active ? '1px solid rgba(110,231,183,0.35)' : '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 4,
+        color: active ? '#6ee7b7' : hovered ? '#e0d8c8' : '#9a9080',
+        fontSize: '1.1rem',
+        fontFamily: "'LifeCraft', 'Cinzel', serif",
+        letterSpacing: 3,
         cursor: 'pointer',
-        transition: 'all 0.25s ease',
-        width: '100%',
+        transition: 'all 0.3s cubic-bezier(0.25,0.8,0.25,1)',
+        width: 'auto',
         textAlign: 'left',
-        transform: hovered && !active ? 'translateX(3px)' : 'translateX(0)',
-        boxShadow: active ? 'inset 4px 0 12px rgba(110,231,183,0.15)' : 'none',
-        textShadow: active ? '0 0 8px rgba(110,231,183,0.4)' : hovered ? '0 0 6px rgba(255,255,255,0.2)' : 'none',
+        transform: slid ? 'translateX(12px)' : hovered ? 'translateX(6px)' : 'translateX(0)',
+        boxShadow: active
+          ? '0 0 12px rgba(110,231,183,0.2), inset 0 0 8px rgba(110,231,183,0.1), 0 2px 6px rgba(0,0,0,0.5)'
+          : '0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
+        textShadow: active
+          ? '0 0 10px rgba(110,231,183,0.5), 0 0 20px rgba(110,231,183,0.2)'
+          : hovered
+            ? '0 0 8px rgba(255,220,160,0.3)'
+            : '0 1px 2px rgba(0,0,0,0.8)',
       }}
     >
-      <EssentialIcon name={essentialIcon} size={16} />
+      <EssentialIcon name={essentialIcon} size={18} />
       {label}
     </button>
   );
