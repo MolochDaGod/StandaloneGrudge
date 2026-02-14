@@ -1110,7 +1110,7 @@ if (isProd) {
 registerDbRoutes(app);
 
 if (isProd) {
-  const htmlPages = ['compendium', 'arena', 'discordauth'];
+  const htmlPages = ['compendium', 'arena', 'discordauth', 'hero-codex'];
   htmlPages.forEach(page => {
     app.get(`/${page}`, (req, res) => {
       const filePath = path.join(__dirname_server, 'dist', `${page}.html`);
