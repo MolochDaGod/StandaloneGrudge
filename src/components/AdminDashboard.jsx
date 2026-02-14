@@ -319,7 +319,7 @@ export default function AdminDashboard() {
 
   const infoTabs = [
     { id: 'overview', label: 'Overview', color: '#ffd700' },
-    { id: 'heroes', label: `Heroes (${heroRoster?.length || 0})`, color: '#3b82f6' },
+    { id: 'heroes', label: 'Characters (24)', color: '#3b82f6' },
     { id: 'world', label: 'World', color: '#22c55e' },
     { id: 'systems', label: 'Systems', color: '#8b5cf6' },
   ];
@@ -496,24 +496,87 @@ export default function AdminDashboard() {
 
           {activeTab === 'heroes' && (
             <div>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 16, fontSize: '0.65rem', color: '#94a3b8' }}>
-                <span>Total: {heroRoster?.length || 0}</span>
-                <span>Active: {activeHeroIds?.length || 0}</span>
-                <span>Active IDs: {activeHeroIds?.join(', ') || 'none'}</span>
+              <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
+                Choosable Characters — 6 Races × 4 Classes = 24 Warlord Combinations
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
-                {(heroRoster || []).map(hero => (
-                  <HeroCard
-                    key={hero.id}
-                    hero={hero}
-                    expanded={expandedHero === hero.id}
-                    onToggle={() => setExpandedHero(expandedHero === hero.id ? null : hero.id)}
-                  />
-                ))}
-                {(!heroRoster || heroRoster.length === 0) && (
-                  <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.8rem', gridColumn: '1 / -1' }}>
-                    No heroes created yet. Start a new game to create heroes.
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                {Object.values(raceDefinitions).map(race =>
+                  Object.entries(classDefinitions).map(([clsId, cls]) => {
+                    const faction = FACTION_MAP[race.id] || FACTION_MAP.human;
+                    const classIcon = CLASS_ICON_MAP[clsId];
+                    const spriteData = getPlayerSprite(clsId, race.id);
+                    const baseStats = cls.baseStats || {};
+                    return (
+                      <div key={`${race.id}_${clsId}`} style={{
+                        position: 'relative', overflow: 'hidden',
+                        borderRadius: 10, height: 200,
+                        border: `1px solid ${faction.color}33`,
+                        display: 'flex', flexDirection: 'column',
+                      }}>
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          background: `radial-gradient(ellipse at center, ${faction.color}15 0%, rgba(10,10,20,0.95) 70%)`,
+                        }} />
+                        {classIcon && (
+                          <div style={{
+                            position: 'absolute', top: 8, right: 8, zIndex: 3,
+                            width: 28, height: 28, opacity: 0.4,
+                            backgroundImage: `url(${classIcon})`,
+                            backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+                            filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.8))',
+                          }} />
+                        )}
+                        <div style={{
+                          position: 'absolute', left: '50%', top: '30%',
+                          transform: 'translateX(-50%)',
+                          zIndex: 1, opacity: 0.85,
+                          filter: `drop-shadow(0 4px 16px ${faction.color}40)`,
+                        }}>
+                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={3.2} speed={180} />
+                        </div>
+                        <div style={{
+                          position: 'relative', zIndex: 2, padding: '10px 14px 0',
+                        }}>
+                          <div style={{
+                            fontFamily: "'Cinzel', serif", color: '#ffd700', fontWeight: 700,
+                            fontSize: '0.95rem', lineHeight: 1.1,
+                            textShadow: `0 0 12px ${faction.color}60, 0 2px 6px rgba(0,0,0,0.8)`,
+                          }}>
+                            {race.name} {cls.name}
+                          </div>
+                          <div style={{
+                            fontSize: '0.6rem', color: faction.color, opacity: 0.7,
+                            marginTop: 2, fontStyle: 'italic',
+                          }}>
+                            {faction.name}
+                          </div>
+                        </div>
+                        <div style={{ flex: 1 }} />
+                        <div style={{
+                          position: 'relative', zIndex: 2,
+                          background: 'linear-gradient(180deg, transparent 0%, rgba(5,5,15,0.9) 40%)',
+                          padding: '16px 10px 8px',
+                        }}>
+                          <div style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
+                          }}>
+                            {['strength', 'agility', 'intellect', 'vitality'].map(k => (
+                              <div key={k} style={{ textAlign: 'center' }}>
+                                <div style={{
+                                  fontSize: '0.4rem', color: STAT_COLORS[k], textTransform: 'uppercase',
+                                  fontWeight: 700, opacity: 0.8,
+                                }}>{k.slice(0, 3)}</div>
+                                <div style={{
+                                  fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 700,
+                                  fontFamily: "'Cinzel', serif",
+                                }}>{baseStats[k] || 0}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
