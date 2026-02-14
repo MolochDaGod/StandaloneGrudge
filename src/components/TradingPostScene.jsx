@@ -134,10 +134,10 @@ export default function TradingPostScene() {
         position: 'absolute', top: 8, left: 16, right: 16,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        <div style={{ color: '#fbbf24', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
           Trading Post
         </div>
-        <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+        <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
           {gold} Gold
         </span>
       </div>
@@ -188,9 +188,10 @@ export default function TradingPostScene() {
             }}>
               <img src={trader.img} alt={trader.name} style={{ width: 68, height: 68, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
-            <div className="font-cinzel" style={{
+            <div style={{
               color: trader.color, fontSize: '1.05rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${trader.color}40`,
+              fontFamily: "'LifeCraft', 'Cinzel', serif",
             }}>{trader.name}</div>
             {isNearby && !selectedTrader && (
               <div style={{
@@ -249,7 +250,7 @@ export default function TradingPostScene() {
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
           <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="font-cinzel" style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '1rem' }}>
+            <div style={{ color: TRADER_NODES.find(t => t.id === selectedTrader)?.color || '#fff', fontSize: '1rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
               {TRADER_NODES.find(t => t.id === selectedTrader)?.name} Trader
             </div>
             <button onClick={() => setSelectedTrader(null)} style={{
@@ -264,6 +265,7 @@ export default function TradingPostScene() {
                 border: 'none', borderBottom: tab === t ? '2px solid #fbbf24' : '2px solid transparent',
                 color: tab === t ? '#fbbf24' : '#888', cursor: 'pointer',
                 fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase',
+                fontFamily: "'LifeCraft', 'Cinzel', serif",
               }}>{t}</button>
             ))}
           </div>
@@ -329,7 +331,7 @@ export default function TradingPostScene() {
             <button onClick={refreshShop} style={{
               background: 'rgba(100,100,100,0.2)', border: '1px solid #555',
               borderRadius: 4, padding: '3px 10px', color: '#aaa', cursor: 'pointer',
-              fontSize: '0.75rem',
+              fontSize: '0.75rem', fontFamily: "'LifeCraft', 'Cinzel', serif",
             }}>Refresh Stock</button>
           </div>
         </div>

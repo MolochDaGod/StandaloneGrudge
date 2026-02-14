@@ -122,17 +122,17 @@ export default function CampScene() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#4ade80', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+        <div style={{ color: '#4ade80', fontSize: '1.3rem', textShadow: '0 2px 8px rgba(0,0,0,0.8)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
           Camp
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+          <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
             {gold} Gold
           </span>
           <button onClick={() => setShowSellPanel(!showSellPanel)} style={{
             background: 'rgba(0,0,0,0.6)', border: '1px solid #fbbf24', borderRadius: 8,
             padding: '4px 12px', color: '#fbbf24', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'blur(4px)', fontFamily: "'LifeCraft', 'Cinzel', serif",
           }}>Sell Resources</button>
         </div>
       </div>
@@ -215,10 +215,10 @@ export default function CampScene() {
             }}>
               <img src={node.img} alt={node.name} style={{ width: 60, height: 60, objectFit: 'contain', imageRendering: 'auto' }} />
             </div>
-            <div className="font-cinzel" style={{
+            <div style={{
               color: node.color, fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`,
-              whiteSpace: 'nowrap',
+              whiteSpace: 'nowrap', fontFamily: "'LifeCraft', 'Cinzel', serif",
             }}>
               {node.name}
             </div>
@@ -302,7 +302,7 @@ export default function CampScene() {
           borderRadius: 12, padding: 16, minWidth: 220, zIndex: SCENE.POPUP,
           backdropFilter: 'blur(8px)',
         }}>
-          <div className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1.05rem', marginBottom: 8, textAlign: 'center' }}>
+          <div style={{ color: '#fbbf24', fontSize: '1.05rem', marginBottom: 8, textAlign: 'center', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
             Sell Resources
           </div>
           {Object.entries(SELL_PRICES).map(([res, price]) => {

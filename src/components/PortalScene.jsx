@@ -181,6 +181,7 @@ export default function PortalScene() {
       <button onClick={() => { setActivePanel(null); setShopItems(null); }} style={{
         background: 'rgba(239,68,68,0.3)', border: '1px solid #ef4444',
         borderRadius: 6, padding: '2px 10px', color: '#ef4444', cursor: 'pointer', fontSize: '0.85rem',
+        fontFamily: "'LifeCraft', 'Cinzel', serif",
       }}>Close</button>
     );
 
@@ -188,7 +189,7 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#f97316', fontSize: '1rem' }}>Void Forge - Upgrade Equipment</span>
+            <span style={{ color: '#f97316', fontSize: '1rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>Void Forge - Upgrade Equipment</span>
             {closeBtn}
           </div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -228,7 +229,7 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#a78bfa', fontSize: '1rem' }}>Arcane Enchanter</span>
+            <span style={{ color: '#a78bfa', fontSize: '1rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>Arcane Enchanter</span>
             {closeBtn}
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -275,7 +276,7 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#ef4444', fontSize: '1rem' }}>Soul Vendor</span>
+            <span style={{ color: '#ef4444', fontSize: '1rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>Soul Vendor</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ color: '#fbbf24', fontSize: '0.8rem' }}>{gold} gold</span>
               {closeBtn}
@@ -306,7 +307,7 @@ export default function PortalScene() {
       return (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <span className="font-cinzel" style={{ color: '#fbbf24', fontSize: '1rem' }}>Salvage Pit</span>
+            <span style={{ color: '#fbbf24', fontSize: '1rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>Salvage Pit</span>
             {closeBtn}
           </div>
           <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: 6 }}>Break down items for gold and resources</div>
@@ -343,11 +344,11 @@ export default function PortalScene() {
         position: 'absolute', top: 6, left: 12, right: 12,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: SCENE.HEADER,
       }}>
-        <div className="font-cinzel" style={{ color: '#c026d3', fontSize: '1.1rem', textShadow: '0 2px 8px rgba(192,38,211,0.6)' }}>
+        <div style={{ color: '#c026d3', fontSize: '1.1rem', textShadow: '0 2px 8px rgba(192,38,211,0.6)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
           Void Nexus
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ color: '#fbbf24', fontSize: '0.75rem' }}>{gold} gold</span>
+          <span style={{ color: '#fbbf24', fontSize: '0.75rem', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>{gold} gold</span>
           {Object.entries(harvestResources).filter(([k]) => k !== 'gold').map(([r, a]) => (
             <span key={r} style={{ color: '#94a3b8', fontSize: '0.65rem' }}>{r}: {Math.floor(a)}</span>
           ))}
@@ -404,9 +405,10 @@ export default function PortalScene() {
             }}>
               <InlineIcon name={node.icon} />
             </div>
-            <div className="font-cinzel" style={{
+            <div style={{
               color: node.color, fontSize: '1.1rem', fontWeight: 700, marginTop: 4,
               textShadow: `0 2px 6px rgba(0,0,0,0.95), 0 0 10px ${node.color}40`, whiteSpace: 'nowrap',
+              fontFamily: "'LifeCraft', 'Cinzel', serif",
             }}>
               {node.name}
             </div>
