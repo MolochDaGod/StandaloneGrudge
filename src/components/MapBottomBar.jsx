@@ -18,9 +18,9 @@ import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/
 
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
-function ChatAvatar({ race, heroClass, size = 20 }) {
+function ChatAvatar({ race, heroClass, namedHeroId, size = 20 }) {
   if (!race || !heroClass) return null;
-  const spriteData = getPlayerSprite(heroClass, race);
+  const spriteData = getPlayerSprite(heroClass, race, namedHeroId);
   const idleAnim = spriteData?.idle;
   if (!idleAnim) return null;
 
@@ -473,7 +473,7 @@ export default function MapBottomBar({
     const name = leader?.name || 'You';
     setChatLog(prev => [...prev.slice(-49), {
       id: Date.now(), speaker: name, line: chatInput.trim(), color: '#a78bfa',
-      race: leader?.race, heroClass: leader?.class,
+      race: leader?.race, heroClass: leader?.class, namedHeroId: leader?.namedHeroId,
     }]);
     setChatInput('');
   };
@@ -529,7 +529,7 @@ export default function MapBottomBar({
           }}>
             {chatLog.length > 0 ? chatLog.map(entry => (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2, padding: '1px 0' }}>
-                <ChatAvatar race={entry.race} heroClass={entry.heroClass} size={18} />
+                <ChatAvatar race={entry.race} heroClass={entry.heroClass} namedHeroId={entry.namedHeroId} size={18} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ fontWeight: 700, color: entry.color, marginRight: 3, fontSize: '0.5rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
                   <span style={{ color: 'rgba(226,232,240,0.75)', fontWeight: 400, fontSize: '0.5rem' }}>{entry.line}</span>
