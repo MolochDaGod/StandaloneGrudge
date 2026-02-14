@@ -107,14 +107,13 @@ export default function LobbyScreen() {
           pointerEvents: 'none',
         }}>
           <span style={{
-            fontSize: '2.2rem',
+            fontSize: '2.6rem',
             fontFamily: "'LifeCraft', 'Cinzel', serif",
             letterSpacing: 5,
-            background: 'linear-gradient(90deg, #6ee7b7 0%, #ffd700 30%, #fff 50%, #ffd700 70%, #6ee7b7 100%)',
+            background: 'linear-gradient(90deg, #8b0000 0%, #cc1100 25%, #ffd700 50%, #cc1100 75%, #8b0000 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             animation: 'titleShimmer 8s linear infinite',
-            textShadow: 'none',
           }}>
             GRUDGE WARLORDS
           </span>
