@@ -403,6 +403,73 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename_server = fileURLToPath(import.meta.url);
+const __dirname_server = path.dirname(__filename_server);
+
+function scanDir(dir, baseUrl, category) {
+  const results = [];
+  if (!fs.existsSync(dir)) return results;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      results.push(...scanDir(full, `${baseUrl}/${e.name}`, category));
+    } else if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e.name)) {
+      const stat = fs.statSync(full);
+      results.push({
+        name: e.name,
+        path: `${baseUrl}/${e.name}`,
+        dir: baseUrl,
+        category,
+        size: stat.size,
+        modified: stat.mtimeMs,
+      });
+    }
+  }
+  return results;
+}
+
+app.get('/api/assets/scan', (req, res) => {
+  try {
+    const pub = path.join(__dirname_server, 'public');
+    const cats = [
+      { dir: 'sprites', category: 'sprites' },
+      { dir: 'effects', category: 'effects' },
+      { dir: 'icons', category: 'icons' },
+      { dir: 'backgrounds', category: 'backgrounds' },
+      { dir: 'ui', category: 'ui' },
+      { dir: 'images', category: 'images' },
+      { dir: 'map_nodes', category: 'map_nodes' },
+    ];
+    const all = [];
+    for (const c of cats) {
+      all.push(...scanDir(path.join(pub, c.dir), `/${c.dir}`, c.category));
+    }
+    const attached = [];
+    const attachDir = path.join(__dirname_server, 'attached_assets');
+    if (fs.existsSync(attachDir)) {
+      const entries = fs.readdirSync(attachDir);
+      for (const e of entries) {
+        if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e)) {
+          const stat = fs.statSync(path.join(attachDir, e));
+          attached.push({ name: e, path: `/attached/${e}`, dir: '/attached', category: 'attached', size: stat.size, modified: stat.mtimeMs });
+        }
+      }
+    }
+    const summary = {};
+    for (const a of all) {
+      summary[a.category] = (summary[a.category] || 0) + 1;
+    }
+    summary.attached = attached.length;
+    res.json({ total: all.length + attached.length, summary, assets: all, attached });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const ALLOWED_RETURN_ORIGINS = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
 
 app.get('/api/external/login', (req, res) => {

@@ -1,835 +1,416 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import SpriteAnimation from './SpriteAnimation';
-import { spriteSheets, raceClassSpriteMap, getPlayerSprite, namedHeroes } from '../data/spriteMap';
+import { spriteSheets, raceClassSpriteMap, namedHeroes, effectSprites } from '../data/spriteMap';
 
-const SECTIONS = [
-  { id: 'overview', label: 'Sprite Forge', color: '#ffd700' },
-  { id: 'architecture', label: 'Architecture', color: '#3b82f6' },
-  { id: 'anatomy', label: 'Sheet Anatomy', color: '#a855f7' },
-  { id: 'animations', label: 'Animation Gallery', color: '#ef4444' },
-  { id: 'skeleton', label: 'Skeleton Rigging', color: '#22c55e' },
-  { id: 'filters', label: 'Filters & Tints', color: '#f59e0b' },
-  { id: 'ai', label: 'AI Creation', color: '#ec4899' },
-  { id: 'rules', label: 'Golden Rules', color: '#06b6d4' },
+const TABS = [
+  { id: 'scanner', label: 'Scanner', color: '#22c55e' },
+  { id: 'sprites', label: 'Sprites', color: '#a855f7' },
+  { id: 'effects', label: 'Effects', color: '#ef4444' },
+  { id: 'pins', label: 'Pins', color: '#f59e0b' },
+  { id: 'knowledge', label: 'Knowledge', color: '#3b82f6' },
+  { id: 'usage', label: 'Usage', color: '#06b6d4' },
 ];
 
-const ANIMATION_TYPES = [
-  { name: 'idle', desc: 'Standing still, breathing, weapon sway. 4-10 frames. Always looping.', frames: '4-10', fps: 8 },
-  { name: 'walk/run', desc: 'Locomotion cycle. 6-8 frames. Must loop seamlessly at frame 0.', frames: '6-8', fps: 10 },
-  { name: 'attack1', desc: 'Primary attack — fast strike. 6-9 frames. Anticipation → strike → recovery.', frames: '6-9', fps: 12 },
-  { name: 'attack2', desc: 'Heavy/special attack. 8-12 frames. Wider arc, more anticipation.', frames: '8-12', fps: 10 },
-  { name: 'attack3', desc: 'Ultimate attack. 10-13 frames. Can include effect layer.', frames: '10-13', fps: 10 },
-  { name: 'cast', desc: 'Spell casting. 9-11 frames. Charge-up → release pose.', frames: '9-11', fps: 10 },
-  { name: 'hurt', desc: 'Taking damage. 2-4 frames. Quick recoil, head snap back.', frames: '2-4', fps: 8 },
-  { name: 'death', desc: 'Death sequence. 4-18 frames. Non-looping. Final frame persists.', frames: '4-18', fps: 8 },
-  { name: 'block', desc: 'Shield raise. 3-4 frames. Defensive crouch.', frames: '3-4', fps: 8 },
-  { name: 'jump', desc: 'Vertical leap. 2-3 frames. Used in scene movement.', frames: '2-3', fps: 10 },
-];
+const PIN_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7'];
+const RACES = ['human', 'orc', 'elf', 'undead', 'barbarian', 'dwarf'];
+const CLASSES = ['warrior', 'mage', 'worge', 'ranger'];
+const CAT_COLORS = { sprites: '#a855f7', effects: '#ef4444', icons: '#f59e0b', backgrounds: '#3b82f6', ui: '#22c55e', images: '#ec4899', map_nodes: '#06b6d4', attached: '#6b7280' };
 
-const SKELETON_BONES = [
-  { name: 'spine', parent: 'hip', child: 'neck', color: '#00CCFF', desc: 'Core torso support' },
-  { name: 'neck', parent: 'neck', child: 'head', color: '#FF4444', desc: 'Head attachment' },
-  { name: 'shoulderL/R', parent: 'neck', child: 'shoulder', color: '#FF8800', desc: 'Arm root joints' },
-  { name: 'upperArmL/R', parent: 'shoulder', child: 'elbow', color: '#FFCC00', desc: 'Upper arm swing' },
-  { name: 'forearmL/R', parent: 'elbow', child: 'wrist', color: '#88FF00', desc: 'Forearm rotation' },
-  { name: 'thighL/R', parent: 'hipL/R', child: 'knee', color: '#8844FF', desc: 'Upper leg, walk driver' },
-  { name: 'shinL/R', parent: 'knee', child: 'ankle', color: '#FF44CC', desc: 'Lower leg follow-through' },
-  { name: 'weapon', parent: 'wristR', child: 'weaponTip', color: '#FF0000', desc: 'Weapon attachment bone' },
-];
-
-const MATERIAL_LABELS = [
-  { name: 'skin', color: '#FFB07C', desc: 'Skin/flesh tones — deforms naturally' },
-  { name: 'hair', color: '#8B4513', desc: 'Hair — secondary motion, trail effect' },
-  { name: 'fabric', color: '#4169E1', desc: 'Cloth/cape — 35% dampened rotation for soft billowing' },
-  { name: 'leather', color: '#8B6914', desc: 'Leather armor — moderate flexibility' },
-  { name: 'metal', color: '#C0C0C0', desc: 'Metal plate — rigid, no deformation' },
-  { name: 'wood', color: '#966F33', desc: 'Wooden shields, handles — moderate rigidity' },
-  { name: 'gem', color: '#00CED1', desc: 'Crystals, gems — glow-eligible' },
-  { name: 'magic', color: '#FF00FF', desc: 'Magical aura — particle-eligible, can glow/pulse' },
-];
-
-const FILTER_EXAMPLES = [
-  { label: 'Orc Green Skin', filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', desc: 'Turns human skin tones into orcish green' },
-  { label: 'Elf Mystical', filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.1)', desc: 'Cool ethereal coloring for elven worge' },
-  { label: 'Undead Ghastly', filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)', desc: 'Desaturated blueish tones for undead' },
-  { label: 'Barbarian Weathered', filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', desc: 'Warm earth tones for tribal warrior' },
-  { label: 'Undead Inverted', filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)', desc: 'Ghostly negative effect' },
-  { label: 'Dark Barbarian Mage', filter: 'sepia(0.6) saturate(1.3) hue-rotate(-10deg) brightness(0.85) contrast(1.1)', desc: 'Dark ritualistic feel' },
-  { label: 'Grayscale Undead', filter: 'saturate(0) brightness(0.7) contrast(1.2)', desc: 'Pure bone/ash coloring' },
-  { label: 'Dwarf Short & Wide', dwarfTransform: 'scaleX(1.3) scaleY(0.75)', filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', desc: 'CSS transform makes characters look stocky' },
-];
-
-const AI_PROMPTS = [
-  {
-    title: 'Sprite Sheet Generation Prompt',
-    prompt: `Create a pixel art sprite sheet for a [RACE] [CLASS] character for a dark fantasy RPG game.
-
-TECHNICAL REQUIREMENTS:
-- Output: Single horizontal PNG strip (all frames in one row)
-- Frame size: [WIDTH]x[HEIGHT] pixels per frame (common sizes: 100x100, 128x128, 231x190)
-- Background: Fully transparent (PNG alpha)
-- Style: Pixel art, consistent proportions across all frames
-- Character faces RIGHT by default
-- Bottom-aligned: Character feet touch the bottom edge of the frame
-- Consistent silhouette: Character stays within frame bounds across all animations
-
-ANIMATION SET (separate sheet per animation):
-idle: [4-6 frames] subtle breathing, weapon idle sway
-run: [6-8 frames] seamless looping locomotion cycle
-attack1: [6-9 frames] fast primary strike with anticipation
-attack2: [8-12 frames] heavy special attack, wide arc
-hurt: [2-4 frames] damage recoil, head snap back
-death: [4-7 frames] falling sequence, final frame = resting pose
-
-VISUAL NOTES:
-- Dark fantasy aesthetic (ornate armor, glowing runes, weathered gear)
-- Clear silhouette readable at small sizes (50-100px display height)
-- Equipment should have visible detail but not noise
-- Color palette should support CSS filter recoloring for racial variants`,
-  },
-  {
-    title: 'AI Auto-Rig Prompt (GPT-4o Vision)',
-    prompt: `Analyze this character sprite image and provide skeleton joint positions.
-
-Return a JSON object with normalized coordinates (0.0 to 1.0) for these 16 joints:
-{
-  "head": {"x": 0.50, "y": 0.08},
-  "neck": {"x": 0.50, "y": 0.22},
-  "shoulderL": {"x": 0.35, "y": 0.24},
-  "shoulderR": {"x": 0.65, "y": 0.24},
-  "elbowL": {"x": 0.28, "y": 0.40},
-  "elbowR": {"x": 0.72, "y": 0.40},
-  "wristL": {"x": 0.25, "y": 0.55},
-  "wristR": {"x": 0.75, "y": 0.55},
-  "hip": {"x": 0.50, "y": 0.52},
-  "hipL": {"x": 0.42, "y": 0.54},
-  "hipR": {"x": 0.58, "y": 0.54},
-  "kneeL": {"x": 0.40, "y": 0.72},
-  "kneeR": {"x": 0.60, "y": 0.72},
-  "ankleL": {"x": 0.38, "y": 0.92},
-  "ankleR": {"x": 0.62, "y": 0.92},
-  "weaponTip": {"x": 0.83, "y": 0.40}
+function fmt(bytes) {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / 1048576).toFixed(1) + 'MB';
 }
 
-Also identify material zones: skin, hair, fabric, leather, metal, wood, gem, magic.
-Assign body zones for animation: head, torso, armL, armR, legL, legR, weapon.`,
-  },
-  {
-    title: 'Inpainting / Frame Repair Prompt',
-    prompt: `Fix this sprite animation frame. The character is a [RACE] [CLASS] in a dark fantasy RPG.
-
-CONTEXT:
-- This is frame [N] of the [ANIMATION_TYPE] animation
-- Previous frame shows: [describe previous pose]
-- Next frame shows: [describe next pose]
-- The masked/highlighted region needs to be repainted to smoothly interpolate between the previous and next poses
-
-CONSTRAINTS:
-- Maintain exact pixel art style (no anti-aliasing, hard pixel edges)
-- Keep color palette consistent with the existing sprite
-- Preserve transparent background
-- Character proportions must match other frames exactly
-- Equipment/weapon details must be consistent`,
-  },
-];
-
-const GOLDEN_RULES = [
-  { icon: '1', title: 'Containerless by Default', desc: 'Sprites render with width:0, height:0, overflow:visible. They NEVER push UI elements, map nodes, or containers around. Only admin/UI panels use containerless={false}.' },
-  { icon: '2', title: 'Bottom-Center Anchor', desc: 'All sprites anchor at bottom-center (transformOrigin: "bottom center"). Characters "stand" on their anchor point. This ensures consistent ground-level alignment.' },
-  { icon: '3', title: 'Uniform Scale by frameHeight', desc: 'All sprites scale to a uniform 200px display height based on frameHeight. No per-combo scale overrides for display — only data-level scale for gameplay balance.' },
-  { icon: '4', title: 'Horizontal Strip Format', desc: 'Each animation is a single horizontal PNG strip. Frame 0 at left, frames arranged left-to-right. Background position animates via CSS: backgroundPosition = -frame * displayWidth.' },
-  { icon: '5', title: 'Race Recoloring via CSS Filters', desc: 'One base sprite sheet can serve multiple races via CSS filter chains (hue-rotate, saturate, brightness, sepia). This saves massive sprite production effort.' },
-  { icon: '6', title: 'facesLeft Flag', desc: 'Some sprite sheets face left by default (e.g., dwarf-worge). The facesLeft:true property tells the engine to flip them so all characters face right in battle.' },
-  { icon: '7', title: 'Hitbox from Sprite Size', desc: 'BattleScreen calculates hitboxes from sprite display size: hitW = spriteSize * 0.5, hitH = spriteSize * 0.75. Consistent frame sizes = consistent gameplay.' },
-  { icon: '8', title: 'Equipment Overlays on Top', desc: 'Equipment tier glow overlays render ON TOP of the sprite in defined zones (weapon: 45% top, helmet: 0-28%, armor: 28-63%, feet: 75-100%). Higher tiers pulse brighter.' },
-  { icon: '9', title: 'Named Hero Override System', desc: 'Named heroes (like Racalvin) bypass the race/class sprite map entirely via namedHeroId. They get custom sprite sheets, avatars, card backgrounds, and unlock cinematics.' },
-  { icon: '10', title: 'Effect Layers are Separate', desc: 'VFX (fire, ice, lightning, heal beams) are separate sprite sheets. They overlay above character sprites using the z-index layer system. Never bake effects into character sheets.' },
-];
-
-function SectionHeader({ title, color, subtitle }) {
+function Badge({ text, color, onClick, active }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <h2 style={{
-        fontFamily: "'Cinzel', serif", fontSize: '1.4rem', fontWeight: 700,
-        color, margin: 0, textShadow: `0 0 20px ${color}40`,
-      }}>{title}</h2>
-      {subtitle && <p style={{ color: '#8a8d94', fontSize: '0.75rem', marginTop: 4 }}>{subtitle}</p>}
-      <div style={{ height: 2, background: `linear-gradient(90deg, ${color}, transparent)`, marginTop: 8 }} />
+    <button onClick={onClick} style={{
+      background: active ? `${color}33` : 'rgba(255,255,255,0.05)', border: `1px solid ${active ? color : 'rgba(255,255,255,0.1)'}`,
+      color: active ? color : '#8a8d94', borderRadius: 4, padding: '2px 8px', fontSize: '0.6rem',
+      cursor: 'pointer', fontWeight: active ? 700 : 400, transition: 'all 0.15s',
+    }}>{text}</button>
+  );
+}
+
+function Hdr({ title, color, sub }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <h2 style={{ fontFamily: "'Cinzel', serif", fontSize: '1.1rem', fontWeight: 700, color, margin: 0, textShadow: `0 0 15px ${color}40` }}>{title}</h2>
+      {sub && <p style={{ color: '#8a8d94', fontSize: '0.65rem', marginTop: 2 }}>{sub}</p>}
+      <div style={{ height: 2, background: `linear-gradient(90deg, ${color}, transparent)`, marginTop: 6 }} />
     </div>
   );
 }
 
-function CodeBlock({ code, title }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div style={{
-      background: 'rgba(0,0,0,0.5)', borderRadius: 8, overflow: 'hidden',
-      border: '1px solid rgba(255,215,0,0.1)', marginBottom: 12,
-    }}>
-      {title && (
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '6px 12px', background: 'rgba(255,215,0,0.05)',
-          borderBottom: '1px solid rgba(255,215,0,0.1)',
-        }}>
-          <span style={{ fontSize: '0.65rem', color: '#b4966a', fontWeight: 600 }}>{title}</span>
-          <button
-            onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-            style={{
-              background: 'none', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 4,
-              color: copied ? '#22c55e' : '#8a8d94', cursor: 'pointer', fontSize: '0.6rem', padding: '2px 8px',
-            }}
-          >{copied ? 'Copied!' : 'Copy'}</button>
-        </div>
-      )}
-      <pre style={{
-        padding: 12, margin: 0, fontSize: '0.65rem', lineHeight: 1.5,
-        color: '#a0e8b0', overflow: 'auto', maxHeight: 400,
-        fontFamily: "'Fira Code', 'Consolas', monospace",
-      }}>{code}</pre>
-    </div>
-  );
+function loadPins() {
+  try { return JSON.parse(localStorage.getItem('grudge_sprite_pins') || '[]'); } catch { return []; }
 }
-
-function InfoCard({ title, value, detail, color = '#ffd700' }) {
-  return (
-    <div style={{
-      background: 'rgba(20,15,30,0.6)', border: `1px solid ${color}20`,
-      borderRadius: 8, padding: 12, minWidth: 120,
-    }}>
-      <div style={{ fontSize: '1.2rem', fontWeight: 700, color, fontFamily: "'Cinzel', serif" }}>{value}</div>
-      <div style={{ fontSize: '0.7rem', color: '#e2e8f0', fontWeight: 600, marginTop: 2 }}>{title}</div>
-      {detail && <div style={{ fontSize: '0.6rem', color: '#8a8d94', marginTop: 4 }}>{detail}</div>}
-    </div>
-  );
-}
+function savePins(p) { localStorage.setItem('grudge_sprite_pins', JSON.stringify(p)); }
 
 export default function AdminMaker() {
-  const [activeSection, setActiveSection] = useState('overview');
-  const [previewAnim, setPreviewAnim] = useState('idle');
-  const [previewSpeed, setPreviewSpeed] = useState(120);
-  const [expandedPrompt, setExpandedPrompt] = useState(null);
+  const [tab, setTab] = useState('scanner');
+  const [assets, setAssets] = useState(null);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanSearch, setScanSearch] = useState('');
+  const [scanCat, setScanCat] = useState('');
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selSprite, setSelSprite] = useState('knight');
+  const [selAnim, setSelAnim] = useState('idle');
+  const [speed, setSpeed] = useState(120);
+  const [pins, setPins] = useState(loadPins);
+  const [pinNote, setPinNote] = useState('');
+  const [pinColor, setPinColor] = useState('#f59e0b');
+  const [effectSearch, setEffectSearch] = useState('');
 
-  const allSpriteKeys = useMemo(() => Object.keys(spriteSheets), []);
-  const [selectedSprite, setSelectedSprite] = useState('knight');
-
-  const currentSpriteData = spriteSheets[selectedSprite];
-  const availableAnims = currentSpriteData
-    ? Object.keys(currentSpriteData).filter(k => typeof currentSpriteData[k] === 'object' && currentSpriteData[k]?.src)
-    : [];
-
-  const spriteStats = useMemo(() => {
-    const sheets = Object.keys(spriteSheets).length;
-    let totalAnims = 0;
-    let totalFrames = 0;
-    const frameSizes = new Set();
-    Object.values(spriteSheets).forEach(s => {
-      Object.values(s).forEach(v => {
-        if (v && typeof v === 'object' && v.src) {
-          totalAnims++;
-          totalFrames += v.frames || 0;
-        }
-      });
-      const fw = s.frameWidth || 100;
-      const fh = s.frameHeight || 100;
-      frameSizes.add(`${fw}x${fh}`);
-    });
-    return { sheets, totalAnims, totalFrames, frameSizes: [...frameSizes] };
+  const doScan = useCallback(() => {
+    setScanLoading(true);
+    fetch('/api/assets/scan')
+      .then(r => r.json())
+      .then(d => { setAssets(d); setScanLoading(false); })
+      .catch(() => setScanLoading(false));
   }, []);
 
-  const renderOverview = () => (
+  useEffect(() => { if (tab === 'scanner' && !assets) doScan(); }, [tab, assets, doScan]);
+
+  const spriteKeys = useMemo(() => Object.keys(spriteSheets), []);
+  const curSprite = spriteSheets[selSprite];
+  const anims = curSprite ? Object.keys(curSprite).filter(k => typeof curSprite[k] === 'object' && curSprite[k]?.src) : [];
+
+  useEffect(() => { if (anims.length && !anims.includes(selAnim)) setSelAnim(anims[0] || 'idle'); }, [selSprite]);
+
+  const filteredAssets = useMemo(() => {
+    if (!assets?.assets) return [];
+    let list = assets.assets;
+    if (scanCat) list = list.filter(a => a.category === scanCat);
+    if (scanSearch) { const s = scanSearch.toLowerCase(); list = list.filter(a => a.name.toLowerCase().includes(s) || a.path.toLowerCase().includes(s)); }
+    return list.slice(0, 200);
+  }, [assets, scanCat, scanSearch]);
+
+  const addPin = useCallback((path) => {
+    const np = [...pins, { path, color: pinColor, note: pinNote, ts: Date.now() }];
+    setPins(np); savePins(np); setPinNote('');
+  }, [pins, pinColor, pinNote]);
+
+  const removePin = useCallback((idx) => {
+    const np = pins.filter((_, i) => i !== idx);
+    setPins(np); savePins(np);
+  }, [pins]);
+
+  const spriteStats = useMemo(() => {
+    let totalAnims = 0, totalFrames = 0;
+    const sizes = new Set();
+    Object.values(spriteSheets).forEach(s => {
+      Object.values(s).forEach(v => { if (v?.src) { totalAnims++; totalFrames += v.frames || 0; } });
+      sizes.add(`${s.frameWidth || 100}x${s.frameHeight || 100}`);
+    });
+    return { sheets: spriteKeys.length, totalAnims, totalFrames, sizes: [...sizes] };
+  }, [spriteKeys]);
+
+  const spriteFolders = useMemo(() => {
+    const folders = new Set();
+    Object.values(spriteSheets).forEach(s => { if (s.folder) folders.add(s.folder); });
+    return folders;
+  }, []);
+
+  const effectKeys = useMemo(() => Object.keys(effectSprites || {}), []);
+  const filteredEffects = useMemo(() => {
+    if (!effectSearch) return effectKeys;
+    const s = effectSearch.toLowerCase();
+    return effectKeys.filter(k => k.toLowerCase().includes(s));
+  }, [effectKeys, effectSearch]);
+
+  const renderScanner = () => (
     <div>
-      <SectionHeader title="Sprite Forge — Knowledge Base" color="#ffd700" subtitle="Everything learned from building Grudge Warlords sprites + Sprite Animator Pro insights" />
-
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        <InfoCard title="Sprite Sheets" value={spriteStats.sheets} detail="Unique sprite definitions" color="#a855f7" />
-        <InfoCard title="Total Animations" value={spriteStats.totalAnims} detail="Across all sheets" color="#3b82f6" />
-        <InfoCard title="Total Frames" value={spriteStats.totalFrames} detail="Individual animation frames" color="#22c55e" />
-        <InfoCard title="Race/Class Combos" value="24" detail="6 races x 4 classes" color="#ffd700" />
-        <InfoCard title="Frame Sizes" value={spriteStats.frameSizes.length} detail={spriteStats.frameSizes.slice(0, 4).join(', ')} color="#f59e0b" />
-        <InfoCard title="Named Heroes" value={Object.keys(namedHeroes || {}).length || 1} detail="Secret unlockable characters" color="#ec4899" />
+      <Hdr title="Asset Scanner" color="#22c55e" sub={assets ? `${assets.total} assets found` : 'Scan filesystem for all game assets'} />
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button onClick={doScan} style={{
+          background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e',
+          borderRadius: 6, padding: '4px 14px', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 600,
+        }}>{scanLoading ? 'Scanning...' : '⟳ Scan'}</button>
+        <input value={scanSearch} onChange={e => setScanSearch(e.target.value)} placeholder="Search assets..."
+          style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,215,0,0.15)', borderRadius: 6, padding: '4px 10px', color: '#e2e8f0', fontSize: '0.65rem', flex: 1, minWidth: 140 }} />
       </div>
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(255,215,0,0.12)',
-        borderRadius: 10, padding: 16, marginBottom: 20,
-      }}>
-        <h3 style={{ fontFamily: "'Cinzel', serif", color: '#ffd700', fontSize: '1rem', margin: '0 0 10px' }}>
-          What Is This Page?
-        </h3>
-        <p style={{ fontSize: '0.75rem', color: '#c0c0c8', lineHeight: 1.6 }}>
-          This is the <strong style={{ color: '#ffd700' }}>Sprite Maker Knowledge Base</strong> — a living document of everything
-          we've learned about creating, rigging, animating, and integrating 2D sprite sheets for Grudge Warlords.
-          It combines insights from building our own sprite system with analysis of the Sprite Animator Pro tool
-          (skeleton rigging, AI auto-rig, canvas-based frame generation, material labeling).
-        </p>
-        <p style={{ fontSize: '0.75rem', color: '#c0c0c8', lineHeight: 1.6, marginTop: 8 }}>
-          Use this as a reference for creating new sprites, training AI to generate sprite sheets,
-          understanding the animation pipeline, and maintaining consistency across the project's 24+ character combinations.
-        </p>
-      </div>
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(168,85,247,0.15)',
-        borderRadius: 10, padding: 16,
-      }}>
-        <h3 style={{ fontFamily: "'Cinzel', serif", color: '#a855f7', fontSize: '1rem', margin: '0 0 10px' }}>
-          Sprite Animator Pro — Key Takeaways
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
-          {[
-            { t: '16-Bone Skeleton Hierarchy', d: 'Head, neck, 2 shoulders, 2 elbows, 2 wrists, hip, 2 hip joints, 2 knees, 2 ankles, weaponTip. Normalized 0-1 coordinates.' },
-            { t: 'AI Auto-Rig via GPT-4o Vision', d: 'Sends character image to GPT-4o, receives back joint positions + material zones + body part assignments automatically.' },
-            { t: 'Canvas-Based Sprite Engine', d: 'Client-side frame generation. Extracts character parts, applies bone transforms per frame, interpolates between keyframe poses.' },
-            { t: 'Material-Aware Animation', d: 'Labels parts as skin/hair/fabric/leather/metal/wood/gem/magic. Fabric gets 35% dampened rotation for natural cloth billow.' },
-            { t: 'BFS Background Removal', d: 'Flood-fill from edges to remove solid backgrounds. Tolerance-based color matching with alpha feathering at edges.' },
-            { t: 'Frame-Level Editing', d: 'Per-frame skeleton adjustment, stretch/scale tool for regions, and AI inpainting (brush mask → GPT generates fill).' },
-          ].map(item => (
-            <div key={item.t} style={{
-              background: 'rgba(168,85,247,0.08)', borderRadius: 6, padding: 10,
-              border: '1px solid rgba(168,85,247,0.12)',
-            }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#c4b5fd', marginBottom: 4 }}>{item.t}</div>
-              <div style={{ fontSize: '0.6rem', color: '#9ca3af', lineHeight: 1.5 }}>{item.d}</div>
-            </div>
+      {assets?.summary && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          <Badge text={`All (${assets.total})`} color="#ffd700" onClick={() => setScanCat('')} active={!scanCat} />
+          {Object.entries(assets.summary).map(([cat, n]) => (
+            <Badge key={cat} text={`${cat} (${n})`} color={CAT_COLORS[cat] || '#888'} onClick={() => setScanCat(scanCat === cat ? '' : cat)} active={scanCat === cat} />
           ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderArchitecture = () => (
-    <div>
-      <SectionHeader title="Sprite Architecture" color="#3b82f6" subtitle="How the containerless sprite system works from data to render" />
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-        <div>
-          <h4 style={{ color: '#3b82f6', fontSize: '0.8rem', fontWeight: 700, marginBottom: 8 }}>Data Flow</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[
-              { step: '1', label: 'spriteMap.js', desc: 'Defines all sprite sheets, frame sizes, animation sources' },
-              { step: '2', label: 'raceClassSpriteMap', desc: 'Maps race+class combos to sprite sheets with optional filters' },
-              { step: '3', label: 'getPlayerSprite()', desc: 'Resolves named hero overrides, then falls back to race/class map' },
-              { step: '4', label: 'SpriteAnimation', desc: 'Renders the sprite with CSS background-position animation' },
-              { step: '5', label: 'Equipment Overlays', desc: 'Tier-based glow overlays rendered on top of the sprite' },
-            ].map(s => (
-              <div key={s.step} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: '50%', background: '#3b82f6',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.65rem', fontWeight: 700, color: '#fff', flexShrink: 0,
-                }}>{s.step}</div>
-                <div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#93c5fd' }}>{s.label}</div>
-                  <div style={{ fontSize: '0.6rem', color: '#8a8d94' }}>{s.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h4 style={{ color: '#3b82f6', fontSize: '0.8rem', fontWeight: 700, marginBottom: 8 }}>Layer System (Z-Index)</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {[
-              { z: '10501+', label: 'MODALS / TOOLTIPS', color: '#ef4444' },
-              { z: '10500', label: 'UI OVERLAY (panels, hotbar)', color: '#f59e0b' },
-              { z: '200-300', label: 'VFX / EFFECTS', color: '#a855f7' },
-              { z: '100-199', label: 'CHARACTER SPRITES', color: '#3b82f6' },
-              { z: '50-99', label: 'MAP NODES / TERRAIN', color: '#22c55e' },
-              { z: '1-49', label: 'BACKGROUND', color: '#6b7280' },
-            ].map(l => (
-              <div key={l.z} style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '4px 8px', borderRadius: 4,
-                background: `${l.color}10`, borderLeft: `3px solid ${l.color}`,
-              }}>
-                <span style={{ fontSize: '0.6rem', color: l.color, fontFamily: 'monospace', width: 60, fontWeight: 700 }}>{l.z}</span>
-                <span style={{ fontSize: '0.65rem', color: '#c0c0c8' }}>{l.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <CodeBlock title="Containerless Sprite Rendering (width:0, height:0)" code={`// SpriteAnimation.jsx — containerless mode (default)
-<div style={{
-  position: 'relative',
-  width: 0,          // ← ZERO width
-  height: 0,         // ← ZERO height
-  overflow: 'visible', // ← content paints outside
-  imageRendering: 'pixelated',
-}}>
-  <div style={{
-    position: 'absolute',
-    bottom: 0,        // ← anchored at bottom
-    left: '50%',      // ← centered horizontally
-    transform: 'translateX(-50%)',
-    transformOrigin: 'bottom center',
-    width: displayWidth,   // frameWidth * scale
-    height: displayHeight, // frameHeight * scale
-    overflow: 'hidden',
-    pointerEvents: 'none',
-  }}>
-    {/* Sprite image via CSS background */}
-  </div>
-</div>
-
-// KEY: The 0x0 parent means the sprite has NO layout impact.
-// It can be scaled to any size without pushing siblings around.
-// Used in BattleScreen, world map, scene views.
-// Admin panels use containerless={false} for grid/flex layouts.`} />
-
-      <CodeBlock title="Sprite Data Structure" code={`// Each sprite sheet in spriteMap.js follows this pattern:
-const spriteSheet = {
-  folder: 'knight',            // Asset folder under /sprites/
-  frameWidth: 100,             // Width of one frame in pixels (default: 100)
-  frameHeight: 100,            // Height of one frame in pixels (default: 100)
-  facesLeft: false,            // If true, engine flips sprite to face right
-  filter: '',                  // CSS filter string for racial recoloring
-  scale: 1,                    // Data-level scale modifier
-  dwarfTransform: '',          // CSS transform for body proportions
-
-  // Animations — each is a horizontal PNG strip:
-  idle:    { src: '/sprites/knight/idle.png',    frames: 6 },
-  attack1: { src: '/sprites/knight/attack1.png', frames: 7 },
-  attack2: { src: '/sprites/knight/attack2.png', frames: 10 },
-  hurt:    { src: '/sprites/knight/hurt.png',    frames: 4 },
-  death:   { src: '/sprites/knight/death.png',   frames: 4 },
-  walk:    { src: '/sprites/knight/walk.png',    frames: 8 },
-
-  // Optional: effect layers
-  attack3_effect: { src: '/sprites/knight/attack3_effect.png', frames: 11 },
-};`} />
-
-      <CodeBlock title="Race/Class → Sprite Mapping" code={`// raceClassSpriteMap in spriteMap.js
-export const raceClassSpriteMap = {
-  human: {
-    warrior: spriteSheets.knight,
-    mage:    spriteSheets.wizard,
-    worge:   spriteSheets.priest,
-    ranger:  spriteSheets['human-ranger'],
-  },
-  orc: {
-    warrior: spriteSheets['elite-orc'],
-    // CSS filter transforms human sprite → orc coloring:
-    mage: {
-      ...spriteSheets['wizard-pack'],
-      filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)',
-      scale: 0.7,
-    },
-    worge: spriteSheets.orc,
-    ranger: spriteSheets['armored-orc'],
-  },
-  dwarf: {
-    // dwarfTransform squashes proportions:
-    mage: {
-      ...spriteSheets['fire-wizard'],
-      filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)',
-      scale: 0.7,
-      dwarfTransform: 'scaleX(1.3) scaleY(0.75)',
-    },
-  },
-};`} />
-    </div>
-  );
-
-  const renderAnatomy = () => (
-    <div>
-      <SectionHeader title="Sprite Sheet Anatomy" color="#a855f7" subtitle="Frame structure, sizing conventions, and animation strip format" />
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(168,85,247,0.15)',
-        borderRadius: 10, padding: 16, marginBottom: 20,
-      }}>
-        <h4 style={{ color: '#c4b5fd', fontSize: '0.8rem', marginBottom: 12 }}>Horizontal Strip Format</h4>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 2, padding: 12,
-          background: 'repeating-conic-gradient(rgba(100,100,100,0.15) 0% 25%, transparent 0% 50%) 50% / 16px 16px',
-          borderRadius: 6, overflow: 'auto',
-        }}>
-          {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} style={{
-              width: 60, height: 60, border: '1px dashed rgba(168,85,247,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.55rem', color: '#a855f7', flexShrink: 0,
-              background: i === 0 ? 'rgba(168,85,247,0.1)' : 'transparent',
-            }}>
-              Frame {i}
-            </div>
-          ))}
-          <div style={{ fontSize: '0.6rem', color: '#8a8d94', padding: '0 8px' }}>→ PNG</div>
-        </div>
-        <p style={{ fontSize: '0.6rem', color: '#8a8d94', marginTop: 8 }}>
-          Each animation is saved as a single horizontal strip PNG. The engine reads frames left-to-right
-          using CSS <code style={{ color: '#a0e8b0' }}>backgroundPosition: -frame * displayWidth</code>.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginBottom: 20 }}>
-        {ANIMATION_TYPES.map(a => (
-          <div key={a.name} style={{
-            background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(168,85,247,0.1)',
-            borderRadius: 8, padding: 10,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#e2e8f0' }}>{a.name}</span>
-              <span style={{ fontSize: '0.55rem', color: '#a855f7', background: 'rgba(168,85,247,0.15)', padding: '1px 6px', borderRadius: 4 }}>{a.frames}f</span>
-            </div>
-            <p style={{ fontSize: '0.55rem', color: '#8a8d94', margin: 0, lineHeight: 1.4 }}>{a.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      <CodeBlock title="Frame Size Standards Used in Grudge Warlords" code={`Common frame dimensions across our sprite sheets:
-
-100 x 100  — Default for most character sprites (knight, priest, wizard)
-128 x 128  — Mid-size characters (necromancer, some boss sprites)
-231 x 190  — Large sprites (wizard-pack, elf-mage) — higher detail
-175 x 100  — Wide sprites (barbarian-warrior) — extra attack reach
-140 x 140  — Boss sprites (evil-wizard-3)
-119 x 124  — Custom proportions (stormhead)
- 48 x  48  — Compact sprites (viking) — pixel art style
-100 x  82  — Short/wide (dwarf-worge)
-
-RULE: All sprites render at uniform 200px display height via:
-  scale = 200 / frameHeight
-No per-combo scale overrides for visual display.
-This keeps all characters the same screen height.`} />
-    </div>
-  );
-
-  const renderAnimations = () => (
-    <div>
-      <SectionHeader title="Live Animation Gallery" color="#ef4444" subtitle="Browse all sprite sheets and preview animations in real time" />
-
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div>
-          <label style={{ fontSize: '0.6rem', color: '#8a8d94', display: 'block', marginBottom: 4 }}>Sprite Sheet</label>
-          <select
-            value={selectedSprite}
-            onChange={e => { setSelectedSprite(e.target.value); setPreviewAnim('idle'); }}
-            style={{
-              background: 'rgba(20,15,30,0.8)', border: '1px solid rgba(255,215,0,0.2)',
-              borderRadius: 6, color: '#e2e8f0', padding: '6px 10px', fontSize: '0.7rem',
-              minWidth: 200,
-            }}
-          >
-            {allSpriteKeys.map(k => (
-              <option key={k} value={k}>{k}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label style={{ fontSize: '0.6rem', color: '#8a8d94', display: 'block', marginBottom: 4 }}>Animation</label>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {availableAnims.map(a => (
-              <button
-                key={a}
-                onClick={() => setPreviewAnim(a)}
-                style={{
-                  background: previewAnim === a ? 'rgba(239,68,68,0.3)' : 'rgba(20,15,30,0.6)',
-                  border: `1px solid ${previewAnim === a ? '#ef4444' : 'rgba(255,215,0,0.1)'}`,
-                  borderRadius: 4, color: previewAnim === a ? '#fca5a5' : '#8a8d94',
-                  padding: '4px 8px', fontSize: '0.6rem', cursor: 'pointer',
-                }}
-              >{a} ({currentSpriteData[a]?.frames || '?'}f)</button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label style={{ fontSize: '0.6rem', color: '#8a8d94', display: 'block', marginBottom: 4 }}>Speed: {previewSpeed}ms</label>
-          <input
-            type="range" min={40} max={300} step={10} value={previewSpeed}
-            onChange={e => setPreviewSpeed(Number(e.target.value))}
-            style={{ width: 120 }}
-          />
-        </div>
-      </div>
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(239,68,68,0.15)',
-        borderRadius: 10, padding: 20, marginBottom: 20,
-        display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-        minHeight: 250,
-        backgroundImage: 'repeating-conic-gradient(rgba(100,100,100,0.08) 0% 25%, transparent 0% 50%) 50% / 20px 20px',
-      }}>
-        {currentSpriteData && currentSpriteData[previewAnim] ? (
-          <div style={{ position: 'relative', width: 200, height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-            <SpriteAnimation
-              spriteData={currentSpriteData}
-              animation={previewAnim}
-              scale={200 / (currentSpriteData.frameHeight || 100)}
-              speed={previewSpeed}
-              containerless={false}
-            />
-          </div>
-        ) : (
-          <div style={{ color: '#8a8d94', fontSize: '0.7rem' }}>No animation data for "{previewAnim}"</div>
-        )}
-      </div>
-
-      {currentSpriteData && (
-        <div style={{
-          background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(239,68,68,0.1)',
-          borderRadius: 8, padding: 12,
-        }}>
-          <div style={{ fontSize: '0.65rem', color: '#b4966a', fontWeight: 600, marginBottom: 8 }}>Sheet Info</div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.6rem', color: '#8a8d94' }}>
-            <span>Folder: <strong style={{ color: '#e2e8f0' }}>{currentSpriteData.folder || 'n/a'}</strong></span>
-            <span>Frame: <strong style={{ color: '#e2e8f0' }}>{currentSpriteData.frameWidth || 100}x{currentSpriteData.frameHeight || 100}</strong></span>
-            <span>Animations: <strong style={{ color: '#e2e8f0' }}>{availableAnims.length}</strong></span>
-            <span>facesLeft: <strong style={{ color: currentSpriteData.facesLeft ? '#22c55e' : '#8a8d94' }}>{String(!!currentSpriteData.facesLeft)}</strong></span>
-            {currentSpriteData.filter && <span>Filter: <strong style={{ color: '#f59e0b' }}>{currentSpriteData.filter}</strong></span>}
-            {currentSpriteData.dwarfTransform && <span>Transform: <strong style={{ color: '#f59e0b' }}>{currentSpriteData.dwarfTransform}</strong></span>}
-          </div>
         </div>
       )}
+      <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ flex: 1, maxHeight: 520, overflow: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 6 }}>
+            {filteredAssets.map((a, i) => (
+              <div key={i} onClick={() => setSelectedAsset(a)} style={{
+                background: selectedAsset?.path === a.path ? 'rgba(255,215,0,0.1)' : 'rgba(20,15,30,0.5)',
+                border: `1px solid ${selectedAsset?.path === a.path ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                borderRadius: 6, padding: 6, cursor: 'pointer', transition: 'all 0.15s',
+              }}>
+                <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: 'rgba(0,0,0,0.3)', borderRadius: 4, marginBottom: 4 }}>
+                  <img src={a.path} alt="" style={{ maxWidth: '100%', maxHeight: 64, imageRendering: 'pixelated', objectFit: 'contain' }} onError={e => { e.target.style.display = 'none'; }} />
+                </div>
+                <div style={{ fontSize: '0.55rem', color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
+                <div style={{ fontSize: '0.5rem', color: '#6b7280' }}>{fmt(a.size)}</div>
+              </div>
+            ))}
+          </div>
+          {filteredAssets.length >= 200 && <div style={{ fontSize: '0.6rem', color: '#6b7280', textAlign: 'center', marginTop: 8 }}>Showing first 200 results...</div>}
+        </div>
+        {selectedAsset && (
+          <div style={{ width: 240, background: 'rgba(20,15,30,0.6)', border: '1px solid rgba(255,215,0,0.15)', borderRadius: 8, padding: 12, flexShrink: 0 }}>
+            <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 6, padding: 8, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}>
+              <img src={selectedAsset.path} alt="" style={{ maxWidth: '100%', maxHeight: 160, imageRendering: 'pixelated' }} />
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#ffd700', fontWeight: 600, marginBottom: 4, wordBreak: 'break-all' }}>{selectedAsset.name}</div>
+            <div style={{ fontSize: '0.6rem', color: '#8a8d94', marginBottom: 2 }}>{selectedAsset.dir}</div>
+            <div style={{ fontSize: '0.6rem', color: '#8a8d94', marginBottom: 2 }}>Size: {fmt(selectedAsset.size)}</div>
+            <div style={{ fontSize: '0.6rem', color: CAT_COLORS[selectedAsset.category] || '#888', marginBottom: 8 }}>Category: {selectedAsset.category}</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {PIN_COLORS.map(c => (
+                <button key={c} onClick={() => setPinColor(c)} style={{
+                  width: 16, height: 16, borderRadius: '50%', background: c, border: pinColor === c ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer',
+                }} />
+              ))}
+            </div>
+            <input value={pinNote} onChange={e => setPinNote(e.target.value)} placeholder="Pin note..." style={{
+              width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,215,0,0.1)', borderRadius: 4, padding: '3px 6px', color: '#e2e8f0', fontSize: '0.6rem', marginTop: 6,
+            }} />
+            <button onClick={() => addPin(selectedAsset.path)} style={{
+              width: '100%', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700',
+              borderRadius: 4, padding: '4px 0', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 600, marginTop: 6,
+            }}>📌 Pin Asset</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 
-  const renderSkeleton = () => (
+  const renderSprites = () => (
     <div>
-      <SectionHeader title="Skeleton Rigging System" color="#22c55e" subtitle="16-bone hierarchy from Sprite Animator Pro — applicable to procedural animation" />
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(34,197,94,0.15)',
-        borderRadius: 10, padding: 16, marginBottom: 20,
-      }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 8,
+      <Hdr title="Sprite Browser" color="#a855f7" sub={`${spriteStats.sheets} sheets · ${spriteStats.totalAnims} animations · ${spriteStats.totalFrames} frames`} />
+      <div style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={selSprite} onChange={e => setSelSprite(e.target.value)} style={{
+          background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 6, padding: '4px 8px',
+          color: '#c4b5fd', fontSize: '0.65rem', minWidth: 160,
         }}>
-          {SKELETON_BONES.map(b => (
-            <div key={b.name} style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
-              background: 'rgba(34,197,94,0.05)', borderRadius: 6,
-              borderLeft: `3px solid ${b.color}`,
-            }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#e2e8f0' }}>{b.name}</div>
-                <div style={{ fontSize: '0.55rem', color: '#8a8d94' }}>{b.parent} → {b.child} | {b.desc}</div>
-              </div>
-            </div>
-          ))}
+          {spriteKeys.map(k => <option key={k} value={k}>{k}</option>)}
+        </select>
+        <select value={selAnim} onChange={e => setSelAnim(e.target.value)} style={{
+          background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 6, padding: '4px 8px',
+          color: '#c4b5fd', fontSize: '0.65rem',
+        }}>
+          {anims.map(a => <option key={a} value={a}>{a} ({curSprite[a]?.frames}f)</option>)}
+        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: '0.6rem', color: '#8a8d94' }}>Speed:</span>
+          <input type="range" min={40} max={300} value={speed} onChange={e => setSpeed(+e.target.value)} style={{ width: 80 }} />
+          <span style={{ fontSize: '0.6rem', color: '#c4b5fd' }}>{speed}ms</span>
         </div>
       </div>
-
-      <CodeBlock title="Rest Pose (Normalized 0-1 Coordinates)" code={`// From skeleton.ts — the T-pose / rest position
-export const restPose = {
-  head:      { x: 0.50, y: 0.08 },   // Top center
-  neck:      { x: 0.50, y: 0.22 },
-  shoulderL: { x: 0.35, y: 0.24 },
-  shoulderR: { x: 0.65, y: 0.24 },
-  elbowL:    { x: 0.28, y: 0.40 },
-  elbowR:    { x: 0.72, y: 0.40 },
-  wristL:    { x: 0.25, y: 0.55 },
-  wristR:    { x: 0.75, y: 0.55 },
-  hip:       { x: 0.50, y: 0.52 },   // Center mass
-  hipL:      { x: 0.42, y: 0.54 },
-  hipR:      { x: 0.58, y: 0.54 },
-  kneeL:     { x: 0.40, y: 0.72 },
-  kneeR:     { x: 0.60, y: 0.72 },
-  ankleL:    { x: 0.38, y: 0.92 },   // Near bottom
-  ankleR:    { x: 0.62, y: 0.92 },
-  weaponTip: { x: 0.83, y: 0.40 },   // Extended from wristR
-};
-
-// Coordinates are fractions of frame width/height.
-// x=0.5 means center, y=0.0 means top, y=1.0 means bottom.
-// The weapon bone extends from wristR to weaponTip.`} />
-
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 8, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 200, minHeight: 200, border: '1px solid rgba(168,85,247,0.15)' }}>
+          {curSprite && <SpriteAnimation spriteData={curSprite} animation={selAnim} scale={3} speed={speed} containerless={false} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: '0.7rem', color: '#ffd700', fontWeight: 600, marginBottom: 8 }}>Sheet Metadata</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: '0.6rem' }}>
+            {curSprite && [
+              ['Folder', curSprite.folder || '—'],
+              ['Frame Size', `${curSprite.frameWidth || 100}×${curSprite.frameHeight || 100}`],
+              ['Faces Left', curSprite.facesLeft ? '✓ Yes' : 'No'],
+              ['Filter', curSprite.filter || 'none'],
+              ['Scale', curSprite.scale || 1],
+              ['Dwarf Transform', curSprite.dwarfTransform || 'none'],
+              ['Animations', anims.length],
+              ['Total Frames', anims.reduce((s, a) => s + (curSprite[a]?.frames || 0), 0)],
+            ].map(([k, v]) => (
+              <React.Fragment key={k}>
+                <span style={{ color: '#8a8d94' }}>{k}:</span>
+                <span style={{ color: '#e2e8f0', wordBreak: 'break-all' }}>{String(v)}</span>
+              </React.Fragment>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: '0.6rem', color: '#8a8d94' }}>
+            <div style={{ color: '#c4b5fd', fontWeight: 600, marginBottom: 4 }}>Animation Strips:</div>
+            {anims.map(a => (
+              <div key={a} onClick={() => setSelAnim(a)} style={{
+                padding: '2px 6px', cursor: 'pointer', borderRadius: 3,
+                background: selAnim === a ? 'rgba(168,85,247,0.15)' : 'transparent',
+                color: selAnim === a ? '#c4b5fd' : '#8a8d94',
+              }}>{a}: {curSprite[a]?.frames}f — {curSprite[a]?.src}</div>
+            ))}
+          </div>
+        </div>
+      </div>
       <div style={{ marginTop: 16 }}>
-        <h4 style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 700, marginBottom: 10 }}>Material Labels</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
-          {MATERIAL_LABELS.map(m => (
-            <div key={m.name} style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
-              background: 'rgba(34,197,94,0.05)', borderRadius: 6,
-            }}>
-              <div style={{ width: 16, height: 16, borderRadius: 3, background: m.color, flexShrink: 0, border: '1px solid rgba(255,255,255,0.2)' }} />
-              <div>
-                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#e2e8f0' }}>{m.name}</div>
-                <div style={{ fontSize: '0.55rem', color: '#8a8d94' }}>{m.desc}</div>
+        <div style={{ fontSize: '0.7rem', color: '#ffd700', fontWeight: 600, marginBottom: 8 }}>Race/Class Sprite Map</div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ borderCollapse: 'collapse', fontSize: '0.6rem', width: '100%' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '4px 8px', color: '#8a8d94', textAlign: 'left', borderBottom: '1px solid rgba(255,215,0,0.1)' }}>Race</th>
+                {CLASSES.map(c => <th key={c} style={{ padding: '4px 8px', color: '#c4b5fd', borderBottom: '1px solid rgba(255,215,0,0.1)' }}>{c}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {RACES.map(r => (
+                <tr key={r}>
+                  <td style={{ padding: '4px 8px', color: '#ffd700', fontWeight: 600 }}>{r}</td>
+                  {CLASSES.map(c => {
+                    const sprite = raceClassSpriteMap[r]?.[c];
+                    const folder = sprite?.folder || '—';
+                    const hasFilter = !!sprite?.filter;
+                    return (
+                      <td key={c} style={{ padding: '4px 8px', color: hasFilter ? '#f59e0b' : '#e2e8f0', cursor: sprite ? 'pointer' : 'default' }}
+                        onClick={() => { if (sprite?.folder) { const k = spriteKeys.find(sk => spriteSheets[sk].folder === sprite.folder); if (k) setSelSprite(k); } }}>
+                        {folder}{hasFilter && ' 🎨'}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderEffects = () => (
+    <div>
+      <Hdr title="Effects Browser" color="#ef4444" sub={`${effectKeys.length} effect sprites defined in spriteMap`} />
+      <input value={effectSearch} onChange={e => setEffectSearch(e.target.value)} placeholder="Search effects..."
+        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '4px 10px', color: '#e2e8f0', fontSize: '0.65rem', marginBottom: 12, width: 220 }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8, maxHeight: 500, overflow: 'auto' }}>
+        {filteredEffects.map(k => {
+          const e = effectSprites[k];
+          return (
+            <div key={k} style={{ background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(239,68,68,0.1)', borderRadius: 6, padding: 8 }}>
+              <div style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: 'rgba(0,0,0,0.3)', borderRadius: 4, marginBottom: 4 }}>
+                <img src={e.src} alt="" style={{ maxHeight: 56, maxWidth: '100%', imageRendering: 'pixelated', objectFit: 'contain' }} onError={ev => { ev.target.style.display = 'none'; }} />
+              </div>
+              <div style={{ fontSize: '0.6rem', color: '#fca5a5', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k}</div>
+              <div style={{ fontSize: '0.5rem', color: '#6b7280' }}>
+                {e.frames}f {e.frameW ? `${e.frameW}×${e.frameH}` : e.size ? `grid ${Math.sqrt(e.frames)|0}×${Math.sqrt(e.frames)|0}` : ''}
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
-
-      <CodeBlock title="Animation Keyframe Interpolation" code={`// From skeleton.ts — how frames are generated procedurally:
-
-// 1. Define keyframe poses per animation type
-animationKeyframes: {
-  idle:    [pose0, pose1, pose2, ...],  // 3-4 keyframes
-  run:     [pose0, pose1, pose2, ...],  // 6-8 keyframes
-  attack1: [pose0, pose1, pose2, ...],  // anticipation → strike → recovery
-}
-
-// 2. For each output frame, interpolate between nearest keyframes:
-function getSkeletonForFrame(animType, frameIndex, equipmentType) {
-  const t = frameIndex / (totalFrames - 1);     // 0.0 to 1.0
-  const scaledIndex = t * (keyframes.length - 1);
-  const lower = Math.floor(scaledIndex);
-  const upper = Math.min(lower + 1, keyframes.length - 1);
-  const frac = scaledIndex - lower;
-  return interpolateSkeleton(keyframes[lower], keyframes[upper], frac);
-}
-
-// 3. Each joint position is linearly interpolated:
-function interpolateSkeleton(a, b, t) {
-  const result = {};
-  for (const joint of jointNames) {
-    result[joint] = {
-      x: a[joint].x + (b[joint].x - a[joint].x) * t,
-      y: a[joint].y + (b[joint].y - a[joint].y) * t,
-    };
-  }
-  return result;
-}
-
-// 4. Fabric materials get dampened rotation (35%) for soft cloth motion
-// This prevents capes/robes from being too jerky.`} />
     </div>
   );
 
-  const renderFilters = () => (
+  const renderPins = () => (
     <div>
-      <SectionHeader title="CSS Filters & Transforms" color="#f59e0b" subtitle="How one sprite sheet becomes many races via CSS recoloring" />
-
-      <p style={{ fontSize: '0.7rem', color: '#c0c0c8', lineHeight: 1.6, marginBottom: 16 }}>
-        Instead of creating unique sprite art for every race/class combo, we use CSS filter chains to
-        recolor base sprites. This is our biggest efficiency win — one sprite sheet can represent 3-4 races
-        with different filter combinations.
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10, marginBottom: 20 }}>
-        {FILTER_EXAMPLES.map(f => (
-          <div key={f.label} style={{
-            background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(245,158,11,0.1)',
-            borderRadius: 8, padding: 12,
+      <Hdr title="Pins & Annotations" color="#f59e0b" sub={`${pins.length} pinned assets`} />
+      {pins.length === 0 && (
+        <div style={{ textAlign: 'center', padding: 40, color: '#6b7280', fontSize: '0.7rem' }}>
+          No pinned assets yet. Use the Scanner to browse and pin assets.
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {pins.map((p, i) => (
+          <div key={i} style={{
+            display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(20,15,30,0.5)',
+            border: `1px solid ${p.color}33`, borderLeft: `3px solid ${p.color}`, borderRadius: 6, padding: 8,
           }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fbbf24', marginBottom: 4 }}>{f.label}</div>
-            <code style={{
-              display: 'block', fontSize: '0.55rem', color: '#a0e8b0',
-              background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, marginBottom: 6,
-              wordBreak: 'break-all',
-            }}>
-              {f.filter && `filter: ${f.filter}`}
-              {f.dwarfTransform && `\ntransform: ${f.dwarfTransform}`}
-            </code>
-            <div style={{ fontSize: '0.55rem', color: '#8a8d94' }}>{f.desc}</div>
+            <div style={{ width: 56, height: 56, background: 'rgba(0,0,0,0.3)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <img src={p.path} alt="" style={{ maxWidth: 52, maxHeight: 52, imageRendering: 'pixelated' }} onError={e => { e.target.style.display = 'none'; }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.65rem', color: '#e2e8f0', fontWeight: 600, wordBreak: 'break-all' }}>{p.path}</div>
+              {p.note && <div style={{ fontSize: '0.6rem', color: '#8a8d94', marginTop: 2 }}>{p.note}</div>}
+              <div style={{ fontSize: '0.5rem', color: '#6b7280', marginTop: 2 }}>{new Date(p.ts).toLocaleDateString()}</div>
+            </div>
+            <button onClick={() => removePin(i)} style={{
+              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444',
+              borderRadius: 4, padding: '2px 8px', fontSize: '0.6rem', cursor: 'pointer', flexShrink: 0,
+            }}>✕</button>
           </div>
         ))}
       </div>
-
-      <CodeBlock title="Filter Chaining Reference" code={`CSS Filter Functions (applied in order, left to right):
-
-hue-rotate(Xdeg)   — Rotates the color wheel. 90deg = warm→green, 180deg = full invert
-saturate(X)         — 0 = grayscale, 1 = normal, >1 = vivid
-brightness(X)       — 0 = black, 1 = normal, >1 = brighter
-sepia(X)            — 0 = none, 1 = full sepia (warm brown tones)
-contrast(X)         — <1 = washed out, 1 = normal, >1 = harsh
-invert(X)           — 0 = normal, 1 = full negative
-grayscale(X)        — 0 = normal, 1 = full grayscale
-
-COMBINATION RECIPES:
-Orc:     hue-rotate(90deg) saturate(1.4) brightness(1.05)
-Undead:  hue-rotate(180deg) saturate(0.6) brightness(0.7)
-Elf:     hue-rotate(90deg) saturate(1.3) brightness(1.1)
-Ghost:   invert(0.85) hue-rotate(180deg) saturate(1.4)
-Tribal:  sepia(0.5) saturate(1.5) brightness(0.9)
-
-BODY TRANSFORM (dwarfTransform):
-Dwarf:   scaleX(1.3) scaleY(0.75)  — wider + shorter = stocky
-Giant:   scaleX(0.9) scaleY(1.2)   — thinner + taller = imposing
-  
-TIP: Apply filters on the spriteData object, not CSS directly.
-The SpriteAnimation component reads spriteData.filter automatically.`} />
     </div>
   );
 
-  const renderAI = () => (
-    <div>
-      <SectionHeader title="AI Sprite Creation" color="#ec4899" subtitle="Prompts, techniques, and pipeline for AI-generated sprite sheets" />
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(236,72,153,0.15)',
-        borderRadius: 10, padding: 16, marginBottom: 20,
-      }}>
-        <h4 style={{ color: '#f9a8d4', fontSize: '0.8rem', marginBottom: 8 }}>AI Sprite Pipeline</h4>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+  const renderKnowledge = () => (
+    <div style={{ maxHeight: 560, overflow: 'auto' }}>
+      <Hdr title="Knowledge Base" color="#3b82f6" sub="Architecture, golden rules, AI prompts, filters" />
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#93c5fd', fontWeight: 700, marginBottom: 6 }}>🏗 Architecture</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.6rem' }}>
           {[
-            { step: '1', label: 'Generate Base Art', desc: 'Use image AI to create a single-frame character in the correct style and proportions' },
-            { step: '2', label: 'Auto-Rig Skeleton', desc: 'Send to GPT-4o Vision to detect joint positions, body zones, and material labels' },
-            { step: '3', label: 'Generate Keyframes', desc: 'Use skeleton poses to generate animation keyframes via canvas bone transforms' },
-            { step: '4', label: 'Frame Refinement', desc: 'Per-frame editing: adjust skeleton, stretch regions, AI inpaint damaged areas' },
-            { step: '5', label: 'Export Strip PNGs', desc: 'Render final horizontal strips per animation. Remove backgrounds. Save to /sprites/' },
-            { step: '6', label: 'Register in spriteMap', desc: 'Add entry to spriteSheets{} and map in raceClassSpriteMap{}' },
-          ].map(s => (
-            <div key={s.step} style={{
-              flex: '1 1 140px', background: 'rgba(236,72,153,0.08)', borderRadius: 6, padding: 10,
-              border: '1px solid rgba(236,72,153,0.1)', textAlign: 'center',
-            }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', background: '#ec4899',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.7rem', fontWeight: 700, color: '#fff', margin: '0 auto 6px',
-              }}>{s.step}</div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#f9a8d4', marginBottom: 2 }}>{s.label}</div>
-              <div style={{ fontSize: '0.5rem', color: '#8a8d94', lineHeight: 1.4 }}>{s.desc}</div>
+            ['Data Flow', 'spriteMap.js → raceClassSpriteMap → getPlayerSprite() → SpriteAnimation → Equipment Overlays'],
+            ['Rendering', 'Containerless: width:0, height:0, overflow:visible. Bottom-center anchor. Never pushes UI.'],
+            ['Z-Index', 'BG 1-49 → Map 50-99 → Chars 100-199 → VFX 200-300 → UI 10500 → Modals 10501+'],
+            ['Scaling', 'All sprites scale to 200px display height via frameHeight. No per-combo overrides.'],
+          ].map(([t, d]) => (
+            <div key={t} style={{ background: 'rgba(59,130,246,0.08)', borderRadius: 6, padding: 8, border: '1px solid rgba(59,130,246,0.12)' }}>
+              <div style={{ color: '#93c5fd', fontWeight: 600, marginBottom: 2 }}>{t}</div>
+              <div style={{ color: '#9ca3af', lineHeight: 1.4 }}>{d}</div>
             </div>
           ))}
         </div>
       </div>
-
-      {AI_PROMPTS.map((p, i) => (
-        <div key={p.title} style={{
-          background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(236,72,153,0.1)',
-          borderRadius: 10, marginBottom: 12, overflow: 'hidden',
-        }}>
-          <button
-            onClick={() => setExpandedPrompt(expandedPrompt === i ? null : i)}
-            style={{
-              width: '100%', textAlign: 'left', background: 'none', border: 'none',
-              color: '#f9a8d4', padding: '12px 16px', cursor: 'pointer',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              fontSize: '0.75rem', fontWeight: 700,
-            }}
-          >
-            {p.title}
-            <span style={{ color: '#8a8d94', fontSize: '0.7rem' }}>{expandedPrompt === i ? '−' : '+'}</span>
-          </button>
-          {expandedPrompt === i && (
-            <div style={{ padding: '0 16px 16px' }}>
-              <CodeBlock code={p.prompt} title="Prompt Template (click Copy to use)" />
-            </div>
-          )}
-        </div>
-      ))}
-
-      <div style={{
-        background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(236,72,153,0.15)',
-        borderRadius: 10, padding: 16, marginTop: 16,
-      }}>
-        <h4 style={{ color: '#f9a8d4', fontSize: '0.8rem', marginBottom: 10 }}>AI Creation Tips</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#ffd700', fontWeight: 700, marginBottom: 6 }}>⚔ Golden Rules</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4, fontSize: '0.6rem' }}>
           {[
-            { title: 'Consistency is King', desc: 'AI generates each frame independently. Describe the EXACT same character, clothing, and proportions in every prompt. Reference the idle frame as the canonical look.' },
-            { title: 'Transparent Backgrounds', desc: 'Always specify "fully transparent PNG background" or use BFS flood-fill removal after generation. Edge feathering prevents halo artifacts.' },
-            { title: 'Frame-by-Frame Approach', desc: 'Generate each animation frame as a separate image with the same character in different poses. Then assemble into horizontal strips manually or with a tool.' },
-            { title: 'Silhouette Check', desc: 'Good sprites read clearly at 50px height. If the character becomes a blob at small sizes, simplify the design. Less detail = better game sprites.' },
-            { title: 'Color Palette Planning', desc: 'Design base sprites in neutral human skin tones. This gives CSS filters the most room to recolor for other races. Avoid pure red/blue — they shift unpredictably.' },
-            { title: 'Bottom Alignment', desc: 'Every frame must have the character feet touching the same Y position at the bottom. Misaligned feet cause "bouncing" during animation playback.' },
-          ].map(tip => (
-            <div key={tip.title} style={{
-              background: 'rgba(236,72,153,0.05)', borderRadius: 6, padding: 10,
-              border: '1px solid rgba(236,72,153,0.08)',
-            }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#f9a8d4', marginBottom: 4 }}>{tip.title}</div>
-              <div style={{ fontSize: '0.55rem', color: '#9ca3af', lineHeight: 1.5 }}>{tip.desc}</div>
+            ['Containerless Default', 'Sprites render w:0 h:0 overflow:visible. Never push UI. Admin panels use containerless={false}.'],
+            ['Bottom-Center Anchor', 'All sprites anchor bottom-center. Characters "stand" on anchor point.'],
+            ['Horizontal Strip Format', 'Each anim = single horizontal PNG strip. Frame 0 left, animate via backgroundPosition.'],
+            ['Race Recoloring', 'CSS filter chains (hue-rotate, saturate, brightness) recolor base sprites for races.'],
+            ['facesLeft Flag', 'Some sheets face left. facesLeft:true flips them to face right in battle.'],
+            ['Equipment Overlays', 'Tier glow overlays render on top in zones: weapon 45%, helmet 0-28%, armor 28-63%, feet 75-100%.'],
+            ['Named Heroes', 'namedHeroId bypasses race/class map. Custom sprites, avatars, card BGs.'],
+            ['Effects Separate', 'VFX are separate sheets. Overlay above chars via z-index. Never bake into char sheets.'],
+          ].map(([t, d]) => (
+            <div key={t} style={{ padding: '4px 8px', borderLeft: '2px solid #ffd700', background: 'rgba(255,215,0,0.04)' }}>
+              <span style={{ color: '#ffd700', fontWeight: 600 }}>{t}: </span>
+              <span style={{ color: '#9ca3af' }}>{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>🤖 AI Sprite Generation Prompt</div>
+        <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 6, padding: 10, fontSize: '0.58rem', color: '#a0e8b0', fontFamily: "'Fira Code', monospace", lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>
+{`Create pixel art sprite sheet for [RACE] [CLASS] dark fantasy RPG.
+- Single horizontal PNG strip per animation
+- Frame size: [W]x[H]px, transparent BG, character faces RIGHT
+- Bottom-aligned, consistent silhouette
+Animations: idle (4-6f), run (6-8f), attack1 (6-9f), attack2 (8-12f), hurt (2-4f), death (4-7f)
+Style: Dark fantasy, ornate armor, glowing runes, clear silhouette at 50-100px
+Color palette must support CSS filter recoloring for racial variants`}
+        </div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#22c55e', fontWeight: 700, marginBottom: 6 }}>🦴 Skeleton Bones (16-joint rig)</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, fontSize: '0.55rem' }}>
+          {[
+            { name: 'spine', color: '#00CCFF' }, { name: 'neck', color: '#FF4444' },
+            { name: 'shoulderL/R', color: '#FF8800' }, { name: 'upperArmL/R', color: '#FFCC00' },
+            { name: 'forearmL/R', color: '#88FF00' }, { name: 'thighL/R', color: '#8844FF' },
+            { name: 'shinL/R', color: '#FF44CC' }, { name: 'weapon', color: '#FF0000' },
+          ].map(b => (
+            <span key={b.name} style={{ background: `${b.color}20`, border: `1px solid ${b.color}40`, color: b.color, padding: '2px 6px', borderRadius: 3 }}>{b.name}</span>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>🎨 Filter Recipes</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6, fontSize: '0.55rem' }}>
+          {[
+            ['Orc Green', 'hue-rotate(90deg) saturate(1.4) brightness(1.05)'],
+            ['Elf Mystical', 'hue-rotate(90deg) saturate(1.3) brightness(1.1)'],
+            ['Undead Ghastly', 'hue-rotate(180deg) saturate(0.6) brightness(0.7)'],
+            ['Barbarian Weathered', 'sepia(0.5) saturate(1.5) brightness(0.9)'],
+            ['Undead Inverted', 'invert(0.85) hue-rotate(180deg) saturate(1.4)'],
+            ['Grayscale', 'saturate(0) brightness(0.7) contrast(1.2)'],
+          ].map(([label, filter]) => (
+            <div key={label} style={{ background: 'rgba(245,158,11,0.06)', borderRadius: 4, padding: 6, border: '1px solid rgba(245,158,11,0.1)' }}>
+              <div style={{ color: '#fbbf24', fontWeight: 600 }}>{label}</div>
+              <div style={{ color: '#9ca3af', fontFamily: 'monospace', fontSize: '0.5rem' }}>{filter}</div>
             </div>
           ))}
         </div>
@@ -837,105 +418,61 @@ The SpriteAnimation component reads spriteData.filter automatically.`} />
     </div>
   );
 
-  const renderRules = () => (
-    <div>
-      <SectionHeader title="The 10 Golden Rules" color="#06b6d4" subtitle="Non-negotiable sprite system rules for Grudge Warlords" />
+  const renderUsage = () => {
+    const diskFolders = assets?.assets ? [...new Set(assets.assets.filter(a => a.category === 'sprites').map(a => {
+      const parts = a.dir.replace(/^\/sprites\//, '').split('/');
+      return parts[0];
+    }).filter(Boolean))] : [];
+    const activeFolders = [...spriteFolders];
+    const orphaned = diskFolders.filter(f => !activeFolders.some(af => af === f || af.startsWith(f + '/') || f.startsWith(af)));
+    const active = diskFolders.filter(f => activeFolders.some(af => af === f || af.startsWith(f + '/') || f.startsWith(af)));
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {GOLDEN_RULES.map(r => (
-          <div key={r.icon} style={{
-            display: 'flex', gap: 14, alignItems: 'flex-start',
-            background: 'rgba(20,15,30,0.5)', border: '1px solid rgba(6,182,212,0.12)',
-            borderRadius: 10, padding: 14,
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #06b6d4, #0284c7)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.8rem', fontWeight: 900, color: '#fff', flexShrink: 0,
-              boxShadow: '0 0 12px rgba(6,182,212,0.3)',
-            }}>{r.icon}</div>
-            <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#67e8f9', marginBottom: 3 }}>{r.title}</div>
-              <div style={{ fontSize: '0.6rem', color: '#9ca3af', lineHeight: 1.6 }}>{r.desc}</div>
+    return (
+      <div>
+        <Hdr title="Usage Tracker" color="#06b6d4" sub={`${active.length} active · ${orphaned.length} orphaned sprite folders`} />
+        {!assets && <div style={{ fontSize: '0.65rem', color: '#6b7280', padding: 20 }}>Run the Scanner first to populate filesystem data.</div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: '0.6rem' }}>
+          <div>
+            <div style={{ color: '#22c55e', fontWeight: 700, marginBottom: 6 }}>✓ Active ({active.length})</div>
+            <div style={{ maxHeight: 400, overflow: 'auto' }}>
+              {active.sort().map(f => (
+                <div key={f} style={{ padding: '2px 6px', borderLeft: '2px solid #22c55e', marginBottom: 2, color: '#9ca3af' }}>{f}</div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
-
-      <div style={{
-        marginTop: 20, background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)',
-        borderRadius: 10, padding: 16,
-      }}>
-        <h4 style={{ color: '#67e8f9', fontSize: '0.8rem', marginBottom: 8 }}>Quick Checklist for New Sprites</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-          {[
-            'Transparent PNG background',
-            'Consistent frame dimensions',
-            'Character faces RIGHT',
-            'Feet aligned at bottom edge',
-            'At least idle + attack1 + hurt + death',
-            'Readable silhouette at 50px height',
-            'Neutral base colors for filter recoloring',
-            'Registered in spriteSheets{}',
-            'Mapped in raceClassSpriteMap{}',
-            'Tested in Animation Gallery above',
-          ].map(item => (
-            <div key={item} style={{
-              fontSize: '0.6rem', color: '#c0c0c8', padding: '3px 0',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <span style={{ color: '#06b6d4', fontSize: '0.7rem' }}>&#x2610;</span>
-              {item}
+          <div>
+            <div style={{ color: '#ef4444', fontWeight: 700, marginBottom: 6 }}>✗ Orphaned ({orphaned.length})</div>
+            <div style={{ maxHeight: 400, overflow: 'auto' }}>
+              {orphaned.sort().map(f => (
+                <div key={f} style={{ padding: '2px 6px', borderLeft: '2px solid #ef4444', marginBottom: 2, color: '#9ca3af' }}>{f}</div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'overview': return renderOverview();
-      case 'architecture': return renderArchitecture();
-      case 'anatomy': return renderAnatomy();
-      case 'animations': return renderAnimations();
-      case 'skeleton': return renderSkeleton();
-      case 'filters': return renderFilters();
-      case 'ai': return renderAI();
-      case 'rules': return renderRules();
-      default: return null;
-    }
+    );
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'linear-gradient(180deg, #0a0a14 0%, #141428 50%, #0a0e1a 100%)',
-      color: '#e2e8f0', fontFamily: "'Jost', sans-serif",
-    }}>
-      <div style={{
-        display: 'flex', gap: 4, padding: '10px 16px', flexWrap: 'wrap',
-        borderBottom: '1px solid rgba(255,215,0,0.1)',
-        background: 'rgba(20,15,30,0.6)',
-      }}>
-        {SECTIONS.map(s => (
-          <button
-            key={s.id}
-            onClick={() => setActiveSection(s.id)}
-            style={{
-              background: activeSection === s.id ? `${s.color}20` : 'transparent',
-              border: `1px solid ${activeSection === s.id ? s.color : 'rgba(255,215,0,0.08)'}`,
-              borderRadius: 6, color: activeSection === s.id ? s.color : '#6b7280',
-              padding: '5px 12px', fontSize: '0.65rem', fontWeight: 600,
-              cursor: 'pointer', transition: 'all 0.15s',
-            }}
-          >{s.label}</button>
+    <div style={{ padding: 16, fontFamily: "'Jost', sans-serif", color: '#e2e8f0', minHeight: 'calc(100vh - 60px)', background: 'rgba(10,10,20,0.3)' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: 4 }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            background: tab === t.id ? `${t.color}22` : 'transparent',
+            border: tab === t.id ? `1px solid ${t.color}55` : '1px solid transparent',
+            borderBottom: tab === t.id ? `2px solid ${t.color}` : '2px solid transparent',
+            color: tab === t.id ? t.color : '#6b7280', borderRadius: 6, padding: '6px 14px',
+            fontSize: '0.7rem', cursor: 'pointer', fontWeight: tab === t.id ? 700 : 400,
+            fontFamily: "'Cinzel', serif", transition: 'all 0.15s',
+          }}>{t.label}</button>
         ))}
       </div>
-
-      <div style={{ padding: 20, maxWidth: 1100, margin: '0 auto' }}>
-        {renderContent()}
-      </div>
+      {tab === 'scanner' && renderScanner()}
+      {tab === 'sprites' && renderSprites()}
+      {tab === 'effects' && renderEffects()}
+      {tab === 'pins' && renderPins()}
+      {tab === 'knowledge' && renderKnowledge()}
+      {tab === 'usage' && renderUsage()}
     </div>
   );
 }
