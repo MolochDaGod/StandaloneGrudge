@@ -8,7 +8,7 @@ import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 import AbilityIcon from './AbilityIcon';
@@ -108,7 +108,8 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const cp = calculateCombatPower(stats);
   const hasPoints = (hero.unspentPoints || 0) > 0 || (hero.skillPoints || 0) > 0;
 
-  const raceBg = RACE_BG[hero.raceId] || RACE_BG.human;
+  const namedHero = hero.namedHeroId ? namedHeroes[hero.namedHeroId] : null;
+  const raceBg = namedHero?.cardBg || RACE_BG[hero.raceId] || RACE_BG.human;
   const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
   const cardScale = getCardScale(spriteData);
 
@@ -116,10 +117,11 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
     <div onClick={onClick} style={{
       backgroundImage: `linear-gradient(135deg, ${isSelected ? 'rgba(110,231,183,0.25)' : 'rgba(14,22,48,0.70)'}, rgba(11,16,32,0.80)), url(${raceBg})`,
       backgroundSize: 'cover', backgroundPosition: 'center',
-      border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+      border: `2px solid ${isSelected ? 'var(--accent)' : namedHero ? `${namedHero.color || '#d4a017'}55` : 'var(--border)'}`,
       borderRadius: 14, padding: 16, cursor: 'pointer',
       transition: 'all 0.3s', position: 'relative', overflow: 'hidden',
       minWidth: 170,
+      boxShadow: namedHero ? `inset 0 0 30px ${namedHero.color || '#d4a017'}15, 0 0 12px ${namedHero.color || '#d4a017'}20` : undefined,
     }}
     onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = 'rgba(110,231,183,0.5)'; }}
     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--border)'; }}
@@ -140,6 +142,16 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
           borderRadius: 4, padding: '1px 6px', fontSize: '0.5rem',
           color: 'var(--accent)', fontWeight: 700, letterSpacing: 1,
         }}>ACTIVE</div>
+      )}
+
+      {namedHero && (
+        <div style={{
+          position: 'absolute', top: 6, right: hasPoints ? 22 : 6,
+          background: `rgba(212,160,23,0.25)`, border: `1px solid ${namedHero.color || '#d4a017'}`,
+          borderRadius: 4, padding: '1px 6px', fontSize: '0.45rem',
+          color: namedHero.color || '#d4a017', fontWeight: 700, letterSpacing: 1,
+          textTransform: 'uppercase',
+        }}>{namedHero.title}</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: isActive ? 12 : 0, position: 'relative', minHeight: 260 }}>

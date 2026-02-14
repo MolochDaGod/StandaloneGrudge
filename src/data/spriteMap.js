@@ -999,6 +999,8 @@ export const namedHeroes = {
     unlocked: true,
     passive: 'Sword Throw: Ranged attacks hurl a spinning blade that deals bonus damage',
     color: '#d4a017',
+    cardBg: '/ui/admin_avatar.png',
+    avatar: '/ui/admin_avatar.png',
   },
 };
 
