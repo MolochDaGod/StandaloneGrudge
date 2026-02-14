@@ -227,37 +227,38 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative', zIndex: 1,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        padding: '10px 20px',
-        margin: '0 6px',
-        backgroundImage: `url(${active ? '/ui/wood_light.png' : '/ui/wood_dark.png'})`,
-        backgroundSize: '100% 100%',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        border: 'none',
-        borderRadius: 6,
-        color: '#1a1008',
-        fontSize: '1.1rem',
-        fontFamily: "'LifeCraft', 'Cinzel', serif",
-        letterSpacing: 3,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'none', backgroundColor: 'transparent',
+        border: 'none', borderRadius: 0, padding: 0, margin: '0 2px',
         cursor: 'pointer',
         transition: 'all 0.3s cubic-bezier(0.25,0.8,0.25,1)',
-        width: 'auto',
-        textAlign: 'center',
         transform: hovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0) scale(1)',
-        boxShadow: active
-          ? '0 4px 16px rgba(0,0,0,0.6), 0 0 12px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
-          : hovered
-            ? '0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
-            : '0 2px 6px rgba(0,0,0,0.5)',
-        textShadow: '0 1px 0 rgba(255,255,255,0.3)',
         filter: hovered && !active ? 'brightness(1.15)' : 'none',
       }}
     >
-      <span style={{ filter: 'brightness(0.15)', display: 'flex', alignItems: 'center' }}>
-        <EssentialIcon name={essentialIcon} size={18} />
+      <img
+        src={active ? '/ui/wood_light.png' : '/ui/wood_dark.png'}
+        alt=""
+        style={{
+          display: 'block', width: '100%', height: 42,
+          objectFit: 'fill',
+          pointerEvents: 'none',
+        }}
+      />
+      <span style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        color: '#1a1008', fontSize: '1.05rem',
+        fontFamily: "'LifeCraft', 'Cinzel', serif",
+        letterSpacing: 3,
+        textShadow: '0 1px 0 rgba(255,255,255,0.3)',
+        padding: '0 16px',
+      }}>
+        <span style={{ filter: 'brightness(0.15)', display: 'flex', alignItems: 'center' }}>
+          <EssentialIcon name={essentialIcon} size={16} />
+        </span>
+        {label}
       </span>
-      {label}
     </button>
   );
 }
