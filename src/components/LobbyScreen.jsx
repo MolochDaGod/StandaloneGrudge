@@ -98,14 +98,23 @@ export default function LobbyScreen() {
         position: 'relative', zIndex: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src="/images/grudge_rpg_logo.png" alt="Grudge RPG" style={{
+            height: 48, width: 'auto', objectFit: 'contain', imageRendering: 'auto',
+          }} />
+        </div>
+        <div style={{
+          position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+        }}>
           <span style={{
-            fontSize: '1.5rem',
+            fontSize: '2.2rem',
             fontFamily: "'LifeCraft', 'Cinzel', serif",
-            letterSpacing: 3,
+            letterSpacing: 5,
             background: 'linear-gradient(90deg, #6ee7b7 0%, #ffd700 30%, #fff 50%, #ffd700 70%, #6ee7b7 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             animation: 'titleShimmer 8s linear infinite',
+            textShadow: 'none',
           }}>
             GRUDGE WARLORDS
           </span>
