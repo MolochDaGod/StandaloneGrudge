@@ -220,7 +220,6 @@ export default function LobbyScreen() {
 
 function NavItem({ essentialIcon, label, active, onClick }) {
   const [hovered, setHovered] = useState(false);
-  const slid = active;
   return (
     <button
       onClick={onClick}
@@ -228,36 +227,35 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative', zIndex: 1,
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '11px 16px 11px 18px',
-        margin: '0 10px',
-        background: active
-          ? 'linear-gradient(90deg, rgba(110,231,183,0.18) 0%, rgba(110,231,183,0.06) 100%)'
-          : hovered
-            ? 'linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)'
-            : 'rgba(0,0,0,0.35)',
-        border: active ? '1px solid rgba(110,231,183,0.35)' : '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 4,
-        color: active ? '#6ee7b7' : hovered ? '#e0d8c8' : '#9a9080',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        padding: '10px 20px',
+        margin: '0 6px',
+        backgroundImage: `url(${active ? '/ui/wood_light.png' : '/ui/wood_dark.png'})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        border: 'none',
+        borderRadius: 6,
+        color: '#1a1008',
         fontSize: '1.1rem',
         fontFamily: "'LifeCraft', 'Cinzel', serif",
         letterSpacing: 3,
         cursor: 'pointer',
         transition: 'all 0.3s cubic-bezier(0.25,0.8,0.25,1)',
         width: 'auto',
-        textAlign: 'left',
-        transform: slid ? 'translateX(12px)' : hovered ? 'translateX(6px)' : 'translateX(0)',
+        textAlign: 'center',
+        transform: hovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0) scale(1)',
         boxShadow: active
-          ? '0 0 12px rgba(110,231,183,0.2), inset 0 0 8px rgba(110,231,183,0.1), 0 2px 6px rgba(0,0,0,0.5)'
-          : '0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
-        textShadow: active
-          ? '0 0 10px rgba(110,231,183,0.5), 0 0 20px rgba(110,231,183,0.2)'
+          ? '0 4px 16px rgba(0,0,0,0.6), 0 0 12px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
           : hovered
-            ? '0 0 8px rgba(255,220,160,0.3)'
-            : '0 1px 2px rgba(0,0,0,0.8)',
+            ? '0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)'
+            : '0 2px 6px rgba(0,0,0,0.5)',
+        textShadow: '0 1px 0 rgba(255,255,255,0.3)',
+        filter: hovered && !active ? 'brightness(1.15)' : 'none',
       }}
     >
-      <EssentialIcon name={essentialIcon} size={18} />
+      <span style={{ filter: 'brightness(0.15)', display: 'flex', alignItems: 'center' }}>
+        <EssentialIcon name={essentialIcon} size={18} />
+      </span>
       {label}
     </button>
   );
