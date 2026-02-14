@@ -1085,7 +1085,7 @@ export const eliteTransformSprites = {
     dwarf: spriteSheets['wind-hashashin'],
     barbarian: spriteSheets['martial-hero'],
     orc: { ...spriteSheets['wind-hashashin'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
-    undead: { ...spriteSheets['arcane-archer'], filter: 'saturate(0) brightness(0.7) contrast(1.2)' },
+    undead: { ...spriteSheets['undead-ranger'], filter: 'hue-rotate(260deg) saturate(0.6) brightness(0.8) contrast(1.1)' },
   },
   worge: {
     human: nightborneSprite,
