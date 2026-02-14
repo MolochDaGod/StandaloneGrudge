@@ -95,7 +95,9 @@ export default function CampScene() {
     return !isHarvesting;
   });
 
-  const primarySprite = getPlayerSprite(playerRace, playerClass);
+  const playerName = useGameStore(s => s.playerName);
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const primarySprite = getPlayerSprite(playerClass, playerRace, activeHero0?.namedHeroId);
 
   const handleNodeClick = (node) => {
     if (adminMode) return;

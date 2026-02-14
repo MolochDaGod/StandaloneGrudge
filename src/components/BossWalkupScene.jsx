@@ -14,7 +14,10 @@ export default function BossWalkupScene() {
   const [phase, setPhase] = useState('walk');
   const [heroY, setHeroY] = useState(85);
 
-  const primarySprite = getPlayerSprite(playerRace, playerClass);
+  const heroRoster = useGameStore(s => s.heroRoster);
+  const playerName = useGameStore(s => s.playerName);
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const primarySprite = getPlayerSprite(playerClass, playerRace, activeHero0?.namedHeroId);
   const bossSprite = getEnemySprite('evil_wizard');
 
   useEffect(() => {

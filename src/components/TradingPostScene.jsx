@@ -40,6 +40,7 @@ export default function TradingPostScene() {
   const sellItem = useGameStore(s => s.sellItem);
   const playerRace = useGameStore(s => s.playerRace);
   const playerClass = useGameStore(s => s.playerClass);
+  const heroRoster = useGameStore(s => s.heroRoster);
 
   const [selectedTrader, setSelectedTrader] = useState(null);
   const [tab, setTab] = useState('buy');
@@ -87,7 +88,9 @@ export default function TradingPostScene() {
     return () => { clearInterval(interval); if (barkTimer.current) clearTimeout(barkTimer.current); };
   }, [positions, selectedTrader]);
 
-  const primarySprite = getPlayerSprite(playerRace, playerClass);
+  const playerName = useGameStore(s => s.playerName);
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const primarySprite = getPlayerSprite(playerClass, playerRace, activeHero0?.namedHeroId);
 
   const handleTraderClick = (traderId) => {
     if (adminMode) return;

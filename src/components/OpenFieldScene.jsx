@@ -35,6 +35,7 @@ export default function OpenFieldScene() {
   const startBattle = useGameStore(s => s.startBattle);
   const playerRace = useGameStore(s => s.playerRace);
   const playerClass = useGameStore(s => s.playerClass);
+  const heroRoster = useGameStore(s => s.heroRoster);
   const playerHealth = useGameStore(s => s.playerHealth);
   const playerMaxHealth = useGameStore(s => s.playerMaxHealth);
   const playerMana = useGameStore(s => s.playerMana);
@@ -93,7 +94,9 @@ export default function OpenFieldScene() {
 
   const { heroX, heroY, walking, facingLeft, nearbyNode } = useWASD(SPAWN_POS, interactNodes, doInteract);
 
-  const primarySprite = getPlayerSprite(playerRace, playerClass);
+  const playerName = useGameStore(s => s.playerName);
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const primarySprite = getPlayerSprite(playerClass, playerRace, activeHero0?.namedHeroId);
 
   useEffect(() => {
     const interval = setInterval(() => {

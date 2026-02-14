@@ -68,7 +68,10 @@ export default function DungeonScene() {
   const completed = dungeonProgress?.completed || [];
   const locationId = dungeonProgress?.locationId || 'dark_forest';
 
-  const primarySprite = getPlayerSprite(playerRace, playerClass);
+  const heroRoster = useGameStore(s => s.heroRoster);
+  const playerName = useGameStore(s => s.playerName);
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const primarySprite = getPlayerSprite(playerClass, playerRace, activeHero0?.namedHeroId);
 
   const allCleared = currentNode >= config.nodes.length;
   const currentNodeY = allCleared ? 6 : (config.nodes[Math.min(currentNode, config.nodes.length - 1)]?.y || 82);
