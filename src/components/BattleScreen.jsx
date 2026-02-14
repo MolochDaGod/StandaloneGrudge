@@ -72,7 +72,7 @@ const BUFF_LABELS = {
   speed_down: { text: '-SPD', color: '#6b7280' },
 };
 
-const locationBackgrounds = {
+const BASE_LOCATION_BACKGROUNDS = {
   verdant_plains: '/backgrounds/verdant_plains.png',
   dark_forest: '/backgrounds/dark_forest.png',
   cursed_ruins: '/backgrounds/cursed_ruins.png',
@@ -107,6 +107,33 @@ const locationBackgrounds = {
   maw_of_madra: '/backgrounds/maw_of_madra.png',
   sanctum_of_omni: '/backgrounds/sanctum_of_omni.png',
 };
+
+const BG_PATH_TO_ID = {};
+Object.entries(BASE_LOCATION_BACKGROUNDS).forEach(([, path]) => {
+  const id = path.split('/').pop().replace('.png', '');
+  BG_PATH_TO_ID[path] = id;
+});
+
+function getLocationBackgrounds() {
+  try {
+    const raw = localStorage.getItem('grudge_bg_settings');
+    if (!raw) return BASE_LOCATION_BACKGROUNDS;
+    const settings = JSON.parse(raw);
+    if (!settings.removed || settings.removed.length === 0) return BASE_LOCATION_BACKGROUNDS;
+    const removedPaths = new Set(settings.removed.map(id => `/backgrounds/${id}.png`));
+    const filtered = {};
+    for (const [zone, path] of Object.entries(BASE_LOCATION_BACKGROUNDS)) {
+      if (!removedPaths.has(path)) {
+        filtered[zone] = path;
+      }
+    }
+    return filtered;
+  } catch (e) {
+    return BASE_LOCATION_BACKGROUNDS;
+  }
+}
+
+const locationBackgrounds = getLocationBackgrounds();
 
 const zoneGradients = {
   camp: 'linear-gradient(180deg, #1a2a1a 0%, #0d1a0d 30%, #0a140a 60%, #060e06 100%)',
