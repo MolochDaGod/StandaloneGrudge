@@ -346,12 +346,12 @@ function TitleHeroParade() {
     if (!sprite) return null;
 
     const fromLeft = Math.random() > 0.5;
-    const yPos = 30 + Math.random() * 45;
+    const yPos = 35 + Math.random() * 40;
     const baseSpeed = 0.3 + Math.random() * 0.5;
     const depthScale = 0.7 + (yPos / 75) * 0.5;
     const baseFrameW = sprite.frameWidth || 100;
     const sizeNorm = baseFrameW > 150 ? 0.45 : baseFrameW > 100 ? 0.65 : 1;
-    const heroScale = Math.min((sprite.scale || 1) * depthScale * 1.6 * sizeNorm, 2.5);
+    const heroScale = Math.min((sprite.scale || 1) * depthScale * 2.2 * sizeNorm, 3.5);
     const id = heroIdCounter.current++;
 
     return {
@@ -471,10 +471,10 @@ function TitleHeroParade() {
   return (
     <div ref={containerRef} style={{
       position: 'absolute',
-      bottom: 0,
+      bottom: 30,
       left: 0,
       right: 0,
-      height: '75%',
+      height: '80%',
       pointerEvents: 'none',
       overflow: 'hidden',
       zIndex: 0,
@@ -516,18 +516,18 @@ function TitleHeroParade() {
 
           <div style={{
             position: 'absolute',
-            bottom: -20,
+            bottom: -24,
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: '0.8rem',
+            fontSize: '1rem',
             color: hero.raceColor,
             textTransform: 'uppercase',
-            letterSpacing: 1.5,
-            fontFamily: "'Cinzel', serif",
+            letterSpacing: 2,
+            fontFamily: "'LifeCraft', 'Cinzel', serif",
             fontWeight: 700,
             whiteSpace: 'nowrap',
-            opacity: 0.7,
-            textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 8px ${hero.raceColor}33`,
+            opacity: 0.85,
+            textShadow: `0 1px 4px rgba(0,0,0,0.9), 0 0 10px ${hero.raceColor}44`,
           }}>
             {hero.displayName || `${raceDefinitions[hero.race]?.name} ${classDefinitions[hero.cls]?.name}`}
           </div>
@@ -539,9 +539,24 @@ function TitleHeroParade() {
         bottom: 0,
         left: 0,
         right: 0,
-        height: '40%',
-        background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)',
+        height: '70%',
+        backgroundImage: 'url(/backgrounds/grass_field.png)',
+        backgroundSize: '100% auto',
+        backgroundPosition: 'center bottom',
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'auto',
         pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '75%',
+        background: 'linear-gradient(to top, transparent 0%, transparent 30%, rgba(10,8,20,0.6) 55%, rgba(10,8,20,1) 80%)',
+        pointerEvents: 'none',
+        zIndex: 0,
       }} />
     </div>
   );
@@ -766,15 +781,15 @@ function MenuButton({ label, onClick, primary, subtle, icon, delay = 0 }) {
         ? '1px solid rgba(255,255,255,0.1)'
         : '1px solid rgba(255,255,255,0.15)',
     borderRadius: 8,
-    padding: primary ? '14px 50px' : '10px 40px',
+    padding: primary ? '18px 60px' : '14px 50px',
     color: primary ? 'var(--accent)' : subtle ? 'var(--muted)' : '#ccc',
-    fontSize: primary ? '1.1rem' : '1rem',
-    fontWeight: 600,
+    fontSize: primary ? '1.4rem' : '1.2rem',
+    fontWeight: 700,
     cursor: 'pointer',
-    fontFamily: "'Cinzel', serif",
-    letterSpacing: primary ? 3 : 2,
+    fontFamily: "'LifeCraft', 'Cinzel', serif",
+    letterSpacing: primary ? 4 : 3,
     transition: 'all 0.25s ease',
-    width: 280,
+    width: 340,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
