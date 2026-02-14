@@ -98,8 +98,10 @@ export default function LobbyScreen() {
         position: 'relative', zIndex: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="font-cinzel" style={{
-            fontSize: '1.2rem',
+          <span style={{
+            fontSize: '1.5rem',
+            fontFamily: "'LifeCraft', 'Cinzel', serif",
+            letterSpacing: 3,
             background: 'linear-gradient(90deg, #6ee7b7 0%, #ffd700 30%, #fff 50%, #ffd700 70%, #6ee7b7 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -108,23 +110,26 @@ export default function LobbyScreen() {
             GRUDGE WARLORDS
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={handleMuteToggle} style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 6, padding: '4px 12px',
-            color: isMuted ? '#ef4444' : 'var(--muted)', fontSize: '0.75rem',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            borderRadius: 6, padding: '8px 16px',
+            color: isMuted ? '#ef4444' : 'var(--muted)', fontSize: '0.95rem',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            fontFamily: "'LifeCraft', 'Cinzel', serif",
+            letterSpacing: 1,
             transition: 'all 0.2s',
           }} title={isMuted ? 'Unmute' : 'Mute'}>
-            <EssentialIcon name={isMuted ? 'SpeakerMute' : 'SpeakerOn'} size={14} />
+            <EssentialIcon name={isMuted ? 'SpeakerMute' : 'SpeakerOn'} size={18} />
           </button>
           <button onClick={handleLogout} style={{
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 6, padding: '4px 14px',
-            color: 'var(--muted)', fontSize: '0.75rem',
-            cursor: 'pointer', fontFamily: "'Cinzel', serif",
+            borderRadius: 6, padding: '8px 18px',
+            color: 'var(--muted)', fontSize: '0.95rem',
+            cursor: 'pointer', fontFamily: "'LifeCraft', 'Cinzel', serif",
+            letterSpacing: 2,
           }}>
             SIGN OUT
           </button>
