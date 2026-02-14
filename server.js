@@ -1110,6 +1110,16 @@ if (isProd) {
 registerDbRoutes(app);
 
 if (isProd) {
+  const htmlPages = ['compendium', 'arena', 'discordauth'];
+  htmlPages.forEach(page => {
+    app.get(`/${page}`, (req, res) => {
+      const filePath = path.join(__dirname_server, 'dist', `${page}.html`);
+      res.sendFile(filePath, err => {
+        if (err) res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
+      });
+    });
+  });
+
   app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
   });

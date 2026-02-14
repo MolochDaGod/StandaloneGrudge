@@ -36,6 +36,9 @@ const BATTLE_BACKGROUNDS = {
   lava_dungeon_path: { path: '/backgrounds/lava_dungeon_path.png', zones: ['lava_dungeon'] },
   scene_dungeon: { path: '/backgrounds/scene_dungeon.png', zones: ['default_dungeon_boss'] },
   scene_field: { path: '/backgrounds/scene_field.png', zones: ['default_dungeon'] },
+  grass_field: { path: '/backgrounds/grass_field.png', zones: ['verdant_meadow', 'emerald_glade'] },
+  lava_field: { path: '/backgrounds/lava_field.png', zones: ['scorched_wastes', 'ember_rift'] },
+  ice_field: { path: '/backgrounds/ice_field.png', zones: ['frostfall_ridge', 'glacial_expanse'] },
 };
 
 const STORAGE_KEY = 'grudge_bg_settings';
