@@ -513,10 +513,9 @@ export default function AdminSprite() {
     if (preset) setEffectLayers(preset.layers.map(l => ({ ...l })));
   };
 
-  const spriteCenter = {
-    x: activeSpriteData ? ((activeSpriteData.frameWidth || 100) * scale) / 2 : 150,
-    y: activeSpriteData ? ((activeSpriteData.frameHeight || 100) * scale) / 2 : 150,
-  };
+  const VIEWPORT_W = 500;
+  const VIEWPORT_H = 420;
+  const spriteCenter = { x: VIEWPORT_W / 2, y: VIEWPORT_H / 2 };
 
   const currentBuff = buffVisuals[selectedBuff];
   const currentWeapon = weaponVisuals[selectedWeapon];
@@ -639,23 +638,35 @@ export default function AdminSprite() {
                 </div>
 
                 <div style={{
-                  display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 420,
+                  width: '100%', height: VIEWPORT_H, position: 'relative', overflow: 'hidden',
                   background: 'radial-gradient(ellipse at center, rgba(30,25,40,0.8) 0%, rgba(10,10,20,1) 80%)',
-                  borderRadius: 6, border: '1px solid rgba(74,60,40,0.3)', position: 'relative', overflow: 'hidden',
+                  borderRadius: 6, border: '1px solid rgba(74,60,40,0.3)',
                 }} ref={previewRef}>
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    {activeSpriteData && (
-                      <div style={{ position: 'relative' }}>
-                        <SpriteAnimation spriteData={activeSpriteData} animation={animation} scale={scale} flip={flip} loop={true} speed={speed} containerless={false} />
+                  {activeSpriteData && (() => {
+                    const fw = activeSpriteData.frameWidth || 100;
+                    const fh = activeSpriteData.frameHeight || 100;
+                    const dw = fw * scale;
+                    const dh = fh * scale;
+                    const spriteLeft = spriteCenter.x - dw / 2;
+                    const spriteTop = spriteCenter.y - dh / 2;
+                    return (
+                      <>
+                        <div style={{
+                          position: 'absolute', left: spriteLeft, top: spriteTop,
+                          width: dw, height: dh, pointerEvents: 'none',
+                        }}>
+                          <SpriteAnimation spriteData={activeSpriteData} animation={animation} scale={scale} flip={flip} loop={true} speed={speed} containerless={false} />
+                        </div>
+
                         {showMarkers && (
                           <>
-                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.shadowOffsetX - layout.shadowWidth / 2, top: spriteCenter.y + layout.shadowOffsetY, width: layout.shadowWidth, height: layout.shadowHeight, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', pointerEvents: 'none', border: '1px dashed rgba(255,255,255,0.3)' }} />
+                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.shadowOffsetX - layout.shadowWidth / 2, top: spriteCenter.y + layout.shadowOffsetY, width: layout.shadowWidth, height: layout.shadowHeight, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', pointerEvents: 'none', border: '1px dashed rgba(255,255,255,0.3)', zIndex: 2 }} />
                             <DraggableMarker label="Shadow" color="#666" x={spriteCenter.x + layout.shadowOffsetX} y={spriteCenter.y + layout.shadowOffsetY} onChange={(x, y) => { updateLayout('shadowOffsetX', Math.round(x - spriteCenter.x)); updateLayout('shadowOffsetY', Math.round(y - spriteCenter.y)); }} />
                             <DraggableMarker label="Name" color="#ffd700" x={spriteCenter.x + layout.nameOffsetX} y={layout.nameOffsetY + 20} onChange={(x, y) => { updateLayout('nameOffsetX', Math.round(x - spriteCenter.x)); updateLayout('nameOffsetY', Math.round(y - 20)); }} />
                             <DraggableMarker label="Hit Point" color="#ef4444" x={spriteCenter.x + layout.hitLocationX} y={spriteCenter.y + layout.hitLocationY} onChange={(x, y) => { updateLayout('hitLocationX', Math.round(x - spriteCenter.x)); updateLayout('hitLocationY', Math.round(y - spriteCenter.y)); }} />
-                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.hitLocationX - 8, top: spriteCenter.y + layout.hitLocationY - 8, width: 16, height: 16, border: '2px solid rgba(239,68,68,0.6)', borderRadius: '50%', pointerEvents: 'none' }} />
+                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.hitLocationX - 8, top: spriteCenter.y + layout.hitLocationY - 8, width: 16, height: 16, border: '2px solid rgba(239,68,68,0.6)', borderRadius: '50%', pointerEvents: 'none', zIndex: 2 }} />
                             <DraggableMarker label="Spell Play" color="#8b5cf6" x={spriteCenter.x + layout.spellPlayX} y={spriteCenter.y + layout.spellPlayY} onChange={(x, y) => { updateLayout('spellPlayX', Math.round(x - spriteCenter.x)); updateLayout('spellPlayY', Math.round(y - spriteCenter.y)); }} />
-                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.spellPlayX - 12, top: spriteCenter.y + layout.spellPlayY - 12, width: 24, height: 24, border: '2px dashed rgba(139,92,246,0.5)', borderRadius: 4, pointerEvents: 'none' }} />
+                            <div style={{ position: 'absolute', left: spriteCenter.x + layout.spellPlayX - 12, top: spriteCenter.y + layout.spellPlayY - 12, width: 24, height: 24, border: '2px dashed rgba(139,92,246,0.5)', borderRadius: 4, pointerEvents: 'none', zIndex: 2 }} />
                             <DraggableMarker label="Effect" color="#22c55e" x={spriteCenter.x + layout.effectOffsetX} y={spriteCenter.y + layout.effectOffsetY} onChange={(x, y) => { updateLayout('effectOffsetX', Math.round(x - spriteCenter.x)); updateLayout('effectOffsetY', Math.round(y - spriteCenter.y)); }} />
                           </>
                         )}
@@ -674,9 +685,12 @@ export default function AdminSprite() {
                             <div style={{ color: '#ffd700', fontSize: 11, fontFamily: "'Cinzel', serif", textShadow: '0 0 4px rgba(0,0,0,0.8)', whiteSpace: 'nowrap', padding: '1px 6px', background: 'rgba(0,0,0,0.4)', borderRadius: 3 }}>{race} {cls}</div>
                           </div>
                         )}
-                      </div>
-                    )}
-                  </div>
+
+                        <div style={{ position: 'absolute', left: spriteCenter.x, top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.06)', pointerEvents: 'none', zIndex: 1 }} />
+                        <div style={{ position: 'absolute', top: spriteCenter.y, left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.06)', pointerEvents: 'none', zIndex: 1 }} />
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ marginTop: 12, fontSize: 11, color: '#8a7d65' }}>

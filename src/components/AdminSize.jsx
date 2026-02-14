@@ -412,20 +412,37 @@ export default function AdminSize({ onClose }) {
                 <div style={{
                   background: 'rgba(10,8,20,0.8)',
                   border: '1px solid rgba(255,215,0,0.15)',
-                  borderRadius: 8, padding: 12,
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                  minHeight: 160, minWidth: 160,
+                  borderRadius: 8,
+                  width: 200, height: 200,
+                  position: 'relative', overflow: 'hidden',
                 }}>
-                  <SpriteAnimation
-                    key={`${selectedId}-${previewAnim}`}
-                    spriteData={editFilter ? { ...selectedSprite.spriteData, filter: editFilter } : selectedSprite.spriteData}
-                    animation={previewAnim}
-                    scale={(150 / (selectedSprite.spriteData.frameHeight || selectedSprite.spriteData.frameWidth || 100)) * editScale}
-                    loop={loopAnims.includes(previewAnim)}
-                    speed={150}
-                    onAnimationEnd={!loopAnims.includes(previewAnim) ? () => {} : null}
-                    containerless={false}
-                  />
+                  {(() => {
+                    const fw = selectedSprite.spriteData.frameWidth || 100;
+                    const fh = selectedSprite.spriteData.frameHeight || 100;
+                    const baseScale = (150 / (fh || fw)) * editScale;
+                    const dw = fw * baseScale;
+                    const dh = fh * baseScale;
+                    return (
+                      <div style={{
+                        position: 'absolute',
+                        left: 100 - dw / 2,
+                        top: 100 - dh / 2,
+                        width: dw, height: dh,
+                        pointerEvents: 'none',
+                      }}>
+                        <SpriteAnimation
+                          key={`${selectedId}-${previewAnim}`}
+                          spriteData={editFilter ? { ...selectedSprite.spriteData, filter: editFilter } : selectedSprite.spriteData}
+                          animation={previewAnim}
+                          scale={baseScale}
+                          loop={loopAnims.includes(previewAnim)}
+                          speed={150}
+                          onAnimationEnd={!loopAnims.includes(previewAnim) ? () => {} : null}
+                          containerless={false}
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div style={{
                   fontSize: '0.5rem', color: '#6b7280', marginTop: 6,
