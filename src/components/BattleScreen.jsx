@@ -15,6 +15,7 @@ import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
 import { adminConfig } from '../utils/adminConfig';
+import { BATTLE_BACKGROUNDS, STORAGE_KEY as BG_STORAGE_KEY } from './AdminBackgrounds';
 
 const DMG_NUM_SRC = '/effects/damage_numbers.png';
 const DMG_CELL_W = 16, DMG_CELL_H = 20, DMG_COLS = 10, DMG_ROWS_PER_COLOR = 10;
@@ -108,15 +109,9 @@ const BASE_LOCATION_BACKGROUNDS = {
   sanctum_of_omni: '/backgrounds/sanctum_of_omni.png',
 };
 
-const BG_PATH_TO_ID = {};
-Object.entries(BASE_LOCATION_BACKGROUNDS).forEach(([, path]) => {
-  const id = path.split('/').pop().replace('.png', '');
-  BG_PATH_TO_ID[path] = id;
-});
-
 function getLocationBackgrounds() {
   try {
-    const raw = localStorage.getItem('grudge_bg_settings');
+    const raw = localStorage.getItem(BG_STORAGE_KEY);
     if (!raw) return BASE_LOCATION_BACKGROUNDS;
     const settings = JSON.parse(raw);
     if (!settings.removed || settings.removed.length === 0) return BASE_LOCATION_BACKGROUNDS;

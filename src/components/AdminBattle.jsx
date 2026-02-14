@@ -3,42 +3,26 @@ import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite } from '../data/spriteMap';
 import { locations } from '../data/enemies';
 import { InlineIcon } from '../data/uiSprites';
+import { BATTLE_BACKGROUNDS, STORAGE_KEY } from './AdminBackgrounds';
 
-const allBackgrounds = {
-  verdant_plains: '/backgrounds/verdant_plains.png',
-  dark_forest: '/backgrounds/dark_forest.png',
-  cursed_ruins: '/backgrounds/cursed_ruins.png',
-  blood_canyon: '/backgrounds/blood_canyon.png',
-  dragon_peaks: '/backgrounds/dragon_peaks.png',
-  shadow_citadel: '/backgrounds/shadow_citadel.png',
-  demon_gate: '/backgrounds/demon_gate.png',
-  void_throne: '/backgrounds/void_throne.png',
-  molten_core: '/backgrounds/volcanic_field.png',
-  infernal_forge: '/backgrounds/infernal_arena.png',
-  mystic_grove: '/map_nodes/mystic_grove.png',
-  whispering_caverns: '/map_nodes/whispering_caverns.png',
-  haunted_marsh: '/map_nodes/haunted_marsh.png',
-  crystal_caves: '/map_nodes/crystal_caves.png',
-  thornwood_pass: '/map_nodes/thornwood_pass.png',
-  sunken_temple: '/map_nodes/sunken_temple.png',
-  iron_peaks: '/backgrounds/boss_mountain.png',
-  shadow_forest: '/map_nodes/shadow_forest.png',
-  frozen_tundra: '/backgrounds/winter_arena.png',
-  blight_hollow: '/map_nodes/blight_hollow.png',
-  stormspire_peak: '/backgrounds/storm_ruins.png',
-  corrupted_spire: '/map_nodes/corrupted_spire.png',
-  abyssal_depths: '/map_nodes/abyssal_depths.png',
-  ashen_battlefield: '/backgrounds/storm_ruins.png',
-  windswept_ridge: '/backgrounds/boss_mountain.png',
-  void_threshold: '/map_nodes/void_threshold.png',
-  obsidian_wastes: '/map_nodes/obsidian_wastes.png',
-  ruins_of_ashenmoor: '/map_nodes/ruins_of_ashenmoor.png',
-  dreadmaw_canyon: '/map_nodes/dreadmaw_canyon.png',
-  crystal_lake: '/backgrounds/winter_arena.png',
-  storm_ruins: '/backgrounds/storm_ruins.png',
-  winter_arena: '/backgrounds/winter_arena.png',
-  boss_mountain: '/backgrounds/boss_mountain.png',
-};
+function getActiveBackgrounds() {
+  const all = {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const settings = raw ? JSON.parse(raw) : { removed: [] };
+    const removed = settings.removed || [];
+    for (const [id, data] of Object.entries(BATTLE_BACKGROUNDS)) {
+      if (!removed.includes(id)) {
+        all[id] = data.path;
+      }
+    }
+  } catch (e) {
+    for (const [id, data] of Object.entries(BATTLE_BACKGROUNDS)) {
+      all[id] = data.path;
+    }
+  }
+  return all;
+}
 
 const defaultFormations = {
   player: {
@@ -149,7 +133,11 @@ function MiniBar({ current, max, color, height = 4, width = 50 }) {
 }
 
 export default function AdminBattle() {
-  const [selectedBg, setSelectedBg] = useState('verdant_plains');
+  const allBackgrounds = getActiveBackgrounds();
+  const [selectedBg, setSelectedBg] = useState(() => {
+    const keys = Object.keys(getActiveBackgrounds());
+    return keys.length > 0 ? keys[0] : 'verdant_plains';
+  });
   const [playerCount, setPlayerCount] = useState(3);
   const [enemyCount, setEnemyCount] = useState(3);
   const [formations, setFormations] = useState(() => {
