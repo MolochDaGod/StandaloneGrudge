@@ -137,11 +137,30 @@ export default function LobbyScreen() {
       }}>
         <div style={{
           width: 200,
-          background: 'rgba(0,0,0,0.4)',
-          borderRight: '1px solid rgba(110,231,183,0.08)',
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(10,8,18,0.92) 30%, rgba(5,5,12,0.95) 70%, rgba(0,0,0,0.9) 100%)',
+          backgroundImage: 'url(/ui/sidebar-bg.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRight: 'none',
           display: 'flex', flexDirection: 'column',
           padding: '16px 0',
+          position: 'relative',
+          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), 4px 0 12px rgba(0,0,0,0.5)',
         }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(5,5,15,0.3) 40%, rgba(5,5,15,0.3) 60%, rgba(0,0,0,0.5) 100%)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+          <div style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: 14,
+            backgroundImage: 'url(/ui/sidebar-border.png)',
+            backgroundSize: '14px 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            pointerEvents: 'none', zIndex: 2,
+            filter: 'brightness(0.8)',
+          }} />
           <NavItem essentialIcon="Gamepad" label="PLAY" active={activeTab === 'main'} onClick={() => setActiveTab('main')} />
           <NavItem essentialIcon="Team" label="CHARACTERS" active={activeTab === 'characters'} onClick={() => setActiveTab('characters')} />
           <NavItem essentialIcon="Briefcase" label="ACCOUNT" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
@@ -193,13 +212,13 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'relative',
+        position: 'relative', zIndex: 1,
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 20px',
-        background: active ? 'rgba(110,231,183,0.1)' : hovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+        background: active ? 'rgba(110,231,183,0.12)' : hovered ? 'rgba(255,255,255,0.06)' : 'transparent',
         border: 'none',
         borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
-        color: active ? 'var(--accent)' : hovered ? '#ccc' : 'var(--muted)',
+        color: active ? 'var(--accent)' : hovered ? '#ddd' : 'var(--muted)',
         fontSize: '0.75rem',
         fontFamily: "'Cinzel', serif",
         letterSpacing: 2,
@@ -208,7 +227,8 @@ function NavItem({ essentialIcon, label, active, onClick }) {
         width: '100%',
         textAlign: 'left',
         transform: hovered && !active ? 'translateX(3px)' : 'translateX(0)',
-        boxShadow: active ? 'inset 4px 0 12px rgba(110,231,183,0.1)' : 'none',
+        boxShadow: active ? 'inset 4px 0 12px rgba(110,231,183,0.15)' : 'none',
+        textShadow: active ? '0 0 8px rgba(110,231,183,0.4)' : hovered ? '0 0 6px rgba(255,255,255,0.2)' : 'none',
       }}
     >
       <EssentialIcon name={essentialIcon} size={16} />
