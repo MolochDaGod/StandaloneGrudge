@@ -943,7 +943,7 @@ export const raceClassSpriteMap = {
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
-    mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', scale: 0.7 },
+    mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.55) brightness(0.62) contrast(1.35)', scale: 0.7 },
     worge: spriteSheets.orc,
     ranger: spriteSheets['armored-orc'],
   },
@@ -1076,7 +1076,7 @@ export const eliteTransformSprites = {
     elf: { ...spriteSheets['elf-mage'], scale: 0.7 },
     dwarf: spriteSheets['wanderer-magician'],
     barbarian: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(15deg) saturate(1.3) brightness(1.1)' },
-    orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)', scale: 0.7 },
+    orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.55) brightness(0.62) contrast(1.35)', scale: 0.7 },
     undead: { ...spriteSheets['lightning-mage'], filter: 'hue-rotate(180deg) saturate(1.4) brightness(0.85)' },
   },
   ranger: {
