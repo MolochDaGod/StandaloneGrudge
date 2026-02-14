@@ -1,10 +1,26 @@
 import express from 'express';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { initDatabase, testConnection } from './src/server/db.js';
 import { registerDbRoutes } from './src/server/dbRoutes.js';
 import { startBot, addUserToGuild } from './src/server/discordBot.js';
 
+const __filename_server = fileURLToPath(import.meta.url);
+const __dirname_server = path.dirname(__filename_server);
+
+const isProd = process.env.NODE_ENV === 'production';
+const PORT = isProd ? 5000 : 3001;
+
 const app = express();
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -19,13 +35,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
 const BETA_CHANNEL_ID = '1381760000946470987';
-const PORT = 3001;
 
 const pendingStates = new Map();
 const activeSessions = new Map();
@@ -37,7 +52,9 @@ function getPublicOrigin(req) {
   if (host && !host.includes('localhost')) {
     return `${proto}://${host}`;
   }
-  const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS;
+  const domain = isProd
+    ? process.env.REPLIT_DOMAINS
+    : (process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS);
   if (domain) return `https://${domain}`;
   return `${proto}://${host || 'localhost:5000'}`;
 }
@@ -401,73 +418,6 @@ app.post('/api/discord/webhook/custom', requireAdmin, async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
-});
-
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename_server = fileURLToPath(import.meta.url);
-const __dirname_server = path.dirname(__filename_server);
-
-function scanDir(dir, baseUrl, category) {
-  const results = [];
-  if (!fs.existsSync(dir)) return results;
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const e of entries) {
-    const full = path.join(dir, e.name);
-    if (e.isDirectory()) {
-      results.push(...scanDir(full, `${baseUrl}/${e.name}`, category));
-    } else if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e.name)) {
-      const stat = fs.statSync(full);
-      results.push({
-        name: e.name,
-        path: `${baseUrl}/${e.name}`,
-        dir: baseUrl,
-        category,
-        size: stat.size,
-        modified: stat.mtimeMs,
-      });
-    }
-  }
-  return results;
-}
-
-app.get('/api/assets/scan', (req, res) => {
-  try {
-    const pub = path.join(__dirname_server, 'public');
-    const cats = [
-      { dir: 'sprites', category: 'sprites' },
-      { dir: 'effects', category: 'effects' },
-      { dir: 'icons', category: 'icons' },
-      { dir: 'backgrounds', category: 'backgrounds' },
-      { dir: 'ui', category: 'ui' },
-      { dir: 'images', category: 'images' },
-      { dir: 'map_nodes', category: 'map_nodes' },
-    ];
-    const all = [];
-    for (const c of cats) {
-      all.push(...scanDir(path.join(pub, c.dir), `/${c.dir}`, c.category));
-    }
-    const attached = [];
-    const attachDir = path.join(__dirname_server, 'attached_assets');
-    if (fs.existsSync(attachDir)) {
-      const entries = fs.readdirSync(attachDir);
-      for (const e of entries) {
-        if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e)) {
-          const stat = fs.statSync(path.join(attachDir, e));
-          attached.push({ name: e, path: `/attached/${e}`, dir: '/attached', category: 'attached', size: stat.size, modified: stat.mtimeMs });
-        }
-      }
-    }
-    const summary = {};
-    for (const a of all) {
-      summary[a.category] = (summary[a.category] || 0) + 1;
-    }
-    summary.attached = attached.length;
-    res.json({ total: all.length + attached.length, summary, assets: all, attached });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
 const ALLOWED_RETURN_ORIGINS = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
@@ -1080,7 +1030,95 @@ app.post('/api/public/sync', requireSession, async (req, res) => {
   }
 });
 
+if (!isProd) {
+  function scanDir(dir, baseUrl, category) {
+    const results = [];
+    if (!fs.existsSync(dir)) return results;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        results.push(...scanDir(full, `${baseUrl}/${e.name}`, category));
+      } else if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e.name)) {
+        const stat = fs.statSync(full);
+        results.push({
+          name: e.name,
+          path: `${baseUrl}/${e.name}`,
+          dir: baseUrl,
+          category,
+          size: stat.size,
+          modified: stat.mtimeMs,
+        });
+      }
+    }
+    return results;
+  }
+
+  app.get('/api/assets/scan', (req, res) => {
+    try {
+      const pub = path.join(__dirname_server, 'public');
+      const cats = [
+        { dir: 'sprites', category: 'sprites' },
+        { dir: 'effects', category: 'effects' },
+        { dir: 'icons', category: 'icons' },
+        { dir: 'backgrounds', category: 'backgrounds' },
+        { dir: 'ui', category: 'ui' },
+        { dir: 'images', category: 'images' },
+        { dir: 'map_nodes', category: 'map_nodes' },
+      ];
+      const all = [];
+      for (const c of cats) {
+        all.push(...scanDir(path.join(pub, c.dir), `/${c.dir}`, c.category));
+      }
+      const attached = [];
+      const attachDir = path.join(__dirname_server, 'attached_assets');
+      if (fs.existsSync(attachDir)) {
+        const entries = fs.readdirSync(attachDir);
+        for (const e of entries) {
+          if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e)) {
+            const stat = fs.statSync(path.join(attachDir, e));
+            attached.push({ name: e, path: `/attached/${e}`, dir: '/attached', category: 'attached', size: stat.size, modified: stat.mtimeMs });
+          }
+        }
+      }
+      const summary = {};
+      for (const a of all) {
+        summary[a.category] = (summary[a.category] || 0) + 1;
+      }
+      summary.attached = attached.length;
+      res.json({ total: all.length + attached.length, summary, assets: all, attached });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+}
+
+if (isProd) {
+  app.use('/assets', express.static(path.join(__dirname_server, 'dist', 'assets'), {
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
+  }));
+
+  app.use(express.static(path.join(__dirname_server, 'dist'), {
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-cache');
+    },
+  }));
+}
+
 registerDbRoutes(app);
+
+if (isProd) {
+  app.get('/{*splat}', (req, res) => {
+    res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
+  });
+}
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 (async () => {
   const connected = await testConnection();
@@ -1088,6 +1126,21 @@ registerDbRoutes(app);
   await startBot(arenaTeams, arenaBattles);
 })();
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Discord API server running on port ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Grudge Warlords server running on port ${PORT} (${isProd ? 'production' : 'development'})`);
 });
+
+function gracefulShutdown(signal) {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error('Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
