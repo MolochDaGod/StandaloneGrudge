@@ -416,6 +416,8 @@ export default function WorldMap() {
   const cls = classDefinitions[playerClass];
   const unlockedLocs = getUnlockedLocations();
   const canCreateNewHero = heroRoster.length < maxHeroSlots;
+  const activeHero0 = heroRoster.find(h => h.name === playerName && h.classId === playerClass && h.raceId === playerRace);
+  const playerNamedHeroId = activeHero0?.namedHeroId || null;
 
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
@@ -3074,7 +3076,7 @@ export default function WorldMap() {
               }} />
             </div>
             <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0 }}>
-              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.5} speed={150} />
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace, playerNamedHeroId)} animation="idle" scale={1.5} speed={150} />
             </div>
             <div>
               <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem', fontWeight: 700 }}>{playerName}</div>
