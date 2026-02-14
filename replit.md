@@ -7,7 +7,7 @@ Grudge Warlords is a Final Fantasy 7-inspired turn-based RPG with a dark fantasy
 I want the agent to use clear and concise language. I prefer iterative development with small, testable changes. Before making any significant architectural changes or adding new external dependencies, please ask for my approval. Ensure all code adheres to modern React practices and maintains a consistent styling approach.
 
 ## System Architecture
-The application is a React 19 frontend developed with Vite, with an Express backend for Discord OAuth and API routes. State management uses a single Zustand store. Styling utilizes inline styles and CSS variables. Deployment uses autoscale with `server.prod.js` serving both API and static build from `dist/`.
+The application is a React 19 frontend developed with Vite, with a unified Express backend (`server.js`) for Discord OAuth, API routes, and production static serving. State management uses a single Zustand store. Styling utilizes inline styles and CSS variables. Deployment uses `vm` target (Discord bot + in-memory arena require persistent process). Single `server.js` auto-detects mode via `NODE_ENV`: dev mode runs on port 3001 (proxied through Vite on 5000), production runs on port 5000 serving built assets from `dist/`. Build: `npm run build` (Vite), Start: `npm run start` (NODE_ENV=production node server.js).
 
 **UI/UX Decisions:**
 - **Typography & Visuals:** Uses Cinzel (headings), Jost (body), and LifeCraft (Warcraft-style) fonts. Visuals include pixel art sprites, particle and beam effects, a 2D world map with clickable nodes, and animated hero movement. Character cards use race-specific background images.
