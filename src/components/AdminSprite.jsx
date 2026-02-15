@@ -609,13 +609,21 @@ function SpriteMapperTab() {
                 <button onClick={() => setSelected(null)} style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(255,215,0,0.2)', background: 'rgba(20,15,30,0.8)', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, background: 'rgba(10,8,20,0.8)', borderRadius: 8, padding: 16, border: '1px solid rgba(255,215,0,0.08)' }}>
-                <div style={{ height: 140, overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, background: 'rgba(10,8,20,0.8)', borderRadius: 8, padding: 16, border: '1px solid rgba(255,215,0,0.08)', overflow: 'hidden' }}>
+                <div style={{ position: 'relative', height: 160, width: '100%' }}>
                   {previewSprite && (
-                    <div style={{ transform: `scale(${editScale})${editTransform ? ' ' + editTransform : ''}`, transformOrigin: 'bottom center' }}>
-                      <SpriteAnimation spriteData={previewSprite} animation={previewAnim} scale={140 / (previewSprite.frameHeight || 100)} loop={true} speed={120} containerless={false} />
+                    <div style={{ position: 'absolute', bottom: 8, left: '50%' }}>
+                      <SpriteAnimation
+                        spriteData={{ ...previewSprite, dwarfTransform: editTransform || undefined }}
+                        animation={previewAnim}
+                        scale={(140 / (previewSprite.frameHeight || 100)) * editScale}
+                        loop={true}
+                        speed={120}
+                        containerless={true}
+                      />
                     </div>
                   )}
+                  <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', width: 60, height: 1, background: 'rgba(255,215,0,0.15)' }} />
                 </div>
               </div>
 

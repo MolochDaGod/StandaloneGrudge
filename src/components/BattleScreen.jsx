@@ -2591,8 +2591,9 @@ export default function BattleScreen() {
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+          const adminScale = spriteData?.scale || 1;
           const comboOffset = { x: 0, y: 0 };
-          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const hitW = Math.round(spriteSize * 0.5);

@@ -287,13 +287,28 @@ function HeroCard({ hero, expanded, onToggle }) {
 }
 
 function EditorWrapper({ children }) {
+  const [zoom, setZoom] = useState(1);
   return (
     <div style={{
       position: 'relative', width: '100%', height: 'calc(100vh - 60px)',
-      borderRadius: 8, overflowY: 'auto', overflowX: 'hidden',
+      borderRadius: 8, overflow: 'auto',
       border: '1px solid rgba(255,215,0,0.15)',
     }}>
-      {children}
+      <div style={{
+        position: 'sticky', top: 0, right: 0, zIndex: 100,
+        display: 'flex', justifyContent: 'flex-end', padding: '4px 8px',
+        background: 'rgba(10,8,20,0.85)', borderBottom: '1px solid rgba(255,215,0,0.1)',
+        gap: 6, alignItems: 'center',
+      }}>
+        <span style={{ fontSize: 10, color: '#8a7d65' }}>Zoom</span>
+        <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(1)))} style={{ background: 'rgba(20,15,30,0.8)', border: '1px solid rgba(255,215,0,0.2)', color: '#e0d6c2', borderRadius: 4, width: 22, height: 22, cursor: 'pointer', fontSize: 12 }}>-</button>
+        <span style={{ fontSize: 11, color: '#ffd700', minWidth: 36, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(1)))} style={{ background: 'rgba(20,15,30,0.8)', border: '1px solid rgba(255,215,0,0.2)', color: '#e0d6c2', borderRadius: 4, width: 22, height: 22, cursor: 'pointer', fontSize: 12 }}>+</button>
+        <button onClick={() => setZoom(1)} style={{ background: 'rgba(20,15,30,0.8)', border: '1px solid rgba(255,215,0,0.2)', color: '#8a7d65', borderRadius: 4, padding: '2px 6px', cursor: 'pointer', fontSize: 10 }}>Reset</button>
+      </div>
+      <div style={{ zoom: zoom !== 1 ? zoom : undefined }}>
+        {children}
+      </div>
     </div>
   );
 }
