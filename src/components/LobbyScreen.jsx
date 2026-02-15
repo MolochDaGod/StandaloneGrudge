@@ -9,7 +9,6 @@ import {
   setBgm, getMusicMuted, setMusicMuted, getSfxMuted, setSfxMuted,
 } from '../utils/audioManager';
 import GrudgeOnlinePage from './GrudgeOnlinePage';
-import HeroCodexTab from './HeroCodexTab';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -181,7 +180,6 @@ export default function LobbyScreen() {
           <NavItem essentialIcon="Briefcase" label="ACCOUNT" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
           <NavItem essentialIcon="Cloud" label="DISCORD" active={activeTab === 'discord'} onClick={() => setActiveTab('discord')} />
           <div style={{ flex: 1 }} />
-          <NavItem essentialIcon="Book" label="HEROES" active={activeTab === 'heroes'} onClick={() => setActiveTab('heroes')} />
           <NavItem essentialIcon="Trophy" label="CREDITS" active={activeTab === 'credits'} onClick={() => setActiveTab('credits')} />
         </div>
 
@@ -210,9 +208,6 @@ export default function LobbyScreen() {
           )}
           {activeTab === 'discord' && (
             <DiscordTab panelStyle={panelStyle} />
-          )}
-          {activeTab === 'heroes' && (
-            <HeroCodexTab panelStyle={panelStyle} />
           )}
           {activeTab === 'credits' && (
             <CreditsTab panelStyle={panelStyle} />
