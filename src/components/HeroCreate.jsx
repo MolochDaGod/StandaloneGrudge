@@ -358,7 +358,7 @@ export default function HeroCreate() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
-              <button onClick={() => setStep(2)} style={{
+              <button onClick={() => { setDetectedNamedHero(null); setStep(2); }} style={{
                 background: 'var(--border)', border: 'none', borderRadius: 10,
                 padding: '10px 20px', color: 'var(--text)', cursor: 'pointer',
               }}>← Back</button>
@@ -477,7 +477,7 @@ export default function HeroCreate() {
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20 }}>
-              <button onClick={() => setStep(3)} style={{
+              <button onClick={() => { setDetectedNamedHero(null); setStep(3); }} style={{
                 background: 'var(--border)', border: 'none', borderRadius: 10,
                 padding: '10px 20px', color: 'var(--text)', cursor: 'pointer',
               }}>← Back</button>
