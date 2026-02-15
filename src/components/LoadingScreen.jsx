@@ -41,6 +41,13 @@ export default function LoadingScreen({ progress = 0, total = 1, message = 'Load
       alignItems: 'center', justifyContent: 'center',
       background: '#050a15', overflow: 'hidden'
     }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        backgroundImage: 'url(/images/loading-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }} />
       <div ref={holderRef} style={{
         position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
         overflow: 'hidden'
