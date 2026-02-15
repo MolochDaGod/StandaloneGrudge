@@ -966,7 +966,7 @@ export const raceClassSpriteMap = {
   },
   elf: {
     warrior: spriteSheets['hero-knight'],
-    mage: spriteSheets['wanderer-magician'],
+    mage: { ...spriteSheets['elf-mage'], scale: 0.7 },
     worge: { ...spriteSheets.priest, filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.1)' },
     ranger: spriteSheets['elf-ranger'],
   },
