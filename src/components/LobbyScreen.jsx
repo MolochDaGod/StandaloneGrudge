@@ -307,6 +307,39 @@ function WarRoomCard({ onClick, borderColor, hoverBorderColor, hoverShadow, bgIm
 
 function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLevel, playerRace, playerClass, gold, heroRoster, panelStyle }) {
   const [showInfo, setShowInfo] = useState(false);
+  const [walletState, setWalletState] = useState({ loading: true, hasWallet: false, wallet: null, error: null, creating: false });
+  const [showWallet, setShowWallet] = useState(false);
+
+  useEffect(() => {
+    const session = (() => { try { return JSON.parse(localStorage.getItem('grudge-session') || '{}'); } catch { return {}; } })();
+    if (!session.token || session.type !== 'discord') {
+      setWalletState({ loading: false, hasWallet: false, wallet: null, error: null, creating: false });
+      return;
+    }
+    fetch('/api/wallet/status', { headers: { 'x-session-token': session.token } })
+      .then(r => r.json())
+      .then(data => {
+        setWalletState({ loading: false, hasWallet: data.hasWallet, wallet: data.wallet || null, error: null, creating: false });
+      })
+      .catch(() => setWalletState({ loading: false, hasWallet: false, wallet: null, error: null, creating: false }));
+  }, []);
+
+  const createWallet = async () => {
+    const session = (() => { try { return JSON.parse(localStorage.getItem('grudge-session') || '{}'); } catch { return {}; } })();
+    if (!session.token) return;
+    setWalletState(s => ({ ...s, creating: true, error: null }));
+    try {
+      const res = await fetch('/api/wallet/create', {
+        method: 'POST',
+        headers: { 'x-session-token': session.token, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setWalletState({ loading: false, hasWallet: true, wallet: data.wallet, error: null, creating: false });
+    } catch (err) {
+      setWalletState(s => ({ ...s, creating: false, error: err.message }));
+    }
+  };
 
   const cardStyle = {
     flex: '1 1 0',
@@ -380,21 +413,99 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
         />
 
         <WarRoomCard
-          borderColor="rgba(139,55,46,0.3)"
+          onClick={() => setShowWallet(true)}
+          borderColor={walletState.hasWallet ? 'rgba(34,197,94,0.3)' : 'rgba(139,92,246,0.3)'}
+          hoverBorderColor={walletState.hasWallet ? 'rgba(34,197,94,0.6)' : 'rgba(139,92,246,0.6)'}
+          hoverShadow={walletState.hasWallet ? '0 0 24px rgba(34,197,94,0.2), 0 8px 32px rgba(0,0,0,0.4)' : '0 0 24px rgba(139,92,246,0.2), 0 8px 32px rgba(0,0,0,0.4)'}
           bgImage="/backgrounds/shadow_citadel.png"
-          tagColor="rgba(139,55,46,0.7)"
+          tagColor={walletState.hasWallet ? 'rgba(34,197,94,0.7)' : 'rgba(139,92,246,0.7)'}
           tag="WEB3"
-          titleColor="#8B372E"
+          titleColor={walletState.hasWallet ? '#22c55e' : '#8b5cf6'}
           title="Wallet"
-          subtitle={<>GBUX &bull; SOL &bull; Coming Soon</>}
+          subtitle={walletState.loading ? 'Loading...' : walletState.hasWallet ? <>SOL &bull; {walletState.wallet?.address?.slice(0, 6)}...{walletState.wallet?.address?.slice(-4)}</> : 'Create your Solana wallet'}
           cardStyle={cardStyle}
-          disabled
         />
       </div>
 
       <HeroSlideshow />
 
       {showInfo && <GrudgeOnlinePage onClose={() => setShowInfo(false)} />}
+
+      {showWallet && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(4px)',
+        }} onClick={() => setShowWallet(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'linear-gradient(180deg, #1a1428 0%, #0d0a18 100%)',
+            border: '1px solid rgba(139,92,246,0.3)',
+            borderRadius: 16, padding: 28, width: 380, maxWidth: '90vw',
+            boxShadow: '0 0 40px rgba(139,92,246,0.15)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 className="font-cinzel" style={{ color: '#8b5cf6', fontSize: '1.2rem', margin: 0 }}>Grudge Wallet</h3>
+              <button onClick={() => setShowWallet(false)} style={{
+                width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(139,92,246,0.3)',
+                background: 'rgba(20,15,30,0.8)', color: '#8b5cf6', fontSize: 14, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>X</button>
+            </div>
+
+            {walletState.hasWallet ? (
+              <div>
+                <div style={{
+                  background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+                  borderRadius: 10, padding: 16, marginBottom: 16,
+                }}>
+                  <div style={{ color: '#22c55e', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Solana Wallet</div>
+                  <div style={{
+                    color: '#e2e8f0', fontSize: '0.75rem', fontFamily: 'monospace',
+                    wordBreak: 'break-all', lineHeight: 1.5,
+                  }}>{walletState.wallet?.address}</div>
+                  <button onClick={() => navigator.clipboard.writeText(walletState.wallet?.address)} style={{
+                    marginTop: 10, padding: '5px 14px', borderRadius: 6,
+                    border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)',
+                    color: '#22c55e', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer',
+                  }}>Copy Address</button>
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '0.65rem', textAlign: 'center' }}>
+                  Powered by Crossmint &bull; Solana Network
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{
+                  background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)',
+                  borderRadius: 10, padding: 16, marginBottom: 16, textAlign: 'center',
+                }}>
+                  <div style={{ color: '#c4b998', fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 4 }}>
+                    Create a Solana wallet linked to your Discord account. This wallet will hold your GBUX tokens and in-game assets.
+                  </div>
+                </div>
+                {walletState.error && (
+                  <div style={{ color: '#ef4444', fontSize: '0.7rem', marginBottom: 12, textAlign: 'center' }}>
+                    {walletState.error}
+                  </div>
+                )}
+                <button onClick={createWallet} disabled={walletState.creating} style={{
+                  width: '100%', padding: '12px 20px', borderRadius: 8,
+                  border: '1px solid rgba(139,92,246,0.5)',
+                  background: walletState.creating ? 'rgba(139,92,246,0.1)' : 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.2))',
+                  color: '#a78bfa', fontSize: '0.85rem', fontWeight: 700, cursor: walletState.creating ? 'default' : 'pointer',
+                  fontFamily: "'Cinzel', serif", letterSpacing: 1,
+                }}>
+                  {walletState.creating ? 'Creating Wallet...' : 'Create Solana Wallet'}
+                </button>
+                <div style={{ color: '#6b7280', fontSize: '0.6rem', textAlign: 'center', marginTop: 10 }}>
+                  Requires Discord login &bull; Powered by Crossmint
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

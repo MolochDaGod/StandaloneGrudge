@@ -98,6 +98,10 @@ export async function initDatabase() {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_address VARCHAR(128);
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_chain VARCHAR(32);
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_created_at TIMESTAMPTZ;
+
       CREATE INDEX IF NOT EXISTS idx_characters_account ON characters(account_id);
       CREATE INDEX IF NOT EXISTS idx_inventory_character ON inventory_items(character_id);
       CREATE INDEX IF NOT EXISTS idx_crafted_character ON crafted_items(character_id);

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDatabase, testConnection } from './src/server/db.js';
 import { registerDbRoutes } from './src/server/dbRoutes.js';
+import { registerWalletRoutes } from './src/server/walletRoutes.js';
 import { startBot, addUserToGuild } from './src/server/discordBot.js';
 
 const __filename_server = fileURLToPath(import.meta.url);
@@ -1108,6 +1109,7 @@ if (isProd) {
 }
 
 registerDbRoutes(app);
+registerWalletRoutes(app, requireSession);
 
 if (isProd) {
   const htmlPages = ['compendium', 'arena', 'discordauth', 'hero-codex'];
