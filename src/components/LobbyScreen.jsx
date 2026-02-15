@@ -1496,24 +1496,7 @@ function HeroSlideshow() {
                   pointerEvents: 'none',
                 }} />
 
-                <div style={{
-                  opacity: (showTransform || showTransformVfx) ? 0 : 1,
-                  transform: (showTransform || showTransformVfx) ? 'scale(0.6)' : 'scale(1)',
-                  transformOrigin: 'bottom center',
-                  transition: 'all 0.4s ease',
-                }}>
-                  <SpriteAnimation
-                    spriteData={spriteData}
-                    animation={anim}
-                    scale={spriteScale * (editorMode ? editorScale : 1)}
-                    flip={!!spriteData?.facesLeft}
-                    loop={['idle', 'walk', 'run', 'wallslide'].includes(anim)}
-                    speed={anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80}
-                    onAnimationEnd={!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null}
-                  />
-                </div>
-
-                {isWorge && showTransformVfx && (
+                {showTransformVfx && (
                   <div style={{
                     position: 'absolute',
                     left: '50%', bottom: 0,
@@ -1527,26 +1510,29 @@ function HeroSlideshow() {
                   </div>
                 )}
 
-                {isWorge && showTransform && worgeTransformData && (() => {
-                  return (
-                    <div style={{
-                      position: 'absolute',
-                      left: '50%', bottom: 0,
-                      transform: 'translateX(-50%)',
-                      transformOrigin: 'bottom center',
-                      animation: 'ssTransformFlash 0.4s ease-out forwards',
-                    }}>
-                      <SpriteAnimation
-                        spriteData={worgeTransformData}
-                        animation={transformAnim}
-                        scale={transformScale}
-                        loop={transformAnim === 'idle'}
-                        speed={transformAnim === 'idle' ? 140 : 80}
-                        onAnimationEnd={transformAnim !== 'idle' ? () => setTransformAnim('idle') : null}
-                      />
-                    </div>
-                  );
-                })()}
+                {!showTransformVfx && (
+                  <SpriteAnimation
+                    spriteData={(isWorge && showTransform && worgeTransformData) ? worgeTransformData : spriteData}
+                    animation={(isWorge && showTransform) ? transformAnim : anim}
+                    scale={(isWorge && showTransform) ? transformScale : spriteScale * (editorMode ? editorScale : 1)}
+                    flip={(isWorge && showTransform) ? false : !!spriteData?.facesLeft}
+                    loop={
+                      (isWorge && showTransform)
+                        ? transformAnim === 'idle'
+                        : ['idle', 'walk', 'run', 'wallslide'].includes(anim)
+                    }
+                    speed={
+                      (isWorge && showTransform)
+                        ? (transformAnim === 'idle' ? 140 : 80)
+                        : (anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80)
+                    }
+                    onAnimationEnd={
+                      (isWorge && showTransform)
+                        ? (transformAnim !== 'idle' ? () => setTransformAnim('idle') : null)
+                        : (!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null)
+                    }
+                  />
+                )}
 
               </div>
             </div>
