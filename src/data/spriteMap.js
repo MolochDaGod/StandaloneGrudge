@@ -1082,7 +1082,7 @@ export const eliteTransformSprites = {
   },
   ranger: {
     human: spriteSheets['wind-hashashin'],
-    elf: spriteSheets['wind-hashashin'],
+    elf: { ...spriteSheets['wind-hashashin'], filter: 'sepia(0.45) saturate(1.3) brightness(1.05) hue-rotate(-10deg)' },
     dwarf: spriteSheets['wind-hashashin'],
     barbarian: spriteSheets['martial-hero'],
     orc: { ...spriteSheets['wind-hashashin'], filter: 'hue-rotate(90deg) saturate(1.4) brightness(1.05)' },
