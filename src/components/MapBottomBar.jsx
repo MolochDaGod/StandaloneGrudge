@@ -402,20 +402,35 @@ export default function MapBottomBar({
 
   const hasUnspent = unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0);
 
-  const buttons = [
-    { id: 'camp', label: 'Camp', img: '/ui/icon-camp.png', color: '#4ade80', action: () => enterScene('camp', 'world') },
-    { id: 'points', label: 'Points', img: '/ui/icon-points.png', color: hasUnspent ? '#ef4444' : '#94a3b8', action: () => setScreen('account'), pulse: hasUnspent },
-    { id: 'council', label: 'Council', img: '/ui/icon-council.png', color: 'var(--gold)', action: () => setScreen('account') },
-    { id: 'party', label: 'Party', img: '/ui/icon-party.png', color: 'var(--accent)', action: () => onToggleWarParty(), badge: Object.keys(activeHarvests).length > 0 ? Object.keys(activeHarvests).length : null },
-    { id: 'gruda', label: 'Gruda', icon: 'skull', color: '#f87171', action: () => onToggleGruda() },
-    { id: 'settings', label: 'Settings', img: '/ui/icon-settings.png', color: '#94a3b8', action: () => setScreen('account') },
-    { id: 'music', label: musicMuted ? 'Unmute' : 'Mute', icon: 'energy', color: musicMuted ? '#ef4444' : '#6ee7b7', action: () => {
-      const newVal = !musicMuted;
-      setMusicMutedState(newVal);
-      setMusicMuted(newVal);
-      setSfxMuted(newVal);
-    }},
-    { id: 'quests', label: 'Quests', icon: 'scroll', color: '#fbbf24', action: () => setScreen('account') },
+  const hotbarGroups = [
+    {
+      label: 'Navigate',
+      slots: [
+        { id: 'camp', label: 'Camp', img: '/ui/icon-camp.png', color: '#4ade80', action: () => enterScene('camp', 'world'), key: '1' },
+        { id: 'party', label: 'Party', img: '/ui/icon-party.png', color: 'var(--accent)', action: () => onToggleWarParty(), badge: Object.keys(activeHarvests).length > 0 ? Object.keys(activeHarvests).length : null, key: '2' },
+        { id: 'gruda', label: 'Arena', icon: 'skull', color: '#f87171', action: () => onToggleGruda(), key: '3' },
+      ],
+    },
+    {
+      label: 'Hero',
+      slots: [
+        { id: 'points', label: 'Stats', img: '/ui/icon-points.png', color: hasUnspent ? '#ef4444' : '#94a3b8', action: () => setScreen('account'), pulse: hasUnspent, key: '4' },
+        { id: 'council', label: 'Council', img: '/ui/icon-council.png', color: 'var(--gold)', action: () => setScreen('account'), key: '5' },
+        { id: 'quests', label: 'Quests', icon: 'scroll', color: '#fbbf24', action: () => setScreen('account'), key: '6' },
+      ],
+    },
+    {
+      label: 'System',
+      slots: [
+        { id: 'settings', label: 'Settings', img: '/ui/icon-settings.png', color: '#94a3b8', action: () => setScreen('account'), key: '7' },
+        { id: 'music', label: musicMuted ? 'Unmute' : 'Mute', icon: 'energy', color: musicMuted ? '#ef4444' : '#6ee7b7', action: () => {
+          const newVal = !musicMuted;
+          setMusicMutedState(newVal);
+          setMusicMuted(newVal);
+          setSfxMuted(newVal);
+        }, key: '8' },
+      ],
+    },
   ];
 
   const popupButtons = [
@@ -545,75 +560,84 @@ export default function MapBottomBar({
         <div style={{
           flex: '1 1 0',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '8px 4px 4px',
+          padding: '10px 8px 6px',
           position: 'relative',
         }}>
           <div style={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: 520,
-            aspectRatio: '1455 / 526',
-            backgroundImage: 'url(/ui/hotbar-background.png)',
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 12.5%',
+            alignItems: 'flex-start',
+            gap: 6,
+            padding: '6px 14px 4px',
+            background: 'linear-gradient(180deg, rgba(18,14,10,0.92) 0%, rgba(12,10,8,0.96) 100%)',
+            border: '1px solid rgba(197,160,89,0.25)',
+            borderRadius: 6,
+            boxShadow: 'inset 0 1px 0 rgba(197,160,89,0.1), 0 2px 8px rgba(0,0,0,0.6), 0 0 1px rgba(197,160,89,0.15)',
+            position: 'relative',
           }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(8, 1fr)',
-              gap: '2.2%',
-              width: '100%',
-              alignItems: 'center',
-              paddingTop: '3%',
-            }}>
-              {buttons.map((btn, idx) => (
-                <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                  <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
-                    <button onClick={btn.action} style={{
-                      background: 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s',
-                      position: 'absolute',
-                      inset: '12%',
-                      animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                      borderRadius: 2,
-                      zIndex: 1,
-                    }}
-                      onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
-                    >
-                      {btn.img ? (
-                        <img src={btn.img} alt={btn.label} style={{ width: '70%', height: '70%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
-                      ) : (
-                        <InlineIcon name={btn.icon} size={18} />
-                      )}
-                    </button>
-                    <img src="/ui/skill-slot-frame.png" alt="" style={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%',
-                      pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                    }} />
-                    <span style={{ position: 'absolute', top: '8%', left: '12%', fontSize: '0.35rem', color: 'rgba(200,180,120,0.6)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 1}</span>
-                    {btn.badge && (
-                      <span style={{
-                        position: 'absolute', top: -3, right: -3, zIndex: 4,
-                        background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
-                        fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 0 6px rgba(255,215,0,0.5)',
-                      }}>{btn.badge}</span>
-                    )}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), rgba(197,160,89,0.35), rgba(197,160,89,0.2), transparent)', borderRadius: '6px 6px 0 0' }} />
+
+            {hotbarGroups.map((group, gi) => (
+              <React.Fragment key={group.label}>
+                {gi > 0 && (
+                  <div style={{
+                    width: 1, alignSelf: 'stretch',
+                    background: 'linear-gradient(180deg, rgba(197,160,89,0.05), rgba(197,160,89,0.2), rgba(197,160,89,0.05))',
+                    margin: '4px 2px',
+                    flexShrink: 0,
+                  }} />
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <span style={{ fontSize: '0.3rem', color: 'rgba(197,160,89,0.35)', fontFamily: "'Cinzel', serif", fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1 }}>{group.label}</span>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {group.slots.map((btn) => (
+                      <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 38, height: 38 }}>
+                          <button onClick={btn.action} style={{
+                            background: 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                            position: 'absolute',
+                            inset: '13%',
+                            animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                            borderRadius: 2,
+                            zIndex: 1,
+                            boxShadow: 'inset 0 0 6px rgba(0,0,0,0.7)',
+                          }}
+                            onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.35)'; }}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                          >
+                            {btn.img ? (
+                              <img src={btn.img} alt={btn.label} style={{ width: '68%', height: '68%', objectFit: 'contain', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))' }} />
+                            ) : (
+                              <InlineIcon name={btn.icon} size={16} />
+                            )}
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{
+                            position: 'absolute', inset: 0, width: '100%', height: '100%',
+                            pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                          }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.3rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{btn.key}</span>
+                          {btn.badge && (
+                            <span style={{
+                              position: 'absolute', top: -2, right: -2, zIndex: 4,
+                              background: 'var(--gold)', color: '#000', fontSize: '0.35rem',
+                              fontWeight: 800, borderRadius: '50%', width: 13, height: 13,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              boxShadow: '0 0 5px rgba(255,215,0,0.5)',
+                            }}>{btn.badge}</span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '0.3rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1, textAlign: 'center', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{btn.label}</span>
+                      </div>
+                    ))}
                   </div>
-                  <span style={{ fontSize: '0.35rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1, textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{btn.label}</span>
                 </div>
-              ))}
-            </div>
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
