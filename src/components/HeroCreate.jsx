@@ -86,15 +86,11 @@ export default function HeroCreate() {
   const checkSecretUnlock = (classId) => {
     if (!name.trim() || !selectedRace || !classId) return null;
     const heroName = name.trim().toLowerCase().replace(/\s+/g, ' ');
-    console.log('[SECRET] checking:', JSON.stringify({ heroName, selectedRace, classId }));
     const matched = Object.keys(namedHeroes).find(key => {
       const nh = namedHeroes[key];
       const matchName = (nh.unlockName || nh.name).toLowerCase().replace(/\s+/g, ' ');
-      const result = { key, matchName, nhRace: nh.race, nhClass: nh.class, unlocked: nh.unlocked, nameMatch: heroName === matchName, raceMatch: nh.race === selectedRace, classMatch: nh.class === classId };
-      console.log('[SECRET] vs', key, ':', JSON.stringify(result));
       return nh.race === selectedRace && nh.class === classId && nh.unlocked && heroName === matchName;
     });
-    console.log('[SECRET] result:', matched);
     return matched || null;
   };
 
