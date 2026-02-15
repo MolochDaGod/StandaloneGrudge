@@ -22,7 +22,7 @@ export default function LobbyScreen() {
   const resetGame = useGameStore(s => s.resetGame);
 
   const [activeTab, setActiveTab] = useState('main');
-  const [isMuted, setIsMuted] = useState(() => getMusicMuted() && getSfxMuted());
+  const [isMuted, setIsMuted] = useState(() => getMusicMuted());
 
   const session = useMemo(() => {
     try {
@@ -62,8 +62,16 @@ export default function LobbyScreen() {
     const next = !isMuted;
     setIsMuted(next);
     setMusicMuted(next);
-    setSfxMuted(next);
+    if (next) {
+      setSfxMuted(true);
+    }
   };
+
+  useEffect(() => {
+    const syncMute = () => setIsMuted(getMusicMuted());
+    window.addEventListener('grudge-music-toggle', syncMute);
+    return () => window.removeEventListener('grudge-music-toggle', syncMute);
+  }, []);
 
   const panelStyle = {
     background: 'linear-gradient(180deg, rgba(15,20,35,0.95), rgba(10,14,25,0.98))',

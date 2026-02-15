@@ -154,7 +154,7 @@ function stopIntroMusic() {
 }
 
 function startIntroMusic() {
-  if (currentBgm === 'intro') return;
+  if (currentBgm === 'intro' && introAudio && !introAudio.paused) return;
   stopBgm();
   currentBgm = 'intro';
   introAudio = new Audio('/audio/youth_thinker.mp3');
@@ -294,7 +294,7 @@ function stopSceneMusic() {
 }
 
 function startFileMusic(key, src) {
-  if (currentBgm === key) return;
+  if (currentBgm === key && sceneAudio && !sceneAudio.paused) return;
   stopBgm();
   currentBgm = key;
   sceneAudio = new Audio(src);

@@ -51,6 +51,7 @@ export default function SettingsMenu() {
     const next = !musicOff;
     setMusicOff(next);
     setMusicMuted(next);
+    window.dispatchEvent(new Event('grudge-music-toggle'));
   };
 
   const handleSfxToggle = () => {
