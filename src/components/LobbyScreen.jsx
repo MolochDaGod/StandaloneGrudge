@@ -1694,96 +1694,402 @@ function HeroSlideshow() {
   );
 }
 
+function HeroStatBar({ label, current, max, color, icon }) {
+  const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {icon && <EssentialIcon name={icon} size={12} style={{ opacity: 0.7 }} />}
+      <span style={{ color: 'var(--muted)', fontSize: '0.65rem', width: 24, textAlign: 'right' }}>{label}</span>
+      <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.4s ease' }} />
+      </div>
+      <span style={{ color: '#ccc', fontSize: '0.6rem', width: 50, textAlign: 'right', fontFamily: 'monospace' }}>{current}/{max}</span>
+    </div>
+  );
+}
+
+function HeroCard({ hero, panelStyle, expanded, onToggle }) {
+  const [hovered, setHovered] = useState(false);
+  const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+  const raceDef = raceDefinitions[hero.race] || {};
+  const classDef = classDefinitions[hero.classId] || {};
+  const totalBattles = rec.wins + rec.losses;
+  const winRate = totalBattles > 0 ? Math.round((rec.wins / totalBattles) * 100) : 0;
+  const equipCount = hero.equipment ? Object.keys(hero.equipment).filter(k => hero.equipment[k]).length : 0;
+
+  const raceColor = {
+    human: '#6ee7b7', elf: '#93c5fd', dwarf: '#f59e0b', orc: '#ef4444', worge: '#a78bfa', undead: '#94a3b8'
+  }[hero.race] || '#fff';
+
+  return (
+    <div
+      onClick={onToggle}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...panelStyle,
+        padding: 0, cursor: 'pointer', overflow: 'hidden',
+        border: hovered ? `1px solid ${raceColor}44` : panelStyle.border,
+        transition: 'all 0.25s ease',
+        transform: hovered ? 'translateY(-1px)' : 'none',
+        boxShadow: hovered ? `0 4px 20px ${raceColor}15` : 'none',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
+        <div style={{
+          width: 80, minHeight: 80, overflow: 'hidden',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `linear-gradient(135deg, ${raceColor}15, transparent)`,
+          borderRight: `1px solid ${raceColor}15`,
+          position: 'relative',
+        }}>
+          <SpriteAnimation
+            spriteData={getRaceClassSprite(hero.race, hero.classId)}
+            animation="idle"
+            scale={0.55}
+            containerless={false}
+          />
+          <div style={{
+            position: 'absolute', bottom: 2, left: 0, right: 0, textAlign: 'center',
+            fontSize: '0.5rem', color: raceColor, letterSpacing: 1, opacity: 0.8,
+            textTransform: 'uppercase', fontWeight: 700,
+          }}>Lv.{hero.level || 1}</div>
+        </div>
+
+        <div style={{ flex: 1, padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <span className="font-cinzel" style={{ color: '#fff', fontSize: '0.95rem' }}>{hero.name}</span>
+              <span style={{ color: 'var(--muted)', fontSize: '0.7rem', marginLeft: 8 }}>
+                {raceDef.name || hero.race} {classDef.name || hero.classId}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span style={{ color: '#6ee7b7', fontSize: '0.7rem', fontFamily: 'monospace' }}>{rec.wins}W</span>
+              <span style={{ color: '#ef4444', fontSize: '0.7rem', fontFamily: 'monospace' }}>{rec.losses}L</span>
+              {totalBattles > 0 && (
+                <span style={{
+                  background: winRate >= 60 ? 'rgba(110,231,183,0.15)' : winRate >= 40 ? 'rgba(250,172,71,0.15)' : 'rgba(239,68,68,0.15)',
+                  color: winRate >= 60 ? '#6ee7b7' : winRate >= 40 ? '#FAAC47' : '#ef4444',
+                  fontSize: '0.6rem', padding: '2px 6px', borderRadius: 4, fontWeight: 700,
+                }}>{winRate}%</span>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <HeroStatBar label="HP" current={hero.hp ?? hero.maxHp ?? 250} max={hero.maxHp ?? 250} color="#ef4444" />
+            <HeroStatBar label="MP" current={hero.mana ?? hero.maxMana ?? 100} max={hero.maxMana ?? 100} color="#3b82f6" />
+          </div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{
+          padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(0,0,0,0.2)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <StatBox label="Kills" value={rec.kills || 0} color="#ef4444" />
+            <StatBox label="Boss Kills" value={rec.bossKills || 0} color="#FAAC47" />
+            <StatBox label="Damage Dealt" value={formatNum(rec.damageDealt || 0)} color="#f97316" />
+            <StatBox label="Healing Done" value={formatNum(rec.healingDone || 0)} color="#6ee7b7" />
+            <StatBox label="Equipment" value={`${equipCount}/7`} color="#93c5fd" />
+            <StatBox label="Total Battles" value={totalBattles} color="#a78bfa" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatBox({ label, value, color }) {
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '6px 8px',
+      border: '1px solid rgba(255,255,255,0.04)', textAlign: 'center',
+    }}>
+      <div style={{ color, fontSize: '0.9rem', fontWeight: 700, fontFamily: 'monospace' }}>{value}</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.55rem', textTransform: 'uppercase', letterSpacing: 1 }}>{label}</div>
+    </div>
+  );
+}
+
+function formatNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
+}
+
 function CharactersTab({ heroRoster, panelStyle }) {
+  const setScreen = useGameStore(s => s.setScreen);
+  const [expandedId, setExpandedId] = useState(null);
+
+  const totalWins = (heroRoster || []).reduce((sum, h) => sum + (h.battleRecord?.wins || 0), 0);
+  const totalLosses = (heroRoster || []).reduce((sum, h) => sum + (h.battleRecord?.losses || 0), 0);
+  const totalKills = (heroRoster || []).reduce((sum, h) => sum + (h.battleRecord?.kills || 0), 0);
+  const maxLevel = (heroRoster || []).reduce((max, h) => Math.max(max, h.level || 1), 0);
+
   if (!heroRoster || heroRoster.length === 0) {
     return (
-      <div style={{ maxWidth: 700 }}>
+      <div style={{ maxWidth: 800 }}>
         <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
-          Characters
+          War Council
         </h2>
-        <div style={{ ...panelStyle, textAlign: 'center', padding: 40 }}>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-            No heroes yet. Start a new campaign to create your first Warlord.
+        <div style={{ ...panelStyle, textAlign: 'center', padding: '50px 40px' }}>
+          <EssentialIcon name="Team" size={40} style={{ opacity: 0.2, marginBottom: 16 }} />
+          <div style={{ color: '#fff', fontSize: '1rem', marginBottom: 8 }}>No Warlords Recruited</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: 20, lineHeight: 1.5 }}>
+            Begin a new campaign to create your first hero and build your war party.
           </div>
+          <button
+            onClick={() => setScreen('create')}
+            style={{
+              background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.1))',
+              border: '1px solid rgba(250,172,71,0.4)', borderRadius: 8,
+              color: '#FAAC47', padding: '10px 24px', cursor: 'pointer',
+              fontFamily: "'LifeCraft', 'Cinzel', serif", fontSize: '1rem', letterSpacing: 2,
+            }}
+          >
+            BEGIN CAMPAIGN
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 700 }}>
-      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
-        Characters ({heroRoster.length})
-      </h2>
+    <div style={{ maxWidth: 800 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', margin: 0 }}>
+          War Council
+        </h2>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
+            <span style={{ color: '#fff' }}>{heroRoster.length}</span> Heroes
+          </span>
+          <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
+            Best Lv.<span style={{ color: '#FAAC47' }}>{maxLevel}</span>
+          </span>
+          <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
+            <span style={{ color: '#6ee7b7' }}>{totalWins}</span>W / <span style={{ color: '#ef4444' }}>{totalLosses}</span>L
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+        <StatBox label="Total Battles" value={totalWins + totalLosses} color="#a78bfa" />
+        <StatBox label="Total Wins" value={totalWins} color="#6ee7b7" />
+        <StatBox label="Total Kills" value={totalKills} color="#ef4444" />
+        <StatBox label="Heroes" value={heroRoster.length} color="#FAAC47" />
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {heroRoster.map(hero => (
-          <div key={hero.id} style={{
-            ...panelStyle,
-            display: 'flex', alignItems: 'center', gap: 16, padding: 16,
-          }}>
-            <div style={{
-              width: 48, height: 48, overflow: 'hidden',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <SpriteAnimation
-                spriteData={getRaceClassSprite(hero.race, hero.classId)}
-                animation="idle"
-                scale={0.48}
-                containerless={false}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.95rem' }}>
-                {hero.name}
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
-                Lvl {hero.level || 1} {hero.race} {hero.classId} &bull; HP {hero.hp || 0}/{hero.maxHp || 0}
-              </div>
-            </div>
-            <div style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>
-              {hero.battleStats?.wins || 0}W / {hero.battleStats?.losses || 0}L
-            </div>
-          </div>
+          <HeroCard
+            key={hero.id}
+            hero={hero}
+            panelStyle={panelStyle}
+            expanded={expandedId === hero.id}
+            onToggle={() => setExpandedId(expandedId === hero.id ? null : hero.id)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function AccountTab({ session, panelStyle, hasExistingSave }) {
+function AccountInfoRow({ label, value, valueColor = '#fff', icon }) {
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ color: 'var(--muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {icon && <EssentialIcon name={icon} size={14} style={{ opacity: 0.5 }} />}
+        {label}
+      </span>
+      <span style={{ color: valueColor, fontSize: '0.8rem', fontWeight: 600 }}>{value}</span>
+    </div>
+  );
+}
+
+function AccountTab({ session, panelStyle, hasExistingSave }) {
+  const gold = useGameStore(s => s.gold);
+  const level = useGameStore(s => s.level);
+  const heroRoster = useGameStore(s => s.heroRoster);
+  const zoneConquer = useGameStore(s => s.zoneConquer);
+  const completedQuests = useGameStore(s => s.completedQuests);
+  const harvestResources = useGameStore(s => s.harvestResources);
+  const playerName = useGameStore(s => s.playerName);
+  const resetGame = useGameStore(s => s.resetGame);
+  const setScreen = useGameStore(s => s.setScreen);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [exportCopied, setExportCopied] = useState(false);
+
+  const conqueredCount = Object.values(zoneConquer || {}).filter(v => v >= 100).length;
+  const exploredCount = Object.keys(zoneConquer || {}).length;
+  const questCount = Object.values(completedQuests || {}).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+  const totalWins = (heroRoster || []).reduce((s, h) => s + (h.battleRecord?.wins || 0), 0);
+  const totalLosses = (heroRoster || []).reduce((s, h) => s + (h.battleRecord?.losses || 0), 0);
+  const totalKills = (heroRoster || []).reduce((s, h) => s + (h.battleRecord?.kills || 0), 0);
+  const totalResources = Object.values(harvestResources || {}).reduce((s, v) => s + v, 0);
+
+  const handleExport = () => {
+    try {
+      const saveData = localStorage.getItem('grudge-warlords-storage');
+      if (saveData) {
+        navigator.clipboard.writeText(saveData);
+        setExportCopied(true);
+        setTimeout(() => setExportCopied(false), 2000);
+      }
+    } catch {}
+  };
+
+  const handleImport = () => {
+    const data = prompt('Paste your save data below:');
+    if (data) {
+      try {
+        JSON.parse(data);
+        localStorage.setItem('grudge-warlords-storage', data);
+        window.location.reload();
+      } catch {
+        alert('Invalid save data format.');
+      }
+    }
+  };
+
+  const handleDeleteSave = () => {
+    resetGame();
+    setShowDeleteConfirm(false);
+    setScreen('title');
+  };
+
+  const sectionTitle = (text) => (
+    <div className="font-cinzel" style={{
+      color: '#FAAC47', fontSize: '0.8rem', letterSpacing: 2, textTransform: 'uppercase',
+      marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid rgba(250,172,71,0.15)',
+    }}>{text}</div>
+  );
+
+  return (
+    <div style={{ maxWidth: 800 }}>
       <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
         Account
       </h2>
+
       <div style={{ ...panelStyle }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Login Type</span>
-            <span style={{ color: '#fff', fontSize: '0.8rem' }}>
-              {session.type === 'discord' ? 'Discord' : 'Guest'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Status</span>
-            <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Active</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Save Data</span>
-            <span style={{ color: '#fff', fontSize: '0.8rem' }}>
-              {hasExistingSave ? 'Saved (Local Storage)' : 'No save data'}
-            </span>
-          </div>
+        {sectionTitle('Profile')}
+        <AccountInfoRow icon="Briefcase" label="Player" value={playerName || 'Adventurer'} />
+        <AccountInfoRow icon="Cloud" label="Login" value={session.type === 'discord' ? 'Discord' : 'Guest'} valueColor={session.type === 'discord' ? '#5865F2' : '#FAAC47'} />
+        <AccountInfoRow icon="CheckCircle" label="Status" value="Active" valueColor="#6ee7b7" />
+        <AccountInfoRow icon="File" label="Save Data" value={hasExistingSave ? 'Local Storage' : 'No save'} valueColor={hasExistingSave ? '#6ee7b7' : '#ef4444'} />
+        {session.loginTime && (
+          <AccountInfoRow icon="Clock" label="Session Started" value={new Date(session.loginTime).toLocaleString()} />
+        )}
+      </div>
+
+      <div style={{ ...panelStyle, marginTop: 12 }}>
+        {sectionTitle('Campaign Stats')}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+          <StatBox label="Level" value={level || 1} color="#FAAC47" />
+          <StatBox label="Gold" value={formatNum(gold || 0)} color="#ffd700" />
+          <StatBox label="Heroes" value={(heroRoster || []).length} color="#a78bfa" />
+          <StatBox label="Quests" value={questCount} color="#6ee7b7" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
+          <StatBox label="Battles Won" value={totalWins} color="#6ee7b7" />
+          <StatBox label="Battles Lost" value={totalLosses} color="#ef4444" />
+          <StatBox label="Total Kills" value={totalKills} color="#f97316" />
+          <StatBox label="Resources" value={formatNum(totalResources)} color="#93c5fd" />
         </div>
       </div>
 
-      {session.type === 'guest' && (
-        <div style={{ ...panelStyle, marginTop: 16 }}>
-          <div className="font-cinzel" style={{ color: '#ffd700', fontSize: '0.85rem', marginBottom: 8 }}>
-            Upgrade to Discord Login
+      <div style={{ ...panelStyle, marginTop: 12 }}>
+        {sectionTitle('World Progress')}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <StatBox label="Zones Explored" value={`${exploredCount}/32`} color="#93c5fd" />
+          <StatBox label="Zones Conquered" value={`${conqueredCount}/32`} color="#6ee7b7" />
+        </div>
+        {exploredCount > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{
+                width: `${(conqueredCount / 32) * 100}%`, height: '100%',
+                background: 'linear-gradient(90deg, #6ee7b7, #FAAC47)', borderRadius: 3,
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+            <div style={{ color: 'var(--muted)', fontSize: '0.65rem', textAlign: 'right', marginTop: 4 }}>
+              {Math.round((conqueredCount / 32) * 100)}% world domination
+            </div>
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.5 }}>
-            Connect your Discord account to save progress across devices and join the Grudge Warlords community.
+        )}
+      </div>
+
+      <div style={{ ...panelStyle, marginTop: 12 }}>
+        {sectionTitle('Save Management')}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={handleExport} style={{
+            background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.3)',
+            borderRadius: 6, color: '#6ee7b7', padding: '8px 16px', cursor: 'pointer',
+            fontSize: '0.8rem', fontFamily: "'Jost', sans-serif",
+          }}>
+            {exportCopied ? 'Copied!' : 'Export Save'}
+          </button>
+          <button onClick={handleImport} style={{
+            background: 'rgba(147,197,253,0.1)', border: '1px solid rgba(147,197,253,0.3)',
+            borderRadius: 6, color: '#93c5fd', padding: '8px 16px', cursor: 'pointer',
+            fontSize: '0.8rem', fontFamily: "'Jost', sans-serif",
+          }}>
+            Import Save
+          </button>
+          {hasExistingSave && !showDeleteConfirm && (
+            <button onClick={() => setShowDeleteConfirm(true)} style={{
+              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 6, color: '#ef4444', padding: '8px 16px', cursor: 'pointer',
+              fontSize: '0.8rem', fontFamily: "'Jost', sans-serif", marginLeft: 'auto',
+            }}>
+              Delete Save
+            </button>
+          )}
+        </div>
+        {showDeleteConfirm && (
+          <div style={{
+            marginTop: 10, padding: 12, background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8,
+          }}>
+            <div style={{ color: '#ef4444', fontSize: '0.85rem', marginBottom: 8, fontWeight: 600 }}>
+              Are you sure? This will permanently delete all your progress.
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={handleDeleteSave} style={{
+                background: '#ef4444', border: 'none', borderRadius: 6, color: '#fff',
+                padding: '6px 16px', cursor: 'pointer', fontSize: '0.8rem',
+              }}>Yes, Delete Everything</button>
+              <button onClick={() => setShowDeleteConfirm(false)} style={{
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 6, color: '#ccc', padding: '6px 16px', cursor: 'pointer', fontSize: '0.8rem',
+              }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {session.type === 'guest' && (
+        <div style={{
+          ...panelStyle, marginTop: 12,
+          background: 'linear-gradient(135deg, rgba(88,101,242,0.1), rgba(88,101,242,0.05))',
+          border: '1px solid rgba(88,101,242,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <svg width="20" height="16" viewBox="0 0 71 55" fill="#5865F2">
+              <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
+            </svg>
+            <span className="font-cinzel" style={{ color: '#5865F2', fontSize: '0.9rem' }}>
+              Connect Discord
+            </span>
+          </div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+            Link your Discord account to save progress across devices, join the community, and appear on leaderboards.
           </div>
         </div>
       )}
