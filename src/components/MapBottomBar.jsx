@@ -5,26 +5,23 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { InlineIcon } from '../data/uiSprites.jsx';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
-import { showContextMenu } from './GameContextMenu';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';
-import { getIconPlacement } from '../utils/uiLayoutConfig';
 import RadarChart from './RadarChart';
 import InventoryModal from './InventoryModal';
 import { setMusicMuted, setSfxMuted, getMusicMuted } from '../utils/audioManager';
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification, attributeDefinitions, TOTAL_POINTS_AT_LEVEL, calculateCombatPower } from '../data/attributes';
-import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/uiLayoutConfig';
 import BattlePositions from './BattlePositions';
 
-const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
+const BAR_HEIGHT = '26%';
+const POPUP_BOTTOM = 'calc(26% + 8px)';
 
 function ChatAvatar({ race, heroClass, namedHeroId, size = 20 }) {
   if (!race || !heroClass) return null;
   const spriteData = getPlayerSprite(heroClass, race, namedHeroId);
   const idleAnim = spriteData?.idle;
   if (!idleAnim) return null;
-
   const frameWidth = spriteData?.frameWidth || 100;
   const frameHeight = spriteData?.frameHeight || 100;
   const scale = size / Math.min(frameWidth, frameHeight) * 2.4;
@@ -69,7 +66,6 @@ function BarRow({ label, current, max, color }) {
         overflow: 'hidden',
         border: '1px solid #2a2a3e',
         boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)',
-        imageRendering: 'pixelated',
         position: 'relative',
       }}>
         <div style={{
@@ -98,7 +94,6 @@ function HarvestingPopup({ onClose }) {
     harvestNodes, activeHarvests, harvestResources,
     assignHarvest, recallHarvest, heroRoster, activeHeroIds, level
   } = useGameStore();
-
   const harvestingHeroIds = Object.values(activeHarvests);
   const idleHeroes = heroRoster.filter(h =>
     !activeHeroIds.includes(h.id) && !harvestingHeroIds.includes(h.id)
@@ -107,7 +102,7 @@ function HarvestingPopup({ onClose }) {
 
   return (
     <div className="ui-element panel-style" style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
+      position: 'absolute', bottom: POPUP_BOTTOM, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       padding: 16, width: 360, maxHeight: 400, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
@@ -195,7 +190,7 @@ function GearPopup({ onClose }) {
 
   return (
     <div className="ui-element" style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
+      position: 'absolute', bottom: POPUP_BOTTOM, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       animation: 'fadeIn 0.15s ease-out',
     }}>
       {heroRoster.length > 1 && (
@@ -212,7 +207,6 @@ function GearPopup({ onClose }) {
               borderRadius: 2, padding: '2px 6px', cursor: 'pointer',
               color: selectedHero === h.id ? '#e5d6a1' : 'rgba(229,214,161,0.5)',
               fontSize: '0.55rem', fontWeight: 600, fontFamily: 'Cinzel, serif',
-              imageRendering: 'pixelated',
             }}>{h.name}</button>
           ))}
         </div>
@@ -227,12 +221,12 @@ const ATTR_ABBREV = { Strength: 'STR', Intellect: 'INT', Vitality: 'VIT', Dexter
 
 function getStatTierColor(value, maxPoints) {
   const ratio = maxPoints > 0 ? value / maxPoints : 0;
-  if (ratio >= 0.50) return { bar: 'linear-gradient(90deg, #89f7fe, #b0f0ff)', label: '#89f7fe', name: 'Mythical' };
-  if (ratio >= 0.35) return { bar: 'linear-gradient(90deg, #ea580c, #f97316)', label: '#f97316', name: 'Legendary' };
-  if (ratio >= 0.25) return { bar: 'linear-gradient(90deg, #7c3aed, #a855f7)', label: '#a855f7', name: 'Epic' };
-  if (ratio >= 0.15) return { bar: 'linear-gradient(90deg, #2563eb, #3b82f6)', label: '#3b82f6', name: 'Rare' };
-  if (ratio >= 0.05) return { bar: 'linear-gradient(90deg, #16a34a, #22c55e)', label: '#22c55e', name: 'Uncommon' };
-  return { bar: 'linear-gradient(90deg, #6b7280, #9ca3af)', label: '#9ca3af', name: 'Common' };
+  if (ratio >= 0.50) return { bar: 'linear-gradient(90deg, #89f7fe, #b0f0ff)', label: '#89f7fe' };
+  if (ratio >= 0.35) return { bar: 'linear-gradient(90deg, #ea580c, #f97316)', label: '#f97316' };
+  if (ratio >= 0.25) return { bar: 'linear-gradient(90deg, #7c3aed, #a855f7)', label: '#a855f7' };
+  if (ratio >= 0.15) return { bar: 'linear-gradient(90deg, #2563eb, #3b82f6)', label: '#3b82f6' };
+  if (ratio >= 0.05) return { bar: 'linear-gradient(90deg, #16a34a, #22c55e)', label: '#22c55e' };
+  return { bar: 'linear-gradient(90deg, #6b7280, #9ca3af)', label: '#9ca3af' };
 }
 
 function CharacterPopup({ onClose }) {
@@ -256,7 +250,7 @@ function CharacterPopup({ onClose }) {
 
   return (
     <div className="ui-element panel-style" style={{
-      position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
+      position: 'absolute', bottom: POPUP_BOTTOM, right: 10, zIndex: BOTTOM_BAR_POPUPS,
       padding: 16, width: 420, maxHeight: 520, overflowY: 'auto',
       animation: 'fadeIn 0.15s ease-out',
     }}>
@@ -368,17 +362,12 @@ export default function MapBottomBar({
   const [showGear, setShowGear] = useState(false);
   const [showCharacter, setShowCharacter] = useState(false);
   const [showFormation, setShowFormation] = useState(false);
-  const [hotbarAssignments, setHotbarAssignments] = useState(() => {
-    try {
-      const saved = localStorage.getItem('grudge_hotbar_assignments');
-      return saved ? JSON.parse(saved) : {};
-    } catch { return {}; }
-  });
+  const [selectedPartyHero, setSelectedPartyHeroState] = useState(null);
+
   const activePartyHeroes = heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id));
-  const [selectedPartyHero, setSelectedPartyHeroState] = useState(() => activePartyHeroes[0]?.id || null);
 
   useEffect(() => {
-    if (selectedPartyHero && !activePartyHeroes.find(h => h.id === selectedPartyHero)) {
+    if (!selectedPartyHero || !activePartyHeroes.find(h => h.id === selectedPartyHero)) {
       const fallback = activePartyHeroes[0]?.id || null;
       setSelectedPartyHeroState(fallback);
       if (onSelectPartyHero) onSelectPartyHero(fallback);
@@ -429,42 +418,6 @@ export default function MapBottomBar({
     { id: 'quests', label: 'Quests', icon: 'scroll', color: '#fbbf24', action: () => setScreen('account') },
   ];
 
-  const allActions = buttons;
-
-  const resolvedSlots = Array.from({ length: 8 }, (_, i) => {
-    const assignedId = hotbarAssignments[i];
-    if (assignedId) {
-      const found = allActions.find(a => a.id === assignedId);
-      if (found) return { ...found, slotIndex: i };
-    }
-    return allActions[i] ? { ...allActions[i], slotIndex: i } : { id: `empty_${i}`, label: 'Empty', icon: null, img: null, action: null, slotIndex: i };
-  });
-
-  const assignSlot = (slotIndex, actionId) => {
-    const next = { ...hotbarAssignments, [slotIndex]: actionId };
-    setHotbarAssignments(next);
-    localStorage.setItem('grudge_hotbar_assignments', JSON.stringify(next));
-  };
-
-  const handleSlotRightClick = (e, slotIndex) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const items = [
-      ...allActions.map(act => ({
-        label: act.label,
-        icon: act.icon || null,
-        action: () => assignSlot(slotIndex, act.id),
-      })),
-      { label: 'Clear Slot', icon: 'cancel', action: () => {
-        const next = { ...hotbarAssignments };
-        delete next[slotIndex];
-        setHotbarAssignments(next);
-        localStorage.setItem('grudge_hotbar_assignments', JSON.stringify(next));
-      }},
-    ];
-    showContextMenu(e.clientX, e.clientY, items);
-  };
-
   const popupButtons = [
     { id: 'harvest', icon: 'pickaxe', color: 'var(--gold)', label: 'Harvest', active: showHarvesting },
     { id: 'gear', icon: 'shield', color: 'var(--accent)', label: 'Gear', active: showGear },
@@ -478,30 +431,20 @@ export default function MapBottomBar({
     const name = leader?.name || 'You';
     setChatLog(prev => [...prev.slice(-49), {
       id: Date.now(), speaker: name, line: chatInput.trim(), color: '#a78bfa',
-      race: leader?.race, heroClass: leader?.class, namedHeroId: leader?.namedHeroId,
+      race: leader?.raceId, heroClass: leader?.classId, namedHeroId: leader?.namedHeroId,
     }]);
     setChatInput('');
   };
 
+  const stopWheelPropagation = (e) => e.stopPropagation();
+
   const portalTarget = document.getElementById('game-ui-portal');
 
-  const barStyle = getElementStyle('world', 'bottomBar');
-  const chatStyle = getChildElementStyle('world', 'chatPanel', 'bottomBar');
-  const hotbarStyle = getChildElementStyle('world', 'hotbar', 'bottomBar');
-  const warPartyStyle = getChildElementStyle('world', 'warParty', 'bottomBar');
-
-  const stopWheelPropagation = (e) => {
-    e.stopPropagation();
-  };
-
-  const activeTab = showHarvesting ? 'harvest' : showGear ? 'gear' : showCharacter ? 'character' : showFormation ? 'formation' : null;
-
-  const overlayContent = (
-    <div id="game-ui-overlay" data-ui-id="bottomBar" style={{
-      position: 'absolute',
-      ...barStyle,
-      zIndex: 99999,
-      pointerEvents: 'auto',
+  const barContent = (
+    <div style={{
+      position: 'absolute', bottom: 0, left: 0, right: 0, height: BAR_HEIGHT,
+      zIndex: BOTTOM_BAR,
+      pointerEvents: 'none',
       overflow: 'visible',
     }}
     onWheel={stopWheelPropagation}
@@ -509,62 +452,68 @@ export default function MapBottomBar({
     onClick={e => e.stopPropagation()}
     onContextMenu={e => e.stopPropagation()}
     >
-      {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
-      {showGear && <GearPopup onClose={() => setShowGear(false)} />}
-      {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
+      {showHarvesting && <div style={{ pointerEvents: 'auto' }}><HarvestingPopup onClose={() => setShowHarvesting(false)} /></div>}
+      {showGear && <div style={{ pointerEvents: 'auto' }}><GearPopup onClose={() => setShowGear(false)} /></div>}
+      {showCharacter && <div style={{ pointerEvents: 'auto' }}><CharacterPopup onClose={() => setShowCharacter(false)} /></div>}
       {showFormation && (
-        <div className="ui-element panel-style" style={{
-          position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
-          width: 320, height: 220,
-          animation: 'fadeIn 0.15s ease-out',
-          padding: 0, overflow: 'hidden',
-          borderRadius: 6,
-        }}>
-          <button onClick={() => setShowFormation(false)} style={{
-            position: 'absolute', top: 4, right: 6, zIndex: 2,
-            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem',
-          }}>×</button>
-          <BattlePositions compact />
+        <div style={{ pointerEvents: 'auto' }}>
+          <div className="ui-element panel-style" style={{
+            position: 'absolute', bottom: POPUP_BOTTOM, right: 10, zIndex: BOTTOM_BAR_POPUPS,
+            width: 320, height: 220,
+            animation: 'fadeIn 0.15s ease-out',
+            padding: 0, overflow: 'hidden', borderRadius: 6,
+          }}>
+            <button onClick={() => setShowFormation(false)} style={{
+              position: 'absolute', top: 4, right: 6, zIndex: 2,
+              background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem',
+            }}>×</button>
+            <BattlePositions compact />
+          </div>
         </div>
       )}
 
-        <div data-ui-id="chatPanel" style={{
-          position: 'absolute',
-          ...chatStyle,
-          backgroundImage: 'url(/ui/chat-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          display: 'flex',
-          flexDirection: 'column',
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, top: 0,
+        pointerEvents: 'auto',
+        display: 'flex',
+        alignItems: 'stretch',
+        backgroundImage: 'url(/ui/bar-background.png)',
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+      }}>
+
+        <div style={{
+          flex: '0 0 28%',
+          display: 'flex', flexDirection: 'column',
+          padding: '20px 8px 10px 24px',
           overflow: 'hidden',
-          imageRendering: 'auto',
         }}>
+          <div style={{
+            padding: '2px 8px',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
+          </div>
           <div ref={chatLogRef} style={{
-            flex: 1, overflowY: 'auto',
-            padding: '8% 8% 2% 8%',
-            fontSize: '0.6rem', lineHeight: 1.4,
+            flex: 1, overflowY: 'auto', padding: '2px 8px',
+            fontSize: '0.7rem', lineHeight: 1.4,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
-            position: 'relative', zIndex: 3,
           }}>
-            {chatLog.length > 0 ? chatLog.map(entry => (
-              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2, padding: '1px 0' }}>
+            {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2 }}>
                 <ChatAvatar race={entry.race} heroClass={entry.heroClass} namedHeroId={entry.namedHeroId} size={18} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontWeight: 700, color: entry.color, marginRight: 3, fontSize: '0.5rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
-                  <span style={{ color: 'rgba(226,232,240,0.75)', fontWeight: 400, fontSize: '0.5rem' }}>{entry.line}</span>
+                  <span style={{ fontWeight: 700, color: entry.color, marginRight: 3, fontSize: '0.6rem', textTransform: 'uppercase' }}>{entry.speaker}</span>
+                  <span style={{ color: 'rgba(226,232,240,0.8)', fontWeight: 400, fontSize: '0.6rem' }}>{entry.line}</span>
                 </div>
               </div>
             )) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.5rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.55rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
             )}
           </div>
-          <div style={{
-            display: 'flex', gap: 0, alignItems: 'stretch',
-            padding: '0 10% 12% 10%',
-            height: '18%', minHeight: 0,
-            position: 'relative', zIndex: 3,
-          }}>
+          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center' }}>
             <input
               type="text"
               value={chatInput}
@@ -573,270 +522,227 @@ export default function MapBottomBar({
               placeholder="Say something..."
               style={{
                 flex: 1, background: 'rgba(0,0,0,0.4)',
-                border: '1px solid rgba(184,150,62,0.2)',
-                borderRadius: 2, padding: '2px 6px',
-                color: 'rgba(226,232,240,0.9)', fontSize: '0.55rem',
+                border: '1px solid rgba(255,215,0,0.1)',
+                borderRadius: 4, padding: '3px 6px',
+                color: 'rgba(226,232,240,0.9)', fontSize: '0.65rem',
                 fontFamily: "'Jost', sans-serif", outline: 'none', minWidth: 0,
               }}
+              onFocus={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.3)'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255,215,0,0.1)'}
             />
-            <button
-              onClick={sendChat}
-              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.92)'; e.currentTarget.style.filter = 'brightness(1.4)'; }}
-              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
-              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
-              style={{
-                background: 'linear-gradient(180deg, rgba(184,150,62,0.3) 0%, rgba(122,99,40,0.3) 100%)',
-                border: '1px solid rgba(184,150,62,0.35)',
-                borderLeft: 'none',
-                borderRadius: '0 2px 2px 0',
-                padding: '0 8px',
-                cursor: 'pointer',
-                color: '#d4af5a',
-                fontSize: '0.55rem',
-                fontFamily: "'Cinzel', serif",
-                fontWeight: 700,
-                letterSpacing: '0.03em',
-                transition: 'transform 0.1s, filter 0.15s',
-              }}
-            >
-              Send
-            </button>
+            <button onClick={sendChat} style={{
+              background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.15)',
+              borderRadius: 4, padding: '2px 8px', color: 'var(--gold)', fontSize: '0.55rem',
+              fontFamily: "'Cinzel', serif", fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}>Send</button>
           </div>
         </div>
 
-        <div data-ui-id="hotbar" style={{
-          position: 'absolute',
-          ...hotbarStyle,
-          backgroundImage: 'url(/ui/hotbar-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          imageRendering: 'auto',
+        <div style={{
+          flex: '1 1 0',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '8px 4px 4px',
+          position: 'relative',
         }}>
           <div style={{
-            position: 'absolute',
-            top: '38%',
-            left: '6.8%',
-            right: '6.8%',
-            height: '36%',
+            position: 'relative',
+            width: '100%',
+            maxWidth: 520,
+            aspectRatio: '1455 / 526',
+            backgroundImage: 'url(/ui/hotbar-background.png)',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
             display: 'flex',
-            gap: '2.4%',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 3,
+            padding: '0 12.5%',
           }}>
-            {resolvedSlots.map(btn => (
-              <button key={btn.slotIndex}
-                onClick={btn.action || undefined}
-                onContextMenu={e => handleSlotRightClick(e, btn.slotIndex)}
-                style={{
-                  flex: '1 1 0',
-                  aspectRatio: '1',
-                  height: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  padding: 0,
-                  cursor: btn.action ? 'pointer' : 'default',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  position: 'relative',
-                  animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                  transition: 'transform 0.1s',
-                }}
-                onMouseEnter={e => {
-                  showTooltip(btn.label + (btn.action ? '' : ' (right-click to assign)'), e);
-                  e.currentTarget.style.transform = 'scale(1.08)';
-                  e.currentTarget.style.filter = 'brightness(1.3)';
-                }}
-                onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => {
-                  hideTooltip();
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.filter = 'brightness(1)';
-                }}
-              >
-                {btn.img ? (
-                  <img src={btn.img} alt={btn.label} style={{ width: '80%', height: '80%', objectFit: 'contain', imageRendering: 'auto' }} />
-                ) : btn.icon ? (
-                  (() => { const ip = getIconPlacement('hotbarIcons'); return <InlineIcon name={btn.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
-                ) : (
-                  <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.12)', fontFamily: "'Cinzel', serif" }}>{btn.slotIndex + 1}</span>
-                )}
-                {btn.badge && (
-                  <span style={{
-                    position: 'absolute', top: -3, right: -3,
-                    background: 'var(--gold)', color: '#000', fontSize: '0.35rem',
-                    fontWeight: 800, borderRadius: '50%', width: 12, height: 12,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 4,
-                  }}>{btn.badge}</span>
-                )}
-              </button>
-            ))}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(8, 1fr)',
+              gap: '2.2%',
+              width: '100%',
+              alignItems: 'center',
+              paddingTop: '3%',
+            }}>
+              {buttons.map((btn, idx) => (
+                <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <button onClick={btn.action} style={{
+                    background: 'rgba(0,0,0,0.6)',
+                    border: '2px solid rgba(197,160,89,0.4)',
+                    padding: 0,
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.15s',
+                    position: 'relative',
+                    animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                    aspectRatio: '1 / 1',
+                    width: '100%',
+                    boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)',
+                    borderRadius: 5,
+                  }}
+                    onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}
+                    onMouseMove={e => updateTooltipPosition(e)}
+                    onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                  >
+                    {btn.img ? (
+                      <img src={btn.img} alt={btn.label} style={{ width: '65%', height: '65%', objectFit: 'contain', borderRadius: 2, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
+                    ) : (
+                      <InlineIcon name={btn.icon} size={20} />
+                    )}
+                    <span style={{ position: 'absolute', top: 1, left: 3, fontSize: '0.4rem', color: 'rgba(200,200,200,0.5)', fontWeight: 600, fontFamily: "'Cinzel', serif" }}>{idx + 1}</span>
+                    {btn.badge && (
+                      <span style={{
+                        position: 'absolute', top: -2, right: -2,
+                        background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
+                        fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>{btn.badge}</span>
+                    )}
+                  </button>
+                  <span style={{ fontSize: '0.4rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1, textAlign: 'center' }}>{btn.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div data-ui-id="warParty" style={{
-          position: 'absolute',
-          ...warPartyStyle,
-          backgroundImage: 'url(/ui/bar-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          imageRendering: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
+        <div style={{
+          flex: '0 0 20%',
+          display: 'flex', flexDirection: 'column',
+          padding: '20px 24px 12px 8px',
+          position: 'relative',
           overflow: 'visible',
         }}>
           <div style={{
-            position: 'absolute',
-            top: -24, left: 0, right: 0,
-            display: 'flex', gap: 0, justifyContent: 'center',
-            pointerEvents: 'auto',
+            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 6,
           }}>
-            {popupButtons.map(pb => {
-              const isActive = activeTab === pb.id;
-              return (
-                <button
-                  key={pb.id}
-                  onClick={() => togglePopup(pb.id)}
-                  onMouseEnter={e => showTooltip(pb.label, e)}
-                  onMouseMove={e => updateTooltipPosition(e)}
-                  onMouseLeave={() => hideTooltip()}
-                  style={{
-                    background: isActive
-                      ? 'linear-gradient(180deg, rgba(255,215,0,0.25) 0%, rgba(20,15,30,0.95) 100%)'
-                      : 'linear-gradient(180deg, rgba(60,50,35,0.7) 0%, rgba(20,15,30,0.85) 100%)',
-                    border: `1px solid ${isActive ? 'rgba(255,215,0,0.5)' : 'rgba(180,150,90,0.25)'}`,
-                    borderBottom: isActive ? '1px solid transparent' : '1px solid rgba(180,150,90,0.25)',
-                    borderRadius: '6px 6px 0 0',
-                    padding: '3px 12px',
-                    cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    color: isActive ? '#ffd700' : 'rgba(180,150,90,0.6)',
-                    fontSize: '0.5rem', fontWeight: 700,
-                    fontFamily: "'Cinzel', serif",
-                    transition: 'all 0.15s',
-                    letterSpacing: '0.03em',
-                  }}
-                >
-                  <InlineIcon name={pb.icon} size={12} />
-                  {pb.label}
-                </button>
-              );
-            })}
+            {popupButtons.map(pb => (
+              <button key={pb.id} onClick={() => togglePopup(pb.id)} style={{
+                width: 30, height: 30, borderRadius: '50%',
+                background: pb.active ? 'rgba(255,215,0,0.25)' : 'rgba(20,24,48,0.9)',
+                border: `2px solid ${pb.active ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+                boxShadow: pb.active ? '0 0 10px rgba(255,215,0,0.3)' : 'none',
+              }}
+                onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.3)'; }}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={e => { hideTooltip(); if (!pb.active) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.boxShadow = 'none'; } }}
+              >
+                <InlineIcon name={pb.icon} size={14} />
+              </button>
+            ))}
           </div>
 
           <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            padding: '6% 6% 6% 5%',
-            position: 'relative', zIndex: 3,
+            flex: 1, overflowY: 'auto', paddingTop: 18,
+            scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent',
           }}>
             <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: "'Jost', sans-serif" }}>
-                {heroRoster.filter(h => h.id === 'player' || activeHeroIds.includes(h.id)).map(hero => {
-                  const heroCls = classDefinitions[hero.classId];
-                  const heroRace = raceDefinitions[hero.raceId];
-                  const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
-                  const isSelected = selectedPartyHero === hero.id;
-                  const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
-                  const circleSize = 32;
-                  const fw = spriteData?.frameWidth || 100;
-                  const spriteScale = (circleSize / fw) * 1.1;
-                  const build = heroStats ? getBuildClassification(heroStats, hero.attributes || {}) : null;
-                  const swirlColor = build?.tierColor || '#9ca3af';
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: "'Jost', sans-serif" }}>
+              {activePartyHeroes.map(hero => {
+                const heroCls = classDefinitions[hero.classId];
+                const heroRace = raceDefinitions[hero.raceId];
+                const heroStats = heroCls ? getHeroStatsWithBonuses(hero) : null;
+                const isSelected = selectedPartyHero === hero.id;
+                const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
+                const circleSize = 32;
+                const fw = spriteData?.frameWidth || 100;
+                const spriteScale = (circleSize / fw) * 1.1;
+                const build = heroStats ? getBuildClassification(heroStats, hero.attributes || {}) : null;
+                const swirlColor = build?.tierColor || '#9ca3af';
 
-                  return (
-                    <div
-                      key={`bar_${hero.id}`}
-                      onClick={() => setSelectedPartyHero(hero.id)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        cursor: 'pointer',
-                        padding: '4px 6px',
-                        borderRadius: 6,
-                        background: isSelected ? 'rgba(110,231,183,0.08)' : 'transparent',
-                        border: isSelected ? '1px solid rgba(110,231,183,0.25)' : '1px solid transparent',
-                        transition: 'background 0.15s, border-color 0.15s',
-                      }}
-                    >
+                return (
+                  <div
+                    key={`bar_${hero.id}`}
+                    onClick={() => setSelectedPartyHero(hero.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      cursor: 'pointer',
+                      padding: '4px 6px',
+                      borderRadius: 6,
+                      background: isSelected ? 'rgba(110,231,183,0.08)' : 'transparent',
+                      border: isSelected ? '1px solid rgba(110,231,183,0.25)' : '1px solid transparent',
+                      transition: 'background 0.15s, border-color 0.15s',
+                    }}
+                  >
+                    <div style={{
+                      width: circleSize, height: circleSize, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                      border: isSelected ? `2px solid ${swirlColor}` : `1.5px solid ${swirlColor}80`,
+                      background: 'rgba(0,0,0,0.7)',
+                      boxShadow: isSelected ? `0 0 10px ${swirlColor}50` : `0 0 5px ${swirlColor}30`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      position: 'relative',
+                    }}>
                       <div style={{
-                        width: circleSize, height: circleSize, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-                        border: isSelected ? `2px solid ${swirlColor}` : `1.5px solid ${swirlColor}80`,
-                        background: 'rgba(0,0,0,0.7)',
-                        boxShadow: isSelected ? `0 0 10px ${swirlColor}50` : `0 0 5px ${swirlColor}30`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        position: 'relative',
-                      }}>
-                        <div style={{
-                          position: 'absolute', inset: 0, borderRadius: '50%',
-                          background: `conic-gradient(from 0deg, ${swirlColor}00, ${swirlColor}35, ${swirlColor}00, ${swirlColor}25, ${swirlColor}00)`,
-                          animation: 'swirlSpin 4s linear infinite',
-                          opacity: 0.7,
-                        }} />
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} containerless={false} />
-                        </div>
-                      </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-                          <span style={{
-                            fontSize: '0.6rem', fontWeight: 700,
-                            color: isSelected ? 'var(--accent)' : '#fff',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                            flex: 1, minWidth: 0,
-                          }}>
-                            {hero.name}
-                          </span>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
-                          <span style={{
-                            fontSize: '0.45rem', fontWeight: 700, color: 'var(--gold)',
-                            background: 'rgba(255,215,0,0.1)', padding: '0px 4px', borderRadius: 3,
-                            border: '1px solid rgba(255,215,0,0.15)',
-                          }}>
-                            Lv.{hero.level}
-                          </span>
-                          {heroCls && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <InlineIcon name={heroCls.icon} size={11} />
-                              <span style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>{heroCls.name}</span>
-                            </span>
-                          )}
-                          {heroRace?.icon && (
-                            <img src={heroRace.icon} alt={heroRace.name} style={{
-                              width: 13, height: 13, borderRadius: '50%',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              imageRendering: 'pixelated',
-                            }} />
-                          )}
-                        </div>
-
-                        {heroStats && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <BarRow label="HP" current={hero.currentHealth} max={heroStats.health} color="#22c55e" />
-                            <BarRow label="MP" current={hero.currentMana} max={heroStats.mana} color="#3b82f6" />
-                            <BarRow label="SP" current={hero.currentStamina} max={heroStats.stamina} color="#f59e0b" />
-                            <BarRow label="GR" current={hero.grudge || 0} max={100} color="#dc2626" />
-                          </div>
-                        )}
+                        position: 'absolute', inset: 0, borderRadius: '50%',
+                        background: `conic-gradient(from 0deg, ${swirlColor}00, ${swirlColor}35, ${swirlColor}00, ${swirlColor}25, ${swirlColor}00)`,
+                        animation: 'swirlSpin 4s linear infinite',
+                        opacity: 0.7,
+                      }} />
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <SpriteAnimation spriteData={spriteData} animation="idle" scale={spriteScale} speed={180} containerless={false} />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                        <span style={{
+                          fontSize: '0.6rem', fontWeight: 700,
+                          color: isSelected ? 'var(--accent)' : '#fff',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                          flex: 1, minWidth: 0,
+                        }}>
+                          {hero.name}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                        <span style={{
+                          fontSize: '0.45rem', fontWeight: 700, color: 'var(--gold)',
+                          background: 'rgba(255,215,0,0.1)', padding: '0px 4px', borderRadius: 3,
+                          border: '1px solid rgba(255,215,0,0.15)',
+                        }}>
+                          Lv.{hero.level}
+                        </span>
+                        {heroCls && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <InlineIcon name={heroCls.icon} size={11} />
+                            <span style={{ fontSize: '0.4rem', color: 'var(--muted)' }}>{heroCls.name}</span>
+                          </span>
+                        )}
+                        {heroRace?.icon && (
+                          <img src={heroRace.icon} alt={heroRace.name} style={{
+                            width: 13, height: 13, borderRadius: '50%',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            imageRendering: 'pixelated',
+                          }} />
+                        )}
+                      </div>
+
+                      {heroStats && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <BarRow label="HP" current={hero.currentHealth} max={heroStats.health} color="#22c55e" />
+                          <BarRow label="MP" current={hero.currentMana} max={heroStats.mana} color="#3b82f6" />
+                          <BarRow label="SP" current={hero.currentStamina} max={heroStats.stamina} color="#f59e0b" />
+                          <BarRow label="GR" current={hero.grudge || 0} max={100} color="#dc2626" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
-
+      </div>
     </div>
   );
 
-  return portalTarget ? createPortal(overlayContent, portalTarget) : overlayContent;
+  return portalTarget ? createPortal(barContent, portalTarget) : barContent;
 }
