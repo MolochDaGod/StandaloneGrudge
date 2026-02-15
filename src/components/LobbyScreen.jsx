@@ -1532,7 +1532,7 @@ function HeroSlideshow() {
             {dummyVisible && (
               <div style={{
                 position: 'absolute',
-                right: 'calc(8% + 100px)',
+                right: 'calc(8% + 200px)',
                 bottom: 60,
                 transform: 'scaleX(-1)',
                 transformOrigin: 'bottom center',
