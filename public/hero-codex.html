@@ -172,7 +172,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <img src="/images/hero_codex_bg.png" alt="Hero Codex">
   <div class="hero-banner-content">
     <h1>GRUDGE WARLORDS &mdash; HERO CODEX</h1>
-    <p>Complete visual reference for all 25 playable heroes. Browse stats, abilities, lore, and learn how the hero system works.</p>
+    <p>Complete visual reference for all 26 playable heroes. Browse stats, abilities, lore, and learn how the hero system works.</p>
   </div>
 </div>
 
@@ -183,7 +183,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
     <div class="info-grid">
       <div class="info-card">
         <h3>Hero Creation</h3>
-        <p>When starting the game, you choose a <strong style="color:var(--text)">Race</strong> and <strong style="color:var(--text)">Class</strong>. Each combination produces a unique hero with different stats, abilities, and racial traits. There are 6 races and 4 classes, giving 24 standard heroes plus 1 secret unlock.</p>
+        <p>When starting the game, you choose a <strong style="color:var(--text)">Race</strong> and <strong style="color:var(--text)">Class</strong>. Each combination produces a unique hero with different stats, abilities, and racial traits. There are 6 races and 4 classes, giving 24 standard heroes plus 2 secret unlocks.</p>
       </div>
       <div class="info-card">
         <h3>Stats System</h3>
@@ -248,8 +248,9 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
   <div class="info-section">
     <div class="secret-box">
-      <h3>Secret Hero</h3>
-      <p>Creating a <strong style="color:var(--text)">Barbarian Ranger</strong> named exactly <strong style="color:var(--gold)">"Racalvin the Pirate King"</strong> unlocks a secret Legendary hero with boosted stats (+30 HP, +5 ATK, +5 SPD) and a unique ultimate ability: <strong style="color:var(--gold)">Storm of Arrows</strong>.</p>
+      <h3>Secret Heroes</h3>
+      <p>Creating a <strong style="color:var(--text)">Barbarian Worg</strong> named exactly <strong style="color:var(--gold)">"Racalvin the Pirate"</strong> unlocks a secret Legendary hero with boosted stats (+30 HP, +5 ATK, +5 SPD) and a unique ultimate ability: <strong style="color:var(--gold)">Storm of Arrows</strong>.</p>
+      <p style="margin-top:12px;">Creating a <strong style="color:var(--text)">Human Warrior</strong> named exactly <strong style="color:var(--gold)">"Cpt John Wayne"</strong> unlocks Racalvin's first captain &mdash; a Legendary hero and the first man to pilot a flying machine. Enhanced stats (+20 HP, +5 ATK, +3 DEF) and the unique ability: <strong style="color:var(--gold)">Skyfire Barrage</strong>.</p>
     </div>
   </div>
 </div>
@@ -460,6 +461,16 @@ const HEROES = [
     quote: "The sea does not bow. Neither do I.",
     raceIcon: "/images/races/barbarian.png",
     isSecret: true
+  },
+  {
+    name: "Cpt. John Wayne", title: "The Sky Captain",
+    race: "Human", heroClass: "Warrior", faction: "Pirates", rarity: "Legendary",
+    hp: 240, atk: 30, def: 18, spd: 60, rng: 2.5, mp: 90,
+    quote: "The ground is for those who've given up dreaming.",
+    raceIcon: "/images/races/human.png",
+    portrait: "/images/heroes/cpt_john_wayne.png",
+    isSecret: true,
+    lore: "The first captain of Racalvin's pirate crew and the first man in history to pilot a flying machine. A hardened soldier turned sky-pirate, John Wayne traded his medals for a compass and never looked back. His ironclad nerve and unshakeable loyalty earned him command of The Grudge — Racalvin's legendary warship. They say he once flew through a god-storm and came out the other side laughing."
   }
 ];
 
@@ -547,8 +558,12 @@ function renderHeroes(raceFilter, classFilter, search) {
     const factionLow = h.faction.toLowerCase();
     const secretClass = h.isSecret ? ' secret-hero' : '';
 
+    const portraitHtml = h.portrait ? `<div class="hero-portrait" style="width:100%;height:180px;overflow:hidden;position:relative;"><img src="${h.portrait}" alt="${h.name}" style="width:100%;height:100%;object-fit:cover;object-position:center 20%;filter:brightness(0.7);"><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(26,26,46,0.95) 100%);"></div></div>` : '';
+    const loreHtml = h.lore ? `<div style="padding:0 20px 14px;color:var(--text-dim);font-size:0.82rem;line-height:1.5;">${h.lore}</div>` : '';
+
     return `
     <div class="hero-card rarity-${rarityLow}${secretClass}" style="animation-delay:${i * 0.05}s" data-race="${h.race}" data-class="${h.heroClass}">
+      ${portraitHtml}
       <div class="hero-header">
         <div class="hero-icon" style="background:linear-gradient(135deg,${RACE_COLORS[h.race]}22,${CLASS_COLORS[h.heroClass]}22);border-color:${RACE_COLORS[h.race]}44;">
           <img src="${h.raceIcon}" alt="${h.race}">
@@ -564,6 +579,7 @@ function renderHeroes(raceFilter, classFilter, search) {
           </div>
         </div>
       </div>
+      ${loreHtml}
       <div class="hero-stats">
         ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
         ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
