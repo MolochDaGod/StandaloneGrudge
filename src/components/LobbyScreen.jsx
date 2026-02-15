@@ -156,7 +156,7 @@ export default function LobbyScreen() {
           borderRight: 'none',
           display: 'flex', flexDirection: 'column',
           justifyContent: 'center',
-          padding: '16px 0',
+          padding: '16px 1px',
           gap: 6,
           position: 'relative',
           boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), 4px 0 12px rgba(0,0,0,0.5)',
