@@ -995,7 +995,7 @@ export const raceClassSpriteMap = {
     ranger: { ...spriteSheets['elf-ranger'], filter: 'sepia(0.3) saturate(1.5) hue-rotate(340deg)' },
   },
   undead: {
-    warrior: { ...spriteSheets['greatsword-skeleton'], filter: 'hue-rotate(90deg) saturate(1.5) brightness(0.7) contrast(1.3)' },
+    warrior: { ...spriteSheets['shadow-warrior'], filter: 'brightness(0.75) saturate(0.5) contrast(1.2)' },
     mage: spriteSheets.necromancer,
     worge: { ...spriteSheets.skeleton, filter: 'sepia(0.3) hue-rotate(270deg) saturate(1.0) brightness(0.85)' },
     ranger: spriteSheets['undead-ranger'],
