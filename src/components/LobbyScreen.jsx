@@ -1305,7 +1305,6 @@ function HeroSlideshow() {
         addTimer(() => {
           setTransformAnim(tAtk);
           addTimer(() => {
-            setShowVfx(true);
             setDummyAnim('hurt');
             setDummyShake(1);
             addTimer(() => setDummyShake(0), 300);
@@ -1315,7 +1314,6 @@ function HeroSlideshow() {
 
         addTimer(() => {
           setTransformAnim('idle');
-          setShowVfx(false);
           setShowBubble(true);
         }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 200);
 
