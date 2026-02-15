@@ -18,10 +18,10 @@
   --brand-mauve: #7F4A4B;
   --brand-burgundy: #8B372E;
 
-  --frame-inset-top: 4.5%;
-  --frame-inset-side: 5%;
-  --frame-inset-bottom: 12%;
-  --frame-content-bottom: 12%;
+  --frame-inset-top: 0;
+  --frame-inset-side: 0;
+  --frame-inset-bottom: 0;
+  --frame-content-bottom: 0;
 }
 
 * {
@@ -87,54 +87,10 @@ body {
   cursor: text;
 }
 
-.game-frame::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/ui/game-border-frame.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center center;
-  pointer-events: none;
-  z-index: var(--z-ui-frame, 10505);
-  opacity: var(--frame-opacity, 1);
-  image-rendering: auto;
-  transition: opacity 0.4s ease;
+.game-frame.hide-frame {
+  /* no-op, kept for class compatibility */
 }
 
-.game-frame.hide-frame::after {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  :root {
-    --frame-inset-top: 4%;
-    --frame-inset-side: 4.5%;
-    --frame-inset-bottom: 11%;
-    --frame-content-bottom: 11%;
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --frame-inset-top: 3.5%;
-    --frame-inset-side: 4%;
-    --frame-inset-bottom: 10%;
-    --frame-content-bottom: 10%;
-  }
-}
-
-@media (max-height: 600px) {
-  :root {
-    --frame-inset-top: 3%;
-    --frame-inset-bottom: 10%;
-    --frame-content-bottom: 10%;
-  }
-}
 
 .font-cinzel {
   font-family: 'Morpheus', 'Cinzel', serif;
@@ -159,19 +115,6 @@ body {
 
 .ornate-popup {
   position: relative;
-}
-.ornate-popup::after {
-  content: '';
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background-image: url('/ui/game-border-frame.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  z-index: 10;
 }
 
 .panel-style {

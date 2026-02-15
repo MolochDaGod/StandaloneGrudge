@@ -10,7 +10,7 @@ import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIco
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playBowShot, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';
-import PixelBar, { ActionTimerBar } from './PixelBar';
+import { ActionTimerBar } from './PixelBar';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { BATTLE } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
@@ -1270,6 +1270,28 @@ class BattleErrorBoundary extends React.Component {
     }
     return this.props.children;
   }
+}
+
+function BattleStatBar({ label, current, max, color, bright }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+      <span style={{ width: 16, fontSize: '0.55rem', fontWeight: 700, color: bright, textAlign: 'right', fontFamily: "'Cinzel', serif", textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{label}</span>
+      <div style={{
+        flex: 1, height: 8, background: 'rgba(0,0,0,0.6)', borderRadius: 4,
+        overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, bottom: 0,
+          width: `${pct}%`, borderRadius: 4,
+          background: `linear-gradient(180deg, ${bright} 0%, ${color} 100%)`,
+          transition: 'width 0.4s ease',
+          boxShadow: pct > 0 ? `0 0 6px ${color}66` : 'none',
+        }} />
+      </div>
+      <span style={{ minWidth: 32, fontSize: '0.5rem', color: 'rgba(226,232,240,0.7)', fontWeight: 600, textAlign: 'right', textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{Math.floor(current)}</span>
+    </div>
+  );
 }
 
 function BattleScreenInner() {
@@ -3217,11 +3239,10 @@ function BattleScreenInner() {
       <div style={{
         position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
         zIndex: BATTLE.HEADER, pointerEvents: 'auto',
-        display: 'flex', flexDirection: 'column', gap: 3,
+        display: 'flex', flexDirection: 'column', gap: 4,
       }}>
         {playerTeam.map(unit => {
           const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
-          const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hpGreen' : hpPct > 30 ? 'stamina' : 'hp';
           const isCurrentTurn = unit.id === currentUnitId;
           const grudgePct = Math.min(100, unit.grudge || 0);
           const mpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
@@ -3236,29 +3257,31 @@ function BattleScreenInner() {
               onMouseLeave={() => hideTooltip()}
               style={{
                 opacity: unit.alive ? 1 : 0.35,
-                background: isCurrentTurn ? 'rgba(110,231,183,0.08)' : 'rgba(0,0,0,0.4)',
-                border: isCurrentTurn ? '1px solid rgba(110,231,183,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 4,
-                padding: '3px 6px',
-                backdropFilter: 'blur(4px)',
-                minWidth: 100,
+                background: isCurrentTurn ? 'rgba(110,231,183,0.1)' : 'rgba(0,0,0,0.5)',
+                border: isCurrentTurn ? '1px solid rgba(110,231,183,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 6,
+                padding: '5px 8px',
+                backdropFilter: 'blur(6px)',
+                minWidth: 140,
                 transition: 'all 0.3s',
-                boxShadow: isCurrentTurn ? '0 0 8px rgba(110,231,183,0.15)' : 'none',
+                boxShadow: isCurrentTurn ? '0 0 10px rgba(110,231,183,0.2)' : '0 2px 6px rgba(0,0,0,0.4)',
               }}>
               <div style={{
-                fontSize: '0.6rem', fontWeight: 700,
-                color: isCurrentTurn ? '#6ee7b7' : '#c8d6e5',
+                fontSize: '0.7rem', fontWeight: 700,
+                color: isCurrentTurn ? '#6ee7b7' : '#e2e8f0',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                marginBottom: 2,
-                display: 'flex', alignItems: 'center', gap: 3,
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                marginBottom: 4,
+                display: 'flex', alignItems: 'center', gap: 4,
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
               }}>
                 <span>{unit.name}</span>
-                {isCurrentTurn && <span style={{ fontSize: '0.45rem', color: '#6ee7b7', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
-                {grudgePct >= 100 && <InlineIcon name="fire" size={8} />}
+                {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: '#6ee7b7', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                {grudgePct >= 100 && <InlineIcon name="fire" size={10} />}
               </div>
-              <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={5} width={90} />
-              <ActionTimerBar progress={actionProgress} width={90} height={2} isActive={isCurrentTurn} />
+              <BattleStatBar label="HP" current={unit.health} max={unit.maxHealth} color="#22c55e" bright="#5dd98a" />
+              <BattleStatBar label="MP" current={unit.mana} max={unit.maxMana} color="#3b82f6" bright="#6da8ff" />
+              <BattleStatBar label="SP" current={unit.stamina} max={unit.maxStamina} color="#f59e0b" bright="#fbbf24" />
+              <ActionTimerBar progress={actionProgress} width={'100%'} height={3} isActive={isCurrentTurn} />
             </div>
           );
         })}
@@ -3269,11 +3292,10 @@ function BattleScreenInner() {
         <div style={{
           position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
           zIndex: BATTLE.HEADER, pointerEvents: 'auto',
-          display: 'flex', flexDirection: 'column', gap: 3,
+          display: 'flex', flexDirection: 'column', gap: 4,
         }}>
           {enemyTeam.map(unit => {
             const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
-            const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hp' : hpPct > 30 ? 'stamina' : 'hpGreen';
             const isCurrentTurn = unit.id === currentUnitId;
             const turnIdx = battleTurnOrder.indexOf(unit.id);
             const totalUnits = battleTurnOrder.length;
@@ -3285,28 +3307,29 @@ function BattleScreenInner() {
                 onMouseLeave={() => hideTooltip()}
                 style={{
                   opacity: unit.alive ? 1 : 0.35,
-                  background: isCurrentTurn ? 'rgba(239,68,68,0.08)' : 'rgba(0,0,0,0.4)',
-                  border: isCurrentTurn ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: 4,
-                  padding: '3px 6px',
-                  backdropFilter: 'blur(4px)',
-                  minWidth: 90,
+                  background: isCurrentTurn ? 'rgba(239,68,68,0.1)' : 'rgba(0,0,0,0.5)',
+                  border: isCurrentTurn ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 6,
+                  padding: '5px 8px',
+                  backdropFilter: 'blur(6px)',
+                  minWidth: 140,
                   transition: 'all 0.3s',
                   textAlign: 'right',
+                  boxShadow: isCurrentTurn ? '0 0 10px rgba(239,68,68,0.2)' : '0 2px 6px rgba(0,0,0,0.4)',
                 }}>
                 <div style={{
-                  fontSize: '0.6rem', fontWeight: 700,
+                  fontSize: '0.7rem', fontWeight: 700,
                   color: isCurrentTurn ? '#fca5a5' : '#e8a0a0',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  marginBottom: 2,
-                  display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3,
-                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  marginBottom: 4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4,
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                 }}>
-                  {isCurrentTurn && <span style={{ fontSize: '0.45rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                  {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
                   <span>{unit.name}</span>
                 </div>
-                <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={5} width={80} />
-                <ActionTimerBar progress={actionProgress} width={80} height={2} isActive={isCurrentTurn} />
+                <BattleStatBar label="HP" current={unit.health} max={unit.maxHealth} color="#ef4444" bright="#f87171" />
+                <ActionTimerBar progress={actionProgress} width={'100%'} height={3} isActive={isCurrentTurn} />
               </div>
             );
           })}
@@ -3632,25 +3655,30 @@ function BattleScreenInner() {
               </div>
             )}
 
-            {/* Current hero resource bars */}
             {currentUnit && currentUnit.team === 'player' && (
               <div style={{
-                display: 'flex', gap: 6, alignItems: 'center',
-                background: 'rgba(0,0,0,0.4)', borderRadius: 3, padding: '2px 8px',
-                backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.04)',
+                display: 'flex', gap: 8, alignItems: 'center',
+                background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: '4px 10px',
+                backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.06)',
               }}>
-                <span style={{ fontSize: '0.45rem', color: '#6ee7b7', fontWeight: 700, textShadow: '0 1px 2px rgba(0,0,0,0.8)', minWidth: 40 }}>{currentUnit.name}</span>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.35rem', color: '#ef4444', fontWeight: 600 }}>HP</span>
-                  <PixelBar current={currentUnit.health} max={currentUnit.maxHealth} preset={currentUnit.health / currentUnit.maxHealth > 0.6 ? 'hpGreen' : currentUnit.health / currentUnit.maxHealth > 0.3 ? 'stamina' : 'hp'} height={5} width={70} />
+                <span style={{ fontSize: '0.55rem', color: '#6ee7b7', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)', minWidth: 40 }}>{currentUnit.name}</span>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 80 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#5dd98a', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>HP</span>
+                  <div style={{ width: 80, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.health/currentUnit.maxHealth)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #5dd98a, #22c55e)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(34,197,94,0.4)' }} />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.35rem', color: '#60a5fa', fontWeight: 600 }}>MP</span>
-                  <PixelBar current={currentUnit.mana} max={currentUnit.maxMana} preset="mana" height={5} width={50} />
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 60 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#6da8ff', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>MP</span>
+                  <div style={{ width: 60, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.mana/currentUnit.maxMana)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #6da8ff, #3b82f6)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(59,130,246,0.4)' }} />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.35rem', color: '#fbbf24', fontWeight: 600 }}>SP</span>
-                  <PixelBar current={currentUnit.stamina} max={currentUnit.maxStamina} preset="stamina" height={5} width={50} />
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 60 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#fbbf24', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>SP</span>
+                  <div style={{ width: 60, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.stamina/currentUnit.maxStamina)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #fbbf24, #f59e0b)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(245,158,11,0.4)' }} />
+                  </div>
                 </div>
               </div>
             )}

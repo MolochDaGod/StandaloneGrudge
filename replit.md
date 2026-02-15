@@ -12,7 +12,7 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 **UI/UX Decisions:**
 - **Typography & Visuals:** Uses Cinzel (headings), Jost (body), and LifeCraft (Warcraft-style) fonts. Visuals include pixel art sprites, particle and beam effects, a 2D world map with clickable nodes, and animated hero movement. Character cards use race-specific background images.
 - **Screen Flow:** Standard RPG progression: Title → Intro → Lobby → Character Creation → World Map → Locations → Battle.
-- **Game Frame & Layout:** Wrapped in a `.game-frame` with an ornate dark fantasy border frame (`/ui/game-border-frame.png`) featuring stone/metal edges, skull corners, gold Norse knotwork, and amber accent lines. CSS mask-image creates a transparent center so game content shows through. Frame visible on all screens except intro cinematic. Uses CSS custom properties for responsive content-safe insets.
+- **Game Frame & Layout:** Wrapped in a `.game-frame` container with full-width/height layout. No border frame overlay (removed). Content fills entire viewport. Frame inset CSS variables set to 0.
 - **Z-Index Layer System:** A two-context architecture separates content (z-index 10501) from overlays (higher z-indices).
 - **Game UI Overlay System:** Full-screen transparent overlay (`#game-ui-overlay`) for interactive panels. Three bottom-aligned panels (chat, hotbar, war party) use image-based backgrounds and intricate layouts for elements like hero health/mana bars and interactive buttons.
 - **Custom Cursor:** A Dwarven gauntlet pixel art cursor (`/sprites/ui/cursor_gauntlet.png`).
