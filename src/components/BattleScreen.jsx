@@ -226,7 +226,7 @@ function StackedSlashImpact({ x, y, level, color = 'red' }) {
   }, []);
 
   return (
-    <div style={{ position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`, transform: 'translate(-50%, -50%)', zIndex: BATTLE.EFFECT_FLASH, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: BATTLE.EFFECT_FLASH, pointerEvents: 'none' }}>
       {layers.map((layer, i) => {
         const sprite = effectSprites[layer.key];
         if (!sprite) return null;
@@ -294,7 +294,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
   return (
     <div style={{
       position: 'absolute',
-      left: `${x}%`, top: `calc(${y}% - 45px)`,
+      left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
@@ -351,7 +351,7 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
   return (
     <div style={{
       position: 'absolute',
-      left: `${x}%`, top: `calc(${y}% - 45px)`,
+      left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize,
       overflow: 'hidden',
@@ -533,7 +533,7 @@ function DodgeFlashSprite({ x, y }) {
   const col = frame % cols;
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS, opacity: 0.9,
@@ -575,7 +575,7 @@ function CastingSpriteEffect({ x, y }) {
   const row = Math.floor(frame / cols);
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.8,
@@ -626,7 +626,7 @@ function WeaponContactSprite({ x, y, playCount = 1 }) {
   const row = Math.floor(frame / cols);
   return (
     <div style={{
-      position: 'absolute', left: `${x}%`, top: `calc(${y}% - 45px)`,
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
       transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
       width: displaySize, height: displaySize, overflow: 'hidden',
       pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.9,
@@ -831,7 +831,7 @@ function ResurrectEffect({ x, y, onComplete }) {
     <div style={{
       position: 'absolute',
       left: `${x}%`,
-      top: `calc(${y}% - 45px)`,
+      top: `${y}%`,
       transform: 'translate(-50%, -70%)',
       zIndex: BATTLE.EFFECT_BEAMS + 10, pointerEvents: 'none',
       animation: 'resurrectGlow 1.1s ease-out forwards',
@@ -1488,7 +1488,12 @@ export default function BattleScreen() {
 
   const bodyY = useCallback((unit) => {
     if (!unit?.position) return 50;
-    return unit.position.y + 15;
+    const isBossUnit = unit.team === 'enemy' && unit.isBoss;
+    const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
+    const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+    const scale = bossScaleVal * comboScale;
+    const offset = 8 * scale;
+    return unit.position.y - Math.min(offset, 18);
   }, []);
 
   const addParticle = useCallback((type, x, y, color) => {
@@ -3203,7 +3208,7 @@ export default function BattleScreen() {
 
 
       <div style={{
-        position: 'absolute', bottom: 210, right: 16, zIndex: 50,
+        position: 'absolute', bottom: 185, right: 16, zIndex: 50,
       }}>
         <button onClick={toggleAutoBattle} style={{
           background: autoBattleEnabled
@@ -3294,7 +3299,7 @@ export default function BattleScreen() {
       )}
 
       <div style={{
-          flex: '0 0 155px', height: 155, minHeight: 155, maxHeight: 155,
+          flex: '0 0 130px', height: 130, minHeight: 130, maxHeight: 130,
           borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
           zIndex: BATTLE.HEADER,
           display: 'flex', flexDirection: 'row',
@@ -3322,8 +3327,14 @@ export default function BattleScreen() {
               const turnIdx = battleTurnOrder.indexOf(unit.id);
               const totalUnits = battleTurnOrder.length;
               const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
+              const mpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
+              const spPct = unit.maxStamina > 0 ? Math.round((unit.stamina / unit.maxStamina) * 100) : 0;
               return (
-                <div key={unit.id} style={{
+                <div key={unit.id}
+                  onMouseEnter={e => showTooltip(`${unit.name}\nHP: ${unit.health}/${unit.maxHealth}\nMP: ${unit.mana}/${unit.maxMana} (${mpPct}%)\nSP: ${unit.stamina}/${unit.maxStamina} (${spPct}%)\nGrudge: ${Math.round(grudgePct)}%`, e)}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={() => hideTooltip()}
+                  style={{
                   opacity: unit.alive ? 1 : 0.4,
                   borderLeft: isCurrentTurn ? '2px solid var(--accent)' : '2px solid transparent',
                   paddingLeft: 4,
@@ -3340,18 +3351,13 @@ export default function BattleScreen() {
                   }}>
                     <span>{unit.name}</span>
                     {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: 'var(--accent)', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                    {grudgePct >= 100 && (
+                      <span style={{ fontSize: '0.55rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite' }}>!</span>
+                    )}
                   </div>
                   <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.playerBarHeight} width={actionBarLayout.playerBarWidth} />
-                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={actionBarLayout.playerManaHeight} width={actionBarLayout.playerManaWidth} />
-                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={actionBarLayout.playerStaminaHeight} width={actionBarLayout.playerStaminaWidth} />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                    <ActionTimerBar progress={actionProgress} width={grudgePct >= 100 ? 70 : 90} height={4} isActive={isCurrentTurn} />
-                    <PixelBar current={grudgePct} max={100} preset="grudge" height={actionBarLayout.playerGrudgeHeight} width={grudgePct >= 100 ? 42 : 28} />
-                    {grudgePct >= 100 && (
-                      <span style={{ fontSize: '0.55rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 2 }}>
+                    <ActionTimerBar progress={actionProgress} width={actionBarLayout.playerBarWidth} height={4} isActive={isCurrentTurn} />
                   </div>
                 </div>
               );
@@ -3597,85 +3603,67 @@ export default function BattleScreen() {
                 );
               })()}
               <div style={{
-                display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 5,
-                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '4px 8px',
+                display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 4,
+                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '3px 6px',
                 border: '1px solid rgba(139,115,85,0.2)',
               }}>
                 <button onClick={autoAttack} style={{
-                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
-                  backgroundColor: 'rgba(80,30,30,0.5)',
-                  border: '2px solid #8b4444', borderRadius: 4,
-                  padding: '6px 14px', color: '#ef4444', cursor: 'pointer',
-                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
-                  minWidth: 56,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  background: 'rgba(80,30,30,0.5)',
+                  border: '1px solid #8b4444', borderRadius: 4,
+                  padding: '4px 10px', color: '#ef4444', cursor: 'pointer',
+                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(239,68,68,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#8b4444'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
-                ><SpriteIcon src={UI_ICONS.actionAttack} size={16} scale={2} /><span>Attack</span></button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.background = 'rgba(80,30,30,0.8)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#8b4444'; e.currentTarget.style.background = 'rgba(80,30,30,0.5)'; }}
+                ><SpriteIcon src={UI_ICONS.actionAttack} size={14} scale={2} /><span>Attack</span></button>
                 <button onClick={defendTurn} style={{
-                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
-                  backgroundColor: 'rgba(30,40,80,0.5)',
-                  border: '2px solid #445a8b', borderRadius: 4,
-                  padding: '6px 14px', color: '#60a5fa', cursor: 'pointer',
-                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
-                  minWidth: 56,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  background: 'rgba(30,40,80,0.5)',
+                  border: '1px solid #445a8b', borderRadius: 4,
+                  padding: '4px 10px', color: '#60a5fa', cursor: 'pointer',
+                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(96,165,250,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#445a8b'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'; }}
-                ><SpriteIcon src={UI_ICONS.actionDefend} size={16} scale={2} /><span>Defend</span></button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.background = 'rgba(30,40,80,0.8)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#445a8b'; e.currentTarget.style.background = 'rgba(30,40,80,0.5)'; }}
+                ><SpriteIcon src={UI_ICONS.actionDefend} size={14} scale={2} /><span>Defend</span></button>
                 <button onClick={skipTurn} style={{
-                  backgroundImage: `url(${UI_SLOTS.hotbar})`, backgroundSize: 'cover', imageRendering: 'pixelated',
-                  backgroundColor: 'rgba(40,40,50,0.5)',
-                  border: '2px solid #5c5c6a', borderRadius: 4,
-                  padding: '6px 14px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
-                  fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
-                  minWidth: 56,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  background: 'rgba(40,40,50,0.5)',
+                  border: '1px solid #5c5c6a', borderRadius: 4,
+                  padding: '4px 10px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
+                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', gap: 4,
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#5c5c6a'; e.currentTarget.style.transform = 'none'; }}
-                ><InlineIcon name="moon" size={16} /><span>Skip</span></button>
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = 'rgba(40,40,50,0.8)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#5c5c6a'; e.currentTarget.style.background = 'rgba(40,40,50,0.5)'; }}
+                ><InlineIcon name="moon" size={14} /><span>Skip</span></button>
                 {(() => {
                   const consumables = inventory.filter(i => i.slot === 'consumable');
                   if (consumables.length === 0) return null;
                   return (
                     <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
-                      backgroundImage: showItemsPanel ? `url(${UI_SLOTS.hotbarActive})` : `url(${UI_SLOTS.hotbar})`,
-                      backgroundSize: 'cover', imageRendering: 'pixelated',
-                      backgroundColor: showItemsPanel ? 'rgba(34,120,60,0.5)' : 'rgba(30,50,40,0.5)',
-                      border: `2px solid ${showItemsPanel ? '#4ade80' : '#4a7a5a'}`, borderRadius: 4,
-                      padding: '6px 14px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
-                      fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
-                      display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
-                      minWidth: 56,
-                      boxShadow: showItemsPanel ? '0 0 12px rgba(74,222,128,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                      background: showItemsPanel ? 'rgba(34,120,60,0.5)' : 'rgba(30,50,40,0.5)',
+                      border: `1px solid ${showItemsPanel ? '#4ade80' : '#4a7a5a'}`, borderRadius: 4,
+                      padding: '4px 10px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
+                      fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 4,
                     }}
-                    onMouseEnter={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#86efac'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-                    onMouseLeave={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#4a7a5a'; e.currentTarget.style.transform = 'none'; } }}
-                    ><SpriteIcon src={UI_ICONS.actionItem} size={16} scale={2} /><span>Items ({consumables.length})</span></button>
+                    onMouseEnter={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#86efac'; } }}
+                    onMouseLeave={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#4a7a5a'; } }}
+                    ><SpriteIcon src={UI_ICONS.actionItem} size={14} scale={2} /><span>Items ({consumables.length})</span></button>
                   );
                 })()}
                 {(currentUnit.grudge || 0) >= 100 && (
                   <button onClick={useGrudge} style={{
-                    backgroundImage: `url(${UI_SLOTS.hotbarActive})`, backgroundSize: 'cover', imageRendering: 'pixelated',
-                    backgroundColor: 'rgba(120,20,20,0.6)',
-                    border: '2px solid #ef4444', borderRadius: 4,
-                    padding: '6px 14px', color: '#fca5a5', cursor: 'pointer',
-                    fontSize: '0.85rem', fontWeight: 700, transition: 'all 0.15s',
+                    background: 'rgba(120,20,20,0.6)',
+                    border: '1px solid #ef4444', borderRadius: 4,
+                    padding: '4px 10px', color: '#fca5a5', cursor: 'pointer',
+                    fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
                     animation: 'pulse 1s infinite',
                     textShadow: '0 0 8px #ef4444',
-                    display: 'flex', alignItems: 'center', gap: 5, flexDirection: 'column',
-                    minWidth: 56,
-                    boxShadow: '0 0 16px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+                    display: 'flex', alignItems: 'center', gap: 4,
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 24px rgba(239,68,68,0.6), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 16px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
-                  ><InlineIcon name="fire" size={16} /><span>REVENGE</span></button>
+                  ><InlineIcon name="fire" size={14} /><span>REVENGE</span></button>
                 )}
               </div>
               {showItemsPanel && (() => {
@@ -3890,8 +3878,14 @@ export default function BattleScreen() {
               const turnIdx = battleTurnOrder.indexOf(unit.id);
               const totalUnits = battleTurnOrder.length;
               const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
+              const eMpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
+              const eSpPct = unit.maxStamina > 0 ? Math.round((unit.stamina / unit.maxStamina) * 100) : 0;
               return (
-                <div key={unit.id} style={{
+                <div key={unit.id}
+                  onMouseEnter={e => showTooltip(`${unit.name}${unit.isBoss ? ' (Boss)' : ''}\nHP: ${unit.health}/${unit.maxHealth}\nMP: ${unit.mana}/${unit.maxMana} (${eMpPct}%)\nSP: ${unit.stamina}/${unit.maxStamina} (${eSpPct}%)`, e)}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={() => hideTooltip()}
+                  style={{
                   opacity: unit.alive ? 1 : 0.4,
                   borderRight: isCurrentTurn ? '2px solid var(--danger)' : '2px solid transparent',
                   paddingRight: 4,
@@ -3910,15 +3904,8 @@ export default function BattleScreen() {
                     <span>{unit.name}</span>
                   </div>
                   <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.enemyBarHeight} width={actionBarLayout.enemyBarWidth} />
-                  <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={actionBarLayout.enemyManaHeight} width={actionBarLayout.enemyManaWidth} />
-                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={actionBarLayout.enemyStaminaHeight} width={actionBarLayout.enemyStaminaWidth} />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                    <ActionTimerBar progress={actionProgress} width={unit.isBoss ? 70 : actionBarLayout.enemyBarWidth} height={4} isActive={isCurrentTurn} />
-                    {unit.isBoss && (
-                      <PixelBar current={unit.grudge || 0} max={100} preset="grudge" height={actionBarLayout.enemyGrudgeHeight} width={48} />
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 2 }}>
+                    <ActionTimerBar progress={actionProgress} width={actionBarLayout.enemyBarWidth} height={4} isActive={isCurrentTurn} />
                   </div>
                 </div>
               );
