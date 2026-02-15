@@ -328,6 +328,21 @@ body {
   100% { opacity: 1; filter: brightness(1); }
 }
 
+@keyframes warRoomSlideDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes warRoomSlideRight {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes warRoomFadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes battleEntry {
   0% { opacity: 0; transform: scale(1.15); filter: brightness(3); }
   30% { opacity: 1; filter: brightness(1.5); }

@@ -22,7 +22,6 @@ export default function LobbyScreen() {
   const resetGame = useGameStore(s => s.resetGame);
 
   const [activeTab, setActiveTab] = useState('main');
-  const [fadeIn, setFadeIn] = useState(false);
   const [isMuted, setIsMuted] = useState(() => getMusicMuted() && getSfxMuted());
 
   const session = useMemo(() => {
@@ -35,8 +34,6 @@ export default function LobbyScreen() {
 
   useEffect(() => {
     setBgm('intro');
-    const t = setTimeout(() => setFadeIn(true), 100);
-    return () => clearTimeout(t);
   }, []);
 
   const handleContinue = () => {
@@ -81,8 +78,6 @@ export default function LobbyScreen() {
       width: '100%', height: '100%',
       display: 'flex', flexDirection: 'column',
       position: 'relative', overflow: 'hidden',
-      opacity: fadeIn ? 1 : 0,
-      transition: 'opacity 0.5s ease',
     }}>
       <div style={{
         position: 'absolute', inset: 0,
@@ -90,7 +85,10 @@ export default function LobbyScreen() {
         backgroundSize: 'cover', backgroundPosition: 'center',
         zIndex: 0,
       }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0 }} />
+      <div style={{
+        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0,
+        animation: 'fadeIn 1.2s ease 0.3s both',
+      }} />
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '20px 24px',
@@ -98,6 +96,7 @@ export default function LobbyScreen() {
         borderBottom: '1px solid rgba(110,231,183,0.1)',
         position: 'relative', zIndex: 1,
         minHeight: 80,
+        animation: 'warRoomSlideDown 0.6s ease 0.5s both',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/images/grudge_rpg_logo.png" alt="Grudge RPG" style={{
@@ -164,6 +163,7 @@ export default function LobbyScreen() {
           gap: 6,
           position: 'relative',
           boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), 4px 0 12px rgba(0,0,0,0.5)',
+          animation: 'warRoomSlideRight 0.6s ease 0.8s both',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -190,6 +190,7 @@ export default function LobbyScreen() {
 
         <div style={{
           flex: 1, overflow: 'auto', padding: 24,
+          animation: 'warRoomFadeUp 0.7s ease 1.1s both',
         }}>
           {activeTab === 'main' && (
             <MainTab

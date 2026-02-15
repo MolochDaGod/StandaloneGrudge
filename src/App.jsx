@@ -147,7 +147,13 @@ function GameApp() {
       } else if (prev === 'battle') {
         type = 'battleExit';
         duration = 500;
-      } else if ((prev === 'title' && screen === 'intro') || (prev === 'intro' && screen === 'lobby') || (prev === 'title' && screen === 'lobby')) {
+      } else if (prev === 'title' && screen === 'intro') {
+        type = 'cinematic';
+        duration = 700;
+      } else if (prev === 'intro' && screen === 'lobby') {
+        type = 'none';
+        duration = 50;
+      } else if (prev === 'title' && screen === 'lobby') {
         type = 'cinematic';
         duration = 700;
       } else if ((prev === 'create' && screen === 'world') || (prev === 'lobby' && screen === 'world')) {
@@ -219,6 +225,7 @@ function GameApp() {
 
   const getScreenAnimation = () => {
     switch (transitionType) {
+      case 'none': return 'none';
       case 'battleEntry': return 'battleEntry 0.6s ease-out both';
       case 'battleExit': return 'cinematicFade 0.5s ease-out both';
       case 'cinematic': return 'cinematicFade 0.7s ease-out both';
@@ -230,7 +237,7 @@ function GameApp() {
   const contentStyle = isFullBleed ? {
     position: 'relative', zIndex: 10501, width: '100%', height: '100%',
     animation: transitioning ? 'none' : getScreenAnimation(),
-    opacity: transitioning ? 0 : undefined,
+    opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
   } : {
     position: 'absolute', zIndex: 10501,
     top: 'var(--frame-inset-top)',
@@ -238,7 +245,7 @@ function GameApp() {
     right: 'var(--frame-inset-side)',
     bottom: 'var(--frame-inset-bottom)',
     animation: transitioning ? 'none' : getScreenAnimation(),
-    opacity: transitioning ? 0 : undefined,
+    opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
     overflow: 'hidden',
     borderRadius: 2,
   };

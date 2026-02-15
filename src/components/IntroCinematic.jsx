@@ -4,9 +4,9 @@ import { INTRO_CINEMATIC } from '../constants/layers';
 
 export default function IntroCinematic() {
   const setScreen = useGameStore(s => s.setScreen);
-  const [fadeOut, setFadeOut] = useState(false);
   const [showSkip, setShowSkip] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
+  const [holdFrame, setHoldFrame] = useState(false);
   const endedRef = useRef(false);
 
   useEffect(() => {
@@ -26,7 +26,9 @@ export default function IntroCinematic() {
   const handleEnd = () => {
     if (endedRef.current) return;
     endedRef.current = true;
-    setFadeOut(true);
+    setHoldFrame(true);
+    setShowSkip(false);
+    setShowTitle(false);
     setTimeout(() => setScreen('lobby'), 800);
   };
 
@@ -34,11 +36,9 @@ export default function IntroCinematic() {
     <div style={{
       position: 'absolute', inset: 0, background: '#000', zIndex: INTRO_CINEMATIC,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      opacity: fadeOut ? 0 : 1,
-      transition: 'opacity 0.8s ease',
     }}>
       <img
-        src="/backgrounds/tavern_entrance.gif"
+        src={holdFrame ? '/backgrounds/tavern_bg.png' : '/backgrounds/tavern_entrance.gif'}
         alt="Entering the tavern"
         style={{
           width: '100%', height: '100%', objectFit: 'cover',
