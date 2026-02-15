@@ -167,7 +167,7 @@ function HeroCard({ hero, onClick }) {
       )}
       <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
         <img
-          src={`/heroes/portraits/${hero.id}.png`}
+          src={`/heroes/portraits/${hero.id}.png?v=2`}
           alt={hero.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={e => { e.target.style.display = 'none'; }}
@@ -273,7 +273,7 @@ function HeroModal({ hero, onClose, onPrev, onNext }) {
       }}>
         <div style={{ position: 'relative', width: 260, minWidth: 260, overflow: 'hidden' }}>
           <img
-            src={`/heroes/portraits/${hero.id}.png`}
+            src={`/heroes/portraits/${hero.id}.png?v=2`}
             alt={hero.name}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => { e.target.style.display = 'none'; }}
