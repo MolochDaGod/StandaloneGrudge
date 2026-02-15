@@ -961,7 +961,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets.knight,
     mage: spriteSheets['water-priestess'],
     worge: spriteSheets['wind-hashashin'],
-    ranger: { ...spriteSheets['human-ranger'], filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.05)' },
+    ranger: spriteSheets['human-ranger'],
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
