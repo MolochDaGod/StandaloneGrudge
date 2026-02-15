@@ -18,6 +18,7 @@ import { adminConfig } from '../utils/adminConfig';
 import { BATTLE_BACKGROUNDS, STORAGE_KEY as BG_STORAGE_KEY } from './AdminBackgrounds';
 
 const DMG_NUM_SRC = '/effects/damage_numbers.png';
+let _lastProcessedAction = null;
 const DMG_CELL_W = 16, DMG_CELL_H = 20, DMG_COLS = 10, DMG_ROWS_PER_COLOR = 10;
 const DMG_COLOR_OFFSETS = { red: 0, orange: 1, yellow: 2, green: 3 };
 function SpriteNumber({ value, color = 'red', scale = 3 }) {
@@ -1267,7 +1268,6 @@ export default function BattleScreen() {
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
-  const actionProcessedTime = useRef(0);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
 
@@ -1473,13 +1473,9 @@ export default function BattleScreen() {
   }, []);
 
   useEffect(() => {
-    if (!lastAction || lastAction === actionProcessed.current) return;
-    const now = Date.now();
-    if (lastAction.attackerId === actionProcessed.current?.attackerId && 
-        lastAction.abilityId === actionProcessed.current?.abilityId && 
-        now - actionProcessedTime.current < 100) return;
+    if (!lastAction || lastAction === actionProcessed.current || lastAction === _lastProcessedAction) return;
     actionProcessed.current = lastAction;
-    actionProcessedTime.current = now;
+    _lastProcessedAction = lastAction;
 
     const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type, consumableType } = lastAction;
 
