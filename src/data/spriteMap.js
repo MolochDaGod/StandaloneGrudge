@@ -406,6 +406,22 @@ export const spriteSheets = {
     hurt: { src: '/sprites/water-priestess/hurt.png', frames: 7 },
     death: { src: '/sprites/water-priestess/death.png', frames: 16 },
   },
+  'human-mage': {
+    folder: 'human-mage',
+    frameWidth: 288,
+    frameHeight: 128,
+    idle: { src: '/sprites/human-mage/idle.png', frames: 8 },
+    walk: { src: '/sprites/human-mage/walk.png', frames: 10 },
+    attack1: { src: '/sprites/human-mage/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/human-mage/attack2.png', frames: 21 },
+    attack3: { src: '/sprites/human-mage/attack3.png', frames: 27 },
+    cast: { src: '/sprites/human-mage/cast.png', frames: 32 },
+    heal: { src: '/sprites/human-mage/heal.png', frames: 12 },
+    block: { src: '/sprites/human-mage/block.png', frames: 12 },
+    surf: { src: '/sprites/human-mage/surf.png', frames: 8 },
+    hurt: { src: '/sprites/human-mage/hurt.png', frames: 7 },
+    death: { src: '/sprites/human-mage/death.png', frames: 16 },
+  },
   'fire-wizard': {
     folder: 'fire-wizard',
     frameWidth: 128,
@@ -960,7 +976,7 @@ export const spriteSheets = {
 export const raceClassSpriteMap = {
   human: {
     warrior: spriteSheets.knight,
-    mage: spriteSheets['water-priestess'],
+    mage: spriteSheets['human-mage'],
     worge: spriteSheets['wind-hashashin'],
     ranger: spriteSheets['human-ranger'],
   },
