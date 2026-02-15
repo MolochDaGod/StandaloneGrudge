@@ -808,8 +808,8 @@ function ChatBubble({ text, visible, auraColor }) {
   return (
     <div style={{
       position: 'absolute',
-      right: '8%', top: '50%',
-      transform: 'translateY(-50%)',
+      left: '50%', top: '58%',
+      transform: 'translateX(-50%)',
       zIndex: 12,
       opacity: visible ? 1 : 0,
       animation: visible ? 'bubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
@@ -821,8 +821,9 @@ function ChatBubble({ text, visible, auraColor }) {
         border: `1px solid ${glowColor}55`,
         borderRadius: 4,
         padding: '12px 18px',
-        maxWidth: 220,
+        maxWidth: 280,
         minWidth: 140,
+        textAlign: 'center',
         boxShadow: `0 0 20px ${glowColor}22, inset 0 0 30px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.6)`,
       }}>
         <div style={{
