@@ -671,6 +671,7 @@ const LORE_QUOTES = {
 function SlideshowVFXSprite({ effectKey, displaySize = 280, style }) {
   const [frame, setFrame] = useState(0);
   const sprite = effectSprites[effectKey];
+  const mountedRef = useRef(false);
 
   const hasCustomLayout = sprite ? sprite.cols !== undefined : false;
   const cols = hasCustomLayout ? sprite.cols : (sprite ? Math.round(Math.sqrt(sprite.frames)) : 1);
@@ -681,14 +682,16 @@ function SlideshowVFXSprite({ effectKey, displaySize = 280, style }) {
 
   useEffect(() => {
     if (!sprite) return;
+    mountedRef.current = true;
     let f = 0;
     setFrame(0);
     const interval = setInterval(() => {
+      if (!mountedRef.current) { clearInterval(interval); return; }
       f++;
       if (f >= totalFrames) { clearInterval(interval); return; }
       setFrame(f);
     }, 40);
-    return () => clearInterval(interval);
+    return () => { mountedRef.current = false; clearInterval(interval); };
   }, [effectKey, totalFrames]);
 
   if (!sprite) return null;
@@ -886,6 +889,7 @@ function HeroSlideshow() {
   const [showTransform, setShowTransform] = useState(false);
   const [transformAnim, setTransformAnim] = useState('idle');
   const [showTransformVfx, setShowTransformVfx] = useState(false);
+  const [transformPlayId, setTransformPlayId] = useState(0);
   const [textVisible, setTextVisible] = useState(false);
   const [auraIntensity, setAuraIntensity] = useState(0);
   const [spriteX, setSpriteX] = useState(-30);
@@ -1291,6 +1295,7 @@ function HeroSlideshow() {
         const tAtkDuration = tAtkFrames * 80;
 
         addTimer(() => {
+          setTransformPlayId(prev => prev + 1);
           setShowTransformVfx(true);
           setAnim('idle');
           setShowVfx(false);
@@ -1495,7 +1500,7 @@ function HeroSlideshow() {
                 }} />
 
                 {showTransformVfx && (
-                  <div style={{
+                  <div key={`tornado-${transformPlayId}`} style={{
                     position: 'absolute',
                     left: '50%', bottom: 0,
                     transform: 'translateX(-50%)',
@@ -1508,7 +1513,10 @@ function HeroSlideshow() {
                   </div>
                 )}
 
-                {!showTransformVfx && (
+                <div style={{
+                  opacity: showTransformVfx ? 0 : 1,
+                  transition: showTransformVfx ? 'none' : 'opacity 0.2s ease',
+                }}>
                   <SpriteAnimation
                     spriteData={(isWorge && showTransform && worgeTransformData) ? worgeTransformData : spriteData}
                     animation={(isWorge && showTransform) ? transformAnim : anim}
@@ -1530,7 +1538,7 @@ function HeroSlideshow() {
                         : (!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null)
                     }
                   />
-                )}
+                </div>
 
               </div>
             </div>
