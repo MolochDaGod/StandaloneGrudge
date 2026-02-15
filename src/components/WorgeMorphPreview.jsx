@@ -1,68 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getWorgTransformSprite } from '../data/spriteMap';
+import { classes } from '../data/classes';
+
+const worge = classes.worge;
+const normalSkills = worge.abilities.filter(a =>
+  worge.bearFormAbilities[a.id]
+).map(a => ({ name: a.name, icon: a.icon }));
+
+const formSkills = Object.values(worge.bearFormAbilities).map(a => ({
+  name: a.name, icon: a.icon
+}));
 
 export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, speed = 150 }) {
-  const [isBearForm, setIsBearForm] = useState(false);
-  const [isMorphing, setIsMorphing] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsMorphing(true);
-      setTimeout(() => {
-        setIsBearForm(prev => !prev);
-      }, 500);
-      setTimeout(() => {
-        setIsMorphing(false);
-      }, 1000);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const [transformed, setTransformed] = useState(false);
 
   const normalSprite = getPlayerSprite('worge', raceId, namedHeroId);
-  const bearSprite = getWorgTransformSprite(raceId, namedHeroId);
-  const currentSprite = isBearForm ? bearSprite : normalSprite;
-  const frameSize = currentSprite?.frameWidth || currentSprite?.frameHeight || 48;
-  const displaySize = frameSize * scale;
+  const formSprite = getWorgTransformSprite(raceId, namedHeroId);
+
+  const toggle = useCallback(() => setTransformed(prev => !prev), []);
+
+  useEffect(() => {
+    const id = setInterval(toggle, 4000);
+    return () => clearInterval(id);
+  }, [toggle]);
+
+  const sprite = transformed ? formSprite : normalSprite;
+  const skills = transformed ? formSkills : normalSkills;
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'flex-end',
-      justifyContent: 'center',
-      position: 'relative',
-      width: displaySize,
-      height: displaySize,
-    }}>
-      {isMorphing && (
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          bottom: 0,
-          width: displaySize * 0.5,
-          height: displaySize * 1.6,
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(to top, rgba(34,197,94,0.9) 0%, rgba(34,197,94,0.5) 30%, rgba(74,222,128,0.3) 60%, rgba(134,239,172,0.1) 85%, transparent 100%)',
-          borderRadius: '50% 50% 0 0',
-          animation: 'morphColumnPulse 0.4s ease-in-out infinite alternate',
-          pointerEvents: 'none',
-          zIndex: 10,
-          boxShadow: '0 0 20px rgba(34,197,94,0.6), 0 0 40px rgba(34,197,94,0.3)',
-          mixBlendMode: 'screen',
-        }} />
-      )}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-      }}>
-        <SpriteAnimation
-          spriteData={currentSprite}
-          animation="idle"
-          scale={scale}
-          speed={speed}
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <SpriteAnimation
+        spriteData={sprite}
+        animation="idle"
+        scale={scale}
+        speed={speed}
+      />
+      <div style={{ display: 'flex', gap: 4 }}>
+        {skills.map(s => (
+          <div key={s.name} style={{
+            background: transformed ? 'rgba(220,38,38,0.25)' : 'rgba(34,197,94,0.2)',
+            border: `1px solid ${transformed ? 'rgba(220,38,38,0.5)' : 'rgba(34,197,94,0.4)'}`,
+            borderRadius: 4,
+            padding: '2px 6px',
+            fontSize: 9,
+            color: '#e5e5e5',
+            whiteSpace: 'nowrap',
+          }}>
+            {s.name}
+          </div>
+        ))}
       </div>
     </div>
   );
