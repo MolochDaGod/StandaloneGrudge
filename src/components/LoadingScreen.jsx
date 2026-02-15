@@ -62,7 +62,7 @@ export default function LoadingScreen({ progress = 0, total = 1, message = 'Load
         animation: 'fadeIn 0.5s ease'
       }}>
         <h2 className="font-cinzel" style={{
-          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+          fontSize: 'clamp(4.5rem, 12vw, 7.5rem)',
           background: 'linear-gradient(135deg, #6ee7b7, #ffd700, #ef4444)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           marginBottom: 24
