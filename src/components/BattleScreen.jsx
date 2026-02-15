@@ -1231,7 +1231,48 @@ function getHitEffect(unit, abilityName, isRanged, abilityId) {
   return { sprite: effectSprites.hitEffect1, filter: null, postHeal: null, followUp: null };
 }
 
-export default function BattleScreen() {
+class BattleErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error('[BattleScreen Crash]', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: '#0a0a0f', color: '#e2e2e2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Jost, sans-serif', padding: 40, zIndex: 99999 }}>
+          <div style={{ fontSize: '1.8rem', color: '#ef4444', fontFamily: 'Cinzel, serif', marginBottom: 16 }}>Battle Crashed</div>
+          <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: 20, textAlign: 'center', maxWidth: 500 }}>
+            Something went wrong during combat. The error details below will help fix the issue.
+          </div>
+          <div style={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, padding: 16, maxWidth: 600, width: '100%', maxHeight: 200, overflow: 'auto', fontSize: '0.75rem', fontFamily: 'monospace', color: '#f87171', marginBottom: 20 }}>
+            {this.state.error?.toString()}
+            {this.state.errorInfo?.componentStack && (
+              <pre style={{ marginTop: 8, color: '#888', whiteSpace: 'pre-wrap', fontSize: '0.65rem' }}>
+                {this.state.errorInfo.componentStack.slice(0, 500)}
+              </pre>
+            )}
+          </div>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null, errorInfo: null }); window.location.hash = '#lobby'; window.location.reload(); }}
+            style={{ padding: '10px 30px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '1rem' }}
+          >
+            Return to Lobby
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function BattleScreenInner() {
   const {
     battleState, battleUnits, battleTurnOrder, battleCurrentTurn,
     selectedTargetId, lastAction, battleLog, playerClass, playerName,
@@ -3588,5 +3629,13 @@ export default function BattleScreen() {
           </div>
         </div>
     </div>
+  );
+}
+
+export default function BattleScreen() {
+  return (
+    <BattleErrorBoundary>
+      <BattleScreenInner />
+    </BattleErrorBoundary>
   );
 }
