@@ -116,7 +116,9 @@ function getLocationBackgrounds() {
     if (!raw) return BASE_LOCATION_BACKGROUNDS;
     const settings = JSON.parse(raw);
     if (!settings.removed || settings.removed.length === 0) return BASE_LOCATION_BACKGROUNDS;
-    const removedPaths = new Set(settings.removed.map(id => `/backgrounds/${id}.png`));
+    const removedPaths = new Set(settings.removed.flatMap(id => [
+      `/backgrounds/${id}.png`, `/backgrounds/${id}.jpg`
+    ]));
     const filtered = {};
     for (const [zone, path] of Object.entries(BASE_LOCATION_BACKGROUNDS)) {
       if (!removedPaths.has(path)) {
