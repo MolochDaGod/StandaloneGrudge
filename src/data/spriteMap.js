@@ -1014,6 +1014,24 @@ export const raceClassSpriteMap = {
   },
 };
 
+export const raceClassDefaultSpriteKeys = {
+  human: { warrior: 'knight', mage: 'human-mage', worge: 'wind-hashashin', ranger: 'human-ranger' },
+  orc: { warrior: 'elite-orc', mage: 'wizard-pack', worge: 'orc', ranger: 'armored-orc' },
+  elf: { warrior: 'hero-knight', mage: 'evil-wizard-3', worge: 'priest', ranger: 'elf-ranger' },
+  undead: { warrior: 'greatsword-skeleton', mage: 'necromancer', worge: 'skeleton', ranger: 'undead-ranger' },
+  barbarian: { warrior: 'barbarian-warrior', mage: 'barbarian-mage', worge: 'soldier', ranger: 'martial-hero' },
+  dwarf: { warrior: 'crystal-mauler', mage: 'fire-wizard', worge: 'dwarf-worge', ranger: 'dwarf-ranger' },
+};
+
+export const raceClassDefaultProps = {
+  human: { warrior: {}, mage: {}, worge: {}, ranger: {} },
+  orc: { warrior: {}, mage: { filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 }, worge: {}, ranger: {} },
+  elf: { warrior: { filter: 'saturate(0.6) brightness(1.15) hue-rotate(10deg)' }, mage: { filter: 'saturate(0.15) brightness(1.4) hue-rotate(200deg)' }, worge: { filter: 'hue-rotate(80deg) saturate(1.4) brightness(1.0) contrast(1.1)' }, ranger: { filter: 'sepia(0.3) saturate(1.5) hue-rotate(340deg)' } },
+  undead: { warrior: { filter: 'hue-rotate(90deg) saturate(1.5) brightness(0.7) contrast(1.3)' }, mage: {}, worge: { filter: 'sepia(0.3) hue-rotate(270deg) saturate(1.0) brightness(0.85)' }, ranger: {} },
+  barbarian: { warrior: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)', scale: 1.35 }, mage: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' }, worge: { filter: 'sepia(0.5) saturate(1.2) brightness(0.85)', scale: 1.35 }, ranger: {} },
+  dwarf: { warrior: {}, mage: { filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' }, worge: {}, ranger: {} },
+};
+
 export const warriorTransformSprite = spriteSheets['demon-sword'];
 
 export const nightborneSprite = {
@@ -1984,7 +2002,30 @@ export const weaponSkillEffectMap = {
   ws_lance_sweep: { effect: 'smearH1', beam: null, anim: 'attack2', isAoE: true, followUp: [{ effect: 'smearH2', delay: 100 }, { effect: 'arcaneslash', delay: 260 }, { effect: 'impactWhiteA', delay: 430 }, { effect: 'smokeVfx1', delay: 600 }] },
 };
 
+export function getSpriteSheetKeys() {
+  return Object.keys(spriteSheets);
+}
+
+export function getSpriteSheetByKey(key) {
+  return spriteSheets[key] || null;
+}
+
 export function getRaceClassSprite(raceId, classId) {
+  try {
+    const raw = localStorage.getItem('adminSpriteOverrides');
+    if (raw) {
+      const overrides = JSON.parse(raw);
+      const key = `${raceId}-${classId}`;
+      const override = overrides[key];
+      if (override && override.spriteSheet && spriteSheets[override.spriteSheet]) {
+        const base = { ...spriteSheets[override.spriteSheet] };
+        if (override.scale) base.scale = override.scale;
+        if (override.filter) base.filter = override.filter;
+        if (override.dwarfTransform) base.dwarfTransform = override.dwarfTransform;
+        return base;
+      }
+    }
+  } catch {}
   const raceMap = raceClassSpriteMap[raceId];
   if (raceMap && raceMap[classId]) return raceMap[classId];
   return classSpriteMap[classId] || classSpriteMap.warrior;

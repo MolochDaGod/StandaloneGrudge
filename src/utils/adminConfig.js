@@ -8,6 +8,7 @@ const KEYS = {
   spriteLayers: 'adminEffectLayers',
   spriteEditorLayout: 'adminSpriteLayout',
   pvpPlacements: 'grudge-admin-pvp-placements',
+  spriteOverrides: 'adminSpriteOverrides',
 };
 
 const DEFAULTS = {
@@ -169,6 +170,34 @@ export const adminConfig = {
   },
   savePvpPlacements(data) {
     save('pvpPlacements', data);
+  },
+
+  getSpriteOverrides() {
+    return load('spriteOverrides') || {};
+  },
+  saveSpriteOverrides(data) {
+    save('spriteOverrides', data);
+  },
+  getSpriteOverride(raceId, classId) {
+    const all = load('spriteOverrides') || {};
+    return all[`${raceId}-${classId}`] || null;
+  },
+  saveSpriteOverride(raceId, classId, override) {
+    const all = load('spriteOverrides') || {};
+    if (override) {
+      all[`${raceId}-${classId}`] = override;
+    } else {
+      delete all[`${raceId}-${classId}`];
+    }
+    save('spriteOverrides', all);
+  },
+  resetSpriteOverride(raceId, classId) {
+    const all = load('spriteOverrides') || {};
+    delete all[`${raceId}-${classId}`];
+    save('spriteOverrides', all);
+  },
+  resetAllSpriteOverrides() {
+    remove('spriteOverrides');
   },
 
   resetAll() {

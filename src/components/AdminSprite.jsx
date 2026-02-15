@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import SpriteAnimation from './SpriteAnimation';
-import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets, EFFECT_TYPE_TAGS } from '../data/spriteMap';
+import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets, EFFECT_TYPE_TAGS, getSpriteSheetKeys, getSpriteSheetByKey, raceClassDefaultSpriteKeys, raceClassDefaultProps, getRaceClassSprite } from '../data/spriteMap';
+import { adminConfig } from '../utils/adminConfig';
 import { classDefinitions } from '../data/classes';
 import { WEAPON_SKILLS, CLASS_EQUIPMENT_RULES } from '../data/equipment';
 import { SPRITE_REGISTRY, CATEGORY_META, getRegistryStats, searchRegistry } from '../data/spriteRegistry';
@@ -14,13 +15,14 @@ const allBuffKeys = Object.keys(buffVisuals);
 const allWeaponKeys = Object.keys(weaponVisuals);
 
 const TABS = [
+  { id: 'mapper', label: 'Sprite Mapper', icon: '\u{1F5FA}\uFE0F' },
   { id: 'catalog', label: 'Catalog', icon: 'ID' },
   { id: 'characters', label: 'Characters', icon: '\u{1F9D1}' },
   { id: 'effects', label: 'Effects Gallery', icon: '\u{1F4A5}' },
   { id: 'projectiles', label: 'Projectiles', icon: '\u{1F3AF}' },
   { id: 'buffs', label: 'Buffs & Effects', icon: '\u2728' },
   { id: 'weapons', label: 'Weapons', icon: '\u2694\uFE0F' },
-  { id: 'layers', label: 'Effect Layers', icon: '\u{1F4DA}' },
+  { id: 'layers', label: 'Effect Layers', icon: '\u{1F4DA}' }
 ];
 
 const EFFECT_CATEGORIES = {
@@ -413,8 +415,275 @@ function EffectLayerPreview({ layers, speed = 80 }) {
   );
 }
 
+const allSpriteSheetKeys = getSpriteSheetKeys();
+const RACE_COLORS = { human: '#f59e0b', orc: '#ef4444', elf: '#22d3ee', undead: '#a855f7', barbarian: '#f97316', dwarf: '#10b981' };
+const CLASS_LABELS = { warrior: 'Warrior', mage: 'Mage', worge: 'Worge', ranger: 'Ranger' };
+
+function SpriteMapperTab() {
+  const [overrides, setOverrides] = useState(() => adminConfig.getSpriteOverrides());
+  const [selected, setSelected] = useState(null);
+  const [editSheet, setEditSheet] = useState('');
+  const [editScale, setEditScale] = useState(1);
+  const [editFilter, setEditFilter] = useState('');
+  const [editTransform, setEditTransform] = useState('');
+  const [previewAnim, setPreviewAnim] = useState('idle');
+  const [sheetSearch, setSheetSearch] = useState('');
+  const [saved, setSaved] = useState('');
+
+  const selectCombo = useCallback((r, c) => {
+    const key = `${r}-${c}`;
+    setSelected({ race: r, cls: c, key });
+    const ov = overrides[key];
+    if (ov) {
+      setEditSheet(ov.spriteSheet || '');
+      setEditScale(ov.scale || 1);
+      setEditFilter(ov.filter || '');
+      setEditTransform(ov.dwarfTransform || '');
+    } else {
+      const defaultKey = raceClassDefaultSpriteKeys[r]?.[c] || '';
+      const defaultProps = raceClassDefaultProps[r]?.[c] || {};
+      setEditSheet(defaultKey);
+      setEditScale(defaultProps.scale || 1);
+      setEditFilter(defaultProps.filter || '');
+      setEditTransform(defaultProps.dwarfTransform || '');
+    }
+    setPreviewAnim('idle');
+    setSheetSearch('');
+  }, [overrides]);
+
+  const handleSave = useCallback(() => {
+    if (!selected) return;
+    const defaultKey = raceClassDefaultSpriteKeys[selected.race]?.[selected.cls] || '';
+    const defaultProps = raceClassDefaultProps[selected.race]?.[selected.cls] || {};
+    const isDefault = editSheet === defaultKey
+      && (editScale === (defaultProps.scale || 1))
+      && (editFilter === (defaultProps.filter || ''))
+      && (editTransform === (defaultProps.dwarfTransform || ''));
+    if (isDefault) {
+      adminConfig.resetSpriteOverride(selected.race, selected.cls);
+      const next = { ...overrides };
+      delete next[selected.key];
+      setOverrides(next);
+    } else {
+      const ov = { spriteSheet: editSheet };
+      if (editScale && editScale !== 1) ov.scale = editScale;
+      if (editFilter) ov.filter = editFilter;
+      if (editTransform) ov.dwarfTransform = editTransform;
+      adminConfig.saveSpriteOverride(selected.race, selected.cls, ov);
+      setOverrides({ ...overrides, [selected.key]: ov });
+    }
+    setSaved('Saved!');
+    setTimeout(() => setSaved(''), 1500);
+  }, [selected, editSheet, editScale, editFilter, editTransform, overrides]);
+
+  const handleReset = useCallback(() => {
+    if (!selected) return;
+    adminConfig.resetSpriteOverride(selected.race, selected.cls);
+    const next = { ...overrides };
+    delete next[selected.key];
+    setOverrides(next);
+    const defaultKey = raceClassDefaultSpriteKeys[selected.race]?.[selected.cls] || '';
+    const defaultProps = raceClassDefaultProps[selected.race]?.[selected.cls] || {};
+    setEditSheet(defaultKey);
+    setEditScale(defaultProps.scale || 1);
+    setEditFilter(defaultProps.filter || '');
+    setEditTransform(defaultProps.dwarfTransform || '');
+    setSaved('Reset!');
+    setTimeout(() => setSaved(''), 1500);
+  }, [selected, overrides]);
+
+  const handleResetAll = useCallback(() => {
+    adminConfig.resetAllSpriteOverrides();
+    setOverrides({});
+    if (selected) {
+      const defaultKey = raceClassDefaultSpriteKeys[selected.race]?.[selected.cls] || '';
+      const defaultProps = raceClassDefaultProps[selected.race]?.[selected.cls] || {};
+      setEditSheet(defaultKey);
+      setEditScale(defaultProps.scale || 1);
+      setEditFilter(defaultProps.filter || '');
+      setEditTransform(defaultProps.dwarfTransform || '');
+    }
+    setSaved('All Reset!');
+    setTimeout(() => setSaved(''), 1500);
+  }, [selected]);
+
+  const previewSprite = useMemo(() => {
+    if (!editSheet) return null;
+    const base = getSpriteSheetByKey(editSheet);
+    if (!base) return null;
+    const result = { ...base };
+    if (editFilter) result.filter = editFilter;
+    return result;
+  }, [editSheet, editFilter]);
+
+  const previewAnims = useMemo(() => {
+    if (!previewSprite) return [];
+    return Object.keys(previewSprite).filter(k => typeof previewSprite[k] === 'object' && previewSprite[k]?.src && previewSprite[k]?.frames);
+  }, [previewSprite]);
+
+  const filteredSheetKeys = useMemo(() => {
+    if (!sheetSearch) return allSpriteSheetKeys;
+    const q = sheetSearch.toLowerCase();
+    return allSpriteSheetKeys.filter(k => k.toLowerCase().includes(q));
+  }, [sheetSearch]);
+
+  const overrideCount = Object.keys(overrides).length;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: '#8a7d65' }}>
+          Assign sprite sheets to each race/class combo. Changes apply instantly in-game.
+          {overrideCount > 0 && <span style={{ color: '#f59e0b', marginLeft: 8 }}>{overrideCount} override{overrideCount > 1 ? 's' : ''} active</span>}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {saved && <span style={{ color: '#22c55e', fontSize: 12, fontWeight: 600 }}>{saved}</span>}
+          {overrideCount > 0 && (
+            <button onClick={handleResetAll} style={{ ...S.btn('#ef4444'), fontSize: 11 }}>Reset All Overrides</button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ flex: '0 0 55%' }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 4 }}>
+            <thead>
+              <tr>
+                <th style={{ fontSize: 11, color: '#8a7d65', textAlign: 'left', padding: '4px 8px' }}></th>
+                {classes.map(c => (
+                  <th key={c} style={{ fontSize: 11, color: '#c4b998', textAlign: 'center', padding: '4px 8px', fontFamily: "'Cinzel', serif" }}>{CLASS_LABELS[c]}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {races.map(r => (
+                <tr key={r}>
+                  <td style={{ fontSize: 12, color: RACE_COLORS[r], fontWeight: 700, padding: '4px 8px', fontFamily: "'Cinzel', serif", textTransform: 'capitalize' }}>{r}</td>
+                  {classes.map(c => {
+                    const comboKey = `${r}-${c}`;
+                    const hasOverride = !!overrides[comboKey];
+                    const isSelected = selected?.key === comboKey;
+                    const currentSheet = hasOverride ? overrides[comboKey].spriteSheet : (raceClassDefaultSpriteKeys[r]?.[c] || '?');
+                    const currentSprite = getRaceClassSprite(r, c);
+                    const baseScale = currentSprite ? (50 / (currentSprite.frameHeight || 100)) : 0.5;
+                    return (
+                      <td key={c} onClick={() => selectCombo(r, c)} style={{
+                        background: isSelected ? 'rgba(255,215,0,0.12)' : hasOverride ? 'rgba(245,158,11,0.08)' : 'rgba(20,15,30,0.7)',
+                        border: isSelected ? '2px solid #ffd700' : hasOverride ? '1px solid #f59e0b55' : '1px solid rgba(255,215,0,0.06)',
+                        borderRadius: 6, padding: 6, cursor: 'pointer', textAlign: 'center', position: 'relative',
+                        transition: 'all 0.15s',
+                      }}>
+                        <div style={{ height: 52, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden' }}>
+                          {currentSprite && <SpriteAnimation spriteData={currentSprite} animation="idle" scale={baseScale} loop={true} speed={150} containerless={false} />}
+                        </div>
+                        <div style={{ fontSize: 8, color: hasOverride ? '#f59e0b' : '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {currentSheet}
+                        </div>
+                        {hasOverride && (
+                          <div style={{ position: 'absolute', top: 2, right: 2, width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} title="Overridden" />
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ flex: '1 1 45%' }}>
+          {!selected ? (
+            <div style={{ ...S.panel, textAlign: 'center', padding: 40 }}>
+              <div style={{ fontSize: 14, color: '#8a7d65', marginBottom: 8 }}>Select a race/class combo to edit</div>
+              <div style={{ fontSize: 11, color: '#4a5568' }}>Click any cell in the grid to change its sprite sheet, scale, filter, or transform</div>
+            </div>
+          ) : (
+            <div style={S.panel}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <span style={{ color: RACE_COLORS[selected.race], fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700, textTransform: 'capitalize' }}>{selected.race}</span>
+                  <span style={{ color: '#8a7d65', margin: '0 6px' }}>/</span>
+                  <span style={{ color: '#ffd700', fontFamily: "'Cinzel', serif", fontSize: 16, fontWeight: 700 }}>{CLASS_LABELS[selected.cls]}</span>
+                  {overrides[selected.key] && <span style={{ color: '#f59e0b', fontSize: 10, marginLeft: 8, fontWeight: 600 }}>OVERRIDDEN</span>}
+                </div>
+                <button onClick={() => setSelected(null)} style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(255,215,0,0.2)', background: 'rgba(20,15,30,0.8)', color: '#6b7280', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>X</button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, background: 'rgba(10,8,20,0.8)', borderRadius: 8, padding: 16, border: '1px solid rgba(255,215,0,0.08)' }}>
+                <div style={{ height: 140, overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  {previewSprite && (
+                    <div style={{ transform: `scale(${editScale})${editTransform ? ' ' + editTransform : ''}`, transformOrigin: 'bottom center' }}>
+                      <SpriteAnimation spriteData={previewSprite} animation={previewAnim} scale={140 / (previewSprite.frameHeight || 100)} loop={true} speed={120} containerless={false} />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {previewAnims.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 10 }}>
+                  {previewAnims.map(a => (
+                    <button key={a} onClick={() => setPreviewAnim(a)} style={{
+                      padding: '2px 8px', fontSize: 10, borderRadius: 4, cursor: 'pointer',
+                      background: previewAnim === a ? 'rgba(139,92,246,0.3)' : 'rgba(20,15,30,0.6)',
+                      border: previewAnim === a ? '1px solid #8b5cf6' : '1px solid rgba(255,255,255,0.08)',
+                      color: previewAnim === a ? '#ffd700' : '#8a7d65',
+                    }}>{a}</button>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ ...S.row, marginBottom: 4 }}>
+                  <span style={{ ...S.label, minWidth: 80 }}>Sprite Sheet</span>
+                  <input type="text" value={sheetSearch} onChange={e => setSheetSearch(e.target.value)} placeholder="Search sheets..." style={{ ...S.select, flex: 1, fontSize: 11 }} />
+                </div>
+                <select value={editSheet} onChange={e => { setEditSheet(e.target.value); setPreviewAnim('idle'); }} style={{ ...S.select, width: '100%', fontSize: 12, padding: '6px 8px' }} size={8}>
+                  {filteredSheetKeys.map(k => (
+                    <option key={k} value={k} style={{ padding: '2px 4px', color: k === (raceClassDefaultSpriteKeys[selected.race]?.[selected.cls]) ? '#ffd700' : '#e0d6c2' }}>{k}{k === (raceClassDefaultSpriteKeys[selected.race]?.[selected.cls]) ? ' (default)' : ''}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={S.row}>
+                <span style={{ ...S.label, minWidth: 80 }}>Scale</span>
+                <input type="range" min={0.3} max={3} step={0.05} value={editScale} onChange={e => setEditScale(Number(e.target.value))} style={{ flex: 1 }} />
+                <span style={S.val}>{editScale.toFixed(2)}x</span>
+              </div>
+
+              <div style={S.row}>
+                <span style={{ ...S.label, minWidth: 80 }}>CSS Filter</span>
+                <input type="text" value={editFilter} onChange={e => setEditFilter(e.target.value)} placeholder="e.g. hue-rotate(90deg) saturate(1.4)" style={{ ...S.select, flex: 1, fontSize: 11 }} />
+              </div>
+
+              <div style={S.row}>
+                <span style={{ ...S.label, minWidth: 80 }}>Transform</span>
+                <input type="text" value={editTransform} onChange={e => setEditTransform(e.target.value)} placeholder="e.g. scaleX(1.3) scaleY(0.75)" style={{ ...S.select, flex: 1, fontSize: 11 }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={handleSave} style={{ ...S.btn('#22c55e'), flex: 1, padding: '8px 12px', fontSize: 13 }}>Save</button>
+                <button onClick={handleReset} style={{ ...S.btn('#6b7280'), padding: '8px 12px', fontSize: 13 }}>Reset to Default</button>
+              </div>
+
+              <div style={{ marginTop: 10, fontSize: 10, color: '#4a5568' }}>
+                Default: <span style={{ color: '#8a7d65', fontFamily: 'monospace' }}>{raceClassDefaultSpriteKeys[selected.race]?.[selected.cls] || '—'}</span>
+                {raceClassDefaultProps[selected.race]?.[selected.cls]?.filter && (
+                  <span> | Filter: <span style={{ color: '#a855f7', fontFamily: 'monospace' }}>{raceClassDefaultProps[selected.race][selected.cls].filter}</span></span>
+                )}
+                {raceClassDefaultProps[selected.race]?.[selected.cls]?.scale && (
+                  <span> | Scale: <span style={{ color: '#3b82f6' }}>{raceClassDefaultProps[selected.race][selected.cls].scale}x</span></span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSprite() {
-  const [tab, setTab] = useState('catalog');
+  const [tab, setTab] = useState('mapper');
   const [race, setRace] = useState('human');
   const [cls, setCls] = useState('warrior');
   const [selectedSkill, setSelectedSkill] = useState(null);
@@ -567,6 +836,8 @@ export default function AdminSprite() {
             }}>{t.icon} {t.label}</button>
           ))}
         </div>
+
+        {tab === 'mapper' && <SpriteMapperTab />}
 
         {tab === 'catalog' && (
           <div>
