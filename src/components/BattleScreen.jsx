@@ -425,8 +425,8 @@ function WorgeTornadoVFX({ spriteSize }) {
   const cols = sprite.cols;
   const frameW = sprite.frameW;
   const frameH = sprite.frameH;
-  const displayW = spriteSize * 1.2;
-  const displayH = spriteSize * 1.6;
+  const displayW = spriteSize * 0.8;
+  const displayH = spriteSize * 1.0;
   const scaleX = displayW / frameW;
   const scaleY = displayH / frameH;
 
@@ -448,7 +448,7 @@ function WorgeTornadoVFX({ spriteSize }) {
       position: 'absolute',
       left: '50%',
       bottom: 0,
-      transform: 'translateX(-50%)',
+      transform: 'translate(-50%, 0)',
       width: displayW,
       height: displayH,
       overflow: 'hidden',
@@ -2687,7 +2687,17 @@ export default function BattleScreen() {
               )}
 
               {morphingUnits[unit.id] && unit.alive && (
-                <>
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  overflow: 'visible',
+                  pointerEvents: 'none',
+                  zIndex: 20,
+                }}>
                   {(morphingUnits[unit.id] === 'blink1' || morphingUnits[unit.id] === 'blink2') && (
                     <div style={{
                       position: 'absolute',
@@ -2699,7 +2709,6 @@ export default function BattleScreen() {
                         : 'radial-gradient(ellipse, rgba(250,204,21,0.8) 0%, rgba(34,197,94,0.4) 50%, transparent 80%)',
                       animation: 'morphBlinkPulse 0.2s ease-in-out infinite alternate',
                       pointerEvents: 'none',
-                      zIndex: 20,
                       mixBlendMode: 'screen',
                       borderRadius: '50%',
                     }} />
@@ -2707,7 +2716,7 @@ export default function BattleScreen() {
                   {morphingUnits[unit.id] === 'tornado' && (
                     <WorgeTornadoVFX spriteSize={spriteSize} />
                   )}
-                </>
+                </div>
               )}
 
               {isBearForm && unit.alive && (
