@@ -6,7 +6,7 @@ import { attributeDefinitions, calculateCombatPower, getBuildClassification, get
 import { getZoneTerrain } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
-import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap, getBearFormAbilityPool, getDefaultBearLoadout, getBearFormAbilityMap } from '../utils/abilityLoadout';
+import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
@@ -257,9 +257,9 @@ function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
               HoT {ability.duration}T
             </span>
           )}
-          {(ability.type === 'buff' || ability.type === 'revert_form') && ability.damage === 0 && (
+          {ability.type === 'buff' && ability.damage === 0 && (
             <span style={{ fontSize: '0.55rem', padding: '1px 5px', borderRadius: 3, background: 'rgba(110,231,183,0.15)', color: 'var(--accent)' }}>
-              {ability.type === 'revert_form' ? 'Revert' : 'Buff'}
+              Buff
             </span>
           )}
           {ability.manaCost > 0 && (
@@ -372,7 +372,7 @@ function LoadoutSlotRow({ idx, loadout, abilityMap, cls, slotOptions, onSelect, 
   );
 }
 
-function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout, setHeroBearLoadout }) {
+function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout }) {
   const weaponType = hero.equipment?.weapon?.weaponType || null;
   const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId, weaponType);
   const abilityMap = useMemo(() => getAllAbilityMap(hero.classId, weaponType, hero.unlockedSkills || {}), [hero.classId, weaponType, hero.unlockedSkills]);
@@ -384,37 +384,15 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
     return result;
   }, [hero.classId, weaponType, hero.unlockedSkills]);
 
-  const isWorge = hero.classId === 'worge';
-  const [bearSelectingSlot, setBearSelectingSlot] = useState(null);
-
-  const bearLoadout = hero.bearFormLoadout || (isWorge ? getDefaultBearLoadout() : []);
-  const bearPool = useMemo(() => isWorge ? getBearFormAbilityPool(hero.unlockedSkills || {}) : [], [isWorge, hero.unlockedSkills]);
-  const bearAbilityMap = useMemo(() => {
-    const map = {};
-    for (const ab of bearPool) map[ab.id] = ab;
-    return map;
-  }, [bearPool]);
-
   const handleSlotSelect = (slotIdx, abilityId) => {
     const newLoadout = [...loadout];
     newLoadout[slotIdx] = abilityId;
     setHeroLoadout(hero.id, newLoadout);
   };
 
-  const handleBearSlotSelect = (slotIdx, abilityId) => {
-    const newLoadout = [...bearLoadout];
-    newLoadout[slotIdx] = abilityId;
-    setHeroBearLoadout(hero.id, newLoadout);
-  };
-
   const resetLoadout = () => {
     setHeroLoadout(hero.id, getDefaultLoadout(hero.classId, weaponType));
     setSelectingSlot(null);
-  };
-
-  const resetBearLoadout = () => {
-    setHeroBearLoadout(hero.id, getDefaultBearLoadout());
-    setBearSelectingSlot(null);
   };
 
   const getSlotOptions = (slotIdx) => {
@@ -426,21 +404,13 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
     });
   };
 
-  const getBearSlotOptions = (slotIdx) => {
-    return bearPool.filter(ab => {
-      if (bearLoadout[slotIdx] === ab.id) return true;
-      return !bearLoadout.includes(ab.id);
-    });
-  };
-
   const normalColor = cls?.color || 'var(--accent)';
-  const bearColor = '#d97706';
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <h4 style={{ color: normalColor, fontSize: '0.85rem', margin: 0 }}>
-          {isWorge ? 'Normal Form' : 'Ability Loadout'}
+          Ability Loadout
         </h4>
         <button onClick={resetLoadout} style={{
           background: 'rgba(100,100,120,0.2)', border: '1px solid var(--border)',
@@ -493,54 +463,19 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
               slotOptions={getSlotOptions(idx)}
               onSelect={handleSlotSelect}
               isSelected={selectingSlot === idx}
-              onToggle={(i) => { setBearSelectingSlot(null); setSelectingSlot(selectingSlot === i ? null : i); }}
+              onToggle={(i) => { setSelectingSlot(selectingSlot === i ? null : i); }}
               accentColor={normalColor}
             />
           );
         })}
       </div>
 
-      {isWorge && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 10 }}>
-            <h4 style={{ color: bearColor, fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <InlineIcon name="wolf" size={16} /> Bear Form
-            </h4>
-            <button onClick={resetBearLoadout} style={{
-              background: 'rgba(100,100,120,0.2)', border: '1px solid var(--border)',
-              borderRadius: 6, padding: '3px 10px', fontSize: '0.65rem',
-              color: 'var(--muted)', cursor: 'pointer',
-            }}>Reset</button>
-          </div>
-
-          <div style={{ fontSize: '0.55rem', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.3 }}>
-            These abilities are used when transformed into bear form.
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <LoadoutSlotRow
-                key={`bear-${idx}`}
-                idx={idx}
-                loadout={bearLoadout}
-                abilityMap={bearAbilityMap}
-                cls={cls}
-                slotOptions={getBearSlotOptions(idx)}
-                onSelect={handleBearSlotSelect}
-                isSelected={bearSelectingSlot === idx}
-                onToggle={(i) => { setSelectingSlot(null); setBearSelectingSlot(bearSelectingSlot === i ? null : i); }}
-                accentColor={bearColor}
-              />
-            ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
 function HeroDetailPanel({ hero, onClose }) {
-  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout, setHeroBearLoadout } = useGameStore();
+  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout } = useGameStore();
   const [tab, setTab] = useState('stats');
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -1303,7 +1238,7 @@ function HeroDetailPanel({ hero, onClose }) {
         })()}
 
         {tab === 'abilities' && (
-          <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} setHeroBearLoadout={setHeroBearLoadout} />
+          <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} />
         )}
 
         {tab === 'skills' && tree && (() => {

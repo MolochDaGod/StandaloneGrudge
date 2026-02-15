@@ -1267,6 +1267,7 @@ export default function BattleScreen() {
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
   const logRef = useRef(null);
   const actionProcessed = useRef(null);
+  const actionProcessedTime = useRef(0);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
 
@@ -1365,27 +1366,12 @@ export default function BattleScreen() {
     for (const ab of allAbilities) {
       abilityMap[ab.id] = ab;
     }
-    if (currentCls.bearFormAbilities) {
-      for (const ab of Object.values(currentCls.bearFormAbilities)) {
-        abilityMap[ab.id] = ab;
-      }
-      abilityMap['revert_form'] = {
-        id: 'revert_form', name: 'Revert Form', icon: 'wolf',
-        description: 'Revert to your normal form',
-        type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self'
-      };
-    }
-
-    if (currentUnit.bearForm && currentUnit.bearFormLoadout?.length > 0) {
-      return currentUnit.bearFormLoadout.map(id => abilityMap[id]).filter(Boolean);
-    }
-
     const loadout = currentUnit.abilityLoadout;
     if (loadout && loadout.length > 0) {
       return loadout.map(id => abilityMap[id]).filter(Boolean);
     }
     return allAbilities.slice(0, 5);
-  }, [currentCls, currentUnit?.bearForm, currentUnit?.bearFormLoadout, currentUnit?.abilities, currentUnit?.abilityLoadout]);
+  }, [currentCls, currentUnit?.abilities, currentUnit?.abilityLoadout]);
 
   useEffect(() => {
     setBgm('battle');
@@ -1437,8 +1423,8 @@ export default function BattleScreen() {
     const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
     const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
     const scale = bossScaleVal * comboScale;
-    const offset = 8 * scale;
-    return unit.position.y - Math.min(offset, 18);
+    const offset = 18 * scale;
+    return unit.position.y - Math.min(offset, 35);
   }, []);
 
   const addParticle = useCallback((type, x, y, color) => {
@@ -1488,7 +1474,12 @@ export default function BattleScreen() {
 
   useEffect(() => {
     if (!lastAction || lastAction === actionProcessed.current) return;
+    const now = Date.now();
+    if (lastAction.attackerId === actionProcessed.current?.attackerId && 
+        lastAction.abilityId === actionProcessed.current?.abilityId && 
+        now - actionProcessedTime.current < 100) return;
     actionProcessed.current = lastAction;
+    actionProcessedTime.current = now;
 
     const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type, consumableType } = lastAction;
 
@@ -2200,13 +2191,15 @@ export default function BattleScreen() {
         }
       } else {
         playBuff();
-        if (attacker.position) {
-          addParticle('cast', attacker.position.x, bodyY(attacker), '#6ee7b7');
+        const isSelfBuff = attackerId === targetId;
+        const effectUnit = isSelfBuff ? attacker : (target || attacker);
+        if (effectUnit?.position) {
+          addParticle('cast', effectUnit.position.x, bodyY(effectUnit), '#6ee7b7');
           if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
-            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(attacker) }]);
+            setHitEffects(prev => [...prev, { id: hid, x: effectUnit.position.x, y: bodyY(effectUnit), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(effectUnit) }]);
             setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
-            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter, getUnitEffectSize(attacker));
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, effectUnit.position.x, bodyY(effectUnit), hfxR6.filter, getUnitEffectSize(effectUnit));
           }
         }
       }
@@ -2587,7 +2580,6 @@ export default function BattleScreen() {
           const introDelay = introComplete ? 0 : (idx * 100);
           const baseFrameSize = spriteData?.frameHeight || spriteData?.frameWidth || 100;
           const targetDisplaySize = 200;
-          const isBearForm = unit.classId === 'worge' && unit.bearForm;
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
@@ -2634,58 +2626,6 @@ export default function BattleScreen() {
               )}
 
 
-              {isBearForm && unit.alive && (
-                <>
-                  {[1, 2, 3].map(i => (
-                    <div key={`trail-${i}`} style={{
-                      position: 'absolute', bottom: 0, left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: 0, height: 0, overflow: 'visible',
-                      animation: `nightborneTrail${i} 0.6s ease-out infinite`,
-                      animationDelay: `${i * 0.08}s`,
-                      pointerEvents: 'none',
-                      zIndex: -i,
-                      mixBlendMode: 'screen',
-                    }}>
-                      <SpriteAnimation
-                        spriteData={spriteData}
-                        animation={anim}
-                        scale={spriteScale}
-                        flip={flipSprite}
-                        speed={autoBattleEnabled ? 150 : 188}
-                        loop={anim === 'idle' || anim === 'walk'}
-                      />
-                    </div>
-                  ))}
-                  <div style={{
-                    position: 'absolute', bottom: spriteSize * 0.3, left: '50%',
-                    width: spriteSize * 1.4, height: spriteSize * 1.4,
-                    transform: 'translateX(-50%)',
-                    borderRadius: '50%',
-                    animation: 'nightborneAura 2s ease-in-out infinite',
-                    pointerEvents: 'none',
-                    zIndex: -4,
-                  }} />
-                  {Array.from({ length: 6 }).map((_, pi) => (
-                    <div key={`nb-p-${pi}`} style={{
-                      position: 'absolute',
-                      bottom: spriteSize * (0.2 + Math.random() * 0.6),
-                      left: '50%',
-                      marginLeft: -spriteSize * 0.2 + Math.random() * spriteSize * 0.4,
-                      width: 3, height: 3,
-                      borderRadius: '50%',
-                      background: `rgba(${140 + Math.floor(Math.random() * 80)}, 0, 255, 0.8)`,
-                      animation: `nightborneParticle ${1.2 + Math.random() * 0.8}s ease-out infinite`,
-                      animationDelay: `${pi * 0.25}s`,
-                      pointerEvents: 'none',
-                      zIndex: -1,
-                      '--px': `${-15 + Math.random() * 30}px`,
-                      '--py': `${-20 - Math.random() * 25}px`,
-                    }} />
-                  ))}
-                </>
-              )}
-
               <div style={{
                 position: 'absolute',
                 bottom: 0,
@@ -2696,9 +2636,7 @@ export default function BattleScreen() {
                 overflow: 'visible',
                 filter: anim === 'hurt'
                   ? 'brightness(2) sepia(1) saturate(10) hue-rotate(-10deg) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
-                  : isBearForm && unit.alive
-                    ? 'drop-shadow(0 0 10px rgba(120,0,255,0.7)) drop-shadow(0 0 20px rgba(80,0,180,0.4))'
-                    : isCurrentTurnUnit && unit.alive
+                  : isCurrentTurnUnit && unit.alive
                       ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
                       : 'none',
                 transition: 'filter 0.15s',

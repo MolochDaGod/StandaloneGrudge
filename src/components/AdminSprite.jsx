@@ -75,11 +75,6 @@ function getAllSkillsForClass(classId) {
     if (cls.signatureAbility) {
       skills.push({ id: cls.signatureAbility.id, name: cls.signatureAbility.name, icon: cls.signatureAbility.icon, source: 'signature', type: 'class' });
     }
-    if (cls.bearFormAbilities) {
-      Object.values(cls.bearFormAbilities).forEach(ab => {
-        skills.push({ id: ab.id, name: ab.name, icon: ab.icon, source: 'bear_form', type: 'class' });
-      });
-    }
   }
   const weaponTypes = CLASS_EQUIPMENT_RULES[classId]?.weaponTypes || [];
   weaponTypes.forEach(wt => {

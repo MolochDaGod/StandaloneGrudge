@@ -1890,11 +1890,7 @@ export const abilityEffectMap = {
     'Lightning Lash': { effect: 'arcanelighting', beam: 'orange', anim: 'attack2', followUp: [{ effect: 'electricSpark', delay: 80 }, { effect: 'thunderHit', delay: 200 }, { effect: 'impactYellowA', delay: 380 }, { effect: 'impactOrangeB', delay: 540 }] },
     "Nature's Grasp": { effect: 'healingwave', beam: 'green', anim: 'heal', postHealEffect: 'healingregen', followUp: [{ effect: 'impactGreenA', delay: 250 }, { effect: 'impactTealA', delay: 450 }] },
     'Dagger Toss': { effect: 'windProjectile', beam: 'green', anim: 'attack2', followUp: [{ effect: 'windHit', delay: 120 }, { effect: 'impactGreenB', delay: 300 }, { effect: 'smokeVfx1', delay: 480, filter: 'hue-rotate(90deg)' }] },
-    'Bear Form': { effect: 'arcanemist', beam: null, anim: 'cast', followUp: [{ effect: 'impactOrangeA', delay: 150 }, { effect: 'impactYellowB', delay: 350 }, { effect: 'smokeVfx2', delay: 550 }] },
-    'Maul': { effect: 'arcaneslash', beam: null, anim: 'attack1', comboAnims: ['attack1', 'attack2', 'attack1'], followUp: [{ effect: 'smearH2', delay: 100 }, { effect: 'impactRedA', delay: 250 }, { effect: 'impactOrangeB', delay: 420 }, { effect: 'smokeVfx1', delay: 580 }] },
-    "Nature's Taunt": { effect: 'arcanemist', beam: null, anim: 'cast', isAoE: true, followUp: [{ effect: 'impactGreenA', delay: 200 }, { effect: 'windBreath', delay: 400 }, { effect: 'windHit', delay: 580 }] },
-    'Worge Charge': { effect: 'critSlash', beam: null, anim: 'runAttack', fallbackAnim: 'attack3', comboAnims: ['attack1', 'runAttack', 'attack1'], followUp: [{ effect: 'smearV1', delay: 100 }, { effect: 'impactRedB', delay: 250 }, { effect: 'impactOrangeA', delay: 420 }, { effect: 'earthBump', delay: 580 }] },
-    'Revert Form': { effect: 'beamHoly', beam: null, anim: 'cast', followUp: [{ effect: 'impactWhiteA', delay: 200 }, { effect: 'impactGreenA', delay: 400 }] },
+    'Worge Transform': { effect: 'worgeTornado', beam: null, anim: 'cast', selfTarget: true, followUp: [{ effect: 'impactOrangeA', delay: 200 }, { effect: 'smokeVfx2', delay: 450 }] },
     'Lacerate': { effect: 'smearH1', beam: null, anim: 'attack2', followUp: [{ effect: 'smearH2', delay: 120 }, { effect: 'impactRedA', delay: 280 }, { effect: 'smearH3', delay: 440 }] },
     'Soothing Rain': { effect: 'waterSplash', beam: 'green', anim: 'heal', postHealEffect: 'healingregen', followUp: [{ effect: 'waterStartup1', delay: 180 }, { effect: 'impactTealA', delay: 380 }, { effect: 'impactCyanA', delay: 560 }] },
     'Thunderclap': { effect: 'arcanelighting', beam: 'orange', anim: 'attack2', isAoE: true, followUp: [{ effect: 'electricSpark', delay: 80 }, { effect: 'thunderHit', delay: 200 }, { effect: 'impactYellowA', delay: 360 }, { effect: 'impactOrangeB', delay: 520 }, { effect: 'earthBump', delay: 680 }] },
@@ -2301,9 +2297,6 @@ export function getAbilityEffect(classId, abilityName, abilityId) {
   if (abilityId && weaponSkillEffectMap[abilityId]) return weaponSkillEffectMap[abilityId];
   const classEffects = abilityEffectMap[classId];
   if (classEffects && classEffects[abilityName]) return classEffects[abilityName];
-  if (classId === 'worge' && abilityName.endsWith(' Form') && classEffects?.['Revert Form']) {
-    return classEffects['Revert Form'];
-  }
   if (enemyAbilityEffects[abilityName]) return enemyAbilityEffects[abilityName];
   return { effect: 'weaponHit', beam: null };
 }

@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getWorgTransformSprite } from '../data/spriteMap';
-import { classDefinitions } from '../data/classes';
-import { getDefaultBearLoadout, getBearFormAbilityMap } from '../utils/abilityLoadout';
-
-const worge = classDefinitions.worge;
-const normalAbilities = worge.abilities.slice(0, 3).map(a => a.name);
-const defaultBearIds = getDefaultBearLoadout();
-const bearMap = getBearFormAbilityMap();
-const bearAbilities = defaultBearIds.map(id => bearMap[id]?.name).filter(Boolean);
 
 export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, speed = 150 }) {
   const [transformed, setTransformed] = useState(false);
@@ -24,7 +16,7 @@ export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, spee
   }, [toggle]);
 
   const sprite = transformed ? formSprite : normalSprite;
-  const skills = transformed ? bearAbilities : normalAbilities;
+  const label = transformed ? 'Beast Form' : 'Normal';
   const color = transformed ? '#d97706' : '#22c55e';
 
   return (
@@ -35,20 +27,16 @@ export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, spee
         scale={scale}
         speed={speed}
       />
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {skills.map(name => (
-          <div key={name} style={{
-            background: `${color}33`,
-            border: `1px solid ${color}88`,
-            borderRadius: 4,
-            padding: '2px 6px',
-            fontSize: 9,
-            color: '#e5e5e5',
-            whiteSpace: 'nowrap',
-          }}>
-            {name}
-          </div>
-        ))}
+      <div style={{
+        background: `${color}33`,
+        border: `1px solid ${color}88`,
+        borderRadius: 4,
+        padding: '2px 6px',
+        fontSize: 9,
+        color: '#e5e5e5',
+        whiteSpace: 'nowrap',
+      }}>
+        {label}
       </div>
     </div>
   );

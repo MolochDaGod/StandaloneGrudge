@@ -50,12 +50,7 @@ export const classDefinitions = {
       { id: 'summon_imp', name: 'Call War Imp', icon: 'fire', description: 'Summon a vicious imp that attacks enemies with fire', type: 'summon_companion', companionType: 'imp_companion', manaCost: 30, staminaCost: 10, cooldown: 8, target: 'self' },
       { id: 'summon_twig', name: 'Call Twig Guardian', icon: 'shield', description: 'Summon a bark guardian that taunts enemies and retaliates', type: 'summon_companion', companionType: 'twig_companion', manaCost: 25, staminaCost: 15, cooldown: 8, target: 'self' },
     ],
-    signatureAbility: { id: 'bear_form', name: 'Bear Form', icon: 'wolf', description: 'Transform into a ferocious beast, boosting damage and defense', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } },
-    bearFormAbilities: {
-      mace_strike: { id: 'maul', name: 'Maul', icon: 'wolf', description: 'Savage claws rip the target, restoring resources', type: 'physical', damage: 1.3, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'enemy', manaGain: 4, staminaGain: 8 },
-      natures_grasp: { id: 'natures_taunt', name: "Nature's Taunt", icon: 'nature', description: 'Roar with primal fury, taunting all enemies and boosting defense for 2 turns', type: 'buff', damage: 0, manaCost: 0, staminaCost: 15, cooldown: 4, target: 'self', effect: { stat: 'defense', flat: 15, duration: 2 } },
-      dagger_toss: { id: 'worge_charge', name: 'Worge Charge', icon: 'wolf', description: 'Lunge at the enemy with bestial speed, dealing heavy damage', type: 'physical', damage: 2.0, manaCost: 0, staminaCost: 25, cooldown: 3, target: 'enemy' },
-    }
+    signatureAbility: { id: 'bear_form', name: 'Worge Transform', icon: 'wolf', description: 'Transform into a ferocious beast, boosting damage and defense. Use again to revert.', type: 'buff', damage: 0, manaCost: 0, staminaCost: 20, cooldown: 0, target: 'self', isBearForm: true, effect: { stat: 'damage', multiplier: 1.25, duration: 99 }, defenseBoost: { stat: 'defense', flat: 10, duration: 99 } }
   },
   ranger: {
     name: 'Ranger',
