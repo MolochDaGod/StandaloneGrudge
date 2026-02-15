@@ -808,8 +808,8 @@ function ChatBubble({ text, visible, auraColor }) {
   return (
     <div style={{
       position: 'absolute',
-      left: '50%', top: '50%',
-      transform: 'translate(-50%, -50%)',
+      left: '50%', top: 80,
+      transform: 'translateX(-50%)',
       zIndex: 12,
       opacity: visible ? 1 : 0,
       animation: visible ? 'bubbleFadeIn 0.4s ease-out forwards' : 'none',
@@ -1651,8 +1651,8 @@ function HeroSlideshow() {
           100% { opacity: 1; transform: translateX(-50%) scale(1); filter: brightness(1) hue-rotate(0deg); }
         }
         @keyframes bubbleFadeIn {
-          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-          100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          0% { opacity: 0; transform: translateX(-50%) scale(0.9); }
+          100% { opacity: 1; transform: translateX(-50%) scale(1); }
         }
         @keyframes ssSlideInLeft {
           0% { opacity: 0; transform: translateX(-30px) scale(0.7); }
