@@ -93,10 +93,11 @@ export default function LobbyScreen() {
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0 }} />
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 24px',
+        padding: '20px 24px',
         background: 'rgba(0,0,0,0.6)',
         borderBottom: '1px solid rgba(110,231,183,0.1)',
         position: 'relative', zIndex: 1,
+        minHeight: 80,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/images/grudge_rpg_logo.png" alt="Grudge RPG" style={{
@@ -105,12 +106,13 @@ export default function LobbyScreen() {
         </div>
         <div style={{
           position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none',
+          pointerEvents: 'none', whiteSpace: 'nowrap',
         }}>
           <span style={{
-            fontSize: '2.6rem',
+            fontSize: '3.2rem',
             fontFamily: "'LifeCraft', 'Cinzel', serif",
-            letterSpacing: 5,
+            letterSpacing: 6,
+            lineHeight: 1,
             background: 'linear-gradient(90deg, #8b0000 0%, #cc1100 25%, #ffd700 50%, #cc1100 75%, #8b0000 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
