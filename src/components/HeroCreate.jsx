@@ -25,10 +25,12 @@ export default function HeroCreate() {
   const [step, setStep] = useState(1);
   const [showCinematic, setShowCinematic] = useState(false);
   const [cinematicFading, setCinematicFading] = useState(false);
+  const [cinematicPhase, setCinematicPhase] = useState('unlock');
   const videoRef = useRef(null);
   const [name, setName] = useState('');
   const [selectedRace, setSelectedRace] = useState(null);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [detectedNamedHero, setDetectedNamedHero] = useState(null);
   const [attrPoints, setAttrPoints] = useState(
     ATTRIBUTES.reduce((acc, a) => ({ ...acc, [a]: 0 }), {})
   );
@@ -69,7 +71,9 @@ export default function HeroCreate() {
     cinematicFinishing.current = true;
     setCinematicFading(true);
     setTimeout(() => {
-      if (pendingHeroRef.current) {
+      if (cinematicPhase === 'unlock') {
+        setStep(4);
+      } else if (pendingHeroRef.current) {
         addHeroToRoster(pendingHeroRef.current);
         pendingHeroRef.current = null;
       }
@@ -77,19 +81,38 @@ export default function HeroCreate() {
       setCinematicFading(false);
       cinematicFinishing.current = false;
     }, 800);
-  }, [addHeroToRoster]);
+  }, [addHeroToRoster, cinematicPhase]);
+
+  const checkSecretUnlock = (classId) => {
+    if (!name.trim() || !selectedRace || !classId) return null;
+    const matched = Object.keys(namedHeroes).find(key => {
+      const nh = namedHeroes[key];
+      const heroName = name.trim().toLowerCase();
+      const matchName = nh.unlockName ? nh.unlockName.toLowerCase() : nh.name.toLowerCase();
+      return nh.race === selectedRace && nh.class === classId && nh.unlocked && heroName === matchName;
+    });
+    return matched || null;
+  };
+
+  const handleClassNext = (classId) => {
+    if (!classId) return;
+    setSelectedClass(classId);
+    const matched = checkSecretUnlock(classId);
+    if (matched) {
+      setDetectedNamedHero(matched);
+      setCinematicPhase('unlock');
+      setShowCinematic(true);
+    } else {
+      setDetectedNamedHero(null);
+      setStep(4);
+    }
+  };
 
   const handleCreate = async () => {
     if (!name.trim() || !selectedRace || !selectedClass) return;
     const { generateGrudgeUuid } = await import('../utils/grudgeUuid.js');
     const heroId = generateGrudgeUuid('hero', `${name.trim()}_${selectedRace}_${selectedClass}`);
     const stats = calculateStats(finalAttributes, heroLevel);
-    const matchedNamedHero = Object.keys(namedHeroes).find(key => {
-      const nh = namedHeroes[key];
-      const heroName = name.trim().toLowerCase();
-      const matchName = nh.unlockName ? nh.unlockName.toLowerCase() : nh.name.toLowerCase();
-      return nh.race === selectedRace && nh.class === selectedClass && nh.unlocked && heroName === matchName;
-    });
 
     pendingHeroRef.current = {
       id: heroId,
@@ -97,12 +120,13 @@ export default function HeroCreate() {
       raceId: selectedRace,
       classId: selectedClass,
       level: heroLevel,
-      namedHeroId: matchedNamedHero || null,
+      namedHeroId: detectedNamedHero || null,
       attributePoints: { ...finalAttributes },
       currentHealth: Math.floor(stats.health),
       currentMana: Math.floor(stats.mana),
       currentStamina: Math.floor(stats.stamina),
     };
+    setCinematicPhase('create');
     setShowCinematic(true);
   };
 
@@ -116,10 +140,10 @@ export default function HeroCreate() {
   };
 
   if (showCinematic) {
-    const pendingNH = pendingHeroRef.current?.namedHeroId;
-    const nhData = pendingNH ? namedHeroes[pendingNH] : null;
+    const nhKey = cinematicPhase === 'unlock' ? detectedNamedHero : pendingHeroRef.current?.namedHeroId;
+    const nhData = nhKey ? namedHeroes[nhKey] : null;
     const videoSrc = nhData?.unlockVideo || '/videos/hero_creation_cinematic.mp4';
-    const isNamedUnlock = !!nhData?.unlockVideo;
+    const isNamedUnlock = cinematicPhase === 'unlock' && !!nhData?.unlockVideo;
     return (
       <div style={{
         position: 'fixed', inset: 0, zIndex: HERO_CREATE_MODAL,
@@ -338,7 +362,7 @@ export default function HeroCreate() {
                 background: 'var(--border)', border: 'none', borderRadius: 10,
                 padding: '10px 20px', color: 'var(--text)', cursor: 'pointer',
               }}>← Back</button>
-              <button onClick={() => selectedClass && setStep(4)} disabled={!selectedClass}
+              <button onClick={() => handleClassNext(selectedClass)} disabled={!selectedClass}
                 style={{
                   background: selectedClass ? 'linear-gradient(135deg, var(--accent), #10b981)' : 'var(--border)',
                   border: 'none', borderRadius: 10, padding: '10px 30px',
@@ -407,26 +431,20 @@ export default function HeroCreate() {
                   <h3 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: 12 }}>
                     Preview - {name}
                   </h3>
-                  {(() => {
-                    const matchedNH = Object.values(namedHeroes).find(nh => nh.race === selectedRace && nh.class === selectedClass && nh.unlocked);
-                    return matchedNH ? (
-                      <div style={{
-                        background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.05))',
-                        border: '1px solid rgba(212,160,23,0.4)', borderRadius: 8,
-                        padding: '6px 10px', marginBottom: 8, textAlign: 'center',
-                      }}>
-                        <div style={{ color: '#d4a017', fontSize: '0.7rem', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
-                          Named Hero: {matchedNH.fullName}
-                        </div>
-                        <div style={{ color: 'var(--muted)', fontSize: '0.55rem', marginTop: 2 }}>{matchedNH.passive}</div>
+                  {detectedNamedHero && namedHeroes[detectedNamedHero] ? (
+                    <div style={{
+                      background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.05))',
+                      border: '1px solid rgba(212,160,23,0.4)', borderRadius: 8,
+                      padding: '6px 10px', marginBottom: 8, textAlign: 'center',
+                    }}>
+                      <div style={{ color: '#d4a017', fontSize: '0.7rem', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>
+                        Secret Hero: {namedHeroes[detectedNamedHero].fullName}
                       </div>
-                    ) : null;
-                  })()}
+                      <div style={{ color: 'var(--muted)', fontSize: '0.55rem', marginTop: 2 }}>{namedHeroes[detectedNamedHero].passive}</div>
+                    </div>
+                  ) : null}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <SpriteAnimation spriteData={(() => {
-                      const matchedNH = Object.values(namedHeroes).find(nh => nh.race === selectedRace && nh.class === selectedClass && nh.unlocked);
-                      return matchedNH ? matchedNH.sprite : getPlayerSprite(selectedClass, selectedRace);
-                    })()} animation="idle" scale={2.6} speed={150} containerless={false} />
+                    <SpriteAnimation spriteData={detectedNamedHero && namedHeroes[detectedNamedHero] ? namedHeroes[detectedNamedHero].sprite : getPlayerSprite(selectedClass, selectedRace)} animation="idle" scale={2.6} speed={150} containerless={false} />
                     <div>
                       <div style={{ color: 'var(--text)', fontWeight: 700 }}>{name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>

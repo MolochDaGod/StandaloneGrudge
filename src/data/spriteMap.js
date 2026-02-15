@@ -1095,9 +1095,31 @@ export const racalvinSprite = {
 };
 
 export const racalvinWorgSprite = {
-  ...spriteSheets.werewolf,
-  filter: 'brightness(0.3) saturate(1.6) contrast(1.3)',
+  ...nightborneSprite,
+  filter: 'brightness(0.7) saturate(1.6) hue-rotate(200deg) contrast(1.2)',
   scale: 1.2,
+};
+
+export const fireKnightSprite = {
+  folder: 'fire-knight',
+  frameWidth: 288,
+  frameHeight: 128,
+  facesLeft: false,
+  scale: 0.9,
+  idle: { src: '/sprites/fire-knight/idle.png', frames: 8 },
+  run: { src: '/sprites/fire-knight/run.png', frames: 8 },
+  walk: { src: '/sprites/fire-knight/run.png', frames: 8 },
+  attack1: { src: '/sprites/fire-knight/attack1.png', frames: 11 },
+  attack2: { src: '/sprites/fire-knight/attack2.png', frames: 19 },
+  attack3: { src: '/sprites/fire-knight/attack3.png', frames: 28 },
+  cast: { src: '/sprites/fire-knight/special.png', frames: 18 },
+  block: { src: '/sprites/fire-knight/block.png', frames: 10 },
+  hurt: { src: '/sprites/fire-knight/hurt.png', frames: 6 },
+  death: { src: '/sprites/fire-knight/death.png', frames: 13 },
+  heal: { src: '/sprites/fire-knight/special.png', frames: 18 },
+  roll: { src: '/sprites/fire-knight/roll.png', frames: 8 },
+  jump: { src: '/sprites/fire-knight/jump.png', frames: 20 },
+  special: { src: '/sprites/fire-knight/special.png', frames: 18 },
 };
 
 export const namedHeroes = {
@@ -1117,6 +1139,24 @@ export const namedHeroes = {
     unlocked: true,
     passive: 'Sword Throw: Ranged attacks hurl a spinning blade that deals bonus damage',
     color: '#d4a017',
+    cardBg: '/ui/admin_avatar.png',
+    avatar: '/ui/admin_avatar.png',
+  },
+  cptjohnwayne: {
+    id: 'cptjohnwayne',
+    name: 'Cpt John Wayne',
+    title: 'The Iron Captain',
+    fullName: 'Captain John Wayne',
+    unlockName: 'Cpt John Wayne',
+    race: 'human',
+    class: 'warrior',
+    faction: 'crusade',
+    sprite: { ...fireKnightSprite, filter: 'sepia(0.4) saturate(1.2) hue-rotate(-15deg) brightness(0.95)' },
+    unlockVideo: '/video/racalvin_unlock.mp4',
+    lore: 'A battle-hardened captain who forged his reputation on the frontlines of a hundred wars. His fire-tempered blade and unbreakable resolve make him a legend among the Crusade. Where others falter, Captain Wayne charges forward — his war cry echoing across blood-soaked battlefields. They say his armor still glows from the forge fires of the gods themselves.',
+    unlocked: true,
+    passive: 'Iron Will: Reduces incoming damage by 10% and grants immunity to fear effects',
+    color: '#c97b2a',
     cardBg: '/ui/admin_avatar.png',
     avatar: '/ui/admin_avatar.png',
   },
