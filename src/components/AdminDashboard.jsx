@@ -3,7 +3,7 @@ import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { locations } from '../data/enemies';
 import AdminMap from './AdminMap';
 import AdminBattle from './AdminBattle';
@@ -58,6 +58,7 @@ const FACTION_MAP = {
   undead: { name: 'Legion', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
   elf: { name: 'Fabled', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
   dwarf: { name: 'Fabled', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
+  pirates: { name: 'Pirates', color: '#d4a017', icon: '/factions/faction_pirates.png' },
 };
 
 const CLASS_ICON_MAP = {
@@ -78,7 +79,8 @@ function HeroCard({ hero, expanded, onToggle }) {
   const stats = cls ? getHeroStatsWithBonuses(hero) : null;
   const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
   const record = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
-  const faction = FACTION_MAP[hero.raceId] || FACTION_MAP.human;
+  const namedHeroData = hero.namedHeroId ? namedHeroes[hero.namedHeroId] : null;
+  const faction = (namedHeroData?.faction ? FACTION_MAP[namedHeroData.faction] : null) || FACTION_MAP[hero.raceId] || FACTION_MAP.human;
   const classIcon = CLASS_ICON_MAP[hero.classId];
 
   return (

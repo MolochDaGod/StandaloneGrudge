@@ -15,3 +15,8 @@ export function getSavedBattleRow(heroId) {
   const positions = loadBattlePositions();
   return positions[heroId] || null;
 }
+
+export function getSavedBattleColumn(heroId) {
+  const positions = loadBattlePositions();
+  return positions[`${heroId}_col`] || null;
+}

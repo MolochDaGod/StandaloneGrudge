@@ -503,6 +503,7 @@ const FACTION_MAP = {
   undead: { name: 'Legion', god: 'Madra', color: '#ef4444', icon: '/icons/pack/factions/legion-emblem.png' },
   elf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
   dwarf: { name: 'Fabled', god: 'The Omni', color: '#22d3ee', icon: '/icons/pack/factions/fabled-emblem.png' },
+  pirates: { name: 'Pirates', god: 'None — Neutral Mercenaries', color: '#d4a017', icon: '/factions/faction_pirates.png' },
 };
 
 const HERO_SLOGANS = {

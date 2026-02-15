@@ -28,6 +28,7 @@
   --crusade: #ef4444;
   --fabled: #06b6d4;
   --legion: #a855f7;
+  --pirates: #d4a017;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -75,7 +76,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .mod-neg{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);}
 .mod-zero{background:rgba(255,255,255,0.05);color:var(--text-dim);border:1px solid var(--border);}
 
-.faction-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;}
+.faction-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px;}
 .faction-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;border-top:3px solid;}
 .faction-card h4{font-size:1.1rem;margin-bottom:6px;}
 .faction-card .members{color:var(--text-dim);font-size:0.85rem;}
@@ -124,6 +125,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .htag-faction-crusade{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);}
 .htag-faction-fabled{background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2);}
 .htag-faction-legion{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2);}
+.htag-faction-pirates{background:rgba(212,160,23,0.1);color:#d4a017;border:1px solid rgba(212,160,23,0.2);}
 .htag-rarity-common{background:rgba(156,163,175,0.1);color:#9ca3af;border:1px solid rgba(156,163,175,0.2);}
 .htag-rarity-uncommon{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);}
 .htag-rarity-rare{background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);}
@@ -201,7 +203,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
       </div>
       <div class="info-card">
         <h3>Factions</h3>
-        <p>Heroes belong to one of 3 factions which determines their visual theme and story alignment: <span style="color:var(--crusade)">Crusade</span>, <span style="color:var(--fabled)">Fabled</span>, or <span style="color:var(--legion)">Legion</span>.</p>
+        <p>Heroes belong to one of 3 main factions which determines their visual theme and story alignment: <span style="color:var(--crusade)">Crusade</span>, <span style="color:var(--fabled)">Fabled</span>, or <span style="color:var(--legion)">Legion</span>. A hidden 4th faction, the <span style="color:var(--pirates)">Pirates</span>, are neutral mercenaries who answer to no god — unlocked through secret characters.</p>
       </div>
     </div>
   </div>
@@ -237,9 +239,10 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="info-section">
     <h2 style="color:var(--gold);font-size:1.4rem;margin-bottom:4px;">Factions</h2>
     <div class="faction-row">
-      <div class="faction-card" style="border-top-color:var(--crusade);"><img src="/icons/pack/factions/crusade-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--crusade);">Crusade</h4><div class="members">Human, Barbarian (+ Pirate King)</div></div>
+      <div class="faction-card" style="border-top-color:var(--crusade);"><img src="/icons/pack/factions/crusade-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--crusade);">Crusade</h4><div class="members">Human, Barbarian</div></div>
       <div class="faction-card" style="border-top-color:var(--fabled);"><img src="/icons/pack/factions/fabled-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--fabled);">Fabled</h4><div class="members">Dwarf, Elf</div></div>
       <div class="faction-card" style="border-top-color:var(--legion);"><img src="/icons/pack/factions/legion-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--legion);">Legion</h4><div class="members">Orc, Undead</div></div>
+      <div class="faction-card" style="border-top-color:var(--pirates);"><img src="/factions/faction_pirates.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;border-radius:50%;"><h4 style="color:var(--pirates);">Pirates</h4><div class="members">Neutral Mercenaries (Secret Heroes)</div></div>
     </div>
   </div>
 
@@ -452,7 +455,7 @@ const HEROES = [
   },
   {
     name: "Racalvin the Pirate King", title: "The Scourge of the Seven Seas",
-    race: "Barbarian", heroClass: "Ranger", faction: "Crusade", rarity: "Legendary",
+    race: "Barbarian", heroClass: "Ranger", faction: "Pirates", rarity: "Legendary",
     hp: 225, atk: 30, def: 9, spd: 78, rng: 6.5, mp: 105,
     quote: "The sea does not bow. Neither do I.",
     raceIcon: "/images/races/barbarian.png",
@@ -489,7 +492,8 @@ const CLASS_ICONS = {
 const FACTION_ICONS = {
   Crusade: '/icons/pack/factions/crusade-emblem.png',
   Fabled: '/icons/pack/factions/fabled-emblem.png',
-  Legion: '/icons/pack/factions/legion-emblem.png'
+  Legion: '/icons/pack/factions/legion-emblem.png',
+  Pirates: '/factions/faction_pirates.png'
 };
 const STAT_COLORS = {
   hp: '#ef4444', atk: '#f59e0b', def: '#3b82f6', spd: '#22c55e', rng: '#06b6d4', mp: '#a855f7'

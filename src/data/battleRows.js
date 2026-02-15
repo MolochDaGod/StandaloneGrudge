@@ -142,8 +142,17 @@ export function getRowPositions(units, side) {
       const ru = rowUnits[row];
       const xBase = rowXBase[row];
       const yBase = rowYBase[row];
+      const hasColumns = ru.some(u => u.column != null);
+      if (hasColumns) {
+        ru.sort((a, b) => (a.column || 2) - (b.column || 2));
+      }
       ru.forEach((u, i) => {
-        const ySpread = ru.length > 1 ? (i - (ru.length - 1) / 2) * 10 : 0;
+        let ySpread;
+        if (u.column != null && ru.length <= 3) {
+          ySpread = (u.column - 2) * 10;
+        } else {
+          ySpread = ru.length > 1 ? (i - (ru.length - 1) / 2) * 10 : 0;
+        }
         positions[u.id] = { x: xBase, y: yBase + ySpread };
       });
     });
