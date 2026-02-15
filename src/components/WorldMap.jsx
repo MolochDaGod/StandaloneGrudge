@@ -1993,6 +1993,7 @@ export default function WorldMap() {
                           scale={mapSpriteScale}
                           speed={isWalking ? 100 : (150 + idx * 30)}
                           equipmentOverlays={buildEquipmentOverlays(hero, TIERS)}
+                          containerless={false}
                         />
                       </div>
                     </div>
@@ -3080,7 +3081,7 @@ export default function WorldMap() {
               }} />
             </div>
             <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0 }}>
-              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace, playerNamedHeroId)} animation="idle" scale={1.5} speed={150} />
+              <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace, playerNamedHeroId)} animation="idle" scale={1.5} speed={150} containerless={false} />
             </div>
             <div>
               <div className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.1rem', fontWeight: 700 }}>{playerName}</div>
@@ -3231,7 +3232,7 @@ export default function WorldMap() {
                     }}
                   >
                     <div style={{ width: 60, height: 60, margin: '0 auto', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.7} speed={150} />
+                      <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={0.7} speed={150} containerless={false} />
                     </div>
                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)', marginTop: 2 }}>
                       {hero.name}

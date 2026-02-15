@@ -1075,23 +1075,23 @@ export const worgBearTransformSprite = {
 export const freeKnightSprite = spriteSheets['free-knight'];
 
 export const racalvinSprite = {
-  folder: 'pirate-grunt',
+  folder: 'Racalvin',
   frameWidth: 45,
   frameHeight: 49,
   facesLeft: false,
   scale: 1.8,
-  idle: { src: '/sprites/pirate-grunt/idle.png', frames: 16 },
-  walk: { src: '/sprites/pirate-grunt/walk.png', frames: 12, frameWidth: 49, frameHeight: 51 },
-  attack1: { src: '/sprites/pirate-grunt/attack1.png', frames: 15, frameWidth: 54, frameHeight: 51 },
-  attack2: { src: '/sprites/pirate-grunt/attack2.png', frames: 15, frameWidth: 54, frameHeight: 49 },
-  attack3: { src: '/sprites/pirate-grunt/attack3.png', frames: 20, frameWidth: 55, frameHeight: 54 },
-  cast: { src: '/sprites/pirate-grunt/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
-  block: { src: '/sprites/pirate-grunt/block.png', frames: 11, frameWidth: 67, frameHeight: 48 },
-  run: { src: '/sprites/pirate-grunt/run.png', frames: 18, frameWidth: 48, frameHeight: 48 },
-  sword_throw: { src: '/sprites/racalvin/sword_throw.png', frames: 19, frameWidth: 210, frameHeight: 210 },
-  hurt: { src: '/sprites/pirate-grunt/hurt.png', frames: 15, frameWidth: 50, frameHeight: 46 },
-  death: { src: '/sprites/pirate-grunt/death.png', frames: 12, frameWidth: 53, frameHeight: 45 },
-  heal: { src: '/sprites/pirate-grunt/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
+  idle: { src: '/sprites/Racalvin/idle.png', frames: 16 },
+  walk: { src: '/sprites/Racalvin/walk.png', frames: 12, frameWidth: 49, frameHeight: 51 },
+  attack1: { src: '/sprites/Racalvin/attack1.png', frames: 15, frameWidth: 54, frameHeight: 51 },
+  attack2: { src: '/sprites/Racalvin/attack2.png', frames: 15, frameWidth: 54, frameHeight: 49 },
+  attack3: { src: '/sprites/Racalvin/attack3.png', frames: 20, frameWidth: 55, frameHeight: 54 },
+  cast: { src: '/sprites/Racalvin/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
+  block: { src: '/sprites/Racalvin/block.png', frames: 11, frameWidth: 67, frameHeight: 48 },
+  run: { src: '/sprites/Racalvin/run.png', frames: 18, frameWidth: 48, frameHeight: 48 },
+  sword_throw: { src: '/sprites/Racalvin/sword_throw.png', frames: 19, frameWidth: 210, frameHeight: 210 },
+  hurt: { src: '/sprites/Racalvin/hurt.png', frames: 15, frameWidth: 50, frameHeight: 46 },
+  death: { src: '/sprites/Racalvin/death.png', frames: 12, frameWidth: 53, frameHeight: 45 },
+  heal: { src: '/sprites/Racalvin/cast.png', frames: 12, frameWidth: 72, frameHeight: 54 },
 };
 
 export const racalvinWorgSprite = {
