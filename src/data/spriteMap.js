@@ -1007,7 +1007,7 @@ export const raceClassSpriteMap = {
   dwarf: {
     warrior: spriteSheets['crystal-mauler'],
     mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' },
-    worge: spriteSheets['shardsoul-slayer'],
+    worge: spriteSheets['dwarf-worge'],
     ranger: spriteSheets['dwarf-ranger'],
   },
 };
@@ -1049,7 +1049,7 @@ export const worgBearTransformSprite = {
   elf: spriteSheets.werebear,
   undead: { ...spriteSheets.werebear, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)' },
   barbarian: spriteSheets.werebear,
-  dwarf: spriteSheets.werebear,
+  dwarf: spriteSheets['shardsoul-slayer'],
 };
 
 export const freeKnightSprite = spriteSheets['free-knight'];
