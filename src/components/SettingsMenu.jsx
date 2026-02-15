@@ -112,7 +112,7 @@ export default function SettingsMenu() {
           ref={buttonRef}
           onClick={() => { setOpen(o => { setConfirmReset(false); return !o; }); }}
           style={{
-            position: 'fixed', top: 12, right: 14, zIndex: SETTINGS_BUTTON,
+            position: 'fixed', bottom: 12, left: 14, zIndex: SETTINGS_BUTTON,
             width: 38, height: 38, borderRadius: 8,
             background: open ? 'rgba(110,231,183,0.15)' : 'rgba(0,0,0,0.5)',
             border: open ? '1px solid rgba(110,231,183,0.4)' : '1px solid rgba(255,255,255,0.12)',
@@ -129,7 +129,7 @@ export default function SettingsMenu() {
       )}
       {open && (
         <div ref={panelRef} style={{
-          position: 'fixed', top: 56, right: 14, zIndex: SETTINGS_PANEL,
+          position: 'fixed', bottom: 56, left: 14, zIndex: SETTINGS_PANEL,
           width: 280,
           background: 'linear-gradient(135deg, rgba(14,22,48,0.97), rgba(20,26,43,0.97))',
           border: '1px solid rgba(110,231,183,0.25)',
