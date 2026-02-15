@@ -1531,7 +1531,7 @@ function BattleScreenInner() {
       const defender = battleUnits.find(u => u.id === attackerId);
       if (defender) {
         setUnitAnims(prev => ({ ...prev, [attackerId]: 'block' }));
-        spawnParticle('heal', defender.position?.x || 30, bodyY(defender), '#60a5fa');
+        addParticle('heal', defender.position?.x || 30, bodyY(defender), '#60a5fa');
         setTimeout(() => {
           setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
           advanceTurn();
