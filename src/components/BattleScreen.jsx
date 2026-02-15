@@ -270,10 +270,12 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
 
   const hasCustomLayout = sprite.cols !== undefined;
   const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(sprite.frames));
+  const rows = hasCustomLayout ? (sprite.rows || Math.ceil(totalFrames / cols)) : Math.ceil(totalFrames / cols);
   const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
   const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
-  const scaleX = displaySize / frameW;
-  const scaleY = displaySize / frameH;
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
 
   React.useEffect(() => {
     let f = 0;
@@ -296,18 +298,18 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
       position: 'absolute',
       left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
-      width: displaySize, height: displaySize,
+      width: dispW, height: dispH,
       overflow: 'hidden',
       zIndex: BATTLE.EFFECT_SPRITES,
       pointerEvents: 'none',
       ...EFFECT_BLEND,
     }}>
       <div style={{
-        width: displaySize,
-        height: displaySize,
+        width: dispW,
+        height: dispH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`,
-        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: filterProp || 'none',
@@ -343,8 +345,9 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
   const progress = totalFrames > 1 ? frame / (totalFrames - 1) : 1;
   const currentScale = startScale + (endScale - startScale) * progress;
   const displaySize = baseSize * currentScale;
-  const scaleX = displaySize / frameW;
-  const scaleY = displaySize / frameH;
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
   const col = frame % cols;
   const row = Math.floor(frame / cols);
 
@@ -353,7 +356,7 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
       position: 'absolute',
       left: `${x}%`, top: `${y}%`,
       transform: 'translate(-50%, -50%)',
-      width: displaySize, height: displaySize,
+      width: dispW, height: dispH,
       overflow: 'hidden',
       zIndex: BATTLE.EFFECT_FLASH,
       pointerEvents: 'none',
@@ -361,11 +364,11 @@ function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.
       ...EFFECT_BLEND,
     }}>
       <div style={{
-        width: displaySize,
-        height: displaySize,
+        width: dispW,
+        height: dispH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * frameW * scaleX}px ${rows * frameH * scaleY}px`,
-        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: filterProp || 'none',
@@ -472,10 +475,12 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
   const totalFrames = sprite.frames;
   const hasCustomLayout = sprite.cols !== undefined;
   const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(totalFrames));
+  const rows = hasCustomLayout ? (sprite.rows || Math.ceil(totalFrames / cols)) : Math.ceil(totalFrames / cols);
   const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
   const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
-  const scaleX = displaySize / frameW;
-  const scaleY = displaySize / frameH;
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
 
   React.useEffect(() => {
     let f = 0;
@@ -492,18 +497,16 @@ function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, 
     <div style={{
       position: 'absolute', top: offsetY, left: '50%',
       transform: 'translateX(-50%)', pointerEvents: 'none',
-      width: displaySize, height: displaySize, overflow: 'hidden', opacity,
+      width: dispW, height: dispH, overflow: 'hidden', opacity,
       zIndex: 25,
       ...EFFECT_BLEND,
     }}>
       <div style={{
-        width: displaySize,
-        height: displaySize,
+        width: dispW,
+        height: dispH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: hasCustomLayout
-          ? `${cols * frameW * scaleX}px ${(sprite.rows || Math.ceil(totalFrames / cols)) * frameH * scaleY}px`
-          : `${sprite.size * scaleX}px ${sprite.size * scaleY}px`,
-        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         filter: filter || 'none',
