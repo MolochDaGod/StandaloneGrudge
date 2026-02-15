@@ -3,6 +3,7 @@ import SpriteAnimation from './SpriteAnimation';
 import { raceClassSpriteMap, effectSprites, beamTrails, abilityEffectMap, weaponSkillEffectMap, enemyAbilityEffects, warriorTransformSprite, worgTransformSprite, projectileSprites, buffVisuals, weaponVisuals, effectLayerPresets, EFFECT_TYPE_TAGS } from '../data/spriteMap';
 import { classDefinitions } from '../data/classes';
 import { WEAPON_SKILLS, CLASS_EQUIPMENT_RULES } from '../data/equipment';
+import { SPRITE_REGISTRY, CATEGORY_META, getRegistryStats, searchRegistry } from '../data/spriteRegistry';
 
 const races = ['human', 'orc', 'elf', 'undead', 'barbarian', 'dwarf'];
 const classes = ['warrior', 'mage', 'worge', 'ranger'];
@@ -13,6 +14,7 @@ const allBuffKeys = Object.keys(buffVisuals);
 const allWeaponKeys = Object.keys(weaponVisuals);
 
 const TABS = [
+  { id: 'catalog', label: 'Catalog', icon: 'ID' },
   { id: 'characters', label: 'Characters', icon: '\u{1F9D1}' },
   { id: 'effects', label: 'Effects Gallery', icon: '\u{1F4A5}' },
   { id: 'projectiles', label: 'Projectiles', icon: '\u{1F3AF}' },
@@ -412,7 +414,7 @@ function EffectLayerPreview({ layers, speed = 80 }) {
 }
 
 export default function AdminSprite() {
-  const [tab, setTab] = useState('characters');
+  const [tab, setTab] = useState('catalog');
   const [race, setRace] = useState('human');
   const [cls, setCls] = useState('warrior');
   const [selectedSkill, setSelectedSkill] = useState(null);
@@ -455,6 +457,30 @@ export default function AdminSprite() {
   const [galleryCat, setGalleryCat] = useState('all');
   const [gallerySearch, setGallerySearch] = useState('');
   const [gallerySelected, setGallerySelected] = useState(null);
+
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogFilter, setCatalogFilter] = useState('all');
+  const [catalogSelected, setCatalogSelected] = useState(null);
+  const [catalogCopied, setCatalogCopied] = useState('');
+  const registryStats = useMemo(() => getRegistryStats(), []);
+  const catalogResults = useMemo(() => {
+    let r = catalogSearch ? searchRegistry(catalogSearch) : [...SPRITE_REGISTRY];
+    if (catalogFilter !== 'all') r = r.filter(e => e.category === catalogFilter);
+    return r;
+  }, [catalogSearch, catalogFilter]);
+  const catalogGroups = useMemo(() => {
+    const g = {};
+    for (const e of catalogResults) {
+      if (!g[e.category]) g[e.category] = [];
+      g[e.category].push(e);
+    }
+    return g;
+  }, [catalogResults]);
+  const catalogCopy = (uid) => {
+    navigator.clipboard.writeText(uid);
+    setCatalogCopied(uid);
+    setTimeout(() => setCatalogCopied(''), 1500);
+  };
 
   const spriteData = raceClassSpriteMap[race]?.[cls];
   const skills = getAllSkillsForClass(cls);
@@ -541,6 +567,186 @@ export default function AdminSprite() {
             }}>{t.icon} {t.label}</button>
           ))}
         </div>
+
+        {tab === 'catalog' && (
+          <div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap',
+            }}>
+              <div style={{
+                display: 'flex', gap: 6, fontSize: '0.65rem', color: '#6b7280',
+                background: 'rgba(20,15,30,0.8)', padding: '4px 10px', borderRadius: 12,
+              }}>
+                <span style={{ color: '#ffd700', fontWeight: 700 }}>{registryStats.total}</span> sprites
+                <span style={{ color: '#94a3b8' }}>|</span>
+                <span style={{ color: '#3b82f6' }}>{registryStats.totalAnimations}</span> animations
+                <span style={{ color: '#94a3b8' }}>|</span>
+                <span style={{ color: '#22c55e' }}>{registryStats.totalFrames}</span> frames
+              </div>
+              <input type="text" value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)}
+                placeholder="Search sprites by name, UID, tag..."
+                style={{
+                  padding: '6px 12px', borderRadius: 6, flex: '1 1 200px', maxWidth: 320,
+                  border: '1px solid rgba(255,215,0,0.15)', background: 'rgba(20,15,30,0.8)',
+                  color: '#e2e8f0', fontSize: '0.75rem', outline: 'none',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                <button onClick={() => setCatalogFilter('all')} style={{
+                  padding: '3px 10px', borderRadius: 12, fontSize: '0.6rem', fontWeight: 600,
+                  border: catalogFilter === 'all' ? '1px solid #ffd700' : '1px solid rgba(255,255,255,0.08)',
+                  background: catalogFilter === 'all' ? 'rgba(255,215,0,0.15)' : 'rgba(20,15,30,0.6)',
+                  color: catalogFilter === 'all' ? '#ffd700' : '#6b7280', cursor: 'pointer',
+                }}>All</button>
+                {['hero','enemy','boss','transform','npc','sheet','secret','effect'].map(cat => {
+                  const meta = CATEGORY_META[cat];
+                  if (!meta) return null;
+                  return (
+                    <button key={cat} onClick={() => setCatalogFilter(cat)} style={{
+                      padding: '3px 10px', borderRadius: 12, fontSize: '0.6rem', fontWeight: 600,
+                      border: catalogFilter === cat ? `1px solid ${meta.color}` : '1px solid rgba(255,255,255,0.08)',
+                      background: catalogFilter === cat ? `${meta.color}22` : 'rgba(20,15,30,0.6)',
+                      color: catalogFilter === cat ? meta.color : '#6b7280', cursor: 'pointer',
+                    }}>{meta.label}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div style={{ flex: catalogSelected ? '0 0 55%' : '1 1 100%', maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
+                {catalogResults.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>No sprites match your search</div>
+                )}
+                {['hero','enemy','boss','transform','npc','sheet','secret','effect'].map(cat => {
+                  const sprites = catalogGroups[cat];
+                  if (!sprites || sprites.length === 0) return null;
+                  const meta = CATEGORY_META[cat] || { label: cat, color: '#94a3b8' };
+                  return (
+                    <div key={cat} style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <div style={{ width: 3, height: 16, borderRadius: 2, background: meta.color }} />
+                        <span style={{
+                          fontSize: '0.75rem', fontWeight: 700, color: meta.color,
+                          textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'Cinzel', serif",
+                        }}>{meta.label} ({sprites.length})</span>
+                      </div>
+                      <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 6,
+                      }}>
+                        {sprites.map(entry => {
+                          const isSelected = catalogSelected?.uid === entry.uid;
+                          const baseScale = (55 / (entry.frameHeight || 100));
+                          return (
+                            <div key={entry.uid} onClick={() => setCatalogSelected(entry)} style={{
+                              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px',
+                              background: isSelected ? 'rgba(255,215,0,0.08)' : 'rgba(20,15,30,0.7)',
+                              border: isSelected ? '1px solid #ffd700' : '1px solid rgba(255,215,0,0.06)',
+                              borderRadius: 6, cursor: 'pointer',
+                            }}>
+                              <div style={{ width: 44, height: 44, overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', flexShrink: 0 }}>
+                                <SpriteAnimation spriteData={entry.spriteData} animation="idle" scale={baseScale} loop={true} speed={150} containerless={false} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: '0.65rem', color: '#c4b998', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
+                                <div style={{ fontSize: '0.5rem', color: '#4a5568', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.uid}</div>
+                                <div style={{ fontSize: '0.45rem', color: '#6b7280' }}>{entry.animationCount} anims | {entry.frameWidth}x{entry.frameHeight}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {catalogSelected && (
+                <div style={{
+                  flex: '0 0 42%', background: 'rgba(20,15,30,0.9)', border: '1px solid rgba(255,215,0,0.15)',
+                  borderRadius: 8, padding: 16, maxHeight: 'calc(100vh - 260px)', overflowY: 'auto',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontSize: '1rem', color: '#ffd700', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>{catalogSelected.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <span onClick={() => catalogCopy(catalogSelected.uid)} style={{
+                          fontSize: '0.6rem', fontFamily: 'monospace', cursor: 'pointer',
+                          color: catalogCopied === catalogSelected.uid ? '#22c55e' : '#6b7280',
+                          background: 'rgba(0,0,0,0.3)', padding: '2px 8px', borderRadius: 4,
+                        }} title="Click to copy UID">
+                          {catalogCopied === catalogSelected.uid ? 'Copied!' : catalogSelected.uid}
+                        </span>
+                        <span style={{
+                          fontSize: '0.55rem', padding: '2px 8px', borderRadius: 8,
+                          background: `${(CATEGORY_META[catalogSelected.category]?.color || '#94a3b8')}22`,
+                          color: CATEGORY_META[catalogSelected.category]?.color || '#94a3b8',
+                          fontWeight: 600,
+                        }}>{CATEGORY_META[catalogSelected.category]?.label}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setCatalogSelected(null)} style={{
+                      width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(255,215,0,0.2)',
+                      background: 'rgba(20,15,30,0.8)', color: '#6b7280', fontSize: 12, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>X</button>
+                  </div>
+
+                  <div style={{
+                    display: 'flex', justifyContent: 'center', marginBottom: 12,
+                    background: 'rgba(10,8,20,0.8)', borderRadius: 8, padding: 16,
+                    border: '1px solid rgba(255,215,0,0.08)',
+                  }}>
+                    <div style={{ height: 120, overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      <SpriteAnimation spriteData={catalogSelected.spriteData} animation="idle" scale={120 / (catalogSelected.frameHeight || 100)} loop={true} speed={150} containerless={false} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 12 }}>
+                    {[
+                      { label: 'Frame Size', value: `${catalogSelected.frameWidth}x${catalogSelected.frameHeight}`, color: '#e2e8f0' },
+                      { label: 'Animations', value: catalogSelected.animationCount, color: '#3b82f6' },
+                      { label: 'Total Frames', value: catalogSelected.totalFrames, color: '#22c55e' },
+                      { label: 'Folder', value: catalogSelected.folder, color: '#94a3b8' },
+                      { label: 'Faces Left', value: catalogSelected.facesLeft ? 'Yes' : 'No', color: catalogSelected.facesLeft ? '#f59e0b' : '#4a5568' },
+                      { label: 'Has Filter', value: catalogSelected.hasFilter ? 'Yes' : 'No', color: catalogSelected.hasFilter ? '#a855f7' : '#4a5568' },
+                    ].map(item => (
+                      <div key={item.label} style={{ background: 'rgba(10,8,20,0.6)', borderRadius: 4, padding: '4px 6px', fontSize: '0.55rem' }}>
+                        <div style={{ color: '#6b7280' }}>{item.label}</div>
+                        <div style={{ color: item.color, fontWeight: 600, fontSize: '0.6rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize: '0.6rem', color: '#8a7d65', fontWeight: 600, marginBottom: 4 }}>TAGS</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 12 }}>
+                    {catalogSelected.tags.map(tag => (
+                      <span key={tag} onClick={() => setCatalogSearch(tag)} style={{
+                        fontSize: '0.5rem', color: '#8a7d65', padding: '2px 6px',
+                        border: '1px solid rgba(138,125,101,0.2)', borderRadius: 8,
+                        background: 'rgba(20,15,30,0.6)', cursor: 'pointer',
+                      }}>{tag}</span>
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize: '0.6rem', color: '#8a7d65', fontWeight: 600, marginBottom: 4 }}>ANIMATIONS ({catalogSelected.animationCount})</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    {catalogSelected.animations.map(anim => {
+                      const frames = catalogSelected.spriteData[anim]?.frames || 0;
+                      return (
+                        <span key={anim} style={{
+                          fontSize: '0.5rem', padding: '2px 6px', borderRadius: 4,
+                          background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
+                          color: '#3b82f6',
+                        }}>{anim} ({frames}f)</span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {tab === 'characters' && (
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
