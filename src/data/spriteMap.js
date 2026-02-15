@@ -974,7 +974,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['greatsword-skeleton'],
     mage: spriteSheets.necromancer,
     worge: spriteSheets.skeleton,
-    ranger: { ...classSpriteMap.ranger, filter: 'saturate(0) brightness(0.7) contrast(1.2)' },
+    ranger: { ...spriteSheets['skeleton-archer'], filter: 'saturate(0) brightness(0.85) contrast(1.15)' },
   },
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', scale: 1.35 },
