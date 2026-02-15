@@ -232,7 +232,7 @@ export default function CharacterCreate() {
 
         {step === 3 && (() => {
           const CLASS_ICONS = {
-            warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+            warrior: '/sprites/ui/icons/icon_warrior.png',
             mage: '/sprites/ui/icons/icon_mage.png',
             worge: '/sprites/ui/icons/icon_worge.png',
             ranger: '/sprites/ui/icons/icon_ranger.png',

@@ -456,7 +456,7 @@ const COMBO_EFFECTS = {
 };
 
 const CLASS_ICON_MAP = {
-  warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+  warrior: '/sprites/ui/icons/icon_warrior.png',
   mage: '/sprites/ui/icons/icon_mage.png',
   worge: '/sprites/ui/icons/icon_worge.png',
   ranger: '/sprites/ui/icons/icon_ranger.png',
