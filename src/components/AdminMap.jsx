@@ -131,7 +131,7 @@ export default function AdminMap() {
 
   return (
     <div style={{
-      width: '100vw', height: '100vh', background: '#0a0e1a',
+      width: '100%', height: '100%', background: '#0a0e1a',
       display: 'flex', flexDirection: 'column', fontFamily: 'Jost, sans-serif',
       color: '#e2e8f0', overflow: 'hidden', position: 'relative',
     }}>

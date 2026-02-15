@@ -8,6 +8,15 @@ const CONTEXTS = [
   { key: 'scenes', label: 'Scenes', storageKey: 'adminSize_scenes' },
 ];
 
+export function getSpriteOverrides(context) {
+  try {
+    const ctx = CONTEXTS.find(c => c.key === context);
+    if (!ctx) return {};
+    const raw = localStorage.getItem(ctx.storageKey);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
 const BOSS_KEYS = ['abyssal_demon', 'eldritch_horror', 'frost_titan', 'evil_wizard', 'ogre_boss', 'stormhead_boss', 'gunslinger_boss'];
 
 const RACES = ['human', 'orc', 'elf', 'undead', 'barbarian', 'dwarf'];

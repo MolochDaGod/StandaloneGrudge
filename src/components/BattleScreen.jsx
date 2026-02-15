@@ -1325,6 +1325,8 @@ export default function BattleScreen() {
   const [adminOverrides, setAdminOverrides] = useState(() => adminConfig.getEffectPositions());
   const [adminDragging, setAdminDragging] = useState(null);
   const adminDragStart = useRef(null);
+  const spriteLayout = adminConfig.getSpriteLayout();
+  const actionBarLayout = adminConfig.getActionBar();
 
   useEffect(() => {
     const handler = (e) => {
@@ -2857,8 +2859,8 @@ export default function BattleScreen() {
               )}
 
               <div style={{
-                position: 'absolute', bottom: -2, left: '50%', transform: 'translateX(-50%)',
-                width: 40, height: 8, borderRadius: '50%',
+                position: 'absolute', bottom: spriteLayout.shadow.offsetY - 2, left: '50%', transform: 'translateX(-50%)',
+                width: spriteLayout.shadow.width, height: spriteLayout.shadow.height, borderRadius: '50%',
                 background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
                 zIndex: 1,
               }} />
@@ -2866,7 +2868,7 @@ export default function BattleScreen() {
               <div
                 onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
                 style={{
-                position: 'absolute', bottom: -20, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: spriteLayout.nameplate.offsetY - 20, left: '50%', transform: 'translateX(-50%)',
                 textAlign: 'center',
                 background: isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.35)', 
                 borderRadius: 4, padding: '2px 5px',
@@ -3303,7 +3305,7 @@ export default function BattleScreen() {
           boxShadow: '0 -4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139,115,85,0.15)',
         }}>
           <div style={{
-            flex: '0 0 150px', width: 150,
+            flex: `0 0 ${actionBarLayout.leftPanelWidth}px`, width: actionBarLayout.leftPanelWidth,
             padding: '6px 8px',
             display: 'flex', flexDirection: 'column', gap: 4,
             justifyContent: 'center',
@@ -3339,14 +3341,14 @@ export default function BattleScreen() {
                     <span>{unit.name}</span>
                     {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: 'var(--accent)', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
                   </div>
-                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
+                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.playerBarHeight} width={actionBarLayout.playerBarWidth} />
                   <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={5} width={59} />
-                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={5} width={59} />
+                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={actionBarLayout.playerManaHeight} width={actionBarLayout.playerManaWidth} />
+                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={actionBarLayout.playerStaminaHeight} width={actionBarLayout.playerStaminaWidth} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
                     <ActionTimerBar progress={actionProgress} width={grudgePct >= 100 ? 70 : 90} height={4} isActive={isCurrentTurn} />
-                    <PixelBar current={grudgePct} max={100} preset="grudge" height={4} width={grudgePct >= 100 ? 42 : 28} />
+                    <PixelBar current={grudgePct} max={100} preset="grudge" height={actionBarLayout.playerGrudgeHeight} width={grudgePct >= 100 ? 42 : 28} />
                     {grudgePct >= 100 && (
                       <span style={{ fontSize: '0.55rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite', whiteSpace: 'nowrap' }}>MAX</span>
                     )}
@@ -3872,7 +3874,7 @@ export default function BattleScreen() {
           </div>
 
           <div style={{
-            flex: '0 0 150px', width: 150,
+            flex: `0 0 ${actionBarLayout.rightPanelWidth}px`, width: actionBarLayout.rightPanelWidth,
             padding: '6px 8px',
             display: 'flex', flexDirection: 'column', gap: 4,
             justifyContent: 'center',
@@ -3907,15 +3909,15 @@ export default function BattleScreen() {
                     {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
                     <span>{unit.name}</span>
                   </div>
-                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={8} width={122} />
+                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.enemyBarHeight} width={actionBarLayout.enemyBarWidth} />
                   <div style={{ display: 'flex', gap: 2, marginTop: 1 }}>
-                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={5} width={59} />
-                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={5} width={59} />
+                    <PixelBar current={unit.mana} max={unit.maxMana} preset="mana" height={actionBarLayout.enemyManaHeight} width={actionBarLayout.enemyManaWidth} />
+                    <PixelBar current={unit.stamina} max={unit.maxStamina} preset="stamina" height={actionBarLayout.enemyStaminaHeight} width={actionBarLayout.enemyStaminaWidth} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
-                    <ActionTimerBar progress={actionProgress} width={unit.isBoss ? 70 : 122} height={4} isActive={isCurrentTurn} />
+                    <ActionTimerBar progress={actionProgress} width={unit.isBoss ? 70 : actionBarLayout.enemyBarWidth} height={4} isActive={isCurrentTurn} />
                     {unit.isBoss && (
-                      <PixelBar current={unit.grudge || 0} max={100} preset="grudge" height={4} width={48} />
+                      <PixelBar current={unit.grudge || 0} max={100} preset="grudge" height={actionBarLayout.enemyGrudgeHeight} width={48} />
                     )}
                   </div>
                 </div>

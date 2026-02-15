@@ -537,7 +537,7 @@ export default function AdminUI() {
 
   return (
     <div style={{
-      width: '100vw', height: '100vh', background: '#0a0e17',
+      width: '100%', height: '100%', background: '#0a0e17',
       display: 'flex', fontFamily: "'Jost', sans-serif", color: '#e2e8f0',
       overflow: 'hidden', userSelect: 'none',
     }}>

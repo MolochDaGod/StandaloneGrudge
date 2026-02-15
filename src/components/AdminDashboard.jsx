@@ -290,7 +290,7 @@ function EditorWrapper({ children }) {
   return (
     <div style={{
       position: 'relative', width: '100%', height: 'calc(100vh - 60px)',
-      borderRadius: 8, overflow: 'hidden',
+      borderRadius: 8, overflowY: 'auto', overflowX: 'hidden',
       border: '1px solid rgba(255,215,0,0.15)',
     }}>
       {children}

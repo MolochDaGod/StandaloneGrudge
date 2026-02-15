@@ -470,7 +470,11 @@ export default function WorldMap() {
   const [camPos, setCamPos] = useState({ x: 0, y: 0 });
   const [devUnlocked, setDevUnlocked] = useState({});
   const [devPositions, setDevPositions] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('devNodePositions') || '{}'); } catch { return {}; }
+    try {
+      const admin = localStorage.getItem('adminMapPositions');
+      const dev = localStorage.getItem('devNodePositions');
+      return { ...(admin ? JSON.parse(admin) : {}), ...(dev ? JSON.parse(dev) : {}) };
+    } catch { return {}; }
   });
   const [devDragging, setDevDragging] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
