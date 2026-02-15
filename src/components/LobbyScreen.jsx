@@ -241,7 +241,7 @@ function NavItem({ essentialIcon, label, active, onClick }) {
         src={active ? '/ui/wood_light.png' : '/ui/wood_dark.png'}
         alt=""
         style={{
-          display: 'block', width: '100%', height: 72,
+          display: 'block', width: '100%', height: 94,
           objectFit: 'fill',
           pointerEvents: 'none',
         }}
