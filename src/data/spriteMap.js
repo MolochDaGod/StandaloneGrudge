@@ -988,7 +988,7 @@ export const raceClassSpriteMap = {
   },
 };
 
-export const warriorTransformSprite = spriteSheets['demon-sword'];
+export const warriorTransformSprite = spriteSheets['crystal-mauler'];
 
 export const nightborneSprite = {
   folder: 'nightborne',
@@ -1051,7 +1051,7 @@ export const racalvinSprite = {
 };
 
 export const racalvinWorgSprite = {
-  ...spriteSheets.werewolf,
+  ...spriteSheets['crystal-mauler'],
   filter: 'brightness(0.3) saturate(1.6) contrast(1.3)',
   scale: 1.2,
 };
