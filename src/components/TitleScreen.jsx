@@ -159,6 +159,7 @@ export default function TitleScreen() {
       width: '100%', height: '100%',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       position: 'relative', overflow: 'hidden',
+      background: 'transparent',
       opacity: fadeClass ? 1 : 0,
       transition: 'opacity 1.5s ease',
     }}>
@@ -166,14 +167,14 @@ export default function TitleScreen() {
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/images/title-bg.png)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center center',
+        backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
         zIndex: 0,
       }} />
 
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'radial-gradient(ellipse at center 40%, transparent 30%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.85) 100%)',
+        background: 'radial-gradient(ellipse at center 30%, transparent 40%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.6) 100%)',
         zIndex: 1,
         pointerEvents: 'none',
       }} />
