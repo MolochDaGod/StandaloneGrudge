@@ -15,6 +15,7 @@ import { setMusicMuted, setSfxMuted, getMusicMuted } from '../utils/audioManager
 import { BOTTOM_BAR, BOTTOM_BAR_POPUPS } from '../constants/layers';
 import { getBuildClassification, attributeDefinitions, TOTAL_POINTS_AT_LEVEL, calculateCombatPower } from '../data/attributes';
 import { getElementStyle, getElementRect, getChildElementStyle } from '../utils/uiLayoutConfig';
+import BattlePositions from './BattlePositions';
 
 const POPUP_BOTTOM_OFFSET = 'calc(100% + 8px)';
 
@@ -366,6 +367,7 @@ export default function MapBottomBar({
   const [showHarvesting, setShowHarvesting] = useState(false);
   const [showGear, setShowGear] = useState(false);
   const [showCharacter, setShowCharacter] = useState(false);
+  const [showFormation, setShowFormation] = useState(false);
   const [hotbarAssignments, setHotbarAssignments] = useState(() => {
     try {
       const saved = localStorage.getItem('grudge_hotbar_assignments');
@@ -398,6 +400,7 @@ export default function MapBottomBar({
     setShowHarvesting(false);
     setShowGear(false);
     setShowCharacter(false);
+    setShowFormation(false);
   };
 
   const togglePopup = (which) => {
@@ -405,6 +408,7 @@ export default function MapBottomBar({
     if (which === 'harvest' && !showHarvesting) setShowHarvesting(true);
     else if (which === 'gear' && !showGear) setShowGear(true);
     else if (which === 'character' && !showCharacter) setShowCharacter(true);
+    else if (which === 'formation' && !showFormation) setShowFormation(true);
   };
 
   const hasUnspent = unspentPoints > 0 || skillPoints > 0 || heroRoster.some(h => (h.unspentPoints || 0) > 0 || (h.skillPoints || 0) > 0);
@@ -465,6 +469,7 @@ export default function MapBottomBar({
     { id: 'harvest', icon: 'pickaxe', color: 'var(--gold)', label: 'Harvest', active: showHarvesting },
     { id: 'gear', icon: 'shield', color: 'var(--accent)', label: 'Gear', active: showGear },
     { id: 'character', icon: 'chart', color: '#a855f7', label: 'Power', active: showCharacter },
+    { id: 'formation', icon: 'target', color: '#f97316', label: 'Form', active: showFormation },
   ];
 
   const sendChat = () => {
@@ -489,7 +494,7 @@ export default function MapBottomBar({
     e.stopPropagation();
   };
 
-  const activeTab = showHarvesting ? 'harvest' : showGear ? 'gear' : showCharacter ? 'character' : null;
+  const activeTab = showHarvesting ? 'harvest' : showGear ? 'gear' : showCharacter ? 'character' : showFormation ? 'formation' : null;
 
   const overlayContent = (
     <div id="game-ui-overlay" data-ui-id="bottomBar" style={{
@@ -507,6 +512,21 @@ export default function MapBottomBar({
       {showHarvesting && <HarvestingPopup onClose={() => setShowHarvesting(false)} />}
       {showGear && <GearPopup onClose={() => setShowGear(false)} />}
       {showCharacter && <CharacterPopup onClose={() => setShowCharacter(false)} />}
+      {showFormation && (
+        <div className="ui-element panel-style" style={{
+          position: 'absolute', bottom: POPUP_BOTTOM_OFFSET, right: 10, zIndex: BOTTOM_BAR_POPUPS,
+          width: 320, height: 220,
+          animation: 'fadeIn 0.15s ease-out',
+          padding: 0, overflow: 'hidden',
+          borderRadius: 6,
+        }}>
+          <button onClick={() => setShowFormation(false)} style={{
+            position: 'absolute', top: 4, right: 6, zIndex: 2,
+            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem',
+          }}>×</button>
+          <BattlePositions compact />
+        </div>
+      )}
 
         <div data-ui-id="chatPanel" style={{
           position: 'absolute',

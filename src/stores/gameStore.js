@@ -10,6 +10,7 @@ import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/ab
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
+import { getSavedBattleRow } from '../utils/battlePositionsStorage';
 import { adminConfig } from '../utils/adminConfig';
 import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS } from '../data/spriteMap';
 
@@ -118,7 +119,8 @@ function createHeroBattleUnit(hero) {
     guaranteedCrit: false,
     grudge: 0,
   };
-  unit.row = getDefaultRow(unit);
+  const savedRow = getSavedBattleRow(hero.id);
+  unit.row = (savedRow && PLAYER_ROWS[savedRow]) ? savedRow : getDefaultRow(unit);
   return unit;
 }
 
