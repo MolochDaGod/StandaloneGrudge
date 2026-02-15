@@ -82,8 +82,25 @@ function GameApp() {
     }
   }, []);
 
+  const SCREEN_TITLES = {
+    title: 'Grudge Warlords',
+    intro: 'Grudge Warlords — Intro',
+    lobby: 'Grudge Warlords — War Room',
+    create: 'Grudge Warlords — Create Character',
+    world: 'Grudge Warlords — World Map',
+    location: 'Grudge Warlords — Location',
+    battle: 'Grudge Warlords — Battle',
+    character: 'Grudge Warlords — Character Sheet',
+    skills: 'Grudge Warlords — Skill Tree',
+    heroCreate: 'Grudge Warlords — Recruit Hero',
+    account: 'Grudge Warlords — Account',
+    training: 'Grudge Warlords — Training',
+    scene: 'Grudge Warlords — Scene',
+  };
+
   useEffect(() => {
     const slug = SCREEN_SLUGS[screen];
+    document.title = SCREEN_TITLES[screen] || 'Grudge Warlords';
     if (slug && window.location.pathname !== slug) {
       if (skipPushRef.current) {
         skipPushRef.current = false;
