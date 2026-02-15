@@ -3208,7 +3208,7 @@ export default function BattleScreen() {
 
 
       <div style={{
-        position: 'absolute', bottom: 185, right: 16, zIndex: 50,
+        position: 'absolute', bottom: 160, right: 16, zIndex: 50,
       }}>
         <button onClick={toggleAutoBattle} style={{
           background: autoBattleEnabled
@@ -3299,26 +3299,336 @@ export default function BattleScreen() {
       )}
 
       <div style={{
-          flex: '0 0 130px', height: 130, minHeight: 130, maxHeight: 130,
-          borderTop: `2px solid ${(!isVictory && !isDefeat && isPlayerTurn) ? '#8b7355' : (currentUnit?.team === 'enemy' ? '#6b3030' : '#4a5a7a')}`,
+          flex: '0 0 auto', height: 'auto',
           zIndex: BATTLE.HEADER,
           display: 'flex', flexDirection: 'row',
-          transition: 'border-color 0.3s',
+          alignItems: 'stretch',
           position: 'relative',
-          overflow: 'hidden',
-          background: 'linear-gradient(180deg, rgba(15,12,8,0.98) 0%, rgba(8,12,24,0.98) 100%)',
-          boxShadow: '0 -4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139,115,85,0.15)',
+          overflow: 'visible',
+          backgroundImage: 'url(/ui/bar-background.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
         }}>
+
           <div style={{
-            flex: `0 0 ${actionBarLayout.leftPanelWidth}px`, width: actionBarLayout.leftPanelWidth,
-            padding: '6px 8px',
-            display: 'flex', flexDirection: 'column', gap: 4,
-            justifyContent: 'center',
-            borderRight: '1px solid rgba(139,115,85,0.15)',
+            flex: '0 0 28%',
+            display: 'flex', flexDirection: 'column',
+            padding: '18px 8px 8px 22px',
             overflow: 'hidden',
-            background: 'rgba(0,0,0,0.15)',
           }}>
-            <div style={{ fontSize: '0.6rem', color: '#8b7355', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 1, fontFamily: 'var(--font-heading)' }}>Party</div>
+            <div style={{ padding: '0 4px 2px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>BATTLE LOG</span>
+            </div>
+            <div style={{
+              flex: 1, overflowY: 'auto', padding: '2px 4px',
+              fontSize: '0.6rem', lineHeight: 1.4,
+              scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
+              fontFamily: "'Jost', sans-serif",
+              minHeight: 60,
+            }}>
+              {battleLog.length > 0 ? battleLog.slice(-6).map((msg, i) => (
+                <div key={i} style={{ color: 'rgba(226,232,240,0.7)', marginBottom: 1 }}>{msg}</div>
+              )) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.5rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Awaiting combat...</div>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            flex: '1 1 0',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '6px 4px 4px',
+            position: 'relative',
+          }}>
+
+          {showItemsPanel && (() => {
+            const consumables = inventory.filter(i => i.slot === 'consumable');
+            const grouped = {};
+            consumables.forEach(c => {
+              const key = c.templateId || c.consumableType;
+              if (!grouped[key]) grouped[key] = { ...c, count: 0, items: [] };
+              grouped[key].count++;
+              grouped[key].items.push(c);
+            });
+            return (
+              <div style={{
+                position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+                marginBottom: 4, zIndex: 50,
+                background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(74,222,128,0.3)',
+                borderRadius: 8, padding: 6,
+                display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center',
+              }}>
+                {Object.values(grouped).map(group => {
+                  const isRezzy = group.consumableType === 'resurrect';
+                  const deadAlly = isRezzy ? battleUnits.find(u => u.team === 'player' && !u.alive) : null;
+                  const disabled = isRezzy && !deadAlly;
+                  return (
+                  <button key={group.templateId || group.consumableType} onClick={() => {
+                    if (disabled) return;
+                    const item = group.items[0];
+                    if (isRezzy) {
+                      useConsumable(item.id, deadAlly.id);
+                      setShowItemsPanel(false);
+                    } else {
+                      const allyTarget = battleUnits.find(u => u.id === selectedTargetId && u.team === 'player' && u.alive);
+                      useConsumable(item.id, allyTarget ? allyTarget.id : currentUnitId);
+                      setShowItemsPanel(false);
+                    }
+                  }}
+                  style={{
+                    background: disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.1)',
+                    border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
+                    borderRadius: 6, padding: '4px 8px', cursor: disabled ? 'not-allowed' : 'pointer',
+                    color: disabled ? 'rgba(150,150,150,0.5)' : '#86efac',
+                    fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+                    transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
+                  }}
+                  onMouseEnter={e => { showTooltip(disabled ? 'No fallen allies to revive' : group.description, e); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
+                  >
+                    {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+                    <span>{group.name}</span>
+                    <span style={{ color: '#4ade80', fontSize: '0.7rem' }}>x{group.count}</span>
+                  </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {healTargetMode && (
+            <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 4, zIndex: 50, background: 'rgba(0,0,0,0.9)', border: '1px solid #22c55e', borderRadius: 8, padding: 8, minWidth: 300 }}>
+              <div style={{ textAlign: 'center', marginBottom: 6, color: '#22c55e', fontSize: '0.8rem', fontWeight: 700 }}>
+                <InlineIcon name="heart" size={12} /> Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(1-{playerTeam.filter(u => u.alive).length} or Esc)</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {playerTeam.filter(u => u.alive).map((ally, idx) => {
+                  const hpPct = Math.round((ally.health / ally.maxHealth) * 100);
+                  const hpColor = hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
+                  return (
+                    <button key={ally.id} onClick={() => handleHealTarget(ally.id)}
+                      style={{
+                        background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: 6, padding: '4px 10px',
+                        cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center', minWidth: 80,
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.3)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.15)'; }}
+                    >
+                      <div style={{ color: '#e8dcc8', fontSize: '0.8rem', fontWeight: 700 }}>{idx + 1}. {ally.name}</div>
+                      <div style={{ color: hpColor, fontSize: '0.7rem' }}>{ally.health}/{ally.maxHealth} HP</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isVictory || isDefeat ? (
+            <div style={{ textAlign: 'center', padding: '12px 0', color: isVictory ? 'var(--gold)' : 'var(--danger)', fontSize: '1.1rem', fontWeight: 700 }}>
+              {isVictory ? 'Victory!' : 'Defeated...'}
+            </div>
+          ) : isPlayerTurn && currentUnit ? (
+            <div style={{
+              position: 'relative', width: '100%', maxWidth: 520,
+              aspectRatio: '1455 / 526',
+              backgroundImage: 'url(/ui/hotbar-background.png)',
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              padding: '0 12.5%',
+            }}>
+              {(() => {
+                if (!currentUnit || currentUnit.team !== 'player') return null;
+                const currentRow = currentUnit.row || 'battle';
+                const rowCfg = PLAYER_ROWS[currentRow];
+                const adjacent = getAdjacentRows(currentUnit);
+                const rows = ['protection', 'battle', 'back'];
+                const currentIdx = rows.indexOf(currentRow);
+                const canForward = currentIdx > 0 && adjacent.includes(rows[currentIdx - 1]);
+                const canBack = currentIdx < rows.length - 1 && adjacent.includes(rows[currentIdx + 1]);
+                const forwardRow = canForward ? PLAYER_ROWS[rows[currentIdx - 1]] : null;
+                const backRow = canBack ? PLAYER_ROWS[rows[currentIdx + 1]] : null;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                    <button disabled={!canForward} onClick={() => canForward && moveRow('forward')}
+                      style={{
+                        width: 20, height: 20, borderRadius: 3,
+                        background: canForward ? 'rgba(59,130,246,0.3)' : 'rgba(40,40,50,0.3)',
+                        border: `1px solid ${canForward ? '#3b82f6' : '#333'}`,
+                        color: canForward ? '#93c5fd' : '#555',
+                        cursor: canForward ? 'pointer' : 'not-allowed',
+                        fontSize: '0.7rem', fontWeight: 900, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', opacity: canForward ? 1 : 0.4,
+                      }}
+                      onMouseEnter={e => { if (forwardRow) showTooltip(`Move to ${forwardRow.name}`, e); }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={() => hideTooltip()}
+                    >{'\u25C0'}</button>
+                    <span className="font-cinzel" style={{ fontSize: '0.5rem', color: '#d4a96a', fontWeight: 700, letterSpacing: 1 }}>
+                      <InlineIcon name={rowCfg?.icon || 'crossed_swords'} size={8} /> {rowCfg?.name || 'Battle'}
+                    </span>
+                    <button disabled={!canBack} onClick={() => canBack && moveRow('back')}
+                      style={{
+                        width: 20, height: 20, borderRadius: 3,
+                        background: canBack ? 'rgba(245,158,11,0.3)' : 'rgba(40,40,50,0.3)',
+                        border: `1px solid ${canBack ? '#f59e0b' : '#333'}`,
+                        color: canBack ? '#fcd34d' : '#555',
+                        cursor: canBack ? 'pointer' : 'not-allowed',
+                        fontSize: '0.7rem', fontWeight: 900, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', opacity: canBack ? 1 : 0.4,
+                      }}
+                      onMouseEnter={e => { if (backRow) showTooltip(`Move to ${backRow.name}`, e); }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={() => hideTooltip()}
+                    >{'\u25B6'}</button>
+                  </div>
+                );
+              })()}
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${Math.min(8, 3 + displayedAbilities.length + (inventory.some(i => i.slot === 'consumable') ? 1 : 0) + ((currentUnit.grudge || 0) >= 100 ? 1 : 0))}, 1fr)`,
+                gap: '2.2%',
+                width: '100%',
+                alignItems: 'center',
+                paddingTop: '1%',
+              }}>
+                {[
+                  { id: 'attack', action: autoAttack, icon: UI_ICONS.actionAttack, label: 'Attack', color: '#ef4444', isSprite: true },
+                  { id: 'defend', action: defendTurn, icon: UI_ICONS.actionDefend, label: 'Defend', color: '#60a5fa', isSprite: true },
+                  { id: 'skip', action: skipTurn, icon: 'moon', label: 'Skip', color: '#94a3b8' },
+                ].map((btn, idx) => (
+                  <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <button onClick={btn.action} style={{
+                      background: 'rgba(0,0,0,0.6)',
+                      border: '2px solid rgba(197,160,89,0.4)',
+                      padding: 0, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
+                      boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
+                    }}
+                      onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      {btn.isSprite ? <SpriteIcon src={btn.icon} size={16} scale={2} /> : <InlineIcon name={btn.icon} size={18} />}
+                    </button>
+                    <span className="font-cinzel" style={{ fontSize: '0.35rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1, textAlign: 'center' }}>{btn.label}</span>
+                  </div>
+                ))}
+
+                {displayedAbilities.map((ability, idx) => {
+                  const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                  const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                  const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+                  const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
+                  const disabled = onCd || noMana || noStamina || alreadyTransformed;
+                  return (
+                    <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                        background: disabled ? 'rgba(20,20,30,0.6)' : 'rgba(0,0,0,0.6)',
+                        border: `2px solid ${disabled ? '#3a3a4a' : 'rgba(197,160,89,0.4)'}`,
+                        padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
+                        boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
+                        opacity: disabled ? 0.4 : 1, position: 'relative',
+                      }}
+                        onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = disabled ? '#3a3a4a' : 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                      >
+                        <AbilityIcon ability={ability} size={20} />
+                        <span style={{ position: 'absolute', top: 1, left: 3, fontSize: '0.35rem', color: 'rgba(200,200,200,0.5)', fontWeight: 600, fontFamily: "'Cinzel', serif" }}>{idx + 1}</span>
+                        {onCd && (
+                          <div style={{
+                            position: 'absolute', top: -3, right: -3,
+                            background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
+                            width: 12, height: 12, display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#e8c8c8'
+                          }}>{currentUnit.cooldowns[ability.id]}</div>
+                        )}
+                      </button>
+                      <span className="font-cinzel" style={{ fontSize: '0.3rem', color: disabled ? '#555' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ability.name}</span>
+                    </div>
+                  );
+                })}
+
+                {(() => {
+                  const consumables = inventory.filter(i => i.slot === 'consumable');
+                  if (consumables.length === 0) return null;
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
+                        background: showItemsPanel ? 'rgba(34,120,60,0.4)' : 'rgba(0,0,0,0.6)',
+                        border: `2px solid ${showItemsPanel ? '#4ade80' : 'rgba(197,160,89,0.4)'}`,
+                        padding: 0, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
+                        boxShadow: showItemsPanel ? '0 0 8px rgba(74,222,128,0.3)' : 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
+                      }}
+                        onMouseEnter={e => { showTooltip(`Items (${consumables.length})`, e); e.currentTarget.style.transform = 'scale(1.08)'; }}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); e.currentTarget.style.transform = 'scale(1)'; }}
+                      >
+                        <SpriteIcon src={UI_ICONS.actionItem} size={16} scale={2} />
+                      </button>
+                      <span className="font-cinzel" style={{ fontSize: '0.35rem', color: '#86efac', fontWeight: 600, lineHeight: 1, textAlign: 'center' }}>Items</span>
+                    </div>
+                  );
+                })()}
+
+                {(currentUnit.grudge || 0) >= 100 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <button onClick={useGrudge} style={{
+                      background: 'rgba(120,20,20,0.5)',
+                      border: '2px solid #ef4444',
+                      padding: 0, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
+                      boxShadow: '0 0 12px rgba(239,68,68,0.4)', borderRadius: 5,
+                      animation: 'pulse 1s infinite',
+                    }}
+                      onMouseEnter={e => { showTooltip('GRUDGE REVENGE\nUnleash stored rage!', e); e.currentTarget.style.transform = 'scale(1.08)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <InlineIcon name="fire" size={18} />
+                    </button>
+                    <span className="font-cinzel" style={{ fontSize: '0.35rem', color: '#fca5a5', fontWeight: 600, lineHeight: 1, textAlign: 'center', textShadow: '0 0 6px #ef4444' }}>Revenge</span>
+                  </div>
+                )}
+              </div>
+
+              {!healTargetMode && selectedTargetId && (
+                <div style={{ fontSize: '0.45rem', color: 'var(--danger)', textAlign: 'center', marginTop: 1 }}>
+                  Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{
+              color: currentUnit?.team === 'enemy' ? '#c45050' : '#93c5fd',
+              fontSize: '1rem', fontWeight: 600,
+              animation: 'pulse 1s infinite', textAlign: 'center',
+              padding: '20px 0',
+            }}>
+              {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
+            </div>
+          )}
+          </div>
+
+          <div style={{
+            flex: '0 0 20%',
+            display: 'flex', flexDirection: 'column',
+            padding: '18px 22px 8px 8px',
+            overflow: 'hidden',
+          }}>
+            <div style={{ padding: '0 4px 2px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+              <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,100,100,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>WAR PARTY</span>
+            </div>
             {playerTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
               const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hpGreen' : hpPct > 30 ? 'stamina' : 'hp';
@@ -3340,576 +3650,65 @@ export default function BattleScreen() {
                   paddingLeft: 4,
                   transition: 'border-color 0.3s',
                   background: isCurrentTurn ? 'rgba(110,231,183,0.05)' : 'transparent',
-                  borderRadius: 3, padding: '2px 4px',
+                  borderRadius: 3, padding: '1px 4px',
                 }}>
                   <div style={{
-                    fontSize: '0.75rem', fontWeight: 700,
+                    fontSize: '0.65rem', fontWeight: 700,
                     color: isCurrentTurn ? 'var(--accent)' : '#93c5fd',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     marginBottom: 1,
                     display: 'flex', alignItems: 'center', gap: 3,
                   }}>
                     <span>{unit.name}</span>
-                    {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: 'var(--accent)', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
-                    {grudgePct >= 100 && (
-                      <span style={{ fontSize: '0.55rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite' }}>!</span>
-                    )}
+                    {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: 'var(--accent)', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                    {grudgePct >= 100 && <span style={{ fontSize: '0.5rem', color: '#a855f7', fontWeight: 800, animation: 'pulse 1s infinite' }}>!</span>}
                   </div>
                   <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.playerBarHeight} width={actionBarLayout.playerBarWidth} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 2 }}>
-                    <ActionTimerBar progress={actionProgress} width={actionBarLayout.playerBarWidth} height={4} isActive={isCurrentTurn} />
-                  </div>
+                  <ActionTimerBar progress={actionProgress} width={actionBarLayout.playerBarWidth} height={3} isActive={isCurrentTurn} />
                 </div>
               );
             })}
-          </div>
-
-          <div style={{
-            flex: '0 0 auto', width: 44,
-            padding: '4px 2px',
-            display: 'flex', flexDirection: 'column', gap: 2,
-            justifyContent: 'center', alignItems: 'center',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
-            position: 'relative',
-          }}>
-            {playerTeam.map(unit => {
-              const hero = heroRoster.find(h => h.id === unit.id);
-              const eq = hero?.equipment || {};
-              const weapon = eq.weapon;
-              const weaponSprite = weapon ? getItemSpriteIcon(weapon) : null;
-              const tierDef = weapon ? (TIERS[weapon.tier] || TIERS[1]) : null;
-              const equippedCount = Object.values(eq).filter(Boolean).length;
-              return (
-                <div key={unit.id}
-                  onMouseEnter={() => setHoveredGearUnitId(unit.id)}
-                  onMouseLeave={() => setHoveredGearUnitId(null)}
-                  style={{
-                    width: 36, height: 36,
-                    background: hoveredGearUnitId === unit.id ? 'rgba(139,115,85,0.35)' : 'rgba(0,0,0,0.35)',
-                    border: `1px solid ${tierDef ? tierDef.color + '88' : 'rgba(139,115,85,0.25)'}`,
-                    borderRadius: 4,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    opacity: unit.alive ? 1 : 0.35,
-                    position: 'relative',
-                  }}
-                >
-                  {weaponSprite ? (
-                    <img src={weaponSprite} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))' }} />
-                  ) : (
-                    <span style={{ fontSize: '0.9rem' }}><InlineIcon name={weapon?.icon || 'battle'} size={14} /></span>
-                  )}
-                  {equippedCount > 0 && (
-                    <div style={{
-                      position: 'absolute', bottom: -1, right: -1,
-                      background: '#1a1a2e', border: '1px solid rgba(139,115,85,0.4)',
-                      borderRadius: '50%', width: 12, height: 12,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.6rem', fontWeight: 700, color: '#d4a96a',
-                    }}>{equippedCount}</div>
-                  )}
-                  {hoveredGearUnitId === unit.id && hero && (() => {
-                    const ps = 1.6;
-                    const pW = 96 * ps;
-                    const pH = 128 * ps;
-                    const sPx = 20 * ps;
-                    const sPos = {
-                      helmet:  { left: 35 * ps, top: 8 * ps },
-                      weapon:  { left: 11 * ps, top: 32 * ps },
-                      armor:   { left: 35 * ps, top: 32 * ps },
-                      offhand: { left: 59 * ps, top: 32 * ps },
-                      feet:    { left: 35 * ps, top: 56 * ps },
-                      ring:    { left: 17 * ps, top: 85 * ps },
-                      relic:   { left: 52 * ps, top: 85 * ps },
-                    };
-                    return (
-                      <div style={{
-                        position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                        marginBottom: 6, zIndex: 100,
-                        background: 'rgba(12,10,8,0.96)',
-                        border: '2px solid #8b7355',
-                        borderRadius: 8,
-                        padding: '8px 10px 10px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 12px rgba(139,115,85,0.2)',
-                        pointerEvents: 'none',
-                        minWidth: pW + 20,
-                      }}>
-                        <div style={{
-                          textAlign: 'center', fontSize: '0.8rem', fontWeight: 700,
-                          color: '#d4a96a', letterSpacing: 1, marginBottom: 5,
-                          textTransform: 'uppercase', fontFamily: 'var(--font-heading)',
-                        }}>{unit.name}</div>
-                        <div style={{
-                          width: pW, height: pH, margin: '0 auto',
-                          backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
-                          backgroundSize: `${pW}px ${pH}px`,
-                          imageRendering: 'pixelated',
-                          position: 'relative',
-                        }}>
-                          {Object.entries(sPos).map(([slot, pos]) => {
-                            const item = eq[slot];
-                            const itemSprite = item ? getItemSpriteIcon(item) : null;
-                            const tDef = item ? (TIERS[item.tier] || TIERS[1]) : null;
-                            return (
-                              <div key={slot} style={{
-                                position: 'absolute', left: pos.left, top: pos.top,
-                                width: sPx, height: sPx,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              }}>
-                                {item ? (
-                                  <>
-                                    {itemSprite ? (
-                                      <img src={itemSprite} alt={item.name} style={{
-                                        width: '75%', height: '75%', objectFit: 'contain',
-                                        imageRendering: 'pixelated',
-                                        filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
-                                      }} />
-                                    ) : (
-                                      <InlineIcon name={item.icon} size={14} style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }} />
-                                    )}
-                                    {tDef && <div style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 2, background: tDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tDef.color}` }} />}
-                                  </>
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div style={{
-                          marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: '2px 6px',
-                          justifyContent: 'center',
-                        }}>
-                          {EQUIPMENT_SLOTS.map(slot => {
-                            const item = eq[slot];
-                            if (!item) return null;
-                            const tDef = TIERS[item.tier] || TIERS[1];
-                            return (
-                              <div key={slot} style={{
-                                fontSize: '0.7rem', color: tDef.color,
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {item.name}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{
-            flex: 1, minWidth: 0,
-            padding: '6px 8px',
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            position: 'relative',
-          }}>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-          {isVictory || isDefeat ? (
-            <div style={{
-              textAlign: 'center', padding: '8px 0',
-              color: isVictory ? 'var(--gold)' : 'var(--danger)',
-              fontSize: '1.1rem', fontWeight: 700,
-            }}>
-              {isVictory ? 'Victory!' : 'Defeated...'}
-            </div>
-          ) : isPlayerTurn && currentUnit ? (
-            <>
-              {(() => {
-                if (!currentUnit || currentUnit.team !== 'player') return null;
-                const currentRow = currentUnit.row || 'battle';
-                const rowCfg = PLAYER_ROWS[currentRow];
-                const adjacent = getAdjacentRows(currentUnit);
-                const rows = ['protection', 'battle', 'back'];
-                const currentIdx = rows.indexOf(currentRow);
-                const canForward = currentIdx > 0 && adjacent.includes(rows[currentIdx - 1]);
-                const canBack = currentIdx < rows.length - 1 && adjacent.includes(rows[currentIdx + 1]);
-                const forwardRow = canForward ? PLAYER_ROWS[rows[currentIdx - 1]] : null;
-                const backRow = canBack ? PLAYER_ROWS[rows[currentIdx + 1]] : null;
-                const mods = rowCfg?.modifiers || {};
-                const modEntries = Object.entries(mods);
-
-                return (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5,
-                    justifyContent: 'center',
-                  }}>
-                    <button
-                      disabled={!canForward}
-                      onClick={() => canForward && moveRow('forward')}
-                      style={{
-                        width: 32, height: 32, borderRadius: 4,
-                        background: canForward ? 'rgba(59,130,246,0.3)' : 'rgba(40,40,50,0.3)',
-                        border: `2px solid ${canForward ? '#3b82f6' : '#333'}`,
-                        color: canForward ? '#93c5fd' : '#555',
-                        cursor: canForward ? 'pointer' : 'not-allowed',
-                        fontSize: '1rem', fontWeight: 900, display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s', opacity: canForward ? 1 : 0.4,
-                      }}
-                      onMouseEnter={e => { if (forwardRow) showTooltip(`Move to ${forwardRow.name}`, e); if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.5)'; }}
+            {enemyTeam.length > 0 && (
+              <>
+                <div style={{ height: 1, background: 'rgba(139,69,69,0.2)', margin: '3px 0' }} />
+                {enemyTeam.map(unit => {
+                  const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
+                  const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hp' : hpPct > 30 ? 'stamina' : 'hpGreen';
+                  const isCurrentTurn = unit.id === currentUnitId;
+                  const turnIdx = battleTurnOrder.indexOf(unit.id);
+                  const totalUnits = battleTurnOrder.length;
+                  const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
+                  const eMpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
+                  const eSpPct = unit.maxStamina > 0 ? Math.round((unit.stamina / unit.maxStamina) * 100) : 0;
+                  return (
+                    <div key={unit.id}
+                      onMouseEnter={e => showTooltip(`${unit.name}${unit.isBoss ? ' (Boss)' : ''}\nHP: ${unit.health}/${unit.maxHealth}\nMP: ${unit.mana}/${unit.maxMana} (${eMpPct}%)\nSP: ${unit.stamina}/${unit.maxStamina} (${eSpPct}%)`, e)}
                       onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); if (canForward) e.currentTarget.style.background = 'rgba(59,130,246,0.3)'; }}
-                    >{'\u25C0'}</button>
-                    <div style={{
-                      background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(212,169,106,0.3)',
-                      borderRadius: 6, padding: '3px 10px', textAlign: 'center', minWidth: 110,
+                      onMouseLeave={() => hideTooltip()}
+                      style={{
+                      opacity: unit.alive ? 1 : 0.4,
+                      borderRight: isCurrentTurn ? '2px solid var(--danger)' : '2px solid transparent',
+                      transition: 'border-color 0.3s',
+                      background: isCurrentTurn ? 'rgba(239,68,68,0.05)' : 'transparent',
+                      borderRadius: 3, padding: '1px 4px',
                     }}>
                       <div style={{
-                        fontSize: '0.85rem', fontWeight: 800, color: '#d4a96a',
-                        letterSpacing: 1, textTransform: 'uppercase',
+                        fontSize: '0.65rem', fontWeight: 700,
+                        color: isCurrentTurn ? 'var(--danger)' : '#fca5a5',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        marginBottom: 1,
+                        display: 'flex', alignItems: 'center', gap: 3,
                       }}>
-                        <InlineIcon name={rowCfg?.icon || 'crossed_swords'} size={10} /> {rowCfg?.name || 'Battle Line'}
+                        {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                        <span>{unit.name}</span>
                       </div>
-                      {modEntries.length > 0 ? (
-                        <div style={{ fontSize: '0.7rem', color: '#a08b6d', marginTop: 1, lineHeight: 1.3 }}>
-                          {modEntries.map(([key, val]) => {
-                            const isPositive = key.includes('Bonus') || key.includes('Chance') || (key.includes('Mult') && val > 1);
-                            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace('Mult', '').replace('Penalty', '');
-                            const display = typeof val === 'number' && val < 1 ? `${Math.round(val * 100)}%` : typeof val === 'number' && val > 1 ? `${Math.round(val * 100)}%` : `+${val}`;
-                            return (
-                              <span key={key} style={{
-                                color: isPositive ? '#4ade80' : '#f87171',
-                                marginRight: 4,
-                              }}>{isPositive ? '+' : ''}{display} {label}</span>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: 1 }}>No modifiers</div>
-                      )}
+                      <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.enemyBarHeight} width={actionBarLayout.enemyBarWidth} />
+                      <ActionTimerBar progress={actionProgress} width={actionBarLayout.enemyBarWidth} height={3} isActive={isCurrentTurn} />
                     </div>
-                    <button
-                      disabled={!canBack}
-                      onClick={() => canBack && moveRow('back')}
-                      style={{
-                        width: 32, height: 32, borderRadius: 4,
-                        background: canBack ? 'rgba(245,158,11,0.3)' : 'rgba(40,40,50,0.3)',
-                        border: `2px solid ${canBack ? '#f59e0b' : '#333'}`,
-                        color: canBack ? '#fcd34d' : '#555',
-                        cursor: canBack ? 'pointer' : 'not-allowed',
-                        fontSize: '1rem', fontWeight: 900, display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s', opacity: canBack ? 1 : 0.4,
-                      }}
-                      onMouseEnter={e => { if (backRow) showTooltip(`Move to ${backRow.name}`, e); if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.5)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); if (canBack) e.currentTarget.style.background = 'rgba(245,158,11,0.3)'; }}
-                    >{'\u25B6'}</button>
-                  </div>
-                );
-              })()}
-              <div style={{
-                display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 4,
-                background: 'rgba(0,0,0,0.3)', borderRadius: 6, padding: '3px 6px',
-                border: '1px solid rgba(139,115,85,0.2)',
-              }}>
-                <button onClick={autoAttack} style={{
-                  background: 'rgba(80,30,30,0.5)',
-                  border: '1px solid #8b4444', borderRadius: 4,
-                  padding: '4px 10px', color: '#ef4444', cursor: 'pointer',
-                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.background = 'rgba(80,30,30,0.8)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#8b4444'; e.currentTarget.style.background = 'rgba(80,30,30,0.5)'; }}
-                ><SpriteIcon src={UI_ICONS.actionAttack} size={14} scale={2} /><span>Attack</span></button>
-                <button onClick={defendTurn} style={{
-                  background: 'rgba(30,40,80,0.5)',
-                  border: '1px solid #445a8b', borderRadius: 4,
-                  padding: '4px 10px', color: '#60a5fa', cursor: 'pointer',
-                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#60a5fa'; e.currentTarget.style.background = 'rgba(30,40,80,0.8)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#445a8b'; e.currentTarget.style.background = 'rgba(30,40,80,0.5)'; }}
-                ><SpriteIcon src={UI_ICONS.actionDefend} size={14} scale={2} /><span>Defend</span></button>
-                <button onClick={skipTurn} style={{
-                  background: 'rgba(40,40,50,0.5)',
-                  border: '1px solid #5c5c6a', borderRadius: 4,
-                  padding: '4px 10px', color: 'rgba(180,180,200,0.8)', cursor: 'pointer',
-                  fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.background = 'rgba(40,40,50,0.8)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#5c5c6a'; e.currentTarget.style.background = 'rgba(40,40,50,0.5)'; }}
-                ><InlineIcon name="moon" size={14} /><span>Skip</span></button>
-                {(() => {
-                  const consumables = inventory.filter(i => i.slot === 'consumable');
-                  if (consumables.length === 0) return null;
-                  return (
-                    <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
-                      background: showItemsPanel ? 'rgba(34,120,60,0.5)' : 'rgba(30,50,40,0.5)',
-                      border: `1px solid ${showItemsPanel ? '#4ade80' : '#4a7a5a'}`, borderRadius: 4,
-                      padding: '4px 10px', color: showItemsPanel ? '#4ade80' : '#86efac', cursor: 'pointer',
-                      fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
-                      display: 'flex', alignItems: 'center', gap: 4,
-                    }}
-                    onMouseEnter={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#86efac'; } }}
-                    onMouseLeave={e => { if (!showItemsPanel) { e.currentTarget.style.borderColor = '#4a7a5a'; } }}
-                    ><SpriteIcon src={UI_ICONS.actionItem} size={14} scale={2} /><span>Items ({consumables.length})</span></button>
-                  );
-                })()}
-                {(currentUnit.grudge || 0) >= 100 && (
-                  <button onClick={useGrudge} style={{
-                    background: 'rgba(120,20,20,0.6)',
-                    border: '1px solid #ef4444', borderRadius: 4,
-                    padding: '4px 10px', color: '#fca5a5', cursor: 'pointer',
-                    fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s',
-                    animation: 'pulse 1s infinite',
-                    textShadow: '0 0 8px #ef4444',
-                    display: 'flex', alignItems: 'center', gap: 4,
-                  }}
-                  ><InlineIcon name="fire" size={14} /><span>REVENGE</span></button>
-                )}
-              </div>
-              {showItemsPanel && (() => {
-                const consumables = inventory.filter(i => i.slot === 'consumable');
-                const grouped = {};
-                consumables.forEach(c => {
-                  const key = c.templateId || c.consumableType;
-                  if (!grouped[key]) grouped[key] = { ...c, count: 0, items: [] };
-                  grouped[key].count++;
-                  grouped[key].items.push(c);
-                });
-                return (
-                  <div style={{
-                    background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(74,222,128,0.3)',
-                    borderRadius: 8, padding: 6, marginBottom: 4,
-                    display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center',
-                  }}>
-                    {Object.values(grouped).map(group => {
-                      const isRezzy = group.consumableType === 'resurrect';
-                      const deadAlly = isRezzy ? battleUnits.find(u => u.team === 'player' && !u.alive) : null;
-                      const disabled = isRezzy && !deadAlly;
-                      return (
-                      <button key={group.templateId || group.consumableType} onClick={() => {
-                        if (disabled) return;
-                        const item = group.items[0];
-                        if (isRezzy) {
-                          useConsumable(item.id, deadAlly.id);
-                          setShowItemsPanel(false);
-                        } else {
-                          const allyTarget = battleUnits.find(u => u.id === selectedTargetId && u.team === 'player' && u.alive);
-                          useConsumable(item.id, allyTarget ? allyTarget.id : currentUnitId);
-                          setShowItemsPanel(false);
-                        }
-                      }}
-                      style={{
-                        background: disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.1)',
-                        border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
-                        borderRadius: 6, padding: '4px 8px', cursor: disabled ? 'not-allowed' : 'pointer',
-                        color: disabled ? 'rgba(150,150,150,0.5)' : '#86efac',
-                        fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
-                        transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
-                      }}
-                      onMouseEnter={e => { showTooltip(disabled ? 'No fallen allies to revive' : group.description, e); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
-                      >
-                        {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
-                        <span>{group.name}</span>
-                        <span style={{ color: '#4ade80', fontSize: '0.8rem' }}>x{group.count}</span>
-                      </button>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-              {healTargetMode && (
-                <div style={{ marginBottom: 6 }}>
-                  <div style={{
-                    textAlign: 'center', marginBottom: 6, color: '#22c55e',
-                    fontSize: '0.9rem', letterSpacing: 1, fontWeight: 700,
-                  }}>
-                    <InlineIcon name="heart" size={12} /> Choose ally to heal <span style={{ color: '#86efac', fontWeight: 400 }}>(Press 1-{playerTeam.filter(u => u.alive).length} or Esc to cancel)</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    {playerTeam.filter(u => u.alive).map((ally, idx) => {
-                      const hpPct = Math.round((ally.health / ally.maxHealth) * 100);
-                      const hpColor = hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
-                      const spriteData = getPlayerSprite(ally.classId, ally.raceId, ally.namedHeroId);
-                      const idleAnim = spriteData?.idle;
-                      return (
-                        <button key={ally.id} onClick={() => handleHealTarget(ally.id)}
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,95,70,0.25))',
-                            border: '2px solid #22c55e', borderRadius: 8, padding: '6px 14px',
-                            cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center',
-                            minWidth: 100, position: 'relative',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.3), rgba(6,95,70,0.4))'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(6,95,70,0.25))'; e.currentTarget.style.transform = 'none'; }}
-                        >
-                          <div style={{
-                            position: 'absolute', top: -6, left: -6,
-                            background: '#22c55e', borderRadius: '50%',
-                            width: 18, height: 18, display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800,
-                            color: '#052e16', border: '1px solid rgba(0,0,0,0.3)',
-                          }}>{idx + 1}</div>
-                          <div style={{ width: 48, height: 48, margin: '0 auto 4px', overflow: 'hidden', position: 'relative' }}>
-                            {idleAnim && (
-                              <div style={{
-                                width: 48, height: 48,
-                                backgroundImage: `url(${idleAnim.src})`,
-                                backgroundSize: `${(idleAnim.frames || 6) * 48}px 48px`,
-                                backgroundPosition: '0 0',
-                                imageRendering: 'pixelated',
-                                ...(spriteData.filter ? { filter: spriteData.filter } : {}),
-                              }} />
-                            )}
-                          </div>
-                          <div style={{ color: '#e8dcc8', fontSize: '0.9rem', fontWeight: 700, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90 }}>{ally.name}</div>
-                          <div style={{
-                            background: 'rgba(0,0,0,0.5)', borderRadius: 3, height: 8, width: '100%', overflow: 'hidden',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                          }}>
-                            <div style={{
-                              height: '100%', width: `${hpPct}%`,
-                              background: `linear-gradient(90deg, ${hpColor}, ${hpColor}cc)`,
-                              borderRadius: 2, transition: 'width 0.3s',
-                            }} />
-                          </div>
-                          <div style={{ color: hpColor, fontSize: '0.8rem', fontWeight: 600, marginTop: 2 }}>
-                            {ally.health}/{ally.maxHealth} HP
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {!healTargetMode && (<div style={{
-                textAlign: 'center', marginBottom: 4, color: '#a08b6d',
-                fontSize: '0.85rem', letterSpacing: 1
-              }}>
-                <span style={{ color: '#d4a96a', fontWeight: 700 }}>{currentUnit.name}</span>
-                {' — '}Choose action <span style={{ color: '#d4a96a' }}>(1-{displayedAbilities.length})</span>
-                {selectedTargetId && (
-                  <span style={{ color: 'var(--danger)', marginLeft: 8 }}>
-                    Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
-                  </span>
-                )}
-              </div>)}
-              {!healTargetMode && (<div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {displayedAbilities.map((ability, idx) => {
-                  const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
-                  const noMana = (ability.manaCost || 0) > currentUnit.mana;
-                  const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
-                  const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
-                  const disabled = onCd || noMana || noStamina || alreadyTransformed;
-                  return (
-                    <button key={ability.id} onClick={() => !disabled && handleAbility(ability.id)}
-                      style={{
-                        backgroundImage: disabled ? 'none' : `url(${UI_SLOTS.hotbar})`,
-                        backgroundSize: 'cover', imageRendering: 'pixelated',
-                        background: disabled ? 'rgba(20,20,30,0.6)' : undefined,
-                        backgroundColor: disabled ? 'rgba(20,20,30,0.6)' : 'rgba(50,38,20,0.7)',
-                        border: `2px solid ${disabled ? '#3a3a4a' : '#8b7355'}`,
-                        borderRadius: 6, padding: '4px 8px', minWidth: 80,
-                        color: disabled ? '#555' : '#e8dcc8',
-                        cursor: disabled ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s', textAlign: 'center', opacity: disabled ? 0.5 : 1,
-                        position: 'relative',
-                        boxShadow: disabled ? 'none' : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
-                      }}
-                      onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.style.borderColor = '#d4a96a'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); if (!disabled) { e.currentTarget.style.borderColor = '#8b7355'; e.currentTarget.style.transform = 'none'; }}}
-                    >
-                      <div style={{
-                        position: 'absolute', top: -5, left: -5,
-                        background: disabled ? '#333' : '#d4a96a', borderRadius: '50%',
-                        width: 16, height: 16, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700,
-                        color: disabled ? '#666' : '#2a1a0a', border: '1px solid rgba(0,0,0,0.3)'
-                      }}>{idx + 1}</div>
-                      <div style={{ marginBottom: 0, filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))' }}><AbilityIcon ability={ability} size={28} /></div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>{ability.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#a08b6d', marginTop: 0 }}>
-                        {ability.manaCost > 0 && <span style={{ color: '#6b9bd2' }}>{ability.manaCost}MP </span>}
-                        {ability.staminaCost > 0 && <span style={{ color: '#d4a96a' }}>{ability.staminaCost}SP</span>}
-                        {ability.manaGain > 0 && <span style={{ color: '#7bb8e8' }}>+{ability.manaGain}MP </span>}
-                        {ability.staminaGain > 0 && <span style={{ color: '#e8c86a' }}>+{ability.staminaGain}SP</span>}
-                      </div>
-                      {onCd && (
-                        <div style={{
-                          position: 'absolute', top: 2, right: 2,
-                          background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
-                          width: 14, height: 14, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#e8c8c8'
-                        }}>{currentUnit.cooldowns[ability.id]}</div>
-                      )}
-                    </button>
                   );
                 })}
-              </div>)}
-            </>
-          ) : (
-            <div style={{
-              color: currentUnit?.team === 'enemy' ? '#c45050' : '#93c5fd',
-              fontSize: '1.05rem', fontWeight: 600,
-              animation: 'pulse 1s infinite', textAlign: 'center'
-            }}>
-              {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
-            </div>
-          )}
-          </div>
-          </div>
-
-          <div style={{
-            flex: `0 0 ${actionBarLayout.rightPanelWidth}px`, width: actionBarLayout.rightPanelWidth,
-            padding: '6px 8px',
-            display: 'flex', flexDirection: 'column', gap: 4,
-            justifyContent: 'center',
-            borderLeft: '1px solid rgba(139,115,85,0.15)',
-            overflow: 'hidden',
-            background: 'rgba(0,0,0,0.15)',
-          }}>
-            <div style={{ fontSize: '0.6rem', color: '#8b4444', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 1, fontFamily: 'var(--font-heading)', textAlign: 'right' }}>Enemies</div>
-            {enemyTeam.map(unit => {
-              const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
-              const hpPreset = !unit.alive ? 'actionTimer' : hpPct > 60 ? 'hp' : hpPct > 30 ? 'stamina' : 'hpGreen';
-              const isCurrentTurn = unit.id === currentUnitId;
-              const turnIdx = battleTurnOrder.indexOf(unit.id);
-              const totalUnits = battleTurnOrder.length;
-              const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
-              const eMpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
-              const eSpPct = unit.maxStamina > 0 ? Math.round((unit.stamina / unit.maxStamina) * 100) : 0;
-              return (
-                <div key={unit.id}
-                  onMouseEnter={e => showTooltip(`${unit.name}${unit.isBoss ? ' (Boss)' : ''}\nHP: ${unit.health}/${unit.maxHealth}\nMP: ${unit.mana}/${unit.maxMana} (${eMpPct}%)\nSP: ${unit.stamina}/${unit.maxStamina} (${eSpPct}%)`, e)}
-                  onMouseMove={e => updateTooltipPosition(e)}
-                  onMouseLeave={() => hideTooltip()}
-                  style={{
-                  opacity: unit.alive ? 1 : 0.4,
-                  borderRight: isCurrentTurn ? '2px solid var(--danger)' : '2px solid transparent',
-                  paddingRight: 4,
-                  transition: 'border-color 0.3s',
-                  background: isCurrentTurn ? 'rgba(239,68,68,0.05)' : 'transparent',
-                  borderRadius: 3, padding: '2px 4px',
-                }}>
-                  <div style={{
-                    fontSize: '0.75rem', fontWeight: 700,
-                    color: isCurrentTurn ? 'var(--danger)' : '#fca5a5',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    marginBottom: 1, textAlign: 'right',
-                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3,
-                  }}>
-                    {isCurrentTurn && <span style={{ fontSize: '0.6rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
-                    <span>{unit.name}</span>
-                  </div>
-                  <PixelBar current={unit.health} max={unit.maxHealth} preset={hpPreset} height={actionBarLayout.enemyBarHeight} width={actionBarLayout.enemyBarWidth} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 2 }}>
-                    <ActionTimerBar progress={actionProgress} width={actionBarLayout.enemyBarWidth} height={4} isActive={isCurrentTurn} />
-                  </div>
-                </div>
-              );
-            })}
+              </>
+            )}
           </div>
         </div>
     </div>
