@@ -1560,8 +1560,10 @@ export default function BattleScreen() {
           playMagicCast();
         }
         if (!ranged && attacker.position && target?.position) {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : 'idle' }));
           const centerX = target.position.x + (attacker.team === 'player' ? -4 : 4);
           setDashPositions(prev => ({ ...prev, [attackerId]: { x: centerX, y: target.position.y } }));
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() })), 300 * spd);
         }
         if (abilityType === 'physical' && !ranged) { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
 
@@ -1980,6 +1982,7 @@ export default function BattleScreen() {
         if (isLeap && attacker.position && target.position) {
           const frontX = target.position.x + (attacker.team === 'player' ? -8 : 8);
           const frontY = target.position.y;
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : 'idle' }));
           setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: frontY } }));
 
           setTimeout(() => {
@@ -2041,6 +2044,10 @@ export default function BattleScreen() {
         }
 
         if (abilityType === 'physical') { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
+        const melee = !ranged;
+        if (melee && attacker.position && target.position) {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : 'idle' }));
+        }
         if (attacker.position && target.position) {
           const dashX = target.position.x + (attacker.team === 'player' ? -8 : 8);
           const dashY = target.position.y;
