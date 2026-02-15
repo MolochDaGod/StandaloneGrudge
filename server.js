@@ -16,17 +16,24 @@ const PORT = isProd ? 5000 : 3001;
 
 const app = express();
 
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
+const ALLOWED_ORIGINS = [
+  'https://grudgewarlords.com',
+  'https://www.grudgewarlords.com',
+  'https://grudge-rpg.replit.app',
+];
+
+const CSP_FRAME_ANCESTORS = "frame-ancestors 'self' https://grudgewarlords.com https://www.grudgewarlords.com https://grudge-rpg.replit.app https://puter.com https://*.puter.com";
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowed = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
-  if (origin && allowed.includes(origin)) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Content-Security-Policy', CSP_FRAME_ANCESTORS);
+
+  const origin = req.headers.origin || '';
+  const isPuterOrigin = origin.endsWith('.puter.com') || origin === 'https://puter.com';
+  const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin) || isPuterOrigin;
+
+  if (origin && isAllowedOrigin) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token');
@@ -421,7 +428,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
-const ALLOWED_RETURN_ORIGINS = ['https://grudgewarlords.com', 'https://www.grudgewarlords.com'];
+const ALLOWED_RETURN_ORIGINS = [...ALLOWED_ORIGINS];
 
 app.get('/api/external/login', (req, res) => {
   let returnUrl = req.query.returnUrl || 'https://grudgewarlords.com/dungeon';

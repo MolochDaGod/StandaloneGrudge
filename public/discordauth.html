@@ -130,8 +130,7 @@ h1,h2,h3{font-family:'Cinzel',serif}
 (function() {
   'use strict';
 
-  var API = 'https://f36fb95c-926d-4e1b-9411-9de769d82a4b-00-9efd742oijgh.kirk.replit.dev';
-  // IMPORTANT: After publishing, replace API above with your production URL
+  var API = window.location.origin;
 
   var REDIRECT_URI = window.location.origin + '/discordauth';
   var SESSION_KEY = 'grudge_studio_session';
