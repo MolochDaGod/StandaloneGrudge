@@ -3409,21 +3409,30 @@ function BattleScreenInner() {
                   { id: 'skip', action: skipTurn, icon: 'moon', label: 'Skip', color: '#94a3b8' },
                 ].map((btn, idx) => (
                   <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <button onClick={btn.action} style={{
-                      background: 'rgba(0,0,0,0.6)',
-                      border: '2px solid rgba(197,160,89,0.4)',
-                      padding: 0, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
-                      boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
-                    }}
-                      onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                    >
-                      {btn.isSprite ? <SpriteIcon src={btn.icon} size={16} scale={2} /> : <InlineIcon name={btn.icon} size={18} />}
-                    </button>
-                    <span className="font-cinzel" style={{ fontSize: '0.35rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1, textAlign: 'center' }}>{btn.label}</span>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                      <button onClick={btn.action} style={{
+                        background: 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
+                        border: 'none',
+                        padding: 0, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s',
+                        position: 'absolute', inset: '12%',
+                        borderRadius: 2, zIndex: 1,
+                        boxShadow: `inset 0 0 8px rgba(0,0,0,0.7), 0 0 4px ${btn.color}30`,
+                      }}
+                        onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                      >
+                        {btn.isSprite ? <SpriteIcon src={btn.icon} size={16} scale={2} /> : <InlineIcon name={btn.icon} size={18} />}
+                      </button>
+                      <img src="/ui/skill-slot-frame.png" alt="" style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                      }} />
+                      <span style={{ position: 'absolute', top: '8%', left: '12%', fontSize: '0.35rem', color: 'rgba(200,180,120,0.6)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 1}</span>
+                    </div>
+                    <span className="font-cinzel" style={{ fontSize: '0.35rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1, textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{btn.label}</span>
                   </div>
                 ))}
 
@@ -3435,31 +3444,40 @@ function BattleScreenInner() {
                   const disabled = onCd || noMana || noStamina || alreadyTransformed;
                   return (
                     <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                      <button onClick={() => !disabled && handleAbility(ability.id)} style={{
-                        background: disabled ? 'rgba(20,20,30,0.6)' : 'rgba(0,0,0,0.6)',
-                        border: `2px solid ${disabled ? '#3a3a4a' : 'rgba(197,160,89,0.4)'}`,
-                        padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
-                        boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
-                        opacity: disabled ? 0.4 : 1, position: 'relative',
-                      }}
-                        onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}}
-                        onMouseMove={e => updateTooltipPosition(e)}
-                        onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = disabled ? '#3a3a4a' : 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                      >
-                        <AbilityIcon ability={ability} size={20} />
-                        <span style={{ position: 'absolute', top: 1, left: 3, fontSize: '0.35rem', color: 'rgba(200,200,200,0.5)', fontWeight: 600, fontFamily: "'Cinzel', serif" }}>{idx + 1}</span>
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', opacity: disabled ? 0.45 : 1, transition: 'opacity 0.15s' }}>
+                        <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                          background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
+                          border: 'none',
+                          padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.15s',
+                          position: 'absolute', inset: '12%',
+                          borderRadius: 2, zIndex: 1,
+                          boxShadow: disabled ? 'inset 0 0 6px rgba(0,0,0,0.8)' : `inset 0 0 8px rgba(0,0,0,0.7), 0 0 6px rgba(212,169,106,0.15)`,
+                        }}
+                          onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP Cost: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP Cost: ${ability.staminaCost}` : ''}${ability.manaGain ? `\n+${ability.manaGain} MP` : ''}${ability.staminaGain ? `\n+${ability.staminaGain} SP` : ''}${onCd ? `\nCooldown: ${currentUnit.cooldowns[ability.id]} turns` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
+                          onMouseMove={e => updateTooltipPosition(e)}
+                          onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
+                        >
+                          <AbilityIcon ability={ability} size={20} />
+                        </button>
+                        <img src="/ui/skill-slot-frame.png" alt="" style={{
+                          position: 'absolute', inset: 0, width: '100%', height: '100%',
+                          pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                          filter: disabled ? 'saturate(0.3)' : 'none',
+                        }} />
+                        <span style={{ position: 'absolute', top: '8%', left: '12%', fontSize: '0.35rem', color: 'rgba(200,180,120,0.6)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 4}</span>
                         {onCd && (
                           <div style={{
-                            position: 'absolute', top: -3, right: -3,
+                            position: 'absolute', top: -3, right: -3, zIndex: 4,
                             background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
                             width: 12, height: 12, display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#e8c8c8'
+                            justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#e8c8c8',
+                            boxShadow: '0 0 4px rgba(139,48,48,0.6)',
                           }}>{currentUnit.cooldowns[ability.id]}</div>
                         )}
-                      </button>
-                      <span className="font-cinzel" style={{ fontSize: '0.3rem', color: disabled ? '#555' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ability.name}</span>
+                      </div>
+                      <span className="font-cinzel" style={{ fontSize: '0.3rem', color: disabled ? '#555' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 3px rgba(0,0,0,0.8)' }}>{ability.name}</span>
                     </div>
                   );
                 })}
@@ -3469,42 +3487,60 @@ function BattleScreenInner() {
                   if (consumables.length === 0) return null;
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                      <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
-                        background: showItemsPanel ? 'rgba(34,120,60,0.4)' : 'rgba(0,0,0,0.6)',
-                        border: `2px solid ${showItemsPanel ? '#4ade80' : 'rgba(197,160,89,0.4)'}`,
-                        padding: 0, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
-                        boxShadow: showItemsPanel ? '0 0 8px rgba(74,222,128,0.3)' : 'inset 0 0 5px rgba(0,0,0,0.8)', borderRadius: 5,
-                      }}
-                        onMouseEnter={e => { showTooltip(`Items (${consumables.length})`, e); e.currentTarget.style.transform = 'scale(1.08)'; }}
-                        onMouseMove={e => updateTooltipPosition(e)}
-                        onMouseLeave={e => { hideTooltip(); e.currentTarget.style.transform = 'scale(1)'; }}
-                      >
-                        <SpriteIcon src={UI_ICONS.actionItem} size={16} scale={2} />
-                      </button>
-                      <span className="font-cinzel" style={{ fontSize: '0.35rem', color: '#86efac', fontWeight: 600, lineHeight: 1, textAlign: 'center' }}>Items</span>
+                      <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                        <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
+                          background: showItemsPanel ? 'linear-gradient(145deg, rgba(20,60,30,0.95), rgba(15,40,20,0.98))' : 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
+                          border: 'none',
+                          padding: 0, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.15s',
+                          position: 'absolute', inset: '12%',
+                          borderRadius: 2, zIndex: 1,
+                          boxShadow: showItemsPanel ? '0 0 8px rgba(74,222,128,0.3), inset 0 0 6px rgba(0,0,0,0.5)' : 'inset 0 0 8px rgba(0,0,0,0.7)',
+                        }}
+                          onMouseEnter={e => { showTooltip(`Items (${consumables.length})`, e); e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                          onMouseMove={e => updateTooltipPosition(e)}
+                          onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                        >
+                          <SpriteIcon src={UI_ICONS.actionItem} size={16} scale={2} />
+                        </button>
+                        <img src="/ui/skill-slot-frame.png" alt="" style={{
+                          position: 'absolute', inset: 0, width: '100%', height: '100%',
+                          pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                          filter: showItemsPanel ? 'drop-shadow(0 0 3px rgba(74,222,128,0.4))' : 'none',
+                        }} />
+                      </div>
+                      <span className="font-cinzel" style={{ fontSize: '0.35rem', color: '#86efac', fontWeight: 600, lineHeight: 1, textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>Items</span>
                     </div>
                   );
                 })()}
 
                 {(currentUnit.grudge || 0) >= 100 && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <button onClick={useGrudge} style={{
-                      background: 'rgba(120,20,20,0.5)',
-                      border: '2px solid #ef4444',
-                      padding: 0, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s', aspectRatio: '1 / 1', width: '100%',
-                      boxShadow: '0 0 12px rgba(239,68,68,0.4)', borderRadius: 5,
-                      animation: 'pulse 1s infinite',
-                    }}
-                      onMouseEnter={e => { showTooltip('GRUDGE REVENGE\nUnleash stored rage!', e); e.currentTarget.style.transform = 'scale(1.08)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); e.currentTarget.style.transform = 'scale(1)'; }}
-                    >
-                      <InlineIcon name="fire" size={18} />
-                    </button>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                      <button onClick={useGrudge} style={{
+                        background: 'linear-gradient(145deg, rgba(80,15,15,0.95), rgba(50,10,10,0.98))',
+                        border: 'none',
+                        padding: 0, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s',
+                        position: 'absolute', inset: '12%',
+                        borderRadius: 2, zIndex: 1,
+                        boxShadow: '0 0 12px rgba(239,68,68,0.4), inset 0 0 6px rgba(0,0,0,0.5)',
+                        animation: 'pulse 1s infinite',
+                      }}
+                        onMouseEnter={e => { showTooltip('GRUDGE REVENGE\nUnleash stored rage!', e); e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                      >
+                        <InlineIcon name="fire" size={18} />
+                      </button>
+                      <img src="/ui/skill-slot-frame.png" alt="" style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%',
+                        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                        filter: 'drop-shadow(0 0 4px rgba(239,68,68,0.5))',
+                      }} />
+                    </div>
                     <span className="font-cinzel" style={{ fontSize: '0.35rem', color: '#fca5a5', fontWeight: 600, lineHeight: 1, textAlign: 'center', textShadow: '0 0 6px #ef4444' }}>Revenge</span>
                   </div>
                 )}

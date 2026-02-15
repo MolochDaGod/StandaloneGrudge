@@ -102,18 +102,18 @@ function EquipSlot({ slotDef, item, onDrop, onUnequip, onHover, heroClassId, dra
             : 'linear-gradient(145deg, rgba(35,28,18,0.9), rgba(20,15,8,0.95))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         imageRendering: 'pixelated', borderRadius: 1,
-        boxShadow: over && canDrop ? `inset 0 0 8px rgba(87,199,103,0.4)` : item ? `inset 0 0 6px rgba(0,0,0,0.6)` : 'none',
+        boxShadow: over && canDrop ? `inset 0 0 8px rgba(87,199,103,0.4)` : item && tier ? `inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px ${tier.color}25` : item ? `inset 0 0 6px rgba(0,0,0,0.6)` : 'none',
       }}>
         {item ? (
-          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={item.icon || slotDef.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={item.icon || slotDef.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)`, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />; })()
         ) : (
-          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={slotDef.icon} size={Math.round(ip.iconSize * 0.83)} style={{ opacity: 0.25, filter: 'grayscale(1)', marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={slotDef.icon} size={Math.round(ip.iconSize * 0.83)} style={{ opacity: 0.25, filter: 'grayscale(1) drop-shadow(0 1px 2px rgba(0,0,0,0.3))', marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
         )}
       </div>
       <img src="/ui/inventory-slot-frame.png" alt="" style={{
         position: 'absolute', inset: 0, width: '100%', height: '100%',
         pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-        filter: item && tier ? `drop-shadow(0 0 3px ${tier.color}50)` : 'none',
+        filter: item && tier ? `drop-shadow(0 0 4px ${tier.color}40)` : 'none',
       }} />
       {!item && (
         <div style={{
@@ -183,14 +183,14 @@ function InventorySlot({ item, index, onDragStart, onRightClickEquip }) {
           : 'linear-gradient(145deg, rgba(35,28,18,0.85), rgba(20,15,8,0.9))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         imageRendering: 'pixelated', borderRadius: 1,
-        boxShadow: item ? `inset 0 0 5px rgba(0,0,0,0.5)` : 'none',
+        boxShadow: item && tier ? `inset 0 0 5px rgba(0,0,0,0.5), 0 0 3px ${tier.color}20` : item ? `inset 0 0 5px rgba(0,0,0,0.5)` : 'none',
       }}>
-        {item && (() => { const ip = getIconPlacement('invGridIcons'); return <InlineIcon name={item.icon || 'chest'} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+        {item && (() => { const ip = getIconPlacement('invGridIcons'); return <InlineIcon name={item.icon || 'chest'} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)`, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />; })()}
       </div>
       <img src="/ui/inventory-slot-frame.png" alt="" style={{
         position: 'absolute', inset: 0, width: '100%', height: '100%',
         pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-        filter: item && tier ? `drop-shadow(0 0 2px ${tier.color}40)` : 'none',
+        filter: item && tier ? `drop-shadow(0 0 3px ${tier.color}35)` : 'none',
       }} />
       {item && tier && (
         <div style={{
