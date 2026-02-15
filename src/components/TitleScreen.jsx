@@ -536,13 +536,10 @@ function TitleHeroParade() {
 
       <div style={{
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '70%',
-        backgroundImage: 'url(/backgrounds/grass_field.png)',
-        backgroundSize: '100% auto',
-        backgroundPosition: 'center bottom',
+        inset: 0,
+        backgroundImage: 'url(/images/title-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         imageRendering: 'auto',
         pointerEvents: 'none',
