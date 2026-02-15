@@ -490,6 +490,14 @@ export default function MapBottomBar({
           overflow: 'hidden',
         }}>
           <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            backgroundImage: 'url(/ui/chat-background.png)',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: 4,
+            padding: '6px 8px',
+          }}>
+          <div style={{
             padding: '2px 8px',
             display: 'flex', alignItems: 'center', gap: 5,
           }}>
@@ -535,6 +543,7 @@ export default function MapBottomBar({
               borderRadius: 4, padding: '2px 8px', color: 'var(--gold)', fontSize: '0.55rem',
               fontFamily: "'Cinzel', serif", fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             }}>Send</button>
+          </div>
           </div>
         </div>
 
