@@ -1837,23 +1837,47 @@ function CharactersTab({ heroRoster, panelStyle }) {
         <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
           War Council
         </h2>
-        <div style={{ ...panelStyle, textAlign: 'center', padding: '50px 40px' }}>
-          <EssentialIcon name="Team" size={40} style={{ opacity: 0.2, marginBottom: 16 }} />
-          <div style={{ color: '#fff', fontSize: '1rem', marginBottom: 8 }}>No Warlords Recruited</div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: 20, lineHeight: 1.5 }}>
-            Begin a new campaign to create your first hero and build your war party.
+        <div style={{
+          ...panelStyle,
+          textAlign: 'center',
+          padding: '60px 50px',
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: 220,
+        }}>
+          <div style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0,
+            width: '50%',
+            backgroundImage: 'url(/sprites/209cf40e-0369-46cc-9701-3caf1b4a7112.png)',
+            backgroundSize: 'auto 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right center',
+            pointerEvents: 'none',
+            opacity: 0.7,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to right, rgba(13,10,16,0.97) 25%, rgba(13,10,16,0.75) 55%, rgba(13,10,16,0.3) 85%, transparent 100%)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <EssentialIcon name="Team" size={40} style={{ opacity: 0.3, marginBottom: 16 }} />
+            <div className="font-cinzel" style={{ color: '#fff', fontSize: '1.1rem', marginBottom: 8 }}>No Warlords Recruited</div>
+            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: 24, lineHeight: 1.5 }}>
+              Begin a new campaign to create your first hero and build your war party.
+            </div>
+            <button
+              onClick={() => setScreen('create')}
+              style={{
+                background: 'linear-gradient(135deg, rgba(250,172,71,0.25), rgba(219,99,49,0.15))',
+                border: '1px solid rgba(250,172,71,0.5)', borderRadius: 8,
+                color: '#FAAC47', padding: '12px 28px', cursor: 'pointer',
+                fontFamily: "'LifeCraft', 'Cinzel', serif", fontSize: '1.1rem', letterSpacing: 2,
+              }}
+            >
+              BEGIN CAMPAIGN
+            </button>
           </div>
-          <button
-            onClick={() => setScreen('create')}
-            style={{
-              background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.1))',
-              border: '1px solid rgba(250,172,71,0.4)', borderRadius: 8,
-              color: '#FAAC47', padding: '10px 24px', cursor: 'pointer',
-              fontFamily: "'LifeCraft', 'Cinzel', serif", fontSize: '1rem', letterSpacing: 2,
-            }}
-          >
-            BEGIN CAMPAIGN
-          </button>
         </div>
       </div>
     );
