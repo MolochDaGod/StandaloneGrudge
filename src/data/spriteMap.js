@@ -284,7 +284,6 @@ export const spriteSheets = {
     folder: 'evil-wizard-3',
     frameWidth: 140,
     frameHeight: 140,
-    facesLeft: true,
     idle: { src: '/sprites/evil-wizard-3/idle.png', frames: 10 },
     attack1: { src: '/sprites/evil-wizard-3/attack.png', frames: 13 },
     attack2: { src: '/sprites/evil-wizard-3/attack2.png', frames: 8 },
@@ -962,7 +961,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets.knight,
     mage: spriteSheets['water-priestess'],
     worge: spriteSheets['wind-hashashin'],
-    ranger: spriteSheets['human-ranger'],
+    ranger: { ...spriteSheets['human-ranger'], filter: 'hue-rotate(90deg) saturate(1.3) brightness(1.05)' },
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
