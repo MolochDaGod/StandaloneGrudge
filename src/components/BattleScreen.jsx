@@ -418,58 +418,6 @@ function ThunderProjectileSprite() {
   );
 }
 
-function WorgeTornadoVFX({ spriteSize }) {
-  const [frame, setFrame] = React.useState(0);
-  const sprite = effectSprites.worgeTornado;
-  const totalFrames = sprite.frames;
-  const cols = sprite.cols;
-  const frameW = sprite.frameW;
-  const frameH = sprite.frameH;
-  const displayW = spriteSize * 0.8;
-  const displayH = spriteSize * 1.0;
-  const scaleX = displayW / frameW;
-  const scaleY = displayH / frameH;
-
-  React.useEffect(() => {
-    let f = 0;
-    const interval = setInterval(() => {
-      f++;
-      if (f >= totalFrames) f = 0;
-      setFrame(f);
-    }, 90);
-    return () => clearInterval(interval);
-  }, [totalFrames]);
-
-  const col = frame % cols;
-  const row = Math.floor(frame / cols);
-
-  return (
-    <div style={{
-      position: 'absolute',
-      left: '50%',
-      bottom: 0,
-      transform: 'translate(-50%, 0)',
-      width: displayW,
-      height: displayH,
-      overflow: 'hidden',
-      pointerEvents: 'none',
-      zIndex: 25,
-      mixBlendMode: 'screen',
-      filter: 'brightness(1.2) drop-shadow(0 0 12px rgba(34,197,94,0.8))',
-    }}>
-      <div style={{
-        width: displayW,
-        height: displayH,
-        backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * frameW * scaleX}px ${sprite.rows * frameH * scaleY}px`,
-        backgroundPosition: `-${col * displayW}px -${row * displayH}px`,
-        backgroundRepeat: 'no-repeat',
-        imageRendering: 'auto',
-      }} />
-    </div>
-  );
-}
-
 function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, opacity = 0.85 }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
@@ -1314,7 +1262,6 @@ export default function BattleScreen() {
   const [waterSplashFx, setWaterSplashFx] = useState([]);
   const [poisonGustFx, setPoisonGustFx] = useState([]);
   const [resurrectFx, setResurrectFx] = useState([]);
-  const [morphingUnits, setMorphingUnits] = useState({});
   const [showItemsPanel, setShowItemsPanel] = useState(false);
   const [healTargetMode, setHealTargetMode] = useState(null);
   const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
@@ -2194,7 +2141,6 @@ export default function BattleScreen() {
         }
       }
     } else {
-      const isMorphAbility = abilityId === 'bear_form' || abilityType === 'revert_form' || (abilityName && (abilityName.includes('Form') || abilityName.includes('Revert')));
       setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
       const hfxR6 = getHitEffect(attacker, abilityName, false);
       if ((consumableType === 'resurrect' || abilityType === 'resurrect') && target && target.position) {
@@ -2248,14 +2194,7 @@ export default function BattleScreen() {
       } else {
         playBuff();
         if (attacker.position) {
-          if (isMorphAbility) {
-            setUnitAnims(prev => ({ ...prev, [attackerId]: 'hurt' }));
-            setMorphingUnits(prev => ({ ...prev, [attackerId]: 'blink1' }));
-            setTimeout(() => setMorphingUnits(prev => ({ ...prev, [attackerId]: 'blink2' })), 400);
-            setTimeout(() => setMorphingUnits(prev => ({ ...prev, [attackerId]: 'tornado' })), 800);
-            setTimeout(() => setMorphingUnits(prev => { const n = { ...prev }; delete n[attackerId]; return n; }), 1800);
-          }
-          addParticle('cast', attacker.position.x, bodyY(attacker), isMorphAbility ? '#22c55e' : '#6ee7b7');
+          addParticle('cast', attacker.position.x, bodyY(attacker), '#6ee7b7');
           if (hfxR6.sprite) {
             const hid = Date.now() + Math.random();
             setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(attacker) }]);
@@ -2264,8 +2203,8 @@ export default function BattleScreen() {
           }
         }
       }
-      setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), isMorphAbility ? 1600 : 600);
-      setTimeout(() => advanceTurn(), isMorphAbility ? 2000 : 900);
+      setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
+      setTimeout(() => advanceTurn(), 900);
     }
 
     if (lastAction.effectType && abilityType !== 'debuff') {
@@ -2686,38 +2625,6 @@ export default function BattleScreen() {
                 }} />
               )}
 
-              {morphingUnits[unit.id] && unit.alive && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: 0,
-                  height: 0,
-                  overflow: 'visible',
-                  pointerEvents: 'none',
-                  zIndex: 20,
-                }}>
-                  {(morphingUnits[unit.id] === 'blink1' || morphingUnits[unit.id] === 'blink2') && (
-                    <div style={{
-                      position: 'absolute',
-                      bottom: 0, left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: spriteSize, height: spriteSize,
-                      background: morphingUnits[unit.id] === 'blink1'
-                        ? 'radial-gradient(ellipse, rgba(34,197,94,0.8) 0%, rgba(250,204,21,0.4) 50%, transparent 80%)'
-                        : 'radial-gradient(ellipse, rgba(250,204,21,0.8) 0%, rgba(34,197,94,0.4) 50%, transparent 80%)',
-                      animation: 'morphBlinkPulse 0.2s ease-in-out infinite alternate',
-                      pointerEvents: 'none',
-                      mixBlendMode: 'screen',
-                      borderRadius: '50%',
-                    }} />
-                  )}
-                  {morphingUnits[unit.id] === 'tornado' && (
-                    <WorgeTornadoVFX spriteSize={spriteSize} />
-                  )}
-                </div>
-              )}
 
               {isBearForm && unit.alive && (
                 <>
