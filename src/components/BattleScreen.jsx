@@ -1413,37 +1413,32 @@ export default function BattleScreen() {
 
   const displayedAbilities = useMemo(() => {
     if (!currentCls || !currentUnit) return [];
-    const loadout = currentUnit.abilityLoadout;
     const allAbilities = currentUnit.abilities || currentCls.abilities;
     const abilityMap = {};
     for (const ab of allAbilities) {
       abilityMap[ab.id] = ab;
     }
-
-    let resolved;
-    if (loadout && loadout.length > 0) {
-      resolved = loadout.map(id => abilityMap[id]).filter(Boolean);
-    } else {
-      resolved = allAbilities.slice(0, 5);
+    if (currentCls.bearFormAbilities) {
+      for (const ab of Object.values(currentCls.bearFormAbilities)) {
+        abilityMap[ab.id] = ab;
+      }
+      abilityMap['revert_form'] = {
+        id: 'revert_form', name: 'Revert Form', icon: 'wolf',
+        description: 'Revert to your normal form',
+        type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self'
+      };
     }
 
-    if (!currentUnit.bearForm || !currentCls.bearFormAbilities) return resolved;
+    if (currentUnit.bearForm && currentUnit.bearFormLoadout?.length > 0) {
+      return currentUnit.bearFormLoadout.map(id => abilityMap[id]).filter(Boolean);
+    }
 
-    const raceDef = currentUnit.raceId ? raceDefinitions[currentUnit.raceId] : null;
-    const raceName = raceDef?.name || 'Beast';
-    return resolved.map(ability => {
-      if (currentCls.bearFormAbilities[ability.id]) {
-        return currentCls.bearFormAbilities[ability.id];
-      }
-      if (ability.isBearForm) {
-        const revertAbility = allAbilities.find(a => a.id === 'revert_form');
-        if (revertAbility) {
-          return { ...revertAbility, name: `${raceName} Form` };
-        }
-      }
-      return ability;
-    });
-  }, [currentCls, currentUnit?.bearForm, currentUnit?.raceId, currentUnit?.abilities, currentUnit?.abilityLoadout]);
+    const loadout = currentUnit.abilityLoadout;
+    if (loadout && loadout.length > 0) {
+      return loadout.map(id => abilityMap[id]).filter(Boolean);
+    }
+    return allAbilities.slice(0, 5);
+  }, [currentCls, currentUnit?.bearForm, currentUnit?.bearFormLoadout, currentUnit?.abilities, currentUnit?.abilityLoadout]);
 
   useEffect(() => {
     setBgm('battle');

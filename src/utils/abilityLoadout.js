@@ -172,3 +172,39 @@ export function isSlotLocked(classId, slotIndex) {
   if (classId === 'worge') return false;
   return slotIndex === 4;
 }
+
+export function getBearFormAbilityPool(unlockedSkills = {}) {
+  const cls = classDefinitions['worge'];
+  if (!cls || !cls.bearFormAbilities) return [];
+
+  const pool = Object.values(cls.bearFormAbilities);
+
+  pool.push({
+    id: 'revert_form', name: 'Revert Form', icon: 'wolf',
+    description: 'Revert to your normal form',
+    type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self'
+  });
+
+  const treeAbs = getSkillTreeAbilities('worge', unlockedSkills);
+  for (const ab of treeAbs) {
+    if (!pool.find(p => p.id === ab.id)) pool.push(ab);
+  }
+
+  return pool;
+}
+
+export function getBearFormAbilityMap(unlockedSkills = {}) {
+  const pool = getBearFormAbilityPool(unlockedSkills);
+  const map = {};
+  for (const ab of pool) map[ab.id] = ab;
+  return map;
+}
+
+export function getDefaultBearLoadout() {
+  const cls = classDefinitions['worge'];
+  if (!cls || !cls.bearFormAbilities) return [];
+  const bearAbs = Object.values(cls.bearFormAbilities);
+  const ids = bearAbs.map(a => a.id);
+  ids.push('revert_form');
+  return ids.slice(0, 5);
+}

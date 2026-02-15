@@ -6,7 +6,7 @@ import { raceDefinitions } from '../data/races';
 import { locations, createEnemy, createRaceClassEnemy, getZoneEnemyPresets } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { generateLoot, getEquipmentStatBonuses, getStartingEquipment, EQUIPMENT_SLOTS, canClassEquip, upgradeItem, UPGRADE_COSTS, getItemPrice, getSellPrice, generateShopInventory, WEAPON_TYPES, allEquipmentTemplates, scaleItemStats, TIERS } from '../data/equipment';
-import { getDefaultLoadout, resolveLoadout, getAllAbilityMap } from '../utils/abilityLoadout';
+import { getDefaultLoadout, resolveLoadout, getAllAbilityMap, getDefaultBearLoadout } from '../utils/abilityLoadout';
 import { missionTemplates, arenaTemplates } from '../data/missions';
 import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
@@ -111,6 +111,7 @@ function createHeroBattleUnit(hero) {
     defenseBreak: stats.defenseBreak || 0,
     criticalEvasion: stats.criticalEvasion || 0,
     abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId, heroWeaponType),
+    bearFormLoadout: hero.bearFormLoadout || (hero.classId === 'worge' ? getDefaultBearLoadout() : undefined),
     abilities: Object.values(getAllAbilityMap(hero.classId, heroWeaponType, hero.unlockedSkills || {})),
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
@@ -230,16 +231,25 @@ function chooseAIAction(unit, allUnits) {
   }
 
   const cls = classDefinitions[unit.classId];
-  const bearSwapIds = cls?.bearFormAbilities ? Object.keys(cls.bearFormAbilities) : [];
   const bearReplacementIds = cls?.bearFormAbilities ? Object.values(cls.bearFormAbilities).map(a => a.id) : [];
 
-  const availableAbilities = unit.abilities.filter(a =>
+  let abilityPool = unit.abilities;
+  if (unit.bearForm && unit.bearFormLoadout?.length > 0) {
+    const bearMap = {};
+    if (cls?.bearFormAbilities) {
+      for (const ab of Object.values(cls.bearFormAbilities)) bearMap[ab.id] = ab;
+    }
+    bearMap['revert_form'] = { id: 'revert_form', name: 'Revert Form', icon: 'wolf', type: 'revert_form', damage: 0, manaCost: 0, staminaCost: 0, cooldown: 0, target: 'self' };
+    for (const ab of unit.abilities) bearMap[ab.id] = ab;
+    abilityPool = unit.bearFormLoadout.map(id => bearMap[id]).filter(Boolean);
+  }
+
+  const availableAbilities = abilityPool.filter(a =>
     (unit.cooldowns[a.id] || 0) <= 0 &&
     (a.manaCost || 0) <= unit.mana &&
     (a.staminaCost || 0) <= unit.stamina &&
     !(a.isBearForm && unit.bearForm) &&
     !(a.isDemonBlade && unit.demonBlade) &&
-    !(unit.bearForm && bearSwapIds.includes(a.id)) &&
     !(!unit.bearForm && (bearReplacementIds.includes(a.id) || a.type === 'revert_form'))
   );
   if (availableAbilities.length === 0) return null;
@@ -542,6 +552,7 @@ const useGameStore = create(persist((set, get) => ({
       unlockedSkills: {},
       equipment: startingEquipment,
       abilityLoadout: getDefaultLoadout(state.playerClass, startingEquipment?.weapon?.weaponType),
+      bearFormLoadout: state.playerClass === 'worge' ? getDefaultBearLoadout() : undefined,
     };
     set({
       screen: 'training',
@@ -570,6 +581,7 @@ const useGameStore = create(persist((set, get) => ({
       unspentPoints: hero.unspentPoints || 0,
       equipment: equip,
       abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId, equip?.weapon?.weaponType),
+      bearFormLoadout: hero.bearFormLoadout || (hero.classId === 'worge' ? getDefaultBearLoadout() : undefined),
     };
     const newRoster = [...state.heroRoster, heroWithSkills];
     const newActiveIds = state.activeHeroIds.length < 3
@@ -628,6 +640,14 @@ const useGameStore = create(persist((set, get) => ({
     }
     const updatedRoster = state.heroRoster.map(h =>
       h.id === heroId ? { ...h, abilityLoadout: [...loadout] } : h
+    );
+    set({ heroRoster: updatedRoster });
+  },
+
+  setHeroBearLoadout: (heroId, loadout) => {
+    const state = get();
+    const updatedRoster = state.heroRoster.map(h =>
+      h.id === heroId ? { ...h, bearFormLoadout: [...loadout] } : h
     );
     set({ heroRoster: updatedRoster });
   },

@@ -6,7 +6,7 @@ import { attributeDefinitions, calculateCombatPower, getBuildClassification, get
 import { getZoneTerrain } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
-import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
+import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap, getBearFormAbilityPool, getDefaultBearLoadout, getBearFormAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
@@ -289,7 +289,90 @@ function AbilityCard({ ability, idx, cls, isCurrent, isAlt, altBadge }) {
   );
 }
 
-function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout }) {
+function LoadoutSlotRow({ idx, loadout, abilityMap, cls, slotOptions, onSelect, isSelected, onToggle, accentColor }) {
+  const abilityId = loadout[idx];
+  const ability = abilityMap[abilityId];
+  const options = slotOptions;
+
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
+      <div
+        onClick={() => onToggle(idx)}
+        style={{
+          width: 160, flexShrink: 0,
+          display: 'flex', gap: 6, alignItems: 'center',
+          background: isSelected ? `${accentColor}18` : 'rgba(42,49,80,0.4)',
+          border: `2px solid ${isSelected ? accentColor : 'var(--border)'}`,
+          borderRadius: 8, padding: '6px 8px',
+          cursor: 'pointer', transition: 'all 0.15s',
+        }}
+      >
+        <div style={{
+          width: 20, height: 20, flexShrink: 0,
+          background: accentColor, borderRadius: 4,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.6rem', fontWeight: 700, color: '#0b1020',
+        }}>{idx + 1}</div>
+        {ability ? (
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ flexShrink: 0 }}><AbilityIcon ability={ability} size={22} /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.65rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ability.name}</div>
+              <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {ability.manaCost > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>{ability.manaCost}MP</span>}
+                {ability.staminaCost > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>{ability.staminaCost}SP</span>}
+                {ability.cooldown > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(100,100,120,0.2)', color: 'var(--muted)' }}>{ability.cooldown}T</span>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ flex: 1, color: 'var(--muted)', fontSize: '0.6rem', fontStyle: 'italic' }}>Empty</div>
+        )}
+      </div>
+
+      <div style={{
+        flex: 1, minWidth: 0,
+        display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start',
+        background: isSelected ? 'rgba(30,35,55,0.5)' : 'rgba(20,24,40,0.3)',
+        borderRadius: 6, padding: 3,
+        border: isSelected ? `1px solid ${accentColor}28` : '1px solid transparent',
+        transition: 'all 0.15s',
+        maxHeight: 80, overflowY: 'auto',
+      }}>
+        {options.length === 0 ? (
+          <div style={{ padding: '6px', fontSize: '0.5rem', color: 'rgba(100,100,120,0.5)', fontStyle: 'italic', width: '100%', textAlign: 'center' }}>No options</div>
+        ) : (
+          options.map(ab => {
+            const isCurrent = loadout[idx] === ab.id;
+            return (
+              <div key={ab.id}
+                onClick={() => !isCurrent && onSelect(idx, ab.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 3,
+                  background: isCurrent ? `${accentColor}1e` : 'rgba(42,49,80,0.3)',
+                  border: `1px solid ${isCurrent ? accentColor : 'rgba(60,65,90,0.4)'}`,
+                  borderRadius: 5, padding: '2px 5px',
+                  cursor: isCurrent ? 'default' : 'pointer',
+                  transition: 'all 0.1s',
+                  opacity: isCurrent ? 1 : 0.8,
+                }}
+                onMouseEnter={e => { showTooltip(`${ab.name}\n${ab.description}`, e); if (!isCurrent) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = accentColor; } }}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={e => { hideTooltip(); if (!isCurrent) { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.borderColor = 'rgba(60,65,90,0.4)'; } }}
+              >
+                <InlineIcon name={ab.icon} size={14} style={{ flexShrink: 0 }} />
+                <div style={{ fontSize: '0.55rem', fontWeight: 600, color: isCurrent ? accentColor : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ab.name}</div>
+                {isCurrent && <span style={{ fontSize: '0.5rem', color: accentColor, flexShrink: 0 }}>✓</span>}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoadout, setHeroBearLoadout }) {
   const weaponType = hero.equipment?.weapon?.weaponType || null;
   const loadout = hero.abilityLoadout || getDefaultLoadout(hero.classId, weaponType);
   const abilityMap = useMemo(() => getAllAbilityMap(hero.classId, weaponType, hero.unlockedSkills || {}), [hero.classId, weaponType, hero.unlockedSkills]);
@@ -302,7 +385,15 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
   }, [hero.classId, weaponType, hero.unlockedSkills]);
 
   const isWorge = hero.classId === 'worge';
-  const slotCount = 5;
+  const [bearSelectingSlot, setBearSelectingSlot] = useState(null);
+
+  const bearLoadout = hero.bearFormLoadout || (isWorge ? getDefaultBearLoadout() : []);
+  const bearPool = useMemo(() => isWorge ? getBearFormAbilityPool(hero.unlockedSkills || {}) : [], [isWorge, hero.unlockedSkills]);
+  const bearAbilityMap = useMemo(() => {
+    const map = {};
+    for (const ab of bearPool) map[ab.id] = ab;
+    return map;
+  }, [bearPool]);
 
   const handleSlotSelect = (slotIdx, abilityId) => {
     const newLoadout = [...loadout];
@@ -310,27 +401,46 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
     setHeroLoadout(hero.id, newLoadout);
   };
 
+  const handleBearSlotSelect = (slotIdx, abilityId) => {
+    const newLoadout = [...bearLoadout];
+    newLoadout[slotIdx] = abilityId;
+    setHeroBearLoadout(hero.id, newLoadout);
+  };
+
   const resetLoadout = () => {
     setHeroLoadout(hero.id, getDefaultLoadout(hero.classId, weaponType));
     setSelectingSlot(null);
   };
 
+  const resetBearLoadout = () => {
+    setHeroBearLoadout(hero.id, getDefaultBearLoadout());
+    setBearSelectingSlot(null);
+  };
+
   const getSlotOptions = (slotIdx) => {
     const locked = isSlotLocked(hero.classId, slotIdx);
     if (locked) return [];
-    const available = (slotAbilities[slotIdx] || []).filter(ability => {
-      const isCurrentSlot = loadout[slotIdx] === ability.id;
-      if (isCurrentSlot) return true;
+    return (slotAbilities[slotIdx] || []).filter(ability => {
+      if (loadout[slotIdx] === ability.id) return true;
       return !loadout.includes(ability.id);
     });
-    return available;
   };
+
+  const getBearSlotOptions = (slotIdx) => {
+    return bearPool.filter(ab => {
+      if (bearLoadout[slotIdx] === ab.id) return true;
+      return !bearLoadout.includes(ab.id);
+    });
+  };
+
+  const normalColor = cls?.color || 'var(--accent)';
+  const bearColor = '#d97706';
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h4 style={{ color: 'var(--accent)', fontSize: '0.85rem', margin: 0 }}>
-          Ability Loadout
+        <h4 style={{ color: normalColor, fontSize: '0.85rem', margin: 0 }}>
+          {isWorge ? 'Normal Form' : 'Ability Loadout'}
         </h4>
         <button onClick={resetLoadout} style={{
           background: 'rgba(100,100,120,0.2)', border: '1px solid var(--border)',
@@ -344,119 +454,93 @@ function LoadoutEditor({ hero, cls, selectingSlot, setSelectingSlot, setHeroLoad
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {Array.from({ length: slotCount }).map((_, idx) => {
-          const abilityId = loadout[idx];
-          const ability = abilityMap[abilityId];
+        {Array.from({ length: 5 }).map((_, idx) => {
           const locked = isSlotLocked(hero.classId, idx);
-          const isSelected = selectingSlot === idx;
-          const options = getSlotOptions(idx);
-          const altAbility = isWorge && cls?.bearFormAbilities?.[abilityId] ? cls.bearFormAbilities[abilityId] : null;
-
-          return (
-            <div key={idx} style={{
-              display: 'flex', gap: 4, alignItems: 'stretch',
-            }}>
-              <div
-                onClick={() => !locked && setSelectingSlot(isSelected ? null : idx)}
-                style={{
+          if (locked) {
+            const sigAbility = abilityMap[loadout[idx]];
+            return (
+              <div key={idx} style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
+                <div style={{
                   width: 160, flexShrink: 0,
                   display: 'flex', gap: 6, alignItems: 'center',
-                  background: isSelected ? 'rgba(110,231,183,0.1)' : 'rgba(42,49,80,0.4)',
-                  border: `2px solid ${isSelected ? 'var(--accent)' : locked ? 'rgba(100,100,120,0.3)' : 'var(--border)'}`,
+                  background: 'rgba(42,49,80,0.4)',
+                  border: '2px solid rgba(100,100,120,0.3)',
                   borderRadius: 8, padding: '6px 8px',
-                  cursor: locked ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s',
-                  opacity: locked ? 0.6 : 1,
-                }}
-              >
-                <div style={{
-                  width: 20, height: 20, flexShrink: 0,
-                  background: cls?.color || 'var(--accent)', borderRadius: 4,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.6rem', fontWeight: 700, color: '#0b1020',
-                }}>{idx + 1}</div>
-                {ability ? (
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ flexShrink: 0 }}><AbilityIcon ability={ability} size={22} /></span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.65rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ability.name}</div>
-                      <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                        {ability.manaCost > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(59,130,246,0.15)', color: '#3b82f6' }}>{ability.manaCost}MP</span>}
-                        {ability.staminaCost > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>{ability.staminaCost}SP</span>}
-                        {ability.cooldown > 0 && <span style={{ fontSize: '0.45rem', padding: '0px 3px', borderRadius: 2, background: 'rgba(100,100,120,0.2)', color: 'var(--muted)' }}>{ability.cooldown}T</span>}
-                      </div>
-                      {altAbility && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1, fontSize: '0.45rem', color: '#d97706' }}>
-                          <InlineIcon name="wolf" size={12} />
-                          <span style={{ fontWeight: 600 }}>{altAbility.name}</span>
-                        </div>
-                      )}
+                  cursor: 'not-allowed', opacity: 0.6,
+                }}>
+                  <div style={{ width: 20, height: 20, flexShrink: 0, background: normalColor, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, color: '#0b1020' }}>{idx + 1}</div>
+                  {sigAbility ? (
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ flexShrink: 0 }}><AbilityIcon ability={sigAbility} size={22} /></span>
+                      <div style={{ fontWeight: 700, fontSize: '0.65rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sigAbility.name}</div>
                     </div>
-                  </div>
-                ) : (
-                  <div style={{ flex: 1, color: 'var(--muted)', fontSize: '0.6rem', fontStyle: 'italic' }}>Empty</div>
-                )}
-                {locked && <div style={{ fontSize: '0.5rem', color: '#d97706', fontWeight: 600 }}><InlineIcon name="lock" size={10} /></div>}
+                  ) : <div style={{ flex: 1, color: 'var(--muted)', fontSize: '0.6rem', fontStyle: 'italic' }}>Signature</div>}
+                  <InlineIcon name="lock" size={10} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(20,24,40,0.3)', borderRadius: 6, border: '1px solid transparent' }}>
+                  <span style={{ fontSize: '0.5rem', color: 'rgba(100,100,120,0.4)', fontStyle: 'italic' }}>Signature</span>
+                </div>
               </div>
-
-              <div style={{
-                flex: 1, minWidth: 0,
-                display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start',
-                background: isSelected ? 'rgba(30,35,55,0.5)' : 'rgba(20,24,40,0.3)',
-                borderRadius: 6, padding: locked ? 0 : 3,
-                border: isSelected ? '1px solid rgba(110,231,183,0.15)' : '1px solid transparent',
-                transition: 'all 0.15s',
-                maxHeight: 80, overflowY: 'auto',
-              }}>
-                {locked ? (
-                  <div style={{ padding: '8px 6px', fontSize: '0.5rem', color: 'rgba(100,100,120,0.4)', fontStyle: 'italic', width: '100%', textAlign: 'center' }}>Signature</div>
-                ) : options.length === 0 ? (
-                  <div style={{ padding: '6px', fontSize: '0.5rem', color: 'rgba(100,100,120,0.5)', fontStyle: 'italic', width: '100%', textAlign: 'center' }}>No options</div>
-                ) : (
-                  options.map(ab => {
-                    const isCurrent = loadout[idx] === ab.id;
-                    const bearAlt = isWorge && cls?.bearFormAbilities?.[ab.id] ? cls.bearFormAbilities[ab.id] : null;
-                    return (
-                      <div key={ab.id}
-                        onClick={() => !isCurrent && handleSlotSelect(idx, ab.id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 3,
-                          background: isCurrent ? 'rgba(110,231,183,0.12)' : 'rgba(42,49,80,0.3)',
-                          border: `1px solid ${isCurrent ? 'var(--accent)' : 'rgba(60,65,90,0.4)'}`,
-                          borderRadius: 5, padding: '2px 5px',
-                          cursor: isCurrent ? 'default' : 'pointer',
-                          transition: 'all 0.1s',
-                          opacity: isCurrent ? 1 : 0.8,
-                        }}
-                        onMouseEnter={e => { showTooltip(`${ab.name}\n${ab.description}${bearAlt ? `\nBear: ${bearAlt.name} — ${bearAlt.description}` : ''}`, e); if (!isCurrent) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = cls?.color || 'var(--accent)'; } }}
-                        onMouseMove={e => updateTooltipPosition(e)}
-                        onMouseLeave={e => { hideTooltip(); if (!isCurrent) { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.borderColor = 'rgba(60,65,90,0.4)'; } }}
-                      >
-                        <InlineIcon name={ab.icon} size={14} style={{ flexShrink: 0 }} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: '0.55rem', fontWeight: 600, color: isCurrent ? 'var(--accent)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ab.name}</div>
-                          {bearAlt && (
-                            <div style={{ fontSize: '0.4rem', color: '#d97706', display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <InlineIcon name="wolf" size={12} />{bearAlt.name}
-                            </div>
-                          )}
-                        </div>
-                        {isCurrent && <span style={{ fontSize: '0.5rem', color: 'var(--accent)', flexShrink: 0 }}>✓</span>}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            );
+          }
+          return (
+            <LoadoutSlotRow
+              key={idx}
+              idx={idx}
+              loadout={loadout}
+              abilityMap={abilityMap}
+              cls={cls}
+              slotOptions={getSlotOptions(idx)}
+              onSelect={handleSlotSelect}
+              isSelected={selectingSlot === idx}
+              onToggle={(i) => { setBearSelectingSlot(null); setSelectingSlot(selectingSlot === i ? null : i); }}
+              accentColor={normalColor}
+            />
           );
         })}
       </div>
+
+      {isWorge && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, marginBottom: 10 }}>
+            <h4 style={{ color: bearColor, fontSize: '0.85rem', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <InlineIcon name="wolf" size={16} /> Bear Form
+            </h4>
+            <button onClick={resetBearLoadout} style={{
+              background: 'rgba(100,100,120,0.2)', border: '1px solid var(--border)',
+              borderRadius: 6, padding: '3px 10px', fontSize: '0.65rem',
+              color: 'var(--muted)', cursor: 'pointer',
+            }}>Reset</button>
+          </div>
+
+          <div style={{ fontSize: '0.55rem', color: 'var(--muted)', marginBottom: 10, lineHeight: 1.3 }}>
+            These abilities are used when transformed into bear form.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <LoadoutSlotRow
+                key={`bear-${idx}`}
+                idx={idx}
+                loadout={bearLoadout}
+                abilityMap={bearAbilityMap}
+                cls={cls}
+                slotOptions={getBearSlotOptions(idx)}
+                onSelect={handleBearSlotSelect}
+                isSelected={bearSelectingSlot === idx}
+                onToggle={(i) => { setSelectingSlot(null); setBearSelectingSlot(bearSelectingSlot === i ? null : i); }}
+                accentColor={bearColor}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function HeroDetailPanel({ hero, onClose }) {
-  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout } = useGameStore();
+  const { unlockHeroSkill, allocateHeroPoint, deallocateHeroPoint, activeHeroIds, setActiveHeroes, equipItem, unequipItem, inventory, setHeroLoadout, setHeroBearLoadout } = useGameStore();
   const [tab, setTab] = useState('stats');
   const [selectingSlot, setSelectingSlot] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -1219,7 +1303,7 @@ function HeroDetailPanel({ hero, onClose }) {
         })()}
 
         {tab === 'abilities' && (
-          <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} />
+          <LoadoutEditor hero={hero} cls={cls} selectingSlot={selectingSlot} setSelectingSlot={setSelectingSlot} setHeroLoadout={setHeroLoadout} setHeroBearLoadout={setHeroBearLoadout} />
         )}
 
         {tab === 'skills' && tree && (() => {
