@@ -3318,31 +3318,26 @@ export default function BattleScreen() {
             display: 'flex', flexDirection: 'column',
             padding: '18px 8px 8px 22px',
             overflow: 'hidden',
+            backgroundImage: 'url(/ui/chat-background.png)',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: 4,
           }}>
+            <div style={{ padding: '0 2px 2px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span className="font-cinzel" style={{ fontSize: '1rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>BATTLE LOG</span>
+            </div>
             <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              backgroundImage: 'url(/ui/chat-background.png)',
-              backgroundSize: '100% 100%',
-              backgroundRepeat: 'no-repeat',
-              borderRadius: 4,
-              padding: '6px 8px',
+              flex: 1, overflowY: 'auto', padding: '2px 4px',
+              fontSize: '0.6rem', lineHeight: 1.4,
+              scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
+              fontFamily: "'Jost', sans-serif",
+              minHeight: 60,
             }}>
-              <div style={{ padding: '0 2px 2px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span className="font-cinzel" style={{ fontSize: '1rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>BATTLE LOG</span>
-              </div>
-              <div style={{
-                flex: 1, overflowY: 'auto', padding: '2px 4px',
-                fontSize: '0.6rem', lineHeight: 1.4,
-                scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
-                fontFamily: "'Jost', sans-serif",
-                minHeight: 60,
-              }}>
-                {battleLog.length > 0 ? battleLog.slice(-6).map((msg, i) => (
-                  <div key={i} style={{ color: 'rgba(226,232,240,0.7)', marginBottom: 1 }}>{msg}</div>
-                )) : (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.5rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Awaiting combat...</div>
-                )}
-              </div>
+              {battleLog.length > 0 ? battleLog.slice(-6).map((msg, i) => (
+                <div key={i} style={{ color: 'rgba(226,232,240,0.7)', marginBottom: 1 }}>{msg}</div>
+              )) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.5rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Awaiting combat...</div>
+              )}
             </div>
           </div>
 
