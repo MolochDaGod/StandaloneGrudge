@@ -51,40 +51,33 @@ function ChatAvatar({ race, heroClass, namedHeroId, size = 20 }) {
 function BarRow({ label, current, max, color }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   const fillColors = {
-    '#22c55e': { top: '#78e08f', mid: '#38b764', bot: '#1e6f3e', glow: 'rgba(34,197,94,0.35)' },
-    '#3b82f6': { top: '#7db8ff', mid: '#3b82f6', bot: '#1d4ed8', glow: 'rgba(59,130,246,0.35)' },
-    '#f59e0b': { top: '#fcd34d', mid: '#f59e0b', bot: '#b45309', glow: 'rgba(245,158,11,0.35)' },
-    '#dc2626': { top: '#f87171', mid: '#dc2626', bot: '#7f1d1d', glow: 'rgba(220,38,38,0.4)' },
+    '#22c55e': { main: '#38b764', bright: '#5dd98a', glow: 'rgba(34,197,94,0.4)' },
+    '#3b82f6': { main: '#3b82f6', bright: '#6da8ff', glow: 'rgba(59,130,246,0.4)' },
+    '#f59e0b': { main: '#d97706', bright: '#fbbf24', glow: 'rgba(245,158,11,0.4)' },
+    '#dc2626': { main: '#dc2626', bright: '#f87171', glow: 'rgba(220,38,38,0.4)' },
   };
-  const fc = fillColors[color] || { top: color, mid: color, bot: color, glow: color + '44' };
+  const fc = fillColors[color] || { main: color, bright: color, glow: color + '44' };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-      <span style={{ width: 14, fontSize: '0.35rem', fontWeight: 800, color: fc.mid, textAlign: 'right', letterSpacing: '-0.02em' }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <span style={{ width: 16, fontSize: '0.5rem', fontWeight: 700, color: fc.bright, textAlign: 'right', fontFamily: "'Cinzel', serif" }}>{label}</span>
       <div style={{
-        flex: 1, height: 4,
-        background: 'linear-gradient(180deg, #1a1a2e, #0d0d1a)',
+        flex: 1, height: 6,
+        background: 'rgba(0,0,0,0.6)',
         overflow: 'hidden',
-        border: '1px solid #2a2a3e',
-        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)',
+        borderRadius: 3,
+        border: '1px solid rgba(255,255,255,0.08)',
         position: 'relative',
       }}>
         <div style={{
           position: 'absolute', top: 0, left: 0, bottom: 0,
           width: `${pct}%`,
-          background: `linear-gradient(180deg, ${fc.top} 0%, ${fc.mid} 40%, ${fc.bot} 100%)`,
+          background: `linear-gradient(180deg, ${fc.bright} 0%, ${fc.main} 100%)`,
           transition: 'width 0.4s ease',
-          boxShadow: pct > 0 ? `0 0 4px ${fc.glow}` : 'none',
+          borderRadius: 3,
+          boxShadow: pct > 0 ? `0 0 6px ${fc.glow}` : 'none',
         }} />
-        {pct > 0 && (
-          <div style={{
-            position: 'absolute', top: 0, left: 0,
-            width: `${pct}%`, height: '40%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0))',
-            transition: 'width 0.4s ease',
-          }} />
-        )}
       </div>
-      <span style={{ width: 22, fontSize: '0.3rem', color: 'rgba(226,232,240,0.5)', textAlign: 'right', fontWeight: 600 }}>{Math.floor(current)}</span>
+      <span style={{ width: 24, fontSize: '0.45rem', color: 'rgba(226,232,240,0.6)', textAlign: 'right', fontWeight: 600, fontFamily: "'Jost', sans-serif" }}>{Math.floor(current)}</span>
     </div>
   );
 }
@@ -489,24 +482,21 @@ export default function MapBottomBar({
 
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, top: 0,
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
         display: 'flex',
         alignItems: 'stretch',
-        backgroundImage: 'url(/ui/bar-background.png)',
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
       }}>
 
         <div style={{
-          flex: '0 0 28%',
+          flex: '0 0 24%',
           display: 'flex', flexDirection: 'column',
-          padding: '20px 8px 10px 24px',
+          padding: '10px 8px 8px 12px',
           overflow: 'hidden',
-          backgroundImage: 'url(/ui/chat-background.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          borderRadius: 4,
+          background: 'linear-gradient(180deg, rgba(10,8,15,0.85) 0%, rgba(8,6,12,0.92) 100%)',
+          borderRight: '1px solid rgba(197,160,89,0.15)',
+          borderTop: '1px solid rgba(197,160,89,0.12)',
+          borderRadius: '6px 0 0 0',
+          pointerEvents: 'auto',
         }}>
           <div style={{
             padding: '2px 8px',
@@ -559,9 +549,10 @@ export default function MapBottomBar({
 
         <div style={{
           flex: '1 1 0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '10px 8px 6px',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          padding: '0 8px 8px',
           position: 'relative',
+          pointerEvents: 'none',
         }}>
           <div style={{
             display: 'flex',
@@ -573,6 +564,7 @@ export default function MapBottomBar({
             borderRadius: 6,
             boxShadow: 'inset 0 1px 0 rgba(197,160,89,0.1), 0 2px 8px rgba(0,0,0,0.6), 0 0 1px rgba(197,160,89,0.15)',
             position: 'relative',
+            pointerEvents: 'auto',
           }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), rgba(197,160,89,0.35), rgba(197,160,89,0.2), transparent)', borderRadius: '6px 6px 0 0' }} />
 
@@ -644,13 +636,14 @@ export default function MapBottomBar({
         <div style={{
           flex: '0 0 20%',
           display: 'flex', flexDirection: 'column',
-          padding: '20px 24px 12px 8px',
+          padding: '10px 12px 8px 8px',
           position: 'relative',
           overflow: 'visible',
-          backgroundImage: 'url(/ui/sidebar-bg.png)',
-          backgroundSize: '100% 100%',
-          backgroundRepeat: 'no-repeat',
-          borderRadius: 4,
+          background: 'linear-gradient(180deg, rgba(10,8,15,0.85) 0%, rgba(8,6,12,0.92) 100%)',
+          borderLeft: '1px solid rgba(197,160,89,0.15)',
+          borderTop: '1px solid rgba(197,160,89,0.12)',
+          borderRadius: '0 6px 0 0',
+          pointerEvents: 'auto',
         }}>
           <div style={{
             position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
@@ -684,10 +677,10 @@ export default function MapBottomBar({
           </div>
 
           <div style={{
-            flex: 1, overflowY: 'auto', paddingTop: 18,
+            flex: 1, overflowY: 'auto', paddingTop: 12,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent',
           }}>
-            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 4, letterSpacing: '0.05em', textAlign: 'center' }}>
+            <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: "'Jost', sans-serif" }}>

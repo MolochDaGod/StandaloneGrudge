@@ -1176,16 +1176,32 @@ export default function WorldMap() {
     }
   };
 
-  const HealthBar = ({ current, max, color, label }) => (
-    <div style={{ marginBottom: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--muted)', marginBottom: 1 }}>
-        <span>{label}</span><span>{current}/{max}</span>
+  const HealthBar = ({ current, max, color, label }) => {
+    const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+    const colors = {
+      '#22c55e': { bright: '#5dd98a', glow: 'rgba(34,197,94,0.4)' },
+      '#3b82f6': { bright: '#6da8ff', glow: 'rgba(59,130,246,0.4)' },
+    };
+    const fc = colors[color] || { bright: color, glow: color + '44' };
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+        <span style={{ width: 18, fontSize: '0.7rem', fontWeight: 700, color: fc.bright, textAlign: 'right', fontFamily: "'Cinzel', serif" }}>{label}</span>
+        <div style={{
+          flex: 1, height: 8, background: 'rgba(0,0,0,0.5)', borderRadius: 4,
+          overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', top: 0, left: 0, bottom: 0,
+            width: `${pct}%`, borderRadius: 4,
+            background: `linear-gradient(180deg, ${fc.bright} 0%, ${color} 100%)`,
+            transition: 'width 0.4s ease',
+            boxShadow: pct > 0 ? `0 0 6px ${fc.glow}` : 'none',
+          }} />
+        </div>
+        <span style={{ fontSize: '0.65rem', color: 'rgba(226,232,240,0.7)', fontWeight: 600, minWidth: 48, textAlign: 'right' }}>{Math.floor(current)}/{Math.floor(max)}</span>
       </div>
-      <div style={{ height: 5, background: 'var(--border)', borderRadius: 3 }}>
-        <div style={{ height: '100%', width: `${(current/max)*100}%`, background: color, borderRadius: 3, transition: 'width 0.3s' }} />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const selectedLoc = selectedLocation ? locations.find(l => l.id === selectedLocation) : null;
   const bossDefeated = selectedLoc?.boss ? bossesDefeated.includes(selectedLoc.boss) : false;
