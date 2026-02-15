@@ -34,7 +34,7 @@
   outline: none;
 }
 
-html, body {
+html {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -43,27 +43,25 @@ html, body {
 }
 
 body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   font-family: 'Jost', sans-serif;
   background: var(--bg, #0b1020);
   color: var(--text);
 }
 
 #root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
 .game-frame {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
+  inset: 0;
   overflow: hidden;
   background: var(--bg);
   cursor: url('/sprites/ui/cursor_gauntlet.png') 4 0, auto;
