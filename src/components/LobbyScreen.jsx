@@ -2491,7 +2491,6 @@ function CreditsTab({ panelStyle }) {
         {divider}
         {sectionHeader('Special Thanks')}
         <CreditEntry title="The Grudge Warlords Community" role="Beta testers, feedback & bug reports" />
-        <CreditEntry title="Final Fantasy VII" role="The eternal inspiration" />
         <CreditEntry title="Discord Community" role="discord.gg/KmAC5aXs84" />
       </div>
 
