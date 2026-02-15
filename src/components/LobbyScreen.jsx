@@ -156,8 +156,8 @@ export default function LobbyScreen() {
           borderRight: 'none',
           display: 'flex', flexDirection: 'column',
           justifyContent: 'center',
-          padding: '20px 0',
-          gap: 14,
+          padding: '16px 0',
+          gap: 6,
           position: 'relative',
           boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), 4px 0 12px rgba(0,0,0,0.5)',
         }}>
@@ -241,7 +241,7 @@ function NavItem({ essentialIcon, label, active, onClick }) {
         src={active ? '/ui/wood_light.png' : '/ui/wood_dark.png'}
         alt=""
         style={{
-          display: 'block', width: '100%', height: 48,
+          display: 'block', width: '100%', height: 72,
           objectFit: 'fill',
           pointerEvents: 'none',
         }}
@@ -249,7 +249,7 @@ function NavItem({ essentialIcon, label, active, onClick }) {
       <span style={{
         position: 'absolute', inset: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        color: '#1a1008', fontSize: '1.05rem',
+        color: '#1a1008', fontSize: '1.2rem',
         fontFamily: "'LifeCraft', 'Cinzel', serif",
         letterSpacing: 3,
         textShadow: '0 1px 0 rgba(255,255,255,0.3)',
