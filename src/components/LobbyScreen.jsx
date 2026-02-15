@@ -1412,7 +1412,7 @@ function HeroSlideshow() {
 
         {textVisible && (
           <div style={{
-            position: 'absolute', top: '15%', left: '50%',
+            position: 'absolute', top: 16, left: '50%',
             transform: 'translateX(-50%)',
             textAlign: 'center', zIndex: 4,
             animation: 'ssTitleDrop 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both',
@@ -1429,10 +1429,10 @@ function HeroSlideshow() {
             </div>
             <div style={{
               fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)',
-              marginTop: 6, fontStyle: 'italic',
+              marginTop: 4, fontStyle: 'italic',
               textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-              maxWidth: 350, margin: '6px auto 0',
-              lineHeight: 1.4,
+              maxWidth: 350, margin: '4px auto 0',
+              lineHeight: 1.3,
               animation: 'ssFadeUp 0.6s ease 0.4s both',
             }}>
               {LORE_QUOTES[combo.classId]}
