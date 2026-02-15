@@ -32,6 +32,7 @@ export function hideTooltip() {
 export function updateTooltipPosition(e) {
   tooltipState.x = e.clientX;
   tooltipState.y = e.clientY;
+  tooltipState.lastActivity = Date.now();
   notify();
 }
 
@@ -77,11 +78,28 @@ export default function GameTooltipRenderer() {
   const [state, setState] = useState({ content: null, x: 0, y: 0 });
   const tipRef = useRef(null);
   const [pos, setPos] = useState({ left: 0, top: 0, opacity: 0 });
+  const lastMouseMove = useRef(Date.now());
 
   useEffect(() => {
-    const handler = (s) => setState(s);
+    const handler = (s) => {
+      if (s.content) lastMouseMove.current = Date.now();
+      setState(s);
+    };
     tooltipState.listeners.add(handler);
-    return () => tooltipState.listeners.delete(handler);
+
+    const staleCheck = setInterval(() => {
+      if (tooltipState.content) {
+        const lastAct = Math.max(lastMouseMove.current, tooltipState.lastActivity || 0);
+        if (Date.now() - lastAct > 1500) {
+          hideTooltip();
+        }
+      }
+    }, 500);
+
+    return () => {
+      tooltipState.listeners.delete(handler);
+      clearInterval(staleCheck);
+    };
   }, []);
 
   useEffect(() => {
