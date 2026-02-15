@@ -985,13 +985,13 @@ export const raceClassSpriteMap = {
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'hue-rotate(190deg) saturate(1.2) brightness(1.05)', scale: 1.35 },
     mage: { ...spriteSheets['barbarian-mage'], filter: 'hue-rotate(180deg) saturate(1.1) brightness(1.0)' },
-    worge: { ...spriteSheets['shardsoul-slayer'], scale: 1.35 },
+    worge: { ...spriteSheets.soldier, filter: 'sepia(0.5) saturate(1.2) brightness(0.85)', scale: 1.35 },
     ranger: { ...spriteSheets['barbarian-ranger'], scale: 1.35 },
   },
   dwarf: {
     warrior: spriteSheets['crystal-mauler'],
     mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' },
-    worge: spriteSheets['dwarf-worge'],
+    worge: spriteSheets['shardsoul-slayer'],
     ranger: spriteSheets['dwarf-ranger'],
   },
 };
