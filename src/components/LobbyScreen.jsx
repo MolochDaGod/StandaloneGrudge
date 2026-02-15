@@ -2381,26 +2381,133 @@ function DiscordTab({ panelStyle }) {
 }
 
 function CreditsTab({ panelStyle }) {
-  return (
-    <div style={{ maxWidth: 700 }}>
-      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
-        Credits
-      </h2>
-      <div style={{ ...panelStyle }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CreditEntry title="Grudge Studio" role="Development & Design" />
-          <CreditEntry title="Sprite Artists" role="Character & Monster Sprites" />
-          <CreditEntry title="Sound Design" role="Web Audio Synthesized SFX" />
-          <CreditEntry title="Special Thanks" role="The Grudge Warlords Community" />
+  const [legalTab, setLegalTab] = useState(null);
+
+  const sectionHeader = (text) => (
+    <div className="font-cinzel" style={{
+      color: 'var(--accent)', fontSize: '0.7rem', letterSpacing: 3,
+      textTransform: 'uppercase', marginBottom: 8, marginTop: 4,
+      borderBottom: '1px solid rgba(110,231,183,0.15)', paddingBottom: 6,
+    }}>{text}</div>
+  );
+
+  const divider = <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(110,231,183,0.2), transparent)', margin: '12px 0' }} />;
+
+  if (legalTab) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
+        <button onClick={() => setLegalTab(null)} style={{
+          background: 'none', border: 'none', color: 'var(--accent)',
+          cursor: 'pointer', fontFamily: "'Cinzel', serif", fontSize: '0.8rem',
+          marginBottom: 12, padding: 0, letterSpacing: 1,
+        }}>&larr; Back to Credits</button>
+        <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.3rem', marginBottom: 16, textAlign: 'center' }}>
+          {legalTab === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
+        </h2>
+        <div style={{ ...panelStyle, maxHeight: 420, overflowY: 'auto', lineHeight: 1.7, fontSize: '0.78rem', color: '#ccc' }}>
+          {legalTab === 'privacy' ? (
+            <div>
+              <p style={{ color: 'var(--muted)', marginBottom: 12 }}>Last updated: February 2026</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>1. Information We Collect</strong><br/>
+              Grudge Warlords collects minimal data to provide the game experience. When you log in via Discord, we receive your Discord user ID, username, and avatar. We do not collect or store passwords. Game progress (characters, inventory, arena stats) is stored server-side and linked to your account.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>2. How We Use Your Data</strong><br/>
+              Your data is used solely to provide and improve the game experience, including saving your progress, displaying leaderboards, and enabling multiplayer features like the GRUDA Arena.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>3. Data Sharing</strong><br/>
+              We do not sell or share your personal data with third parties. Your Discord username may appear on public leaderboards if you participate in ranked PvP.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>4. Cookies & Local Storage</strong><br/>
+              The game uses browser local storage to save preferences and session tokens. No tracking cookies are used.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>5. Data Retention & Deletion</strong><br/>
+              Your game data is retained as long as your account is active. You may request deletion of your account and associated data by contacting us through our Discord server.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>6. Children's Privacy</strong><br/>
+              Grudge Warlords is not directed at children under 13. We do not knowingly collect data from children under 13.</p>
+              <p><strong style={{ color: '#fff' }}>7. Contact</strong><br/>
+              For privacy-related inquiries, reach us via the Grudge Warlords Discord server or at grudgestudio@proton.me.</p>
+            </div>
+          ) : (
+            <div>
+              <p style={{ color: 'var(--muted)', marginBottom: 12 }}>Last updated: February 2026</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>1. Acceptance of Terms</strong><br/>
+              By playing Grudge Warlords, you agree to these Terms of Service. If you do not agree, please do not use the game.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>2. Game Access</strong><br/>
+              Grudge Warlords is provided as-is. We reserve the right to modify, suspend, or discontinue the game at any time without notice. Guest accounts may be wiped periodically.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>3. User Conduct</strong><br/>
+              You agree not to exploit bugs, use automation tools, or engage in any behavior that disrupts the game experience for others. Abuse of the arena system or leaderboards may result in account suspension.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>4. Intellectual Property</strong><br/>
+              All game content including artwork, sprites, music, code, and lore is the property of Grudge Studio. You may not reproduce, distribute, or create derivative works without permission.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>5. Virtual Items & Currency</strong><br/>
+              In-game items, gold, and progression have no real-world monetary value. Grudge Studio reserves the right to modify game balance, items, and economy at any time.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>6. Disclaimer of Warranties</strong><br/>
+              The game is provided "as is" without warranties of any kind. We do not guarantee uninterrupted access or that the game will be free of errors.</p>
+              <p style={{ marginBottom: 10 }}><strong style={{ color: '#fff' }}>7. Limitation of Liability</strong><br/>
+              Grudge Studio shall not be liable for any damages arising from the use of or inability to use the game, including loss of game data.</p>
+              <p><strong style={{ color: '#fff' }}>8. Changes to Terms</strong><br/>
+              We may update these terms at any time. Continued use of the game constitutes acceptance of updated terms.</p>
+            </div>
+          )}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      <h2 className="font-cinzel" style={{
+        color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 4, textAlign: 'center',
+      }}>Credits</h2>
+      <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.7rem', letterSpacing: 2, marginBottom: 20 }}>
+        THE PEOPLE BEHIND THE GRUDGE
+      </div>
+
+      <div style={{ ...panelStyle, background: 'linear-gradient(135deg, rgba(20,20,35,0.95), rgba(30,25,45,0.95))', border: '1px solid rgba(110,231,183,0.12)' }}>
+        {sectionHeader('Studio')}
+        <CreditEntry title="Grudge Studio" role="Development, Design & Direction" highlight />
+        <CreditEntry title="Racalvin the Pirate King" role="Creative Lead & Founder" highlight />
+
+        {divider}
+        {sectionHeader('Art & Animation')}
+        <CreditEntry title="Sprite Artists" role="Character, Monster & Boss Sprites" />
+        <CreditEntry title="VFX & Particles" role="Custom Effect Sprite Sheets & CSS Animations" />
+        <CreditEntry title="UI Art" role="Pixel Art Interface, Icons & Bar System" />
+        <CreditEntry title="World Art" role="Map Illustrations, Scene Backgrounds & Environments" />
+
+        {divider}
+        {sectionHeader('Audio')}
+        <CreditEntry title="Sound Design" role="Web Audio Synthesized SFX & Combat Sounds" />
+        <CreditEntry title="Music" role="Original Background Tracks & Ambient Scores" />
+
+        {divider}
+        {sectionHeader('Technology')}
+        <CreditEntry title="Engine" role="React 19, Vite, Zustand, Express" />
+        <CreditEntry title="Online Services" role="Discord.js, Neon PostgreSQL, Replit" />
+
+        {divider}
+        {sectionHeader('Special Thanks')}
+        <CreditEntry title="The Grudge Warlords Community" role="Beta testers, feedback & bug reports" />
+        <CreditEntry title="Final Fantasy VII" role="The eternal inspiration" />
+        <CreditEntry title="Discord Community" role="discord.gg/KmAC5aXs84" />
+      </div>
+
       <div style={{
         ...panelStyle, marginTop: 16, textAlign: 'center',
+        background: 'linear-gradient(135deg, rgba(20,20,35,0.9), rgba(30,25,45,0.9))',
+        border: '1px solid rgba(110,231,183,0.08)',
       }}>
-        <div style={{ color: 'var(--muted)', fontSize: '0.75rem', lineHeight: 1.6 }}>
-          Grudge Warlords v1.0<br/>
-          &copy; 2026 Grudge Studio. All rights reserved.<br/>
-          Inspired by Final Fantasy VII
+        <div style={{ color: 'var(--muted)', fontSize: '0.72rem', lineHeight: 1.8 }}>
+          <span className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Grudge Warlords</span>
+          <span style={{ margin: '0 6px', opacity: 0.4 }}>|</span>v1.0<br/>
+          &copy; 2026 Grudge Studio. All rights reserved.
+        </div>
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 24 }}>
+          <button onClick={() => setLegalTab('privacy')} style={{
+            background: 'none', border: 'none', color: 'rgba(110,231,183,0.6)',
+            cursor: 'pointer', fontSize: '0.7rem', letterSpacing: 1, padding: 0,
+            textDecoration: 'underline', textUnderlineOffset: 3,
+          }}>Privacy Policy</button>
+          <button onClick={() => setLegalTab('terms')} style={{
+            background: 'none', border: 'none', color: 'rgba(110,231,183,0.6)',
+            cursor: 'pointer', fontSize: '0.7rem', letterSpacing: 1, padding: 0,
+            textDecoration: 'underline', textUnderlineOffset: 3,
+          }}>Terms of Service</button>
         </div>
       </div>
     </div>
@@ -2417,11 +2524,15 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-function CreditEntry({ title, role }) {
+function CreditEntry({ title, role, highlight }) {
   return (
-    <div>
-      <div className="font-cinzel" style={{ color: '#fff', fontSize: '0.9rem' }}>{title}</div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>{role}</div>
+    <div style={{ padding: '4px 0' }}>
+      <div className="font-cinzel" style={{
+        color: highlight ? 'var(--accent)' : '#ddd',
+        fontSize: highlight ? '0.95rem' : '0.85rem',
+        textShadow: highlight ? '0 0 12px rgba(110,231,183,0.3)' : 'none',
+      }}>{title}</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.72rem', marginTop: 2 }}>{role}</div>
     </div>
   );
 }
