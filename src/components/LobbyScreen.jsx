@@ -885,6 +885,7 @@ function HeroSlideshow() {
   const [showVfx, setShowVfx] = useState(false);
   const [showTransform, setShowTransform] = useState(false);
   const [transformAnim, setTransformAnim] = useState('idle');
+  const [showTransformVfx, setShowTransformVfx] = useState(false);
   const [textVisible, setTextVisible] = useState(false);
   const [auraIntensity, setAuraIntensity] = useState(0);
   const [spriteX, setSpriteX] = useState(-30);
@@ -1072,6 +1073,7 @@ function HeroSlideshow() {
       setSpriteRotation(0);
       setShowVfx(false);
       setShowTransform(false);
+      setShowTransformVfx(false);
       setShowBubble(false);
       return;
     }
@@ -1080,6 +1082,7 @@ function HeroSlideshow() {
     setTextVisible(false);
     setShowVfx(false);
     setShowTransform(false);
+    setShowTransformVfx(false);
     setShowBubble(false);
     setAuraIntensity(0);
     setSpriteX(-30);
@@ -1287,11 +1290,16 @@ function HeroSlideshow() {
 
         addTimer(() => {
           setShowBubble(false);
-          setShowTransform(true);
+          setShowTransformVfx(true);
           setAnim('idle');
-          setTransformAnim('idle');
           setShowVfx(false);
         }, walkDuration + 800 + attackDuration + 1400);
+
+        addTimer(() => {
+          setShowTransform(true);
+          setTransformAnim('idle');
+          setShowTransformVfx(false);
+        }, walkDuration + 800 + attackDuration + 1800);
 
         addTimer(() => {
           setTransformAnim(tAtk);
@@ -1488,8 +1496,8 @@ function HeroSlideshow() {
                 }} />
 
                 <div style={{
-                  opacity: showTransform ? 0 : 1,
-                  transform: showTransform ? 'scale(0.6)' : 'scale(1)',
+                  opacity: (showTransform || showTransformVfx) ? 0 : 1,
+                  transform: (showTransform || showTransformVfx) ? 'scale(0.6)' : 'scale(1)',
                   transformOrigin: 'bottom center',
                   transition: 'all 0.4s ease',
                 }}>
@@ -1503,6 +1511,20 @@ function HeroSlideshow() {
                     onAnimationEnd={!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null}
                   />
                 </div>
+
+                {isWorge && showTransformVfx && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '50%', bottom: 0,
+                    transform: 'translateX(-50%)',
+                    transformOrigin: 'bottom center',
+                    zIndex: 12,
+                    pointerEvents: 'none',
+                    animation: 'ssTornadoIn 0.3s ease-out forwards',
+                  }}>
+                    <SlideshowVFXSprite effectKey="worgeTornado" displaySize={300} />
+                  </div>
+                )}
 
                 {isWorge && showTransform && worgeTransformData && (() => {
                   return (
@@ -1621,6 +1643,11 @@ function HeroSlideshow() {
           0% { opacity: 0; transform: translateX(-50%) scaleX(1.3); filter: brightness(3); }
           50% { opacity: 1; filter: brightness(1.5); }
           100% { opacity: 1; transform: translateX(-50%) scaleX(1); filter: brightness(1); }
+        }
+        @keyframes ssTornadoIn {
+          0% { opacity: 0; transform: translateX(-50%) scale(0.3); filter: brightness(2) hue-rotate(60deg); }
+          40% { opacity: 1; transform: translateX(-50%) scale(1.1); filter: brightness(1.5) hue-rotate(30deg); }
+          100% { opacity: 1; transform: translateX(-50%) scale(1); filter: brightness(1) hue-rotate(0deg); }
         }
         @keyframes bubblePop {
           0% { transform: translateY(-50%) scale(0.3); opacity: 0; }
