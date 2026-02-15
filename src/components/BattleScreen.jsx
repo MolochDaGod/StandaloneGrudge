@@ -3317,7 +3317,7 @@ export default function BattleScreen() {
             overflow: 'hidden',
           }}>
             <div style={{ padding: '0 4px 2px', display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>BATTLE LOG</span>
+              <span className="font-cinzel" style={{ fontSize: '1rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>BATTLE LOG</span>
             </div>
             <div style={{
               flex: 1, overflowY: 'auto', padding: '2px 4px',
@@ -3627,7 +3627,7 @@ export default function BattleScreen() {
             overflow: 'hidden',
           }}>
             <div style={{ padding: '0 4px 2px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-              <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,100,100,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>WAR PARTY</span>
+              <span className="font-cinzel" style={{ fontSize: '1rem', color: 'rgba(255,100,100,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>WAR PARTY</span>
             </div>
             {playerTeam.map(unit => {
               const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
