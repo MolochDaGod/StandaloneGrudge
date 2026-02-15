@@ -690,9 +690,11 @@ export default function TitleScreen() {
             background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            WebkitTextStroke: '2px #000',
+            paintOrder: 'stroke fill',
             marginBottom: 8, lineHeight: 1.1,
             animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
-            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
+            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
           }}>
             GRUDGE<br/>WARLORDS
           </h1>
