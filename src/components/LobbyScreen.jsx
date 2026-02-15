@@ -950,7 +950,8 @@ function HeroSlideshow() {
   const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale;
   const spriteScale = scaleOverride ? battleScale * scaleOverride : battleScale;
   const transformFrameH = worgeTransformData?.frameHeight || 100;
-  const transformScale = (spriteFrameH * spriteScale) / transformFrameH;
+  const transformScaleBase = (spriteFrameH * spriteScale) / transformFrameH;
+  const transformScale = transformScaleBase * (worgeTransformData?.transformScaleMult || 1);
 
   const intervalRefs = useRef([]);
 

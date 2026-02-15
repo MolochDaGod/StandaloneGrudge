@@ -1013,12 +1013,12 @@ export const leafRangerSprite = spriteSheets['leaf-ranger'];
 export const crystalMaulerSprite = spriteSheets['crystal-mauler'];
 
 export const worgTransformSprite = {
-  human: spriteSheets.werewolf,
-  orc: spriteSheets.werewolf,
-  elf: spriteSheets.werebear,
-  undead: { ...spriteSheets.werewolf, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)' },
-  barbarian: spriteSheets.werebear,
-  dwarf: spriteSheets.werebear,
+  human: { ...spriteSheets.werewolf, transformScaleMult: 2.2 },
+  orc: { ...spriteSheets.werewolf, transformScaleMult: 2.2 },
+  elf: { ...spriteSheets.werebear, transformScaleMult: 2.4 },
+  undead: { ...spriteSheets.werewolf, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)', transformScaleMult: 2.2 },
+  barbarian: { ...spriteSheets.werebear, transformScaleMult: 2.4 },
+  dwarf: { ...spriteSheets.werebear, transformScaleMult: 2.8 },
 };
 
 export const worgBearTransformSprite = {
