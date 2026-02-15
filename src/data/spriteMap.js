@@ -398,9 +398,9 @@ export const spriteSheets = {
     idle: { src: '/sprites/water-priestess/idle.png', frames: 8 },
     walk: { src: '/sprites/water-priestess/walk.png', frames: 10 },
     attack1: { src: '/sprites/water-priestess/attack1.png', frames: 7 },
-    attack2: { src: '/sprites/water-priestess/attack2.png', frames: 12 },
+    attack2: { src: '/sprites/water-priestess/attack2.png', frames: 12, frameWidth: 504 },
     attack3: { src: '/sprites/water-priestess/attack3.png', frames: 27 },
-    cast: { src: '/sprites/water-priestess/cast.png', frames: 16 },
+    cast: { src: '/sprites/water-priestess/cast.png', frames: 16, frameWidth: 576 },
     heal: { src: '/sprites/water-priestess/heal.png', frames: 12 },
     block: { src: '/sprites/water-priestess/block.png', frames: 12 },
     surf: { src: '/sprites/water-priestess/surf.png', frames: 8 },
@@ -922,7 +922,7 @@ export const spriteSheets = {
     folder: 'undead-ranger',
     frameWidth: 64,
     frameHeight: 64,
-    idle: { src: '/sprites/undead-ranger/run.png', frames: 8 },
+    idle: { src: '/sprites/undead-ranger/walk.png', frames: 1 },
     walk: { src: '/sprites/undead-ranger/walk.png', frames: 8 },
     run: { src: '/sprites/undead-ranger/run.png', frames: 8 },
     attack1: { src: '/sprites/undead-ranger/attack1.png', frames: 7 },
@@ -960,7 +960,7 @@ export const spriteSheets = {
 export const raceClassSpriteMap = {
   human: {
     warrior: spriteSheets.knight,
-    mage: spriteSheets.wizard,
+    mage: spriteSheets['water-priestess'],
     worge: { ...spriteSheets.priest, filter: 'sepia(0.5) saturate(1.3) hue-rotate(-30deg) brightness(0.9)' },
     ranger: spriteSheets['human-ranger'],
   },
@@ -972,9 +972,9 @@ export const raceClassSpriteMap = {
   },
   elf: {
     warrior: { ...spriteSheets['hero-knight'], filter: 'saturate(0.6) brightness(1.15) hue-rotate(10deg)' },
-    mage: { ...spriteSheets['elf-mage'], scale: 0.7 },
+    mage: { ...spriteSheets['evil-wizard-3'], filter: 'saturate(0.15) brightness(1.4) hue-rotate(200deg)' },
     worge: { ...spriteSheets.priest, filter: 'hue-rotate(80deg) saturate(1.4) brightness(1.0) contrast(1.1)' },
-    ranger: spriteSheets['elf-ranger'],
+    ranger: { ...spriteSheets['elf-ranger'], filter: 'sepia(0.3) saturate(1.5) hue-rotate(340deg)' },
   },
   undead: {
     warrior: { ...spriteSheets['greatsword-skeleton'], filter: 'hue-rotate(90deg) saturate(1.5) brightness(0.7) contrast(1.3)' },
