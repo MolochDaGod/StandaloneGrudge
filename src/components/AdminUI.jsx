@@ -969,7 +969,7 @@ export default function AdminUI() {
               backgroundImage: 'url(/ui/game-border-frame.png)',
               backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center center',
-              pointerEvents: 'none', zIndex: 50, opacity: 0.7,
+              pointerEvents: 'none', zIndex: 50,
             }} />
 
             <div style={{

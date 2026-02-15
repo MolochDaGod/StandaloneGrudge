@@ -90,28 +90,19 @@ body {
 .game-frame::after {
   content: '';
   position: absolute;
-  top: -10%;
-  left: -10%;
-  right: -10%;
-  bottom: -10%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-image: url('/ui/game-border-frame.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center center;
   pointer-events: none;
   z-index: var(--z-ui-frame, 10505);
-  clip-path: inset(var(--frame-crop-top, 0%) var(--frame-crop-right, 0%) var(--frame-crop-bottom, 0%) var(--frame-crop-left, 0%));
   opacity: var(--frame-opacity, 1);
   image-rendering: auto;
   transition: opacity 0.4s ease;
-  -webkit-mask-image:
-    linear-gradient(to bottom, black 0%, black 16%, transparent 26%, transparent 74%, black 84%, black 100%),
-    linear-gradient(to right, black 0%, black 12%, transparent 22%, transparent 78%, black 88%, black 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to bottom, black 0%, black 16%, transparent 26%, transparent 74%, black 84%, black 100%),
-    linear-gradient(to right, black 0%, black 12%, transparent 22%, transparent 78%, black 88%, black 100%);
-  mask-composite: intersect;
 }
 
 .game-frame.hide-frame::after {
@@ -169,20 +160,18 @@ body {
 .ornate-popup {
   position: relative;
 }
-.ornate-popup::before {
+.ornate-popup::after {
   content: '';
   position: absolute;
-  top: -16px;
-  left: -16px;
-  right: -16px;
-  bottom: -16px;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
   background-image: url('/ui/game-border-frame.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
-  z-index: -1;
-  opacity: 0.7;
-  border-radius: inherit;
+  z-index: 10;
 }
 
 .panel-style {

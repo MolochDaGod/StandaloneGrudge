@@ -145,7 +145,7 @@ export default function AdminMap() {
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/ui/game-border-frame.png)',
         backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat',
-        pointerEvents: 'none', zIndex: 100, opacity: 0.4,
+        pointerEvents: 'none', zIndex: 100,
       }} />
       <div style={{
         padding: '8px 16px', background: 'rgba(20,26,43,0.9)',
