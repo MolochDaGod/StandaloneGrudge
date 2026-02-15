@@ -913,6 +913,19 @@ export const spriteSheets = {
     hurt: { src: '/sprites/barbarian-mage2/hurt.png', frames: 4 },
     death: { src: '/sprites/barbarian-mage2/death.png', frames: 4 },
   },
+  'arcane-archer': {
+    folder: 'arcane-archer',
+    frameWidth: 64,
+    frameHeight: 64,
+    idle: { src: '/sprites/arcane-archer/idle.png', frames: 6 },
+    walk: { src: '/sprites/arcane-archer/walk.png', frames: 4 },
+    run: { src: '/sprites/arcane-archer/run.png', frames: 4 },
+    attack1: { src: '/sprites/arcane-archer/attack1.png', frames: 7 },
+    attack2: { src: '/sprites/arcane-archer/attack2.png', frames: 6 },
+    hurt: { src: '/sprites/arcane-archer/hurt.png', frames: 5 },
+    death: { src: '/sprites/arcane-archer/death.png', frames: 6 },
+    jump: { src: '/sprites/arcane-archer/jump.png', frames: 2 },
+  },
   'undead-ranger': {
     folder: 'undead-ranger',
     frameWidth: 64,
@@ -975,7 +988,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['greatsword-skeleton'],
     mage: spriteSheets.necromancer,
     worge: spriteSheets.skeleton,
-    ranger: { ...spriteSheets['skeleton-archer'], filter: 'saturate(0) brightness(0.85) contrast(1.15)' },
+    ranger: spriteSheets['arcane-archer'],
   },
   barbarian: {
     warrior: { ...spriteSheets['barbarian-warrior'], filter: 'sepia(0.5) saturate(1.5) brightness(0.9)', scale: 1.35 },
