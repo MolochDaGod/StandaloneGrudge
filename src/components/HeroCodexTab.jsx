@@ -128,7 +128,8 @@ function StatSVG({ type, color, size = 11 }) {
 
 function getHeroColors(hero) {
   const fc = FACTION_COLORS[hero.faction] || FACTION_COLORS.Crusade;
-  const pkOverride = hero.id === 'pirate_king' ? '#c9a030' : null;
+  const isSecretHero = hero.id === 'pirate_king' || hero.id === 'sky_captain';
+  const pkOverride = isSecretHero ? '#c9a030' : null;
   return {
     borderColor: pkOverride || fc.border,
     gradient: pkOverride ? 'linear-gradient(135deg, #1a1505 0%, #2a2010 50%, #1a1505 100%)' : fc.gradient,
@@ -157,6 +158,13 @@ function HeroCard({ hero, onClick }) {
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${borderColor}, transparent)` }} />
+      {(hero.id === 'pirate_king' || hero.id === 'sky_captain') && (
+        <div style={{
+          position: 'absolute', top: 8, left: 8, padding: '3px 10px', borderRadius: 4,
+          fontSize: 9, fontWeight: 700, letterSpacing: 1, zIndex: 3,
+          background: 'linear-gradient(135deg, #ffd700, #f59e0b)', color: '#000',
+        }}>SECRET</div>
+      )}
       <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
         <img
           src={`/heroes/portraits/${hero.id}.png`}
@@ -273,6 +281,9 @@ function HeroModal({ hero, onClose, onPrev, onNext }) {
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%)' }} />
           <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '30%', background: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.8) 100%)' }} />
           <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
+            {(hero.id === 'pirate_king' || hero.id === 'sky_captain') && (
+              <span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: 1, background: 'linear-gradient(135deg, #ffd700, #f59e0b)', color: '#000' }}>SECRET</span>
+            )}
             <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, background: 'rgba(0,0,0,0.7)', border: `1px solid ${rarityCfg.color}40`, display: 'flex', gap: 3 }}>
               <Stars rarity={hero.rarity} size={13} />
             </span>
