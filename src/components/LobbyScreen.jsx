@@ -117,6 +117,7 @@ export default function LobbyScreen() {
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             animation: 'titleShimmer 8s linear infinite',
+            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
           }}>
             GRUDGE WARLORDS
           </span>
