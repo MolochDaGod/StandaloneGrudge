@@ -84,13 +84,19 @@ export default function HeroCreate() {
   }, [addHeroToRoster, cinematicPhase]);
 
   const checkSecretUnlock = (classId) => {
-    if (!name.trim() || !selectedRace || !classId) return null;
+    if (!name.trim() || !selectedRace || !classId) {
+      console.log('[SECRET CHECK] Early exit:', { name: name.trim(), selectedRace, classId });
+      return null;
+    }
+    const heroName = name.trim().toLowerCase();
+    console.log('[SECRET CHECK] Checking:', { heroName, selectedRace, classId });
     const matched = Object.keys(namedHeroes).find(key => {
       const nh = namedHeroes[key];
-      const heroName = name.trim().toLowerCase();
       const matchName = nh.unlockName ? nh.unlockName.toLowerCase() : nh.name.toLowerCase();
+      console.log('[SECRET CHECK] vs', key, ':', { matchName, nhRace: nh.race, nhClass: nh.class, unlocked: nh.unlocked, nameMatch: heroName === matchName, raceMatch: nh.race === selectedRace, classMatch: nh.class === classId });
       return nh.race === selectedRace && nh.class === classId && nh.unlocked && heroName === matchName;
     });
+    console.log('[SECRET CHECK] Result:', matched);
     return matched || null;
   };
 
