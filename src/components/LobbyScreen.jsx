@@ -694,8 +694,8 @@ function SlideshowVFXSprite({ effectKey, displaySize = 280, style }) {
   if (!sprite) return null;
 
   const aspect = frameW / frameH;
-  const dW = aspect >= 1 ? displaySize : displaySize * aspect;
-  const dH = aspect >= 1 ? displaySize / aspect : displaySize;
+  const dW = Math.round(aspect >= 1 ? displaySize : displaySize * aspect);
+  const dH = Math.round(aspect >= 1 ? displaySize / aspect : displaySize);
   const col = frame % cols;
   const row = Math.floor(frame / cols);
 
@@ -708,8 +708,8 @@ function SlideshowVFXSprite({ effectKey, displaySize = 280, style }) {
       <div style={{
         width: dW, height: dH,
         backgroundImage: `url(${sprite.src})`,
-        backgroundSize: `${cols * dW}px ${rows * dH}px`,
-        backgroundPosition: `-${col * dW}px -${row * dH}px`,
+        backgroundSize: `${Math.round(cols * dW)}px ${Math.round(rows * dH)}px`,
+        backgroundPosition: `-${Math.round(col * dW)}px -${Math.round(row * dH)}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
       }} />
@@ -730,12 +730,12 @@ function SlideshowVFX({ comboKey, playing }) {
 
     if (combo.projectile) {
       setPhase('projectile');
-      setProjX(65);
-      let x = 65;
+      setProjX(30);
+      let x = 30;
       const moveInterval = setInterval(() => {
-        x -= 2.5;
+        x += 2.5;
         setProjX(x);
-        if (x <= 10) {
+        if (x >= 65) {
           clearInterval(moveInterval);
           setPhase('effect');
           addT(() => setPhase('impact'), 400);
@@ -762,7 +762,7 @@ function SlideshowVFX({ comboKey, playing }) {
         <div style={{
           position: 'absolute',
           left: `${projX}%`, top: '45%',
-          transform: 'translate(-50%, -50%) scaleX(-1)',
+          transform: 'translate(-50%, -50%)',
           zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
         }}>
           <SlideshowVFXSprite effectKey={combo.projectile} displaySize={120} />
@@ -771,7 +771,7 @@ function SlideshowVFX({ comboKey, playing }) {
       {(phase === 'effect' || phase === 'impact' || phase === 'effect2') && (
         <div style={{
           position: 'absolute',
-          left: combo.projectile ? '10%' : '65%', top: '45%',
+          left: '65%', top: '45%',
           transform: 'translate(-50%, -50%)',
           zIndex: 8, mixBlendMode: 'screen', opacity: 0.95,
         }}>
@@ -781,7 +781,7 @@ function SlideshowVFX({ comboKey, playing }) {
       {(phase === 'impact' || phase === 'effect2') && (
         <div style={{
           position: 'absolute',
-          left: combo.projectile ? '10%' : '65%', top: '45%',
+          left: '65%', top: '45%',
           transform: 'translate(-50%, -50%)',
           zIndex: 9, mixBlendMode: 'screen', opacity: 0.9,
         }}>
@@ -791,7 +791,7 @@ function SlideshowVFX({ comboKey, playing }) {
       {phase === 'effect2' && combo.effect2 && (
         <div style={{
           position: 'absolute',
-          left: combo.projectile ? '10%' : '65%', top: '45%',
+          left: '65%', top: '45%',
           transform: 'translate(-50%, -50%)',
           zIndex: 10, mixBlendMode: 'screen', opacity: 0.85,
         }}>

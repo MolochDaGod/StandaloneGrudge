@@ -135,8 +135,8 @@ export default function SpriteAnimation({
 
   const frameWidth = spriteData?.frameWidth || anim?.frameWidth || 100;
   const frameHeight = spriteData?.frameHeight || anim?.frameHeight || 100;
-  const displayWidth = frameWidth * scale;
-  const displayHeight = frameHeight * scale;
+  const displayWidth = Math.round(frameWidth * scale);
+  const displayHeight = Math.round(frameHeight * scale);
 
   const cssFilter = spriteData?.filter || '';
   const tintColor = spriteData?.tint || '';
@@ -165,9 +165,9 @@ export default function SpriteAnimation({
         width: displayWidth,
         height: displayHeight,
         backgroundImage: `url(${anim.src})`,
-        backgroundSize: `${totalFrames * displayWidth}px ${displayHeight}px`,
+        backgroundSize: `${Math.round(totalFrames * displayWidth)}px ${displayHeight}px`,
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: `-${frame * displayWidth}px 0`,
+        backgroundPosition: `-${Math.round(frame * displayWidth)}px 0`,
         imageRendering: 'pixelated',
         filter: cssFilter || 'none',
         willChange: 'background-position',
