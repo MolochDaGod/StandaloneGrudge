@@ -259,7 +259,7 @@ export default function TitleScreen() {
           GRUDGE STUDIO
         </span>
         <span>&bull;</span>
-        <span>&copy; 2026 Grudge Studio &bull; Inspired by Final Fantasy VII</span>
+        <span>&copy; 2026 Grudge Studio</span>
       </div>
     </div>
   );
