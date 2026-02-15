@@ -190,18 +190,19 @@ export default function TitleScreen() {
           Grudge Studio Presents
         </div>
 
-        <h1 className="font-cinzel" style={{
-          fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-          background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
+        <h1 style={{
+          fontSize: 'clamp(3rem, 8vw, 5.5rem)',
+          fontFamily: "'LifeCraft', 'Cinzel', serif",
+          letterSpacing: 6,
+          lineHeight: 1,
+          background: 'linear-gradient(90deg, #8b0000 0%, #cc1100 25%, #ffd700 50%, #cc1100 75%, #8b0000 100%)',
           backgroundSize: '200% auto',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          WebkitTextStroke: '2px #000',
-          paintOrder: 'stroke fill',
-          marginBottom: 8, lineHeight: 1.1,
-          animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
-          filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
+          marginBottom: 8,
+          animation: 'titleShimmer 8s linear infinite, scaleIn 0.8s ease 0.1s both',
+          filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
         }}>
-          GRUDGE<br/>WARLORDS
+          GRUDGE WARLORDS
         </h1>
 
         <div style={{
