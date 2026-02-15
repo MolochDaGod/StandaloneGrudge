@@ -434,7 +434,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
           borderColor={walletState.hasWallet ? 'rgba(34,197,94,0.3)' : 'rgba(139,92,246,0.3)'}
           hoverBorderColor={walletState.hasWallet ? 'rgba(34,197,94,0.6)' : 'rgba(139,92,246,0.6)'}
           hoverShadow={walletState.hasWallet ? '0 0 24px rgba(34,197,94,0.2), 0 8px 32px rgba(0,0,0,0.4)' : '0 0 24px rgba(139,92,246,0.2), 0 8px 32px rgba(0,0,0,0.4)'}
-          bgImage="/backgrounds/shadow_citadel.png"
+          bgImage="/ui/wallet-card-bg.png"
           tagColor={walletState.hasWallet ? 'rgba(34,197,94,0.7)' : 'rgba(139,92,246,0.7)'}
           tag="WEB3"
           titleColor={walletState.hasWallet ? '#22c55e' : '#8b5cf6'}
