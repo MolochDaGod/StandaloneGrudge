@@ -27,8 +27,38 @@ import GameTooltipRenderer from './components/GameTooltip';
 import GameContextMenuRenderer from './components/GameContextMenu';
 import { HERO_CREATE_MODAL } from './constants/layers';
 
+const SCREEN_SLUGS = {
+  title: '/',
+  intro: '/intro',
+  lobby: '/war-room',
+  create: '/create-character',
+  world: '/world-map',
+  location: '/location',
+  battle: '/battle',
+  character: '/character-sheet',
+  skills: '/skill-tree',
+  heroCreate: '/recruit-hero',
+  account: '/account',
+  training: '/training',
+  scene: '/scene',
+};
+
+const SLUG_TO_SCREEN = Object.fromEntries(
+  Object.entries(SCREEN_SLUGS).map(([screen, slug]) => [slug, screen])
+);
+
+const SAFE_ENTRY_SCREENS = ['title', 'lobby', 'create', 'world', 'account', 'training'];
+
+function getScreenFromPath(pathname) {
+  const screen = SLUG_TO_SCREEN[pathname];
+  if (!screen) return null;
+  if (SAFE_ENTRY_SCREENS.includes(screen)) return screen;
+  return null;
+}
+
 function GameApp() {
   const screen = useGameStore(s => s.screen);
+  const setScreen = useGameStore(s => s.setScreen);
   const gameMessage = useGameStore(s => s.gameMessage);
   const clearMessage = useGameStore(s => s.clearMessage);
   const pendingLoot = useGameStore(s => s.pendingLoot);
@@ -39,6 +69,40 @@ function GameApp() {
   const [transitioning, setTransitioning] = useState(false);
   const [transitionType, setTransitionType] = useState('fade');
   const [screenShake, setScreenShake] = useState(false);
+  const skipPushRef = useRef(false);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    const initialScreen = getScreenFromPath(path);
+    if (initialScreen && initialScreen !== screen) {
+      skipPushRef.current = true;
+      setScreen(initialScreen);
+    } else if (!initialScreen && path !== '/' && !SLUG_TO_SCREEN[path]) {
+      window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
+    }
+  }, []);
+
+  useEffect(() => {
+    const slug = SCREEN_SLUGS[screen];
+    if (slug && window.location.pathname !== slug) {
+      if (skipPushRef.current) {
+        skipPushRef.current = false;
+        window.history.replaceState({ screen }, '', slug);
+      } else {
+        window.history.pushState({ screen }, '', slug);
+      }
+    }
+  }, [screen]);
+
+  useEffect(() => {
+    const onPopState = (e) => {
+      const targetScreen = e.state?.screen || getScreenFromPath(window.location.pathname) || 'title';
+      skipPushRef.current = true;
+      setScreen(targetScreen);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [setScreen]);
 
   useEffect(() => {
     if (isReady()) {
@@ -217,3 +281,5 @@ export default function App() {
 
   return <GameApp />;
 }
+
+export { SCREEN_SLUGS };
