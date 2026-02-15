@@ -177,6 +177,12 @@ export default function CharacterCreate() {
                     {isSelected && <div style={{
                       position: 'absolute', top: 6, right: 8, color: race.color, fontSize: '0.8rem', fontWeight: 700
                     }}>&#10003;</div>}
+                    {isSelected && <div style={{
+                      position: 'absolute', bottom: 0, left: 0, right: 0, height: 6,
+                      borderRadius: '0 0 10px 10px',
+                      background: `linear-gradient(90deg, transparent, ${race.color}88 30%, ${race.color} 50%, ${race.color}88 70%, transparent)`,
+                      boxShadow: `0 0 12px ${race.color}66, 0 -2px 8px ${race.color}33`,
+                    }} />}
                     <img src={race.icon} alt={race.name} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', marginBottom: 6 }} />
                     <h3 className="font-cinzel" style={{ color: race.color, marginBottom: 4, fontSize: '1rem' }}>{race.name}</h3>
                     <p style={{ color: 'var(--muted)', fontSize: '0.73rem', marginBottom: 6, lineHeight: 1.4 }}>{race.description}</p>
