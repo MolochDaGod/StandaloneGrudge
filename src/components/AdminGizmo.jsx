@@ -352,24 +352,65 @@ function AdminGizmo() {
 
   return (
     <div id="admin-gizmo-root">
-      <button
-        onClick={() => setShowHeroCodex(h => !h)}
-        style={{
-          position: 'fixed', bottom: 'calc(26% + 12px)', right: 84,
-          width: 32, height: 32, borderRadius: '50%',
-          background: showHeroCodex ? '#6ee7b7' : 'rgba(30,30,50,0.7)',
-          border: `2px solid ${showHeroCodex ? '#6ee7b7' : 'rgba(255,255,255,0.15)'}`,
-          color: showHeroCodex ? '#000' : '#666',
-          fontSize: '0.75rem', fontWeight: 900,
-          cursor: 'pointer', zIndex: ADMIN_GIZMO_BUTTON,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: showHeroCodex ? '0 0 12px rgba(110,231,183,0.5)' : 'none',
-          transition: 'all 0.2s',
-        }}
-        title="Hero Codex"
-      >
-        📖
-      </button>
+      <div style={{
+        position: 'fixed', top: '50%', right: 8, transform: 'translateY(-50%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '6px 4px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        zIndex: ADMIN_GIZMO_BUTTON,
+      }}>
+        <button
+          onClick={() => setShowHeroCodex(h => !h)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: showHeroCodex ? '#6ee7b7' : 'rgba(30,30,50,0.7)',
+            border: `2px solid ${showHeroCodex ? '#6ee7b7' : 'rgba(255,255,255,0.15)'}`,
+            color: showHeroCodex ? '#000' : '#666',
+            fontSize: '0.75rem', fontWeight: 900,
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: showHeroCodex ? '0 0 12px rgba(110,231,183,0.5)' : 'none',
+            transition: 'all 0.2s',
+          }}
+          title="Hero Codex"
+        >
+          📖
+        </button>
+        <button
+          onClick={() => setShowGameRef(r => !r)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: showGameRef ? '#3b82f6' : 'rgba(30,30,50,0.7)',
+            border: `2px solid ${showGameRef ? '#60a5fa' : 'rgba(255,255,255,0.15)'}`,
+            color: showGameRef ? '#fff' : '#666',
+            fontSize: '0.75rem', fontWeight: 900,
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: showGameRef ? '0 0 12px rgba(59,130,246,0.5)' : 'none',
+            transition: 'all 0.2s',
+          }}
+          title="Game Reference"
+        >
+          📋
+        </button>
+        <button
+          onClick={() => setEnabled(e => !e)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: enabled ? '#f59e0b' : 'rgba(30,30,50,0.7)',
+            border: `2px solid ${enabled ? '#fbbf24' : 'rgba(255,255,255,0.15)'}`,
+            color: enabled ? '#000' : '#666',
+            fontSize: '0.85rem', fontWeight: 900,
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: enabled ? '0 0 12px rgba(245,158,11,0.5)' : 'none',
+            transition: 'all 0.2s',
+          }}
+          title={enabled ? 'Disable Admin Gizmo' : 'Enable Admin Gizmo'}
+        >
+          ⚙
+        </button>
+      </div>
 
       {showHeroCodex && (
         <div style={{
@@ -398,49 +439,11 @@ function AdminGizmo() {
         </div>
       )}
 
-      <button
-        onClick={() => setShowGameRef(r => !r)}
-        style={{
-          position: 'fixed', bottom: 'calc(26% + 12px)', right: 46,
-          width: 32, height: 32, borderRadius: '50%',
-          background: showGameRef ? '#3b82f6' : 'rgba(30,30,50,0.7)',
-          border: `2px solid ${showGameRef ? '#60a5fa' : 'rgba(255,255,255,0.15)'}`,
-          color: showGameRef ? '#fff' : '#666',
-          fontSize: '0.75rem', fontWeight: 900,
-          cursor: 'pointer', zIndex: ADMIN_GIZMO_BUTTON,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: showGameRef ? '0 0 12px rgba(59,130,246,0.5)' : 'none',
-          transition: 'all 0.2s',
-        }}
-        title="Game Reference"
-      >
-        📋
-      </button>
-
       {showGameRef && <GameReferencePanel onClose={() => setShowGameRef(false)} />}
-
-      <button
-        onClick={() => setEnabled(e => !e)}
-        style={{
-          position: 'fixed', bottom: 'calc(26% + 12px)', right: 8,
-          width: 32, height: 32, borderRadius: '50%',
-          background: enabled ? '#f59e0b' : 'rgba(30,30,50,0.7)',
-          border: `2px solid ${enabled ? '#fbbf24' : 'rgba(255,255,255,0.15)'}`,
-          color: enabled ? '#000' : '#666',
-          fontSize: '0.85rem', fontWeight: 900,
-          cursor: 'pointer', zIndex: ADMIN_GIZMO_BUTTON,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: enabled ? '0 0 12px rgba(245,158,11,0.5)' : 'none',
-          transition: 'all 0.2s',
-        }}
-        title={enabled ? 'Disable Admin Gizmo' : 'Enable Admin Gizmo'}
-      >
-        ⚙
-      </button>
 
       {enabled && log && (
         <div style={{
-          position: 'fixed', bottom: 'calc(26% + 48px)', right: 8,
+          position: 'fixed', top: '50%', right: 50, transform: 'translateY(40px)',
           background: saveFlash ? 'rgba(34,197,94,0.9)' : 'rgba(15,23,42,0.9)',
           border: `1px solid ${saveFlash ? '#22c55e' : '#334155'}`,
           borderRadius: 6, padding: '4px 10px',
