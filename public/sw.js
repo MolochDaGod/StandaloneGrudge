@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grudge-warlords-v1';
+const CACHE_NAME = 'grudge-warlords-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
