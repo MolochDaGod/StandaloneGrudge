@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GRUDA Arena | Grudge Warlords</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -110,6 +111,13 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .loading .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(139,0,0,0.4);padding:0 20px;display:flex;align-items:center;gap:20px;height:56px;}
+.site-nav-logo{height:40px;margin-right:8px;}
+.site-nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.site-nav-link{font-family:'LifeCraft',serif;font-size:1.1rem;color:#c0a060;text-decoration:none;padding:6px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:1px;}
+.site-nav-link:hover{color:#ffd700;background:rgba(255,215,0,0.08);}
+.site-nav-link.active{color:#ffd700;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);}
+
 @media(max-width:600px){
   .team-card{grid-template-columns:1fr;gap:8px}
   .team-rank{display:flex;align-items:center;gap:10px}
@@ -121,6 +129,16 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 </style>
 </head>
 <body>
+
+<nav class="site-nav">
+  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <div class="site-nav-links">
+    <a href="/compendium.html" class="site-nav-link">Compendium</a>
+    <a href="/hero-codex.html" class="site-nav-link">Hero Codex</a>
+    <a href="/arena.html" class="site-nav-link active">Arena</a>
+    <a href="/" class="site-nav-link">Play Game</a>
+  </div>
+</nav>
 
 <div class="arena-wrap">
   <div class="arena-header">
@@ -444,6 +462,19 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 
 })();
 </script>
+
+</div>
+
+<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
+  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
+  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
+    <a href="/compendium.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="/hero-codex.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="/arena.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+  </div>
+  &copy; 2026 Grudge Warlords. All rights reserved.
+</footer>
 
 </body>
 </html>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grudge Warlords - Hero Codex</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
 <style>
 :root {
   --bg: #0a0a0f;
@@ -34,8 +35,12 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-he
 h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .container{max-width:1400px;margin:0 auto;padding:0 20px;}
 
-.back-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;color:var(--gold);text-decoration:none;font-family:'Cinzel',serif;font-size:0.9rem;border:1px solid var(--gold-dim);border-radius:8px;margin:20px;transition:all 0.2s;background:rgba(0,0,0,0.5);position:relative;z-index:10;}
-.back-btn:hover{background:var(--gold-glow);border-color:var(--gold);}
+.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(139,0,0,0.4);padding:0 20px;display:flex;align-items:center;gap:20px;height:56px;}
+.site-nav-logo{height:40px;margin-right:8px;}
+.site-nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.site-nav-link{font-family:'LifeCraft',serif;font-size:1.1rem;color:#c0a060;text-decoration:none;padding:6px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:1px;}
+.site-nav-link:hover{color:#ffd700;background:rgba(255,215,0,0.08);}
+.site-nav-link.active{color:#ffd700;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);}
 
 .hero-banner{position:relative;width:100%;height:420px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 .hero-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(0.5);}
@@ -79,7 +84,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .secret-box h3{color:var(--gold);margin-bottom:8px;}
 .secret-box p{color:var(--text-dim);font-size:0.9rem;max-width:600px;margin:0 auto;}
 
-.filters{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 0;}
+.filters{position:sticky;top:56px;z-index:100;background:rgba(10,10,15,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 0;}
 .filter-inner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;max-width:1400px;margin:0 auto;padding:0 20px;}
 .filter-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .filter-label{color:var(--text-dim);font-family:'Cinzel',serif;font-size:0.85rem;margin-right:4px;}
@@ -109,7 +114,8 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .hero-name{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--text);line-height:1.3;}
 .hero-title{color:var(--text-dim);font-size:0.82rem;font-style:italic;margin-top:2px;}
 .hero-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-.htag{padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+.htag{padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:4px;}
+.htag img{width:14px;height:14px;object-fit:contain;vertical-align:middle;}
 .htag-race{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);}
 .htag-class-warrior{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3);}
 .htag-class-worg{background:rgba(217,119,6,0.12);color:#d97706;border:1px solid rgba(217,119,6,0.3);}
@@ -150,7 +156,15 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 </head>
 <body>
 
-<a href="/" class="back-btn">&#8592; Back to Game</a>
+<nav class="site-nav">
+  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <div class="site-nav-links">
+    <a href="/compendium.html" class="site-nav-link">Compendium</a>
+    <a href="/hero-codex.html" class="site-nav-link active">Hero Codex</a>
+    <a href="/arena.html" class="site-nav-link">Arena</a>
+    <a href="/" class="site-nav-link">Play Game</a>
+  </div>
+</nav>
 
 <div class="hero-banner">
   <img src="/images/hero_codex_bg.png" alt="Hero Codex">
@@ -207,10 +221,10 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="info-section">
     <h2 style="color:var(--gold);font-size:1.4rem;margin-bottom:4px;">Class Archetypes</h2>
     <div class="class-overview">
-      <div class="class-card" style="border-left-color:#ef4444;"><h4 style="color:#ef4444;">Warrior</h4><p>Tank / melee DPS with Avatar ultimate. Highest defense and HP scaling.</p></div>
-      <div class="class-card" style="border-left-color:#d97706;"><h4 style="color:#d97706;">Worg</h4><p>Shapeshifter with multiple combat forms, totems, and companions. Versatile hybrid.</p></div>
-      <div class="class-card" style="border-left-color:#8b5cf6;"><h4 style="color:#8b5cf6;">Mage</h4><p>Ranged caster with AoE damage and healing. Highest mana pool and magic damage.</p></div>
-      <div class="class-card" style="border-left-color:#22c55e;"><h4 style="color:#22c55e;">Ranger</h4><p>Ranged physical DPS with stealth, crits, and evasion. Highest speed and range.</p></div>
+      <div class="class-card" style="border-left-color:#ef4444;"><h4 style="color:#ef4444;display:flex;align-items:center;gap:8px;"><img src="/sprites/ui/icons/icon_crossed_swords.png" style="width:24px;height:24px;">Warrior</h4><p>Tank / melee DPS with Avatar ultimate. Highest defense and HP scaling.</p></div>
+      <div class="class-card" style="border-left-color:#d97706;"><h4 style="color:#d97706;display:flex;align-items:center;gap:8px;"><img src="/sprites/ui/icons/icon_worge.png" style="width:24px;height:24px;">Worg</h4><p>Shapeshifter with multiple combat forms, totems, and companions. Versatile hybrid.</p></div>
+      <div class="class-card" style="border-left-color:#8b5cf6;"><h4 style="color:#8b5cf6;display:flex;align-items:center;gap:8px;"><img src="/sprites/ui/icons/icon_mage.png" style="width:24px;height:24px;">Mage</h4><p>Ranged caster with AoE damage and healing. Highest mana pool and magic damage.</p></div>
+      <div class="class-card" style="border-left-color:#22c55e;"><h4 style="color:#22c55e;display:flex;align-items:center;gap:8px;"><img src="/sprites/ui/icons/icon_ranger.png" style="width:24px;height:24px;">Ranger</h4><p>Ranged physical DPS with stealth, crits, and evasion. Highest speed and range.</p></div>
     </div>
   </div>
 
@@ -223,9 +237,9 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="info-section">
     <h2 style="color:var(--gold);font-size:1.4rem;margin-bottom:4px;">Factions</h2>
     <div class="faction-row">
-      <div class="faction-card" style="border-top-color:var(--crusade);"><h4 style="color:var(--crusade);">Crusade</h4><div class="members">Human, Barbarian (+ Pirate King)</div></div>
-      <div class="faction-card" style="border-top-color:var(--fabled);"><h4 style="color:var(--fabled);">Fabled</h4><div class="members">Dwarf, Elf</div></div>
-      <div class="faction-card" style="border-top-color:var(--legion);"><h4 style="color:var(--legion);">Legion</h4><div class="members">Orc, Undead</div></div>
+      <div class="faction-card" style="border-top-color:var(--crusade);"><img src="/icons/pack/factions/crusade-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--crusade);">Crusade</h4><div class="members">Human, Barbarian (+ Pirate King)</div></div>
+      <div class="faction-card" style="border-top-color:var(--fabled);"><img src="/icons/pack/factions/fabled-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--fabled);">Fabled</h4><div class="members">Dwarf, Elf</div></div>
+      <div class="faction-card" style="border-top-color:var(--legion);"><img src="/icons/pack/factions/legion-emblem.png" style="width:48px;height:48px;margin:0 auto 8px;display:block;"><h4 style="color:var(--legion);">Legion</h4><div class="members">Orc, Undead</div></div>
     </div>
   </div>
 
@@ -464,6 +478,19 @@ const CLASS_COLORS = {
   Warrior: '#ef4444', Worg: '#d97706', Mage: '#8b5cf6', Ranger: '#22c55e'
 };
 
+const CLASS_ICONS = {
+  Warrior: '/sprites/ui/icons/icon_crossed_swords.png',
+  'Mage Priest': '/sprites/ui/icons/icon_mage.png',
+  Mage: '/sprites/ui/icons/icon_mage.png',
+  Worge: '/sprites/ui/icons/icon_worge.png',
+  Worg: '/sprites/ui/icons/icon_worge.png',
+  Ranger: '/sprites/ui/icons/icon_ranger.png'
+};
+const FACTION_ICONS = {
+  Crusade: '/icons/pack/factions/crusade-emblem.png',
+  Fabled: '/icons/pack/factions/fabled-emblem.png',
+  Legion: '/icons/pack/factions/legion-emblem.png'
+};
 const STAT_COLORS = {
   hp: '#ef4444', atk: '#f59e0b', def: '#3b82f6', spd: '#22c55e', rng: '#06b6d4', mp: '#a855f7'
 };
@@ -473,6 +500,7 @@ function renderRaceMods() {
   const grid = document.getElementById('raceModGrid');
   grid.innerHTML = Object.entries(RACE_MODS).map(([race, mods]) => `
     <div class="race-mod-card" style="border-color:${RACE_COLORS[race]}22;">
+      <img src="/images/races/${race.toLowerCase()}.png" style="width:32px;height:32px;margin:0 auto 6px;display:block;" alt="${race}">
       <h4 style="color:${RACE_COLORS[race]}">${race}</h4>
       <div class="mods">
         ${Object.entries(mods).map(([stat, val]) => {
@@ -525,9 +553,9 @@ function renderHeroes(raceFilter, classFilter, search) {
           <div class="hero-name">${h.name}</div>
           <div class="hero-title">${h.title}</div>
           <div class="hero-tags">
-            <span class="htag htag-race">${h.race}</span>
-            <span class="htag htag-class-${classLow}">${h.heroClass}</span>
-            <span class="htag htag-faction-${factionLow}">${h.faction}</span>
+            <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
+            <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
+            <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
             <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
           </div>
         </div>
@@ -585,5 +613,17 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHeroes('all', 'all', '');
 });
 </script>
+
+<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
+  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
+  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
+    <a href="/compendium.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="/hero-codex.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="/arena.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+  </div>
+  &copy; 2026 Grudge Warlords. All rights reserved.
+</footer>
+
 </body>
 </html>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grudge Warlords - Game Compendium</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
 <style>
 :root {
   --bg: #0a0a0f;
@@ -35,7 +36,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 .hero h1{color:var(--gold);font-size:clamp(2rem,5vw,3.2rem);text-shadow:0 0 40px rgba(255,215,0,0.3);margin-bottom:8px;}
 .hero p{color:var(--text-dim);font-size:1.1rem;max-width:600px;margin:0 auto;}
 
-.nav-bar{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 0;}
+.nav-bar{position:sticky;top:56px;z-index:100;background:rgba(10,10,15,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 0;}
 .nav-inner{display:flex;gap:6px;overflow-x:auto;padding:0 20px;max-width:1400px;margin:0 auto;scrollbar-width:none;}
 .nav-inner::-webkit-scrollbar{display:none;}
 .nav-btn{padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);cursor:pointer;font-family:'Jost',sans-serif;font-size:0.9rem;white-space:nowrap;transition:all 0.2s;}
@@ -102,6 +103,23 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 .footer{text-align:center;padding:40px 20px;border-top:1px solid var(--border);color:var(--text-dim);font-size:0.9rem;margin-top:40px;}
 .footer span{color:var(--gold);font-family:'Cinzel',serif;}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.footer-links a{color:var(--gold);text-decoration:none;font-family:'LifeCraft',sans-serif;font-size:1rem;letter-spacing:1px;transition:color 0.2s;}
+.footer-links a:hover{color:#fff;text-shadow:0 0 8px rgba(255,215,0,0.5);}
+.footer-logo{width:40px;height:40px;margin:0 auto 12px;display:block;image-rendering:pixelated;}
+
+.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(139,0,0,0.4);padding:0 20px;display:flex;align-items:center;gap:20px;height:56px;}
+.site-nav-logo{height:40px;margin-right:8px;}
+.site-nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.site-nav-link{font-family:'LifeCraft',serif;font-size:1.1rem;color:#c0a060;text-decoration:none;padding:6px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:1px;}
+.site-nav-link:hover{color:#ffd700;background:rgba(255,215,0,0.08);}
+.site-nav-link.active{color:#ffd700;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);}
+
+.race-icon,.class-icon,.slot-icon,.attr-icon-img{image-rendering:pixelated;object-fit:contain;}
+.race-icon{width:36px;height:36px;}
+.class-icon{width:32px;height:32px;}
+.slot-icon{width:48px;height:48px;margin-bottom:6px;}
+.attr-icon-img{width:32px;height:32px;margin-bottom:6px;}
 
 .location-card{display:flex;align-items:center;gap:12px;padding:12px 16px;}
 .loc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor;}
@@ -127,6 +145,16 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 </style>
 </head>
 <body>
+
+<nav class="site-nav">
+  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <div class="site-nav-links">
+    <a href="/compendium.html" class="site-nav-link active">Compendium</a>
+    <a href="/hero-codex.html" class="site-nav-link">Hero Codex</a>
+    <a href="/arena.html" class="site-nav-link">Arena</a>
+    <a href="/" class="site-nav-link">Play Game</a>
+  </div>
+</nav>
 
 <header class="hero">
   <h1>Grudge Warlords</h1>
@@ -296,8 +324,14 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 </main>
 
-<footer class="footer">
-  <span>Grudge Warlords</span> &mdash; Game Compendium<br>
+<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
+  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
+  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
+    <a href="/compendium.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="/hero-codex.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="/arena.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+  </div>
   &copy; 2026 Grudge Warlords. All rights reserved.
 </footer>
 
@@ -408,13 +442,13 @@ const TIERS = [
 ];
 
 const SLOTS = [
-  { name:'Weapon', icon:'\u2694\uFE0F' },
-  { name:'Offhand', icon:'\uD83D\uDEE1\uFE0F' },
-  { name:'Helmet', icon:'\uD83E\uDDE2' },
-  { name:'Armor', icon:'\uD83E\uDDE5' },
-  { name:'Feet', icon:'\uD83E\uDD7E' },
-  { name:'Ring', icon:'\uD83D\uDC8D' },
-  { name:'Relic', icon:'\uD83D\uDD2E' },
+  { name:'Weapon', icon:'/sprites/ui/icons/eq_weapon.png' },
+  { name:'Offhand', icon:'/sprites/ui/icons/eq_shield.png' },
+  { name:'Helmet', icon:'/sprites/ui/icons/icon_helm.png' },
+  { name:'Armor', icon:'/sprites/ui/icons/eq_armor.png' },
+  { name:'Feet', icon:'/sprites/ui/icons/icon_boots.png' },
+  { name:'Ring', icon:'/sprites/ui/icons/eq_ring.png' },
+  { name:'Relic', icon:'/sprites/ui/icons/icon_crystal.png' },
 ];
 
 const ATTRS = [
@@ -457,7 +491,7 @@ function renderRaces() {
   g.innerHTML = RACES.map(r => `
     <div class="card" style="border-left:4px solid ${r.color};">
       <div class="race-header">
-        <div class="race-swatch" style="background:${r.color};"></div>
+        <img src="/images/races/${r.name.toLowerCase()}.png" alt="${r.name}" class="race-icon">
         <h4 style="color:${r.color};">${r.name}</h4>
         <span class="badge" style="background:${r.color}22;color:${r.color};border:1px solid ${r.color}44;">${r.trait}</span>
       </div>
@@ -466,11 +500,21 @@ function renderRaces() {
     </div>`).join('');
 }
 
+const CLASS_ICONS = {
+  'Warrior': '/sprites/ui/icons/icon_crossed_swords.png',
+  'Mage Priest': '/sprites/ui/icons/icon_mage.png',
+  'Worge': '/sprites/ui/icons/icon_worge.png',
+  'Ranger': '/sprites/ui/icons/icon_ranger.png'
+};
+
 function renderClasses() {
   const g = document.getElementById('classesGrid');
   g.innerHTML = CLASSES.map(c => `
     <div class="card" style="border-top:3px solid ${c.color};">
-      <h4 style="color:${c.color};margin-bottom:6px;">${c.name}</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <img src="${CLASS_ICONS[c.name] || ''}" alt="${c.name}" class="class-icon">
+        <h4 style="color:${c.color};">${c.name}</h4>
+      </div>
       <div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:4px;">${c.desc}</div>
       <div style="font-size:0.85rem;margin:8px 0;"><span style="color:var(--text-dim);">Base Stats:</span> <span style="color:${c.color};">${c.attrs}</span></div>
       <div class="ability-list">${c.abilities.map(a => `<span class="ability-tag">${a}</span>`).join('')}</div>
@@ -561,7 +605,7 @@ function renderEquipment() {
   const sg = document.getElementById('slotsGrid');
   sg.innerHTML = SLOTS.map(s => `
     <div class="card" style="text-align:center;">
-      <div style="font-size:2rem;margin-bottom:6px;">${s.icon}</div>
+      <img src="${s.icon}" alt="${s.name}" class="slot-icon">
       <div style="font-weight:600;">${s.name}</div>
     </div>`).join('');
 
@@ -590,7 +634,10 @@ function renderAttributes() {
   const g = document.getElementById('attrsGrid');
   g.innerHTML = ATTRS.map(a => `
     <div class="card attr-card" style="border-color:${a.color};">
-      <h4 style="color:${a.color};margin-bottom:4px;">${a.name}</h4>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <img src="/images/attributes/${a.name.toLowerCase()}.png" alt="${a.name}" class="attr-icon-img">
+        <h4 style="color:${a.color};">${a.name}</h4>
+      </div>
       <p style="color:var(--text-dim);font-size:0.85rem;">${a.desc}</p>
       <div class="attr-gains">${a.gains.map(g => `
         <div class="attr-gain">
