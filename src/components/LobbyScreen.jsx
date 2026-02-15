@@ -229,7 +229,8 @@ function NavItem({ essentialIcon, label, active, onClick }) {
         position: 'relative', zIndex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'none', backgroundColor: 'transparent',
-        border: 'none', borderRadius: 0, padding: 0, margin: '0 2px',
+        border: 'none', borderRadius: 0, padding: 0, margin: '0',
+        width: '100%',
         cursor: 'pointer',
         transition: 'all 0.3s cubic-bezier(0.25,0.8,0.25,1)',
         transform: hovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0) scale(1)',
@@ -240,7 +241,7 @@ function NavItem({ essentialIcon, label, active, onClick }) {
         src={active ? '/ui/wood_light.png' : '/ui/wood_dark.png'}
         alt=""
         style={{
-          display: 'block', width: '100%', height: 42,
+          display: 'block', width: '100%', height: 48,
           objectFit: 'fill',
           pointerEvents: 'none',
         }}
