@@ -492,15 +492,22 @@ export default function MapBottomBar({
           display: 'flex', flexDirection: 'column',
           padding: '10px 8px 8px 12px',
           overflow: 'hidden',
-          background: 'linear-gradient(180deg, rgba(10,8,15,0.85) 0%, rgba(8,6,12,0.92) 100%)',
-          borderRight: '1px solid rgba(197,160,89,0.15)',
-          borderTop: '1px solid rgba(197,160,89,0.12)',
+          backgroundImage: 'url(/ui/panel-bg-chat.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           borderRadius: '6px 0 0 0',
           pointerEvents: 'auto',
+          position: 'relative',
         }}>
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '6px 0 0 0',
+            background: 'rgba(5,3,10,0.55)',
+            pointerEvents: 'none',
+          }} />
           <div style={{
             padding: '2px 8px',
             display: 'flex', alignItems: 'center', gap: 5,
+            position: 'relative',
           }}>
             <span className="font-cinzel" style={{ fontSize: '0.5rem', color: 'rgba(255,215,0,0.5)', fontWeight: 700, letterSpacing: '0.08em' }}>PARTY LOG</span>
           </div>
@@ -509,6 +516,7 @@ export default function MapBottomBar({
             fontSize: '0.7rem', lineHeight: 1.4,
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,215,0,0.15) transparent',
             fontFamily: "'Jost', sans-serif",
+            position: 'relative',
           }}>
             {chatLog.length > 0 ? chatLog.slice(-8).map(entry => (
               <div key={entry.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2 }}>
@@ -522,7 +530,7 @@ export default function MapBottomBar({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.55rem', color: 'rgba(148,163,184,0.3)', fontStyle: 'italic' }}>Your party is quiet...</div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 4, padding: '2px 6px 0', alignItems: 'center', position: 'relative' }}>
             <input
               type="text"
               value={chatInput}
@@ -636,49 +644,58 @@ export default function MapBottomBar({
         <div style={{
           flex: '0 0 20%',
           display: 'flex', flexDirection: 'column',
-          padding: '10px 12px 8px 8px',
           position: 'relative',
           overflow: 'visible',
-          background: 'linear-gradient(180deg, rgba(10,8,15,0.85) 0%, rgba(8,6,12,0.92) 100%)',
-          borderLeft: '1px solid rgba(197,160,89,0.15)',
-          borderTop: '1px solid rgba(197,160,89,0.12)',
-          borderRadius: '0 6px 0 0',
           pointerEvents: 'auto',
         }}>
           <div style={{
-            position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: 4,
+            display: 'flex', gap: 0,
+            pointerEvents: 'auto',
           }}>
             {popupButtons.map(pb => (
-              <div key={pb.id} style={{ position: 'relative', width: 34, height: 34 }}>
-                <button onClick={() => togglePopup(pb.id)} style={{
-                  position: 'absolute', inset: '14%',
-                  background: pb.active
-                    ? 'linear-gradient(145deg, rgba(60,50,20,0.95), rgba(40,30,10,0.98))'
-                    : 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
-                  border: 'none', borderRadius: 2,
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s', zIndex: 1,
-                }}
-                  onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.15)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
-                  onMouseMove={e => updateTooltipPosition(e)}
-                  onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
-                >
-                  <InlineIcon name={pb.icon} size={13} />
-                </button>
-                <img src="/ui/skill-slot-frame.png" alt="" style={{
-                  position: 'absolute', inset: 0, width: '100%', height: '100%',
-                  pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                  filter: pb.active ? 'drop-shadow(0 0 4px rgba(255,215,0,0.5)) brightness(1.2)' : 'none',
-                }} />
-              </div>
+              <button key={pb.id} onClick={() => togglePopup(pb.id)} style={{
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+                padding: '4px 2px',
+                background: pb.active
+                  ? 'linear-gradient(180deg, rgba(60,50,20,0.95), rgba(30,25,15,0.98))'
+                  : 'linear-gradient(180deg, rgba(20,16,12,0.85), rgba(12,10,8,0.92))',
+                border: 'none',
+                borderBottom: pb.active ? '2px solid rgba(255,215,0,0.6)' : '2px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                borderRadius: pb.id === popupButtons[0].id ? '6px 0 0 0' : pb.id === popupButtons[popupButtons.length - 1].id ? '0 6px 0 0' : '0',
+              }}
+                onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.style.background = 'linear-gradient(180deg, rgba(40,35,20,0.95), rgba(25,20,12,0.95))'; }}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={e => { hideTooltip(); e.currentTarget.style.background = pb.active ? 'linear-gradient(180deg, rgba(60,50,20,0.95), rgba(30,25,15,0.98))' : 'linear-gradient(180deg, rgba(20,16,12,0.85), rgba(12,10,8,0.92))'; }}
+              >
+                <InlineIcon name={pb.icon} size={12} />
+                <span style={{ fontSize: '0.4rem', color: pb.active ? 'var(--gold)' : 'rgba(197,160,89,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", letterSpacing: '0.04em' }}>{pb.label}</span>
+              </button>
             ))}
           </div>
 
           <div style={{
-            flex: 1, overflowY: 'auto', paddingTop: 12,
+            flex: 1,
+            display: 'flex', flexDirection: 'column',
+            padding: '6px 12px 8px 8px',
+            backgroundImage: 'url(/ui/panel-bg-warparty.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(5,3,10,0.55)',
+              pointerEvents: 'none',
+            }} />
+
+          <div style={{
+            flex: 1, overflowY: 'auto',
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(110,231,183,0.15) transparent',
+            position: 'relative',
           }}>
             <div className="font-cinzel" style={{ fontSize: '0.5rem', color: 'var(--accent)', fontWeight: 700, marginBottom: 6, letterSpacing: '0.05em', textAlign: 'center' }}>
               WAR PARTY
@@ -777,6 +794,7 @@ export default function MapBottomBar({
                 );
               })}
             </div>
+          </div>
           </div>
         </div>
       </div>
