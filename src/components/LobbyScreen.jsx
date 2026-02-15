@@ -1276,9 +1276,11 @@ function HeroSlideshow() {
         setShowVfx(false);
       }, walkDuration + 800 + attackDuration + 200);
 
-      addTimer(() => {
-        setShowBubble(true);
-      }, walkDuration + 800 + attackDuration + 400);
+      if (!isWorge) {
+        addTimer(() => {
+          setShowBubble(true);
+        }, walkDuration + 800 + attackDuration + 400);
+      }
 
       if (isWorge) {
         const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
@@ -1289,7 +1291,6 @@ function HeroSlideshow() {
         const tAtkDuration = tAtkFrames * 80;
 
         addTimer(() => {
-          setShowBubble(false);
           setShowTransformVfx(true);
           setAnim('idle');
           setShowVfx(false);
