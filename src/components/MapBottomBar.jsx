@@ -623,6 +623,10 @@ export default function MapBottomBar({
           padding: '20px 24px 12px 8px',
           position: 'relative',
           overflow: 'visible',
+          backgroundImage: 'url(/ui/sidebar-bg.png)',
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          borderRadius: 4,
         }}>
           <div style={{
             position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
