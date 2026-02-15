@@ -355,8 +355,6 @@ function AdminGizmo() {
       <div style={{
         position: 'fixed', top: '50%', right: 8, transform: 'translateY(-50%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-        background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '6px 4px',
-        border: '1px solid rgba(255,255,255,0.08)',
         zIndex: ADMIN_GIZMO_BUTTON,
       }}>
         <button
