@@ -582,37 +582,39 @@ function renderHeroes(raceFilter, classFilter, search) {
     const factionLow = h.faction.toLowerCase();
     const secretClass = h.isSecret ? ' secret-hero' : '';
 
-    const portraitHtml = h.portrait ? `<div class="hero-portrait" style="width:100%;height:180px;overflow:hidden;position:relative;"><img src="${h.portrait}" alt="${h.name}" style="width:100%;height:100%;object-fit:cover;object-position:center 20%;filter:brightness(0.7);"><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(26,26,46,0.95) 100%);"></div></div>` : '';
+    const portraitHtml = h.portrait ? `<div class="hero-portrait" style="position:absolute;inset:0;overflow:hidden;z-index:0;"><img src="${h.portrait}" alt="${h.name}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;filter:brightness(0.5);"><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(26,26,46,0.8) 60%,rgba(26,26,46,0.98) 85%);"></div></div>` : '';
     const loreHtml = h.lore ? `<div style="padding:0 20px 14px;color:var(--text-dim);font-size:0.82rem;line-height:1.5;">${h.lore}</div>` : '';
 
     return `
     <div class="hero-card rarity-${rarityLow}${secretClass}" style="animation-delay:${i * 0.05}s" data-race="${h.race}" data-class="${h.heroClass}" onclick="openHeroModal('${h.name.replace(/'/g,"\\'")}')">
       ${portraitHtml}
-      <div class="hero-header">
-        <div class="hero-icon" style="background:linear-gradient(135deg,${RACE_COLORS[h.race]}22,${CLASS_COLORS[h.heroClass]}22);border-color:${RACE_COLORS[h.race]}44;">
-          <img src="${h.raceIcon}" alt="${h.race}">
-        </div>
-        <div class="hero-info">
-          <div class="hero-name">${h.name}</div>
-          <div class="hero-title">${h.title}</div>
-          <div class="hero-tags">
-            <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
-            <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
-            <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
-            <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
+      <div style="position:relative;z-index:1;">
+        <div class="hero-header">
+          <div class="hero-icon" style="background:linear-gradient(135deg,${RACE_COLORS[h.race]}22,${CLASS_COLORS[h.heroClass]}22);border-color:${RACE_COLORS[h.race]}44;">
+            <img src="${h.raceIcon}" alt="${h.race}">
+          </div>
+          <div class="hero-info">
+            <div class="hero-name">${h.name}</div>
+            <div class="hero-title">${h.title}</div>
+            <div class="hero-tags">
+              <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
+              <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
+              <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
+              <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
+            </div>
           </div>
         </div>
+        ${loreHtml}
+        <div class="hero-stats">
+          ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
+          ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
+          ${renderStat('DEF', h.def, STAT_MAX.def, STAT_COLORS.def)}
+          ${renderStat('SPD', h.spd, STAT_MAX.spd, STAT_COLORS.spd)}
+          ${renderStat('RNG', h.rng, STAT_MAX.rng, STAT_COLORS.rng)}
+          ${renderStat('MP', h.mp, STAT_MAX.mp, STAT_COLORS.mp)}
+        </div>
+        <div class="hero-quote">"${h.quote}"</div>
       </div>
-      ${loreHtml}
-      <div class="hero-stats">
-        ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
-        ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
-        ${renderStat('DEF', h.def, STAT_MAX.def, STAT_COLORS.def)}
-        ${renderStat('SPD', h.spd, STAT_MAX.spd, STAT_COLORS.spd)}
-        ${renderStat('RNG', h.rng, STAT_MAX.rng, STAT_COLORS.rng)}
-        ${renderStat('MP', h.mp, STAT_MAX.mp, STAT_COLORS.mp)}
-      </div>
-      <div class="hero-quote">"${h.quote}"</div>
     </div>`;
   }).join('');
 }
