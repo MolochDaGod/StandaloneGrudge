@@ -1584,6 +1584,11 @@ export default function BattleScreen() {
         if (spriteData[desired]) return desired;
         if (effectMapping.fallbackAnim && spriteData[effectMapping.fallbackAnim]) return effectMapping.fallbackAnim;
       }
+      if (spriteData.animOverrides) {
+        const overrideKey = (abilityType === 'heal_over_time') ? 'heal' : abilityType;
+        const override = spriteData.animOverrides[overrideKey];
+        if (override && spriteData[override]) return override;
+      }
       if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : spriteData.cast ? 'cast' : 'attack1';
       if (abilityType === 'buff') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
       if (abilityType === 'item' || abilityType === 'stance') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';

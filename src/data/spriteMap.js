@@ -66,6 +66,7 @@ export const spriteSheets = {
     death: { src: '/sprites/orc-rider/death.png', frames: 4 },
     block: { src: '/sprites/orc-rider/block.png', frames: 4 },
     walk: { src: '/sprites/orc-rider/walk.png', frames: 8 },
+    animOverrides: { magical: 'attack3', heal: 'block', buff: 'block' },
   },
   'barbarian-mage': {
     folder: 'barbarian-mage/Wizard Pack',
