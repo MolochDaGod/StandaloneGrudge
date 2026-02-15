@@ -570,41 +570,47 @@ export default function MapBottomBar({
               paddingTop: '3%',
             }}>
               {buttons.map((btn, idx) => (
-                <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <button onClick={btn.action} style={{
-                    background: 'rgba(0,0,0,0.6)',
-                    border: '2px solid rgba(197,160,89,0.4)',
-                    padding: 0,
-                    cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.15s',
-                    position: 'relative',
-                    animation: btn.pulse ? 'glow 2s infinite' : 'none',
-                    aspectRatio: '1 / 1',
-                    width: '100%',
-                    boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)',
-                    borderRadius: 5,
-                  }}
-                    onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.style.borderColor = '#c5a059'; e.currentTarget.style.transform = 'scale(1.08)'; }}
-                    onMouseMove={e => updateTooltipPosition(e)}
-                    onMouseLeave={e => { hideTooltip(); e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    {btn.img ? (
-                      <img src={btn.img} alt={btn.label} style={{ width: '65%', height: '65%', objectFit: 'contain', borderRadius: 2, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
-                    ) : (
-                      <InlineIcon name={btn.icon} size={20} />
-                    )}
-                    <span style={{ position: 'absolute', top: 1, left: 3, fontSize: '0.4rem', color: 'rgba(200,200,200,0.5)', fontWeight: 600, fontFamily: "'Cinzel', serif" }}>{idx + 1}</span>
+                <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                    <button onClick={btn.action} style={{
+                      background: 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s',
+                      position: 'absolute',
+                      inset: '12%',
+                      animation: btn.pulse ? 'glow 2s infinite' : 'none',
+                      borderRadius: 2,
+                      zIndex: 1,
+                    }}
+                      onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.1)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                      onMouseMove={e => updateTooltipPosition(e)}
+                      onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                    >
+                      {btn.img ? (
+                        <img src={btn.img} alt={btn.label} style={{ width: '70%', height: '70%', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }} />
+                      ) : (
+                        <InlineIcon name={btn.icon} size={18} />
+                      )}
+                    </button>
+                    <img src="/ui/skill-slot-frame.png" alt="" style={{
+                      position: 'absolute', inset: 0, width: '100%', height: '100%',
+                      pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                    }} />
+                    <span style={{ position: 'absolute', top: '8%', left: '12%', fontSize: '0.35rem', color: 'rgba(200,180,120,0.6)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 1}</span>
                     {btn.badge && (
                       <span style={{
-                        position: 'absolute', top: -2, right: -2,
+                        position: 'absolute', top: -3, right: -3, zIndex: 4,
                         background: 'var(--gold)', color: '#000', fontSize: '0.4rem',
                         fontWeight: 800, borderRadius: '50%', width: 14, height: 14,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 6px rgba(255,215,0,0.5)',
                       }}>{btn.badge}</span>
                     )}
-                  </button>
-                  <span style={{ fontSize: '0.4rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1, textAlign: 'center' }}>{btn.label}</span>
+                  </div>
+                  <span style={{ fontSize: '0.35rem', color: btn.color, fontWeight: 600, letterSpacing: '0.02em', fontFamily: "'Cinzel', serif", lineHeight: 1, textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{btn.label}</span>
                 </div>
               ))}
             </div>
@@ -619,25 +625,33 @@ export default function MapBottomBar({
           overflow: 'visible',
         }}>
           <div style={{
-            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', gap: 6,
+            position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 4,
           }}>
             {popupButtons.map(pb => (
-              <button key={pb.id} onClick={() => togglePopup(pb.id)} style={{
-                width: 30, height: 30, borderRadius: '50%',
-                background: pb.active ? 'rgba(255,215,0,0.25)' : 'rgba(20,24,48,0.9)',
-                border: `2px solid ${pb.active ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
-                cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-                boxShadow: pb.active ? '0 0 10px rgba(255,215,0,0.3)' : 'none',
-              }}
-                onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(255,215,0,0.3)'; }}
-                onMouseMove={e => updateTooltipPosition(e)}
-                onMouseLeave={e => { hideTooltip(); if (!pb.active) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.boxShadow = 'none'; } }}
-              >
-                <InlineIcon name={pb.icon} size={14} />
-              </button>
+              <div key={pb.id} style={{ position: 'relative', width: 34, height: 34 }}>
+                <button onClick={() => togglePopup(pb.id)} style={{
+                  position: 'absolute', inset: '14%',
+                  background: pb.active
+                    ? 'linear-gradient(145deg, rgba(60,50,20,0.95), rgba(40,30,10,0.98))'
+                    : 'linear-gradient(145deg, rgba(30,25,18,0.95), rgba(18,15,10,0.98))',
+                  border: 'none', borderRadius: 2,
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s', zIndex: 1,
+                }}
+                  onMouseEnter={e => { showTooltip(pb.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.15)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                >
+                  <InlineIcon name={pb.icon} size={13} />
+                </button>
+                <img src="/ui/skill-slot-frame.png" alt="" style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%',
+                  pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                  filter: pb.active ? 'drop-shadow(0 0 4px rgba(255,215,0,0.5)) brightness(1.2)' : 'none',
+                }} />
+              </div>
             ))}
           </div>
 

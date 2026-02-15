@@ -63,22 +63,10 @@ function EquipSlot({ slotDef, item, onDrop, onUnequip, onHover, heroClassId, dra
   return (
     <div
       style={{
-        width: 40,
-        height: 40,
-        background: over && canDrop
-          ? 'rgba(87,199,103,0.35)'
-          : item
-            ? `linear-gradient(135deg, ${SLOT_BG}, ${SLOT_EMPTY})`
-            : SLOT_EMPTY,
-        border: `2px solid ${over && canDrop ? TEAL_LIGHT : item ? (tier?.color || SLOT_BORDER) : SLOT_BORDER}`,
-        borderRadius: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: item ? 'pointer' : 'default',
-        imageRendering: 'pixelated',
+        width: 46,
+        height: 46,
         position: 'relative',
-        transition: 'border-color 0.15s',
+        cursor: item ? 'pointer' : 'default',
       }}
       onDragOver={(e) => {
         if (canDrop) {
@@ -105,24 +93,43 @@ function EquipSlot({ slotDef, item, onDrop, onUnequip, onHover, heroClassId, dra
       onMouseMove={(e) => item && updateTooltipPosition(e)}
       onMouseLeave={() => hideTooltip()}
     >
-      {item ? (
-        (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={item.icon || slotDef.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
-      ) : (
-        (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={slotDef.icon} size={Math.round(ip.iconSize * 0.83)} style={{ opacity: 0.3, filter: 'grayscale(1)', marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
-      )}
+      <div style={{
+        position: 'absolute', inset: '13%',
+        background: over && canDrop
+          ? 'rgba(87,199,103,0.35)'
+          : item
+            ? `linear-gradient(145deg, rgba(50,40,25,0.95), rgba(30,22,12,0.98))`
+            : 'linear-gradient(145deg, rgba(35,28,18,0.9), rgba(20,15,8,0.95))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        imageRendering: 'pixelated', borderRadius: 1,
+        boxShadow: over && canDrop ? `inset 0 0 8px rgba(87,199,103,0.4)` : item ? `inset 0 0 6px rgba(0,0,0,0.6)` : 'none',
+      }}>
+        {item ? (
+          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={item.icon || slotDef.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+        ) : (
+          (() => { const ip = getIconPlacement('equipIcons'); return <InlineIcon name={slotDef.icon} size={Math.round(ip.iconSize * 0.83)} style={{ opacity: 0.25, filter: 'grayscale(1)', marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()
+        )}
+      </div>
+      <img src="/ui/inventory-slot-frame.png" alt="" style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+        filter: item && tier ? `drop-shadow(0 0 3px ${tier.color}50)` : 'none',
+      }} />
       {!item && (
         <div style={{
-          position: 'absolute', bottom: -14, fontSize: 7, color: PARCHMENT_DARK,
+          position: 'absolute', bottom: -13, left: '50%', transform: 'translateX(-50%)',
+          fontSize: 7, color: PARCHMENT_DARK,
           fontFamily: 'Cinzel, serif', whiteSpace: 'nowrap', textAlign: 'center',
-          letterSpacing: '0.03em',
+          letterSpacing: '0.03em', zIndex: 3,
         }}>
           {slotDef.label}
         </div>
       )}
       {item && tier && (
         <div style={{
-          position: 'absolute', top: -2, right: -2, width: 8, height: 8,
+          position: 'absolute', top: 1, right: 1, width: 8, height: 8,
           background: tier.color, borderRadius: 1, border: `1px solid ${SLOT_BORDER}`,
+          zIndex: 3, boxShadow: `0 0 4px ${tier.color}80`,
         }} />
       )}
     </div>
@@ -162,27 +169,34 @@ function InventorySlot({ item, index, onDragStart, onRightClickEquip }) {
       onMouseMove={(e) => item && updateTooltipPosition(e)}
       onMouseLeave={() => hideTooltip()}
       style={{
-        width: 36,
-        height: 36,
-        background: item
-          ? `linear-gradient(135deg, ${SLOT_BG}, ${SLOT_EMPTY})`
-          : SLOT_EMPTY,
-        border: `2px solid ${item ? (tier?.color || SLOT_BORDER) : SLOT_BORDER}`,
-        borderRadius: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: 42,
+        height: 42,
+        position: 'relative',
         cursor: item ? 'grab' : 'default',
         opacity: dragging ? 0.4 : 1,
-        imageRendering: 'pixelated',
-        position: 'relative',
       }}
     >
-      {item && (() => { const ip = getIconPlacement('invGridIcons'); return <InlineIcon name={item.icon || 'chest'} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+      <div style={{
+        position: 'absolute', inset: '13%',
+        background: item
+          ? `linear-gradient(145deg, rgba(50,40,25,0.95), rgba(30,22,12,0.98))`
+          : 'linear-gradient(145deg, rgba(35,28,18,0.85), rgba(20,15,8,0.9))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        imageRendering: 'pixelated', borderRadius: 1,
+        boxShadow: item ? `inset 0 0 5px rgba(0,0,0,0.5)` : 'none',
+      }}>
+        {item && (() => { const ip = getIconPlacement('invGridIcons'); return <InlineIcon name={item.icon || 'chest'} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+      </div>
+      <img src="/ui/inventory-slot-frame.png" alt="" style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+        filter: item && tier ? `drop-shadow(0 0 2px ${tier.color}40)` : 'none',
+      }} />
       {item && tier && (
         <div style={{
-          position: 'absolute', top: -2, right: -2, width: 7, height: 7,
+          position: 'absolute', top: 1, right: 1, width: 7, height: 7,
           background: tier.color, borderRadius: 1, border: `1px solid ${SLOT_BORDER}`,
+          zIndex: 3, boxShadow: `0 0 3px ${tier.color}60`,
         }} />
       )}
     </div>
@@ -326,11 +340,11 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
 
           <div style={{
             position: 'relative',
-            width: compact ? 150 : 180,
-            height: compact ? 190 : 220,
+            width: compact ? 160 : 195,
+            height: compact ? 200 : 235,
             display: 'grid',
-            gridTemplateColumns: '40px 1fr 40px',
-            gridTemplateRows: '40px 1fr 40px',
+            gridTemplateColumns: '46px 1fr 46px',
+            gridTemplateRows: '46px 1fr 46px',
             gap: compact ? 2 : 4,
             alignItems: 'center',
             justifyItems: 'center',
@@ -405,8 +419,8 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 36px)',
-            gridTemplateRows: 'repeat(4, 36px)',
+            gridTemplateColumns: 'repeat(4, 42px)',
+            gridTemplateRows: 'repeat(4, 42px)',
             gap: 3,
           }}>
             {padded.map((item, i) => (
