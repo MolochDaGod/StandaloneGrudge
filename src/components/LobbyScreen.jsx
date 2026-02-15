@@ -1236,43 +1236,43 @@ function HeroSlideshow() {
         {textVisible && (
           <div style={{
             position: 'absolute', top: 10, left: 12, zIndex: 10,
-            display: 'flex', alignItems: 'center', gap: 5,
+            display: 'flex', alignItems: 'center', gap: 10,
             animation: 'ssSlideInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}>
             <div style={{
-              width: 42, height: 42, borderRadius: '50%',
+              width: 84, height: 84, borderRadius: '50%',
               background: `radial-gradient(circle, ${race.color}44, rgba(0,0,0,0.7))`,
-              border: `2px solid ${race.color}88`,
+              border: `3px solid ${race.color}88`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 14px ${race.color}44`,
+              boxShadow: `0 0 18px ${race.color}44`,
               overflow: 'hidden',
             }}>
               <img src={RACE_CLASS_PORTRAIT_MAP[`${combo.raceId}_${combo.classId}`]} alt={race.name} style={{
-                width: 38, height: 38, objectFit: 'cover', borderRadius: '50%',
+                width: 76, height: 76, objectFit: 'cover', borderRadius: '50%',
               }} />
             </div>
             <div style={{
-              width: 36, height: 36, borderRadius: 5,
+              width: 72, height: 72, borderRadius: 8,
               background: `radial-gradient(circle, ${faction.color}33, rgba(0,0,0,0.6))`,
-              border: `2px solid ${faction.color}66`,
+              border: `3px solid ${faction.color}66`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 10px ${faction.color}33`,
+              boxShadow: `0 0 14px ${faction.color}33`,
               overflow: 'hidden',
             }}>
               <img src={faction.icon} alt={faction.name} style={{
-                width: 28, height: 28, objectFit: 'contain', filter: 'brightness(1.2)',
+                width: 56, height: 56, objectFit: 'contain', filter: 'brightness(1.2)',
               }} />
             </div>
             <div style={{
-              width: 36, height: 36, borderRadius: 5,
+              width: 72, height: 72, borderRadius: 8,
               background: `radial-gradient(circle, ${auraColor}33, rgba(0,0,0,0.6))`,
-              border: `2px solid ${auraColor}66`,
+              border: `3px solid ${auraColor}66`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: `0 0 10px ${auraColor}33`,
+              boxShadow: `0 0 14px ${auraColor}33`,
               overflow: 'hidden',
             }}>
               <img src={CLASS_ICON_MAP[combo.classId]} alt={cls.name} style={{
-                width: 28, height: 28, objectFit: 'contain',
+                width: 56, height: 56, objectFit: 'contain',
                 imageRendering: 'pixelated',
                 filter: 'brightness(1.3)',
               }} />
@@ -1427,47 +1427,50 @@ function HeroSlideshow() {
 
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 9,
-          padding: '0 16px 8px',
+          padding: '0 16px 14px',
           background: 'linear-gradient(transparent, rgba(0,0,0,0.7) 40%)',
         }}>
           <div style={{
-            display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 6, flexWrap: 'wrap',
+            display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 10, flexWrap: 'wrap',
             opacity: textVisible ? 1 : 0,
             transform: textVisible ? 'translateY(0)' : 'translateY(10px)',
             transition: 'all 0.6s ease 0.2s',
           }}>
             <span style={{
-              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.9rem', padding: '5px 16px', borderRadius: 20,
               background: `${race.color}22`, color: race.color,
               border: `1px solid ${race.color}44`,
+              fontWeight: 600,
             }}>
               {race.trait}
             </span>
             <span style={{
-              fontSize: '0.55rem', padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.9rem', padding: '5px 16px', borderRadius: 20,
               background: `${cls.color}22`, color: cls.color,
               border: `1px solid ${cls.color}44`,
+              fontWeight: 600,
             }}>
               {cls.name}
             </span>
             <span style={{
-              fontSize: '0.5rem', padding: '2px 10px', borderRadius: 20,
+              fontSize: '0.85rem', padding: '5px 16px', borderRadius: 20,
               background: `${faction.color}15`, color: faction.color,
               border: `1px solid ${faction.color}33`,
+              fontWeight: 600,
             }}>
               {faction.name} &bull; {faction.god}
             </span>
           </div>
 
           <div style={{
-            display: 'flex', justifyContent: 'center', gap: 3,
+            display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 2,
           }}>
             {ALL_COMBOS.map((c, i) => {
               const r = raceDefinitions[c.raceId];
               return (
                 <div key={i} style={{
-                  width: i === index ? 14 : 4, height: 4, borderRadius: 2,
-                  background: i === index ? r.color : 'rgba(255,255,255,0.12)',
+                  width: i === index ? 22 : 7, height: 7, borderRadius: 4,
+                  background: i === index ? r.color : 'rgba(255,255,255,0.15)',
                   transition: 'all 0.4s ease',
                   cursor: 'pointer',
                 }}
