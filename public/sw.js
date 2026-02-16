@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grudge-warlords-v2';
+const CACHE_NAME = 'grudge-warlords-v3';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -6,7 +6,9 @@ const PRECACHE_URLS = [
   '/pwa/icon-512x512.png',
 ];
 
-const CACHEABLE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff2', '.woff', '.mp3', '.wav', '.ogg'];
+const CACHEABLE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff2', '.woff'];
+
+const SKIP_CACHE_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.mp4', '.webm'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -32,6 +34,9 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
 
+  const isSkipCache = SKIP_CACHE_EXTENSIONS.some((ext) => url.pathname.toLowerCase().endsWith(ext));
+  if (isSkipCache) return;
+
   const isCacheableAsset = CACHEABLE_EXTENSIONS.some((ext) => url.pathname.toLowerCase().endsWith(ext));
 
   if (isCacheableAsset) {
@@ -39,19 +44,15 @@ self.addEventListener('fetch', (event) => {
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
-          if (response.ok) {
+          if (response.ok && response.status === 200) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, clone).catch(() => {});
+            });
           }
           return response;
-        });
-      })
-    );
-  } else {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request).then((cached) => {
-          return cached || caches.match('/');
+        }).catch(() => {
+          return new Response('', { status: 503, statusText: 'Offline' });
         });
       })
     );

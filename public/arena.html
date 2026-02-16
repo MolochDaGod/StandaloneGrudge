@@ -194,8 +194,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 (function() {
   'use strict';
 
-  var API = 'https://f36fb95c-926d-4e1b-9411-9de769d82a4b-00-9efd742oijgh.kirk.replit.dev';
-  // IMPORTANT: After publishing, replace API above with your production URL
+  var API = window.location.origin;
 
   var RACE_NAMES = {
     human:'Human', elf:'Elf', dwarf:'Dwarf', orc:'Orc', undead:'Undead', demon:'Demon',
@@ -250,17 +249,16 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   }
 
   function loadStats() {
-    Promise.all([
-      api('/api/arena/stats'),
-      api('/api/public/stats')
-    ]).then(function(results) {
-      var arena = results[0];
-      var pub = results[1];
+    api('/api/arena/stats').then(function(arena) {
       document.getElementById('stat-teams').textContent = arena.totalTeams;
       document.getElementById('stat-ranked').textContent = arena.rankedTeams;
       document.getElementById('stat-battles').textContent = arena.totalBattles;
-      document.getElementById('stat-players').textContent = pub.totalPlayers;
     }).catch(function() {});
+    api('/api/public/stats').then(function(pub) {
+      document.getElementById('stat-players').textContent = pub.totalPlayers || 0;
+    }).catch(function() {
+      document.getElementById('stat-players').textContent = '—';
+    });
   }
 
   function loadLobby() {
