@@ -136,11 +136,41 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 .hero-card{border:2px solid #d4a017;background:linear-gradient(135deg,var(--card),rgba(212,160,23,0.08));}
 
+.sprite-preview{image-rendering:pixelated;min-height:80px;background-repeat:no-repeat;margin:8px auto;display:block;}
+.sprite-animated{image-rendering:pixelated;min-height:80px;background-repeat:no-repeat;margin:8px auto;display:block;}
+.enemy-sprite{image-rendering:pixelated;min-height:80px;width:80px;background-repeat:no-repeat;background-position:0 0;margin:0 auto 8px;display:block;}
+
+.formula-box{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:16px;margin:8px 0;font-family:'Courier New',monospace;font-size:0.9rem;color:var(--gold);line-height:1.8;}
+.formula-box .var{color:var(--cyan);}
+.formula-box .op{color:var(--text-dim);}
+
+.weapon-skill-table{width:100%;border-collapse:collapse;margin:8px 0;}
+.weapon-skill-table th{text-align:left;padding:8px 12px;background:rgba(255,215,0,0.08);color:var(--gold);font-family:'Cinzel',serif;font-size:0.85rem;border-bottom:1px solid var(--gold-dim);}
+.weapon-skill-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:0.85rem;vertical-align:top;}
+.weapon-skill-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+.tier-selector{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap;}
+.tier-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-family:'Jost',sans-serif;font-size:0.85rem;transition:all 0.2s;}
+.tier-btn.active{color:#fff;border-color:currentColor;}
+
+.calc-result{background:rgba(255,215,0,0.06);border:1px solid var(--gold-dim);border-radius:8px;padding:16px;margin:12px 0;}
+.calc-result .big{font-size:1.4rem;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+
+.potion-card{display:flex;align-items:flex-start;gap:16px;padding:20px;}
+.potion-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+
+.system-card{padding:24px;}
+.system-card h4{color:var(--gold);font-family:'Cinzel',serif;margin-bottom:8px;font-size:1.1rem;}
+
+.rank-badge{display:inline-block;padding:4px 12px;border-radius:4px;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+
 @media(max-width:768px){
   .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
   .grid-6{grid-template-columns:repeat(2,1fr);}
   .enemy-stats{grid-template-columns:repeat(2,1fr);}
   .hero h1{font-size:1.8rem;}
+  .weapon-skill-table{font-size:0.75rem;}
+  .weapon-skill-table th,.weapon-skill-table td{padding:6px 8px;}
 }
 </style>
 </head>
@@ -158,7 +188,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 <header class="hero">
   <h1>Grudge Warlords</h1>
-  <p>Complete Game Compendium &mdash; All races, classes, enemies, equipment, and lore in one place.</p>
+  <p>Complete Game Compendium &mdash; All races, classes, enemies, equipment, combat math, and lore in one place.</p>
 </header>
 
 <nav class="nav-bar">
@@ -171,12 +201,14 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
     <button class="nav-btn" data-tab="combat">Combat Math</button>
     <button class="nav-btn" data-tab="heroes">Named Heroes</button>
     <button class="nav-btn" data-tab="factions">Factions</button>
+    <button class="nav-btn" data-tab="consumables">Consumables</button>
+    <button class="nav-btn" data-tab="systems">Game Systems</button>
   </div>
 </nav>
 
 <main class="container">
 
-<!-- ═══════════════ CHARACTERS ═══════════════ -->
+<!-- CHARACTERS -->
 <section class="tab active" id="characters">
   <h2 class="section-title">Warlord Combinations</h2>
   <p style="color:var(--text-dim);margin-bottom:24px;">6 Races &times; 4 Classes = 24 unique Warlord combinations. Each race provides attribute bonuses and a unique racial trait, while each class defines starting attributes, abilities, and a signature power.</p>
@@ -194,14 +226,14 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="grid grid-4" id="combosGrid"></div>
 </section>
 
-<!-- ═══════════════ WORLD MAP ═══════════════ -->
+<!-- WORLD MAP -->
 <section class="tab" id="world">
   <h2 class="section-title">World Map &mdash; 32 Locations</h2>
   <p style="color:var(--text-dim);margin-bottom:24px;">The world of Grudge Warlords is divided into distinct regions, each with unique environments, enemies, and challenges.</p>
   <div id="worldContent"></div>
 </section>
 
-<!-- ═══════════════ ENEMIES ═══════════════ -->
+<!-- ENEMIES -->
 <section class="tab" id="enemies">
   <h2 class="section-title">Enemies &amp; Bosses</h2>
   <div class="search-wrap">
@@ -214,38 +246,63 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="grid grid-2" id="enemiesGrid"></div>
 </section>
 
-<!-- ═══════════════ EQUIPMENT ═══════════════ -->
+<!-- EQUIPMENT -->
 <section class="tab" id="equipment">
   <h2 class="section-title">Equipment System</h2>
 
   <h3 class="sub-title">Equipment Slots (7)</h3>
   <div class="grid grid-6" style="margin-bottom:30px;" id="slotsGrid"></div>
 
+  <h3 class="sub-title">Weapon Types</h3>
+  <div class="grid grid-4" id="weaponTypesGrid"></div>
+
+  <h3 class="sub-title">Class Equipment Rules</h3>
+  <div class="grid grid-2" id="classEquipGrid"></div>
+
+  <h3 class="sub-title">Weapon Skills by Type</h3>
+  <p style="color:var(--text-dim);margin-bottom:16px;">Each weapon type grants unique basic attacks (Slot 1) and special abilities (Slots 2-3). Abilities have damage multipliers, cooldowns, and special effects.</p>
+  <div id="weaponSkillsContent"></div>
+
   <h3 class="sub-title">Tier System (8 Tiers)</h3>
   <div id="tiersContent"></div>
 
-  <h3 class="sub-title">Scaling Formula</h3>
+  <h3 class="sub-title">Tier Scaling Calculator</h3>
   <div class="card" style="margin-top:12px;">
     <p style="font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:8px;">stat = base &times; multiplier + flat bonus</p>
-    <p style="color:var(--text-dim);font-size:0.9rem;">Primary stats (Physical Damage, Magic Damage, Health, Mana, Stamina, Defense) receive the full flat bonus. Secondary stats receive 15% of the flat bonus.</p>
+    <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px;">Primary stats (Physical Damage, Magic Damage, Health, Mana, Stamina, Defense) receive the full flat bonus. Secondary stats receive 15% of the flat bonus.</p>
+    <div id="tierCalcContent"></div>
   </div>
+
+  <h3 class="sub-title">Sample Items</h3>
+  <div class="tier-selector" id="itemTierSelector"></div>
+  <div class="grid grid-3" id="sampleItemsGrid"></div>
 
   <h3 class="sub-title">Upgrade Costs</h3>
   <div class="grid grid-6" style="margin-top:12px;" id="upgradeGrid"></div>
 </section>
 
-<!-- ═══════════════ ATTRIBUTES ═══════════════ -->
+<!-- ATTRIBUTES -->
 <section class="tab" id="attributes">
   <h2 class="section-title">Attributes (8)</h2>
   <p style="color:var(--text-dim);margin-bottom:24px;">Each attribute provides multiple stat bonuses per point invested. Points have diminishing returns above 25 and 50.</p>
   <div class="grid grid-2" id="attrsGrid"></div>
 </section>
 
-<!-- ═══════════════ COMBAT MATH ═══════════════ -->
+<!-- COMBAT MATH -->
 <section class="tab" id="combat">
   <h2 class="section-title">Combat Mechanics</h2>
 
-  <div class="grid grid-2">
+  <h3 class="sub-title">Core Damage Formula</h3>
+  <div class="card">
+    <div class="formula-box">
+      <span class="var">finalDamage</span> <span class="op">=</span> (<span class="var">baseDamage</span> <span class="op">&times;</span> <span class="var">abilityMultiplier</span> <span class="op">&times;</span> <span class="var">buffMultipliers</span>) <span class="op">-</span> <span class="var">defense</span><br>
+      <span class="var">critDamage</span> <span class="op">=</span> <span class="var">finalDamage</span> <span class="op">&times;</span> (1 + <span class="var">critDamageBonus</span> / 100)<br>
+      <span class="var">drainHeal</span> <span class="op">=</span> <span class="var">damageDealt</span> <span class="op">&times;</span> <span class="var">drainPercent</span>
+    </div>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin-top:8px;">Damage is always at least 1. Critical hits apply the crit damage multiplier (base 50% + bonuses). Drain abilities heal the attacker for the specified percentage of damage dealt.</p>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:20px;">
     <div class="card">
       <h4 style="color:var(--gold);margin-bottom:10px;">Initiative &amp; Speed</h4>
       <p style="color:var(--text-dim);font-size:0.9rem;">Combat turn order is determined by Speed. Higher speed units act first. Each unit takes one action per turn (attack or use ability).</p>
@@ -255,16 +312,66 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
       <p style="color:var(--text-dim);font-size:0.9rem;">Players can field up to 3 heroes simultaneously in battle. Boss encounters may feature multiple enemy units as well.</p>
     </div>
     <div class="card">
-      <h4 style="color:var(--gold);margin-bottom:10px;">Level Scaling</h4>
-      <p style="color:var(--text-dim);font-size:0.9rem;">Enemy stats scale with formula: <span style="color:var(--gold);font-family:monospace;">stats &times; (1 + level &times; 0.15)</span></p>
-      <p style="color:var(--text-dim);font-size:0.85rem;margin-top:6px;">Per level: +10 HP, +5 Mana, +3 Stamina, +2 Phys DMG, +1.5 Mag DMG, +2 DEF</p>
+      <h4 style="color:var(--gold);margin-bottom:10px;">AoE Attacks</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Area-of-Effect abilities hit <strong>all enemies</strong> in the encounter. Damage is <strong>not reduced</strong> for multiple targets &mdash; each target takes the full calculated damage.</p>
     </div>
     <div class="card">
-      <h4 style="color:var(--gold);margin-bottom:10px;">Diminishing Returns</h4>
-      <p style="color:var(--text-dim);font-size:0.9rem;">Attribute points have diminishing returns:<br>
-        1&ndash;25: Full value (1:1)<br>
-        26&ndash;50: Half value (0.5:1)<br>
-        51+: Quarter value (0.25:1)</p>
+      <h4 style="color:var(--gold);margin-bottom:10px;">Drain Mechanics</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Drain abilities heal the attacker for a percentage of damage dealt. E.g., a 50% drain on 200 damage heals 100 HP. Drain is calculated after defense reduction.</p>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Level Scaling</h3>
+  <div class="card">
+    <div class="formula-box">
+      <span class="var">enemyStats</span> <span class="op">=</span> <span class="var">baseStats</span> <span class="op">&times;</span> (1 + <span class="var">level</span> <span class="op">&times;</span> 0.15)
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--green);">+10 HP</strong> per level</div>
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--blue);">+5 Mana</strong> per level</div>
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--orange);">+3 Stamina</strong> per level</div>
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--red);">+2 Phys DMG</strong> per level</div>
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--purple);">+1.5 Mag DMG</strong> per level</div>
+      <div class="tag" style="padding:8px 12px;font-size:0.85rem;"><strong style="color:var(--cyan);">+2 DEF</strong> per level</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Diminishing Returns</h3>
+  <div class="card">
+    <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:12px;">Attribute points have diminishing returns to prevent over-stacking a single attribute:</p>
+    <div class="formula-box">
+      Points 1&ndash;25: <span class="var">Full value</span> (1:1 ratio)<br>
+      Points 26&ndash;50: <span class="var">Half value</span> (0.5:1 ratio) &mdash; effective = 25 + (pts-25) &times; 0.5<br>
+      Points 51+: <span class="var">Quarter value</span> (0.25:1 ratio) &mdash; effective = 37.5 + (pts-50) &times; 0.25
+    </div>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin-top:8px;">Example: 60 raw points = 25 + 12.5 + 2.5 = <strong style="color:var(--gold);">40 effective points</strong></p>
+  </div>
+
+  <h3 class="sub-title">Status Effects</h3>
+  <div class="grid grid-3">
+    <div class="card">
+      <h4 style="color:var(--red);margin-bottom:8px;">Bleed (DoT)</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Deals a percentage of the attacker's damage each turn for the duration. Typically 10-15% per tick for 3 turns.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--green);margin-bottom:8px;">Poison (DoT)</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Deals damage over time, often from ranged or rogue abilities. Typically 15-20% per tick for 3-4 turns.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--orange);margin-bottom:8px;">Burn (DoT)</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Fire-based damage over time from magic abilities. Usually 10% per tick for 2-3 turns.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--cyan);margin-bottom:8px;">Stun</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Target skips their turn entirely. Cannot attack, use abilities, or take any action. Duration is usually 1-2 turns.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--blue);margin-bottom:8px;">Buff</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Temporary stat increase (damage, defense, speed, etc.) that lasts a set number of turns. Can stack from different sources.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--purple);margin-bottom:8px;">Debuff</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;">Temporary stat reduction applied to enemies. Commonly reduces damage output (-35-40%) or defense. Lasts 2-3 turns.</p>
     </div>
   </div>
 
@@ -275,31 +382,46 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <div class="grid grid-4" id="statCapsGrid"></div>
 </section>
 
-<!-- ═══════════════ NAMED HEROES ═══════════════ -->
+<!-- NAMED HEROES -->
 <section class="tab" id="heroes">
   <h2 class="section-title">Named Heroes</h2>
-  <p style="color:var(--text-dim);margin-bottom:24px;">Legendary heroes with unique abilities and lore.</p>
+  <p style="color:var(--text-dim);margin-bottom:24px;">Legendary heroes with unique abilities, custom sprites, and secret unlock conditions.</p>
 
-  <div class="card hero-card" style="max-width:500px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <div style="width:48px;height:48px;border-radius:50%;background:#d4a017;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#000;font-family:'Cinzel',serif;font-weight:700;">R</div>
+  <div class="card hero-card" style="max-width:600px;">
+    <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:12px;">
+      <div style="flex-shrink:0;">
+        <div class="sprite-preview" id="racalvinSprite" style="width:100px;height:100px;background-image:url('/sprites/Racalvin/idle.png');background-size:auto 100px;background-position:0 0;image-rendering:pixelated;border-radius:8px;border:2px solid #d4a017;"></div>
+      </div>
       <div>
-        <h4 style="color:#d4a017;font-size:1.2rem;">Racalvin the Pirate King</h4>
-        <div style="color:var(--text-dim);font-size:0.85rem;">Barbarian Ranger</div>
+        <h4 style="color:#d4a017;font-size:1.3rem;">Racalvin the Pirate King</h4>
+        <div style="color:var(--text-dim);font-size:0.9rem;margin-bottom:6px;">Barbarian Worge</div>
+        <div style="margin-top:6px;">
+          <span class="tag" style="border-color:#f43f5e;color:#f43f5e;">Barbarian</span>
+          <span class="tag" style="border-color:#d97706;color:#d97706;">Worge</span>
+          <span class="tag" style="border-color:#d4a017;color:#d4a017;">Pirate Faction</span>
+        </div>
       </div>
     </div>
-    <div style="margin-top:10px;">
-      <div class="tag" style="border-color:#f43f5e;color:#f43f5e;">Barbarian</div>
-      <div class="tag" style="border-color:#22c55e;color:#22c55e;">Ranger</div>
+    <div style="padding:12px;background:rgba(212,160,23,0.08);border-radius:8px;border-left:3px solid #d4a017;margin-bottom:12px;">
+      <div style="color:var(--gold);font-size:0.9rem;font-weight:600;margin-bottom:4px;">Secret Unlock</div>
+      <div style="color:var(--text-dim);font-size:0.85rem;">Name a Barbarian Worge <strong style="color:var(--gold);">"Racalvin the Pirate"</strong> to trigger the secret unlock. This initiates a cinematic video sequence revealing the Pirate King's origin story.</div>
     </div>
-    <div style="margin-top:14px;padding:12px;background:rgba(212,160,23,0.08);border-radius:8px;border-left:3px solid #d4a017;">
+    <div style="padding:12px;background:rgba(212,160,23,0.06);border-radius:8px;border-left:3px solid #d4a017;margin-bottom:12px;">
+      <div style="color:var(--gold);font-size:0.9rem;font-weight:600;margin-bottom:4px;">Custom Sprites</div>
+      <div style="color:var(--text-dim);font-size:0.85rem;">Uses the unique <strong>pirate-grunt</strong> sprite sheet instead of the standard Worge sprites. Has a custom Worge transform sprite for beast form.</div>
+    </div>
+    <div style="padding:12px;background:rgba(212,160,23,0.06);border-radius:8px;border-left:3px solid #d4a017;margin-bottom:12px;">
+      <div style="color:var(--gold);font-size:0.9rem;font-weight:600;margin-bottom:4px;">Title Screen Parade</div>
+      <div style="color:var(--text-dim);font-size:0.85rem;">Racalvin has a <strong>5% spawn chance</strong> to appear in the title screen character parade, walking across the screen with his pirate crew.</div>
+    </div>
+    <div style="padding:12px;background:rgba(212,160,23,0.08);border-radius:8px;border-left:3px solid #d4a017;">
       <div style="color:var(--gold);font-size:0.85rem;font-weight:600;margin-bottom:4px;">Passive: Sword Throw</div>
-      <div style="color:var(--text-dim);font-size:0.85rem;">Ranged attacks hurl a spinning blade with bonus damage.</div>
+      <div style="color:var(--text-dim);font-size:0.85rem;">Ranged attacks hurl a spinning blade with bonus damage. As a Worge, he retains shapeshifting with a custom pirate beast form.</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════ FACTIONS ═══════════════ -->
+<!-- FACTIONS -->
 <section class="tab" id="factions">
   <h2 class="section-title">Factions</h2>
   <p style="color:var(--text-dim);margin-bottom:24px;">Three divine factions vie for dominion over the world, each championed by a god. A hidden 4th faction — the Pirates — operates as neutral mercenaries, beholden to no god.</p>
@@ -330,6 +452,89 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   </div>
 </section>
 
+<!-- CONSUMABLES -->
+<section class="tab" id="consumables">
+  <h2 class="section-title">Consumables &amp; Potions</h2>
+  <p style="color:var(--text-dim);margin-bottom:24px;">Potions and consumables can be purchased from the Camp Merchant between battles. Each hero can carry a limited supply. Use them wisely in tough encounters.</p>
+
+  <h3 class="sub-title">Camp Merchant</h3>
+  <div class="card" style="margin-bottom:24px;">
+    <p style="color:var(--text-dim);font-size:0.9rem;">The Camp Merchant is available at your base camp between combat zones. Stock up on potions before venturing into dangerous territory. Prices scale with tier and rarity.</p>
+  </div>
+
+  <h3 class="sub-title">Potion Types</h3>
+  <div class="grid grid-2" id="potionsGrid"></div>
+
+  <h3 class="sub-title">Wandering Merchant</h3>
+  <div class="card">
+    <h4 style="color:var(--gold);margin-bottom:8px;">Rare Encounters</h4>
+    <p style="color:var(--text-dim);font-size:0.9rem;">The Wandering Merchant spawns periodically during your adventures. They carry <strong style="color:var(--gold);">rare and unique items</strong> not available from the Camp Merchant, but at premium prices. Keep gold reserves for these encounters!</p>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="tag" style="border-color:var(--gold);color:var(--gold);">Rare Equipment</span>
+      <span class="tag" style="border-color:var(--purple);color:var(--purple);">Unique Potions</span>
+      <span class="tag" style="border-color:var(--cyan);color:var(--cyan);">Premium Prices</span>
+      <span class="tag" style="border-color:var(--orange);color:var(--orange);">Limited Stock</span>
+    </div>
+  </div>
+</section>
+
+<!-- GAME SYSTEMS -->
+<section class="tab" id="systems">
+  <h2 class="section-title">Game Systems</h2>
+  <p style="color:var(--text-dim);margin-bottom:24px;">Overview of the major gameplay systems in Grudge Warlords.</p>
+
+  <div class="grid grid-2">
+    <div class="card system-card">
+      <h4>Zone Conquest</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Clear enemies in each zone to increase your conquest percentage. Higher conquest levels grant:</p>
+      <ul style="color:var(--text-dim);font-size:0.85rem;margin:8px 0 0 20px;">
+        <li>Increased XP rewards from battles</li>
+        <li>Auto-harvest resources from conquered zones</li>
+        <li>Access to zone-specific loot tables</li>
+        <li>Unlock Shock Sweepers at 100% conquest</li>
+      </ul>
+    </div>
+    <div class="card system-card">
+      <h4>Shock Sweepers</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Purchasable units unlocked at <strong style="color:var(--gold);">100% zone conquest</strong>. Once deployed, they:</p>
+      <ul style="color:var(--text-dim);font-size:0.85rem;margin:8px 0 0 20px;">
+        <li>Provide <strong style="color:var(--green);">1.5x harvest rate</strong> for the zone</li>
+        <li>Automatically patrol and defend territory</li>
+        <li>Generate passive income while you adventure elsewhere</li>
+      </ul>
+    </div>
+    <div class="card system-card">
+      <h4>Training System</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Heroes can train at camp to gain experience without risking death. Training provides steady XP gains and allows you to test builds against training dummies before committing to real battles.</p>
+    </div>
+    <div class="card system-card">
+      <h4>Hero Roster Management</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Manage your collection of heroes. Recruit new warlords, assign them to squads of up to 3, and send reserves on training missions. Fallen heroes can be revived at camp for a gold cost.</p>
+    </div>
+    <div class="card system-card">
+      <h4>GRUDA Arena</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Ranked PvP combat system. Your team of 3 heroes is snapshot and uploaded for others to challenge. Climb the leaderboard to earn exclusive rewards.</p>
+      <div style="margin-top:12px;">
+        <span class="tag" style="border-color:var(--red);color:var(--red);">Ranked Matches</span>
+        <span class="tag" style="border-color:var(--gold);color:var(--gold);">Team Snapshots</span>
+        <span class="tag" style="border-color:var(--purple);color:var(--purple);">Seasonal Rewards</span>
+      </div>
+    </div>
+    <div class="card system-card">
+      <h4>Rank Badge System</h4>
+      <p style="color:var(--text-dim);font-size:0.9rem;">Earn rank badges through Arena performance and PvE achievements:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+        <span class="rank-badge" style="background:#cd7f32;color:#000;">Bronze</span>
+        <span class="rank-badge" style="background:#c0c0c0;color:#000;">Silver</span>
+        <span class="rank-badge" style="background:#ffd700;color:#000;">Gold</span>
+        <span class="rank-badge" style="background:#e5e4e2;color:#000;">Platinum</span>
+        <span class="rank-badge" style="background:#b9f2ff;color:#000;">Diamond</span>
+        <span class="rank-badge" style="background:linear-gradient(135deg,#ffd700,#ff6b6b,#a855f7);color:#fff;">Legend</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
@@ -345,12 +550,12 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 <script>
 const RACES = [
-  { name:'Human', color:'#94a3b8', bonuses:'+1 all attributes', trait:'Adaptable', desc:'Versatile and adaptable \u2014 masters of none, capable of all.', attrs:{STR:1,INT:1,VIT:1,DEX:1,END:1,WIS:1,AGI:1,TAC:1} },
-  { name:'Orc', color:'#65a30d', bonuses:'+4 STR, +2 VIT, +2 END', trait:'Bloodrage', desc:'Savage brutes bred for war \u2014 crushing power and iron will.', attrs:{STR:4,VIT:2,END:2} },
-  { name:'Elf', color:'#22d3ee', bonuses:'+3 INT, +2 DEX, +2 AGI, +1 WIS', trait:'Arcane Affinity', desc:'Ancient and graceful \u2014 wielders of arcane arts and deadly precision.', attrs:{INT:3,DEX:2,AGI:2,WIS:1} },
-  { name:'Undead', color:'#a78bfa', bonuses:'+3 VIT, +2 END, +2 WIS, +1 STR', trait:'Undying Will', desc:'Death-touched revenants fueled by dark energy.', attrs:{VIT:3,END:2,WIS:2,STR:1} },
-  { name:'Barbarian', color:'#f43f5e', bonuses:'+3 STR, +2 AGI, +1 VIT, +1 END, +1 TAC', trait:'Berserker Rage', desc:'Untamed fury given form \u2014 raw power and relentless aggression.', attrs:{STR:3,AGI:2,VIT:1,END:1,TAC:1} },
-  { name:'Dwarf', color:'#f59e0b', bonuses:'+3 END, +2 VIT, +1 STR, +1 DEX, +1 WIS', trait:'Stoneborn', desc:'Stout mountain folk \u2014 unyielding defense and masterful craftsmanship.', attrs:{END:3,VIT:2,STR:1,DEX:1,WIS:1} },
+  { name:'Human', color:'#94a3b8', bonuses:'+1 all attributes', trait:'Adaptable', desc:'Versatile and adaptable \u2014 masters of none, capable of all.', lore:'The most numerous of the Grudge War survivors, Humans thrive through sheer adaptability.', attrs:{STR:1,INT:1,VIT:1,DEX:1,END:1,WIS:1,AGI:1,TAC:1} },
+  { name:'Orc', color:'#65a30d', bonuses:'+4 STR, +2 VIT, +2 END', trait:'Bloodrage', desc:'Savage brutes bred for war \u2014 crushing power and iron will.', lore:'Born in the blood pits of the Shattered Wastes, Orcs know nothing but battle.', attrs:{STR:4,VIT:2,END:2} },
+  { name:'Elf', color:'#22d3ee', bonuses:'+3 INT, +2 DEX, +2 AGI, +1 WIS', trait:'Arcane Affinity', desc:'Ancient and graceful \u2014 wielders of arcane arts and deadly precision.', lore:'The Elves walked this world before the first grudge was spoken.', attrs:{INT:3,DEX:2,AGI:2,WIS:1} },
+  { name:'Undead', color:'#a78bfa', bonuses:'+3 VIT, +2 END, +2 WIS, +1 STR', trait:'Undying Will', desc:'Death-touched revenants fueled by dark energy.', lore:'Neither alive nor truly dead, the Undead are sustained by the grudges that bind them.', attrs:{VIT:3,END:2,WIS:2,STR:1} },
+  { name:'Barbarian', color:'#f43f5e', bonuses:'+3 STR, +2 AGI, +1 VIT, +1 END, +1 TAC', trait:'Berserker Rage', desc:'Untamed fury given form \u2014 raw power and relentless aggression.', lore:'From the frozen steppes and scorched badlands, Barbarians reject civilization.', attrs:{STR:3,AGI:2,VIT:1,END:1,TAC:1} },
+  { name:'Dwarf', color:'#f59e0b', bonuses:'+3 END, +2 VIT, +1 STR, +1 DEX, +1 WIS', trait:'Stoneborn', desc:'Stout mountain folk \u2014 unyielding defense and masterful craftsmanship.', lore:'Deep beneath the mountains, the Dwarves forged their kingdoms in stone and iron.', attrs:{END:3,VIT:2,STR:1,DEX:1,WIS:1} },
 ];
 
 const CLASSES = [
@@ -361,12 +566,61 @@ const CLASSES = [
     abilities:['Arcane Bolt (1.0x, Basic)','Fireball (2.5x, Burn, CD:3)','Divine Heal (30% HP, CD:4)','Ice Storm (1.8x, -40% DMG, CD:3)'],
     signature:'Mana Shield \u2014 Convert mana into a protective barrier' },
   { name:'Worge', color:'#d97706', attrs:'STR 2, VIT 2, DEX 2, AGI 2, INT 2, END 1, WIS 1', desc:'A shapeshifter wielding nature and storm magic, then transforms into a devastating beast.',
-    abilities:['Mace Strike (1.0x, Basic)','Lightning Lash (1.8x, DoT, CD:2)','Nature\'s Grasp (HoT 8%/turn, CD:4)','Dagger Toss (0.9x, Poison, CD:3)'],
-    signature:'Bear Form \u2014 Transform into beast (+25% DMG, +10 DEF), replaces abilities' },
+    abilities:['Mace Strike (1.0x, Basic)','Lightning Lash (1.8x, DoT, CD:2)','Nature\'s Grasp (HoT 8%/turn, CD:4)','Dagger Toss (0.9x, Poison, CD:3)','Heal Totem (CD:6)','Fire Totem (CD:6)','Fear Totem (CD:7)'],
+    signature:'Worge Transform \u2014 Transform into beast (+25% DMG, +10 DEF), replaces abilities' },
   { name:'Ranger', color:'#22c55e', attrs:'DEX 4, AGI 3, STR 1, VIT 1, END 1, INT 1, TAC 1', desc:'A deadly marksman with precise long-range attacks.',
     abilities:['Quick Shot (0.8x, Basic)','Aimed Shot (2.0x, Auto-Crit, CD:2)','Poison Arrow (0.7x, Poison, CD:3)','Evasive Roll (+50% Evasion, CD:4)','Arrow Volley (2.4x, CD:4)'],
     signature:'Focus \u2014 +10% crit/turn (max 5 stacks). Active: double stacks + guarantee next crit' },
 ];
+
+const COMBO_SPRITES = {
+  'Human_Warrior': { src:'/sprites/knight/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Human_Mage Priest': { src:'/sprites/human-mage/idle.png', frames:8, frameWidth:128, frameHeight:128 },
+  'Human_Worge': { src:'/sprites/wind-hashashin/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Human_Ranger': { src:'/sprites/human-ranger/idle.png', frames:8, frameWidth:128, frameHeight:128 },
+  'Orc_Warrior': { src:'/sprites/elite-orc/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Orc_Mage Priest': { src:'/sprites/wizard-pack/idle.png', frames:6, frameWidth:231, frameHeight:190, filter:'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)' },
+  'Orc_Worge': { src:'/sprites/orc/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Orc_Ranger': { src:'/sprites/armored-orc/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Elf_Warrior': { src:'/sprites/elf_warrior/Idle.png', frames:11, frameWidth:180, frameHeight:180, filter:'saturate(0.6) brightness(1.15) hue-rotate(10deg)' },
+  'Elf_Mage Priest': { src:'/sprites/evil-wizard-3/idle.png', frames:10, frameWidth:140, frameHeight:140, filter:'saturate(0.15) brightness(1.4) hue-rotate(200deg)' },
+  'Elf_Worge': { src:'/sprites/priest/idle.png', frames:6, frameWidth:128, frameHeight:64, filter:'hue-rotate(80deg) saturate(1.4) brightness(1.0) contrast(1.1)' },
+  'Elf_Ranger': { src:'/sprites/Elf-mage/idle.png', frames:6, frameWidth:231, frameHeight:190, filter:'sepia(0.3) saturate(1.5) hue-rotate(340deg)' },
+  'Undead_Warrior': { src:'/sprites/shadow-warrior/idle.png', frames:4, frameWidth:128, frameHeight:96, filter:'brightness(0.75) saturate(0.5) contrast(1.2)' },
+  'Undead_Mage Priest': { src:'/sprites/necromancer/idle.png', frames:8, frameWidth:160, frameHeight:128 },
+  'Undead_Worge': { src:'/sprites/skeleton/idle.png', frames:6, frameWidth:128, frameHeight:64, filter:'sepia(0.3) hue-rotate(270deg) saturate(1.0) brightness(0.85)' },
+  'Undead_Ranger': { src:'/sprites/undead-ranger/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Barbarian_Warrior': { src:'/sprites/barbarian-warrior/idle.png', frames:16, frameWidth:175, frameHeight:100, filter:'brightness(1.1) contrast(1.05) saturate(0.8)' },
+  'Barbarian_Mage Priest': { src:'/sprites/barbarian-mage/idle.png', frames:8, frameWidth:128, frameHeight:128, filter:'brightness(1.1) contrast(1.05) saturate(0.8)' },
+  'Barbarian_Worge': { src:'/sprites/soldier/idle.png', frames:6, frameWidth:128, frameHeight:64, filter:'sepia(0.5) saturate(1.2) brightness(0.85)' },
+  'Barbarian_Ranger': { src:'/sprites/martial-hero/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Dwarf_Warrior': { src:'/sprites/crystal-mauler/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+  'Dwarf_Mage Priest': { src:'/sprites/fire-wizard/idle.png', frames:7, frameWidth:128, frameHeight:128, filter:'hue-rotate(30deg) saturate(1.4) brightness(1.05)', transform:'scaleX(1.3) scaleY(0.75)' },
+  'Dwarf_Worge': { src:'/sprites/dwarf-worge/idle.png', frames:6, frameWidth:100, frameHeight:82 },
+  'Dwarf_Ranger': { src:'/sprites/dwarf-ranger/idle.png', frames:6, frameWidth:128, frameHeight:64 },
+};
+
+const ENEMY_SPRITES = {
+  'Goblin Scout': { src:'/sprites/monsters/goblin/idle.png', frameWidth:64 },
+  'Skeleton Warrior': { src:'/sprites/skeleton-enemy/idle.png', frameWidth:64 },
+  'Dire Wolf': { src:'/sprites/werewolf/idle.png', frameWidth:100 },
+  'Dark Mage': { src:'/sprites/wizard/idle.png', frameWidth:128 },
+  'Dark Knight': { src:'/sprites/dark-knight/idle.png', frameWidth:128 },
+  'Shadow Warrior': { src:'/sprites/shadow-warrior/idle.png', frameWidth:128 },
+  'Water Priestess': { src:'/sprites/water-priestess/idle.png', frameWidth:288 },
+  'Orc Berserker': { src:'/sprites/armored-orc/idle.png', frameWidth:128 },
+  'Dragon Whelp': { src:'/sprites/werebear/idle.png', frameWidth:128 },
+  'Lich Lord': { src:'/sprites/armored-skeleton/idle.png', frameWidth:128 },
+  'Malachar the Undying': { src:'/sprites/evil-wizard-3/idle.png', frameWidth:140, scale:3 },
+  'The Void King': { src:'/sprites/swordsman/idle.png', frameWidth:128 },
+  'Grand Water Elemental': { src:'/sprites/water-elemental/idle.png', frameWidth:128 },
+  'Grand Nature Elemental': { src:'/sprites/nature-elemental/idle.png', frameWidth:128 },
+  'Fire Worm': { src:'/sprites/boss-demon/idle.png', frameWidth:128 },
+  'Infernal Fire Worm': { src:'/sprites/boss-demon/idle.png', frameWidth:128 },
+  'Odin, The Allfather': { src:'/sprites/frost-guardian/idle.png', frameWidth:128 },
+  'Madra, The Devourer': { src:'/sprites/cthulu-boss/idle.png', frameWidth:128 },
+  'The Omni, Weaver of Fate': { src:'/sprites/ogre-boss/idle.png', frameWidth:128 },
+};
 
 const REGIONS = [
   { name:'Verdant Wilds', color:'#4ade80', fill:'rgba(74,222,128,0.08)',
@@ -389,53 +643,57 @@ const ENEMIES = [
   { name:'Dire Wolf', hp:100, dmg:22, def:8, spd:18, color:'#78716c', type:'regular',
     abilities:[{n:'Bite',d:1.2},{n:'Feral Howl',d:0,cd:5,note:'+40% DMG'}] },
   { name:'Dark Mage', hp:90, dmg:25, def:6, spd:12, color:'#7c3aed', type:'regular',
-    abilities:[{n:'Shadow Bolt',d:1.3},{n:'Dark Nova',d:2.2,cd:3},{n:'Drain Life',d:0.8,cd:4,note:'50% lifesteal'}] },
+    abilities:[{n:'Shadow Bolt',d:1.3},{n:'Dark Nova',d:2.2,cd:3},{n:'Drain Life',d:0.8,cd:4,note:'50% drain'}] },
   { name:'Dark Knight', hp:160, dmg:26, def:22, spd:10, color:'#4a1a6b', type:'regular',
     abilities:[{n:'Sword Slash',d:1.2},{n:'Shield Wall',d:0,cd:4,note:'+25 DEF'},{n:'Bone Breaker',d:1.8,cd:3}] },
   { name:'Shadow Warrior', hp:140, dmg:30, def:16, spd:14, color:'#1e1b4b', type:'regular',
     abilities:[{n:'Shadow Strike',d:1.3},{n:'Dark Frenzy',d:0,cd:5,note:'+50% DMG'},{n:'Shadow Leap',d:2.0,cd:4}] },
-  { name:'Water Priestess', hp:110, dmg:'20/32mag', def:12, spd:12, color:'#0891b2', type:'regular',
+  { name:'Water Priestess', hp:110, dmg:20, def:12, spd:12, color:'#0891b2', type:'regular',
     abilities:[{n:'Tidal Strike',d:1.3},{n:'Healing Tide',d:0,cd:4,note:'15% heal'},{n:'Frozen Prison',d:1.8,cd:3,note:'Stun'}] },
   { name:'Orc Berserker', hp:180, dmg:28, def:20, spd:8, color:'#65a30d', type:'regular',
     abilities:[{n:'Smash',d:1.2},{n:'Berserk',d:0,cd:5,note:'+60% DMG'},{n:'Ground Pound',d:1.8,cd:3}] },
   { name:'Dragon Whelp', hp:150, dmg:30, def:18, spd:15, color:'#dc2626', type:'regular',
     abilities:[{n:'Claw',d:1.1},{n:'Fire Breath',d:2.0,cd:3},{n:'Tail Whip',d:1.5,cd:2}] },
+  { name:'Fire Worm', hp:180, dmg:32, def:18, spd:10, color:'#f97316', type:'regular',
+    abilities:[{n:'Lava Spit',d:1.4},{n:'Gnashing Bite',d:1.6,cd:3},{n:'Burrow Strike',d:2.0,cd:4}] },
   { name:'Guardian of the Forest', hp:280, dmg:28, def:18, spd:11, color:'#22c55e', type:'regular',
-    abilities:[{n:'Nature Strike',d:1.1},{n:'Forest Heal',d:0,cd:4,note:'15% heal'},{n:'Poison Spore',d:0.8,cd:3,note:'Poison'}] },
+    abilities:[{n:'Nature Strike',d:1.1},{n:'Forest Heal',d:0,cd:4,note:'15% heal'},{n:'Thorn Burst',d:1.5,cd:3}] },
   { name:'Lich Lord', hp:700, dmg:40, def:22, spd:11, color:'#6366f1', type:'boss',
-    abilities:[{n:'Soul Bolt',d:1.4},{n:'Death Coil',d:2.5,cd:3},{n:'Bone Shield',d:0,cd:5,note:'+40 DEF'},{n:'Soul Drain',d:0,cd:4,note:'15% heal'},{n:'Raise Dead',d:0,cd:7,note:'+60% DMG'},{n:'Shadow Nova',d:3.0,cd:5},{n:'Curse of Weakness',d:0.5,cd:4,note:'DoT'}] },
+    abilities:[{n:'Soul Bolt',d:1.4},{n:'Death Coil',d:2.5,cd:3,note:'40% drain'},{n:'Bone Shield',d:0,cd:5,note:'+40 DEF'},{n:'Shadow Nova',d:3.0,cd:5},{n:'Raise Dead',d:0,cd:7,note:'+60% DMG'}] },
   { name:'Infernal Fire Worm', hp:900, dmg:52, def:35, spd:13, color:'#f97316', type:'boss',
-    abilities:[{n:'Lava Spit',d:1.6},{n:'Savage Bite',d:3.0,cd:4},{n:'Heat Wave',d:2.2,cd:3,note:'Burn'},{n:'Volcanic Slam',d:3.5,cd:6}] },
-  { name:'Malachar the Undying', hp:1400, dmg:65, def:35, spd:14, color:'#c026d3', type:'boss',
-    abilities:[{n:'Arcane Bolt',d:1.6},{n:'Chaos Storm',d:3.2,cd:4},{n:'Soul Siphon',d:1.8,cd:3,note:'60% drain'},{n:'Dark Barrier',d:0,cd:5,note:'+50 DEF'},{n:'Necrotic Curse',d:1.0,cd:4,note:'DoT'},{n:'Hellfire Rain',d:4.0,cd:6},{n:'Petrify',d:0.5,cd:5,note:'Stun 2t'},{n:'Dark Empowerment',d:0,cd:7,note:'+100% DMG'},{n:'Shadow Teleport',d:0,cd:6,note:'+20 SPD'}] },
-  { name:'The Void King', hp:1200, dmg:60, def:48, spd:16, color:'#fbbf24', type:'boss',
-    abilities:[{n:'Void Slash',d:1.8},{n:'Annihilate',d:3.5,cd:4},{n:'Void Barrier',d:0,cd:5,note:'+60 DEF'},{n:'Reality Tear',d:4.5,cd:7},{n:'Void Drain',d:0,cd:5,note:'12% heal'},{n:'Oblivion Pulse',d:2.2,cd:3,note:'DoT'},{n:'Time Stop',d:0.6,cd:6,note:'Stun 2t'},{n:'Void Enrage',d:0,cd:8,note:'+100% DMG'}] },
+    abilities:[{n:'Lava Spit',d:1.6},{n:'Savage Bite',d:3.0,cd:4},{n:'Heat Wave',d:2.2,cd:3,note:'Burn DoT'},{n:'Volcanic Slam',d:3.5,cd:6}] },
   { name:'Grand Water Elemental', hp:550, dmg:50, def:38, spd:14, color:'#06b6d4', type:'boss',
-    abilities:[{n:'Tidal Strike',d:1.4},{n:'Torrent',d:2.5,cd:3,note:'Poison'},{n:'Frost Armor',d:0,cd:5,note:'+45 DEF'},{n:'Tsunami',d:3.5,cd:6},{n:'Healing Tide',d:0,cd:5,note:'18% heal'},{n:'Frozen Prison',d:1.0,cd:4,note:'Stun'}] },
+    abilities:[{n:'Tidal Strike',d:1.4},{n:'Torrent',d:2.5,cd:3,note:'Poison'},{n:'Frost Armor',d:0,cd:5,note:'+45 DEF'},{n:'Tsunami',d:3.5,cd:6}] },
   { name:'Grand Nature Elemental', hp:600, dmg:44, def:42, spd:12, color:'#22c55e', type:'boss',
-    abilities:[{n:'Vine Lash',d:1.3},{n:'Nature\'s Wrath',d:2.4,cd:3,note:'DoT'},{n:'Regenerate',d:0,cd:4,note:'20% heal'},{n:'Earthquake',d:3.5,cd:6},{n:'Thorn Armor',d:0,cd:5,note:'+35 DEF'},{n:'Root Bind',d:0.8,cd:4,note:'Stun'}] },
+    abilities:[{n:'Vine Lash',d:1.3},{n:"Nature's Wrath",d:2.4,cd:3,note:'DoT'},{n:'Regenerate',d:0,cd:4,note:'20% heal'},{n:'Earthquake',d:3.5,cd:6}] },
   { name:'Grand Shaman', hp:500, dmg:32, def:18, spd:11, color:'#16a34a', type:'boss',
-    abilities:[{n:'Nature Bolt',d:1.3},{n:'Healing Rain',d:0,cd:4,note:'18% heal'},{n:'Thorn Burst',d:2.2,cd:3,note:'DoT'},{n:'Bark Shield',d:0,cd:5,note:'+30 DEF'},{n:'Entangle',d:0.6,cd:5,note:'Stun'}] },
+    abilities:[{n:'Nature Bolt',d:1.3},{n:'Healing Rain',d:0,cd:4,note:'18% heal'},{n:'Thorn Burst',d:2.2,cd:3,note:'DoT'},{n:'Bark Shield',d:0,cd:5,note:'+30 DEF'}] },
   { name:'Canyon Warlord', hp:650, dmg:38, def:28, spd:10, color:'#b91c1c', type:'boss',
-    abilities:[{n:'Cleave',d:1.4},{n:'War Cry',d:0,cd:5,note:'+60% DMG'},{n:'Skull Crusher',d:2.8,cd:4},{n:'Iron Skin',d:0,cd:6,note:'+35 DEF'},{n:'Bloodlust',d:1.6,cd:3,note:'30% drain'}] },
+    abilities:[{n:'Cleave',d:1.4},{n:'War Cry',d:0,cd:5,note:'+60% DMG'},{n:'Skull Crusher',d:2.8,cd:4},{n:'Iron Skin',d:0,cd:6,note:'+35 DEF'}] },
   { name:'Frost Wyrm', hp:750, dmg:42, def:30, spd:14, color:'#38bdf8', type:'boss',
-    abilities:[{n:'Ice Fang',d:1.3},{n:'Blizzard Breath',d:2.5,cd:3,note:'DoT'},{n:'Ice Armor',d:0,cd:5,note:'+40 DEF'},{n:'Glacial Slam',d:3.0,cd:5},{n:'Freeze',d:0.8,cd:4,note:'Stun'},{n:'Frost Regen',d:0,cd:5,note:'12% heal'}] },
+    abilities:[{n:'Ice Fang',d:1.3},{n:'Blizzard Breath',d:2.5,cd:3,note:'DoT'},{n:'Ice Armor',d:0,cd:5,note:'+40 DEF'},{n:'Glacial Slam',d:3.0,cd:5}] },
   { name:'Shadow Beast', hp:800, dmg:45, def:25, spd:15, color:'#6b21a8', type:'boss',
-    abilities:[{n:'Shadow Claw',d:1.4},{n:'Dark Pulse',d:2.4,cd:3,note:'DoT'},{n:'Shadow Veil',d:0,cd:5,note:'+35 DEF'},{n:'Devour',d:2.0,cd:4,note:'40% drain'},{n:'Nightmare',d:1.0,cd:5,note:'Stun'},{n:'Shadow Mend',d:0,cd:5,note:'14% heal'}] },
-  { name:'Corrupted Grove Keeper', hp:600, dmg:35, def:20, spd:12, color:'#16a34a', type:'boss',
-    abilities:[{n:'Corrupted Bolt',d:1.3},{n:'Verdant Stun',d:0.8,cd:4,note:'Stun'},{n:'Grove Fireball',d:2.4,cd:3},{n:'Resurrect Guardian',d:0,cd:6,note:'Resurrect'},{n:'Dark Bloom',d:1.8,cd:4,note:'-15 DEF'}] },
-  { name:'Void Sentinel', hp:1000, dmg:55, def:42, spd:13, color:'#a855f7', type:'boss',
-    abilities:[{n:'Void Strike',d:1.5},{n:'Reality Rift',d:3.0,cd:4},{n:'Void Shield',d:0,cd:5,note:'+50 DEF'},{n:'Entropy Pulse',d:2.0,cd:3,note:'DoT'},{n:'Dimensional Lock',d:0.8,cd:5,note:'Stun 2t'},{n:'Void Siphon',d:0,cd:5,note:'13% heal'},{n:'Null Burst',d:3.5,cd:6}] },
-  { name:'Abyssal Demon Lord', hp:1600, dmg:72, def:40, spd:15, color:'#dc2626', type:'boss',
-    abilities:[{n:'Abyssal Cleave',d:2.0},{n:'Hellfire Eruption',d:3.5,cd:4},{n:'Demon Roar',d:0,cd:5,note:'+100% DMG'},{n:'Soul Crush',d:4.0,cd:6},{n:'Abyssal Drain',d:2.0,cd:4,note:'50% drain'},{n:'Infernal Shield',d:0,cd:6,note:'+55 DEF'},{n:'Abyssal Gaze',d:1.0,cd:5,note:'Stun 2t'}] },
-  { name:'The Eldritch Horror', hp:1800, dmg:68, def:35, spd:12, color:'#065f46', type:'boss',
-    abilities:[{n:'Tentacle Lash',d:1.8},{n:'Madness Wave',d:3.0,cd:4,note:'DoT'},{n:'Eldritch Scream',d:1.2,cd:5,note:'Stun 2t'},{n:'Void Consumption',d:2.5,cd:3,note:'60% drain'},{n:'Cosmic Regen',d:0,cd:5,note:'16% heal'},{n:'Reality Shatter',d:4.5,cd:7},{n:'Abyssal Armor',d:0,cd:6,note:'+60 DEF'},{n:'Mind Flay',d:2.2,cd:4}] },
-  { name:'Odin, The Allfather', hp:1800, dmg:75, def:55, spd:18, color:'#fbbf24', type:'god', faction:'Crusade',
-    abilities:[{n:'Gungnir',d:2.2},{n:'Thunderclap',d:3.8,cd:4},{n:'Divine Shield',d:0,cd:6,note:'+80 DEF'},{n:'Wisdom of Ages',d:0,cd:7,note:'+120% DMG'},{n:'Valkyrie Storm',d:4.5,cd:6},{n:'Ragnarok',d:5.0,cd:8},{n:'Divine Restoration',d:0,cd:5,note:'15% heal'},{n:'Temporal Halt',d:0.8,cd:5,note:'Stun 2t'}] },
-  { name:'Madra, The Devourer', hp:2000, dmg:82, def:45, spd:17, color:'#dc2626', type:'god', faction:'Legion',
-    abilities:[{n:'Blood Rend',d:2.0},{n:'Soul Devour',d:3.5,cd:4,note:'50% drain'},{n:'Corruption Aura',d:1.5,cd:3,note:'DoT'},{n:'Blood Frenzy',d:0,cd:6,note:'+150% DMG'},{n:'Death Grip',d:1.2,cd:5,note:'Stun 2t'},{n:'Apocalypse',d:5.5,cd:8},{n:'Vampiric Feast',d:0,cd:5,note:'18% heal'},{n:'Plague Wave',d:2.8,cd:5}] },
-  { name:'The Omni, Weaver of Fate', hp:1600, dmg:70, def:60, spd:20, color:'#a78bfa', type:'god', faction:'Fabled',
-    abilities:[{n:'Arcane Blast',d:2.0},{n:'Fate Weave',d:3.2,cd:4},{n:'Cosmic Barrier',d:0,cd:5,note:'+70 DEF'},{n:'Time Warp',d:1.0,cd:5,note:'Stun 2t'},{n:'Stellar Rain',d:4.8,cd:6},{n:'Genesis',d:5.5,cd:9},{n:'Cosmic Restoration',d:0,cd:5,note:'14% heal'},{n:'Mind Shatter',d:2.5,cd:4,note:'DoT'}] },
+    abilities:[{n:'Shadow Claw',d:1.4},{n:'Dark Pulse',d:2.4,cd:3,note:'DoT'},{n:'Shadow Veil',d:0,cd:5,note:'+35 DEF'},{n:'Devour',d:2.0,cd:4,note:'40% drain'}] },
+  { name:'Malachar the Undying', hp:1400, dmg:65, def:35, spd:14, color:'#c026d3', type:'boss',
+    abilities:[{n:'Arcane Bolt',d:1.6},{n:'Chaos Storm',d:3.2,cd:4},{n:'Soul Siphon',d:1.8,cd:3,note:'60% drain'},{n:'Dark Barrier',d:0,cd:5,note:'+50 DEF'},{n:'Hellfire Rain',d:4.0,cd:6},{n:'Dark Empowerment',d:0,cd:7,note:'+100% DMG'}] },
+  { name:'The Void King', hp:1200, dmg:60, def:48, spd:16, color:'#fbbf24', type:'boss',
+    abilities:[{n:'Void Slash',d:1.8},{n:'Annihilate',d:3.5,cd:4},{n:'Void Barrier',d:0,cd:5,note:'+60 DEF'},{n:'Reality Tear',d:4.5,cd:7},{n:'Time Stop',d:0.6,cd:6,note:'Stun 2t'},{n:'Void Enrage',d:0,cd:8,note:'+100% DMG'}] },
+  { name:'Odin, The Allfather', hp:1800, dmg:75, def:55, spd:18, color:'#fbbf24', type:'god',
+    abilities:[{n:'Gungnir',d:2.2},{n:'Thunderclap',d:3.8,cd:4},{n:'Divine Shield',d:0,cd:6,note:'+80 DEF'},{n:'Wisdom of Ages',d:0,cd:7,note:'+120% DMG'},{n:'Valkyrie Storm',d:4.5,cd:6},{n:'Ragnarok',d:5.0,cd:8}] },
+  { name:'Madra, The Devourer', hp:2000, dmg:82, def:45, spd:17, color:'#dc2626', type:'god',
+    abilities:[{n:'Blood Rend',d:2.0},{n:'Soul Devour',d:3.5,cd:4,note:'50% drain'},{n:'Corruption Aura',d:1.5,cd:3,note:'DoT'},{n:'Blood Frenzy',d:0,cd:6,note:'+150% DMG'},{n:'Apocalypse',d:5.5,cd:8},{n:'Vampiric Feast',d:0,cd:5,note:'18% heal'}] },
+  { name:'The Omni, Weaver of Fate', hp:1600, dmg:70, def:60, spd:20, color:'#a78bfa', type:'god',
+    abilities:[{n:'Arcane Blast',d:2.0},{n:'Fate Weave',d:3.2,cd:4},{n:'Cosmic Barrier',d:0,cd:5,note:'+70 DEF'},{n:'Time Warp',d:1.0,cd:5,note:'Stun 2t'},{n:'Stellar Rain',d:4.8,cd:6},{n:'Genesis',d:5.5,cd:9}] },
+];
+
+const EQUIPMENT_SLOTS = [
+  { name:'Weapon', icon:'\u2694\uFE0F', desc:'Primary damage source' },
+  { name:'Offhand', icon:'\uD83D\uDEE1\uFE0F', desc:'Shield, relic, or tome' },
+  { name:'Helmet', icon:'\uD83E\uDE96', desc:'Head protection' },
+  { name:'Armor', icon:'\uD83D\uDC62', desc:'Body armor' },
+  { name:'Feet', icon:'\uD83E\uDD7E', desc:'Boots and greaves' },
+  { name:'Ring', icon:'\uD83D\uDC8D', desc:'Magical accessories' },
+  { name:'Relic', icon:'\uD83D\uDD2E', desc:'Ancient artifacts' },
 ];
 
 const TIERS = [
@@ -449,271 +707,495 @@ const TIERS = [
   { tier:8, name:'Tier 8', color:'#f472b6', mult:45.0, flat:25 },
 ];
 
-const SLOTS = [
-  { name:'Weapon', icon:'/sprites/ui/icons/eq_weapon.png' },
-  { name:'Offhand', icon:'/sprites/ui/icons/eq_shield.png' },
-  { name:'Helmet', icon:'/sprites/ui/icons/icon_helm.png' },
-  { name:'Armor', icon:'/sprites/ui/icons/eq_armor.png' },
-  { name:'Feet', icon:'/sprites/ui/icons/icon_boots.png' },
-  { name:'Ring', icon:'/sprites/ui/icons/eq_ring.png' },
-  { name:'Relic', icon:'/sprites/ui/icons/icon_crystal.png' },
+const UPGRADE_COSTS = { 1:100, 2:250, 3:500, 4:1000, 5:2500, 6:5000, 7:10000 };
+
+const WEAPON_TYPES = [
+  { id:'sword', name:'Sword', hand:'1h', classes:['Warrior'] },
+  { id:'axe', name:'Axe', hand:'1h', classes:['Warrior'] },
+  { id:'greatsword', name:'Greatsword', hand:'2h', classes:['Warrior'] },
+  { id:'greataxe', name:'Greataxe', hand:'2h', classes:['Warrior'] },
+  { id:'hammer2h', name:'Warhammer', hand:'2h', classes:['Warrior'] },
+  { id:'hammer1h', name:'Hammer', hand:'1h', classes:['Worge'] },
+  { id:'staff', name:'Staff', hand:'2h', classes:['Mage Priest','Worge'] },
+  { id:'dagger', name:'Dagger', hand:'1h', classes:['Worge','Ranger'] },
+  { id:'bow', name:'Bow', hand:'2h', classes:['Ranger'] },
+  { id:'crossbow', name:'Crossbow', hand:'2h', classes:['Ranger'] },
+  { id:'gun', name:'Gun', hand:'2h', classes:['Ranger'] },
+  { id:'lance', name:'Lance', hand:'2h', classes:['Ranger'] },
+  { id:'tome', name:'Tome', hand:'1h', classes:['Mage Priest'] },
+  { id:'relic', name:'Relic', hand:'1h', classes:['Mage Priest'] },
 ];
 
-const ATTRS = [
-  { name:'Strength', color:'#ef4444', desc:'Physical might and raw power.',
-    gains:[{l:'Health',v:'+5'},{l:'Physical Damage',v:'+1.25'},{l:'Physical Defense',v:'+4'},{l:'Block Chance',v:'+0.2%'},{l:'Lifesteal',v:'+0.075%'},{l:'Stagger',v:'+0.04'},{l:'Mana',v:'+1'},{l:'Stamina',v:'+0.8'}] },
-  { name:'Intellect', color:'#3b82f6', desc:'Mental acuity and spellcasting power.',
-    gains:[{l:'Mana Pool',v:'+9'},{l:'Magic Damage',v:'+1.5'},{l:'Magical Defense',v:'+2'},{l:'Mana Regen',v:'+0.04'},{l:'Cooldown Reduction',v:'+0.075'},{l:'Spell Accuracy',v:'+0.15'},{l:'Health',v:'+3'}] },
-  { name:'Vitality', color:'#22c55e', desc:'Physical endurance and life force.',
-    gains:[{l:'Health',v:'+25'},{l:'Physical Defense',v:'+1.5'},{l:'Health Regen',v:'+0.06'},{l:'Damage Reduction',v:'+0.04'},{l:'Bleed Resistance',v:'+0.15'},{l:'Magic Resistance',v:'+0.08'}] },
-  { name:'Dexterity', color:'#f59e0b', desc:'Hand-eye coordination and finesse.',
-    gains:[{l:'Physical Damage',v:'+0.9'},{l:'Critical Chance',v:'+0.3%'},{l:'Accuracy',v:'+0.25'},{l:'Attack Speed',v:'+0.2'},{l:'Evasion',v:'+0.125'},{l:'Critical Damage',v:'+0.2%'}] },
-  { name:'Endurance', color:'#6b7280', desc:'Stamina reserves and physical resistance.',
-    gains:[{l:'Stamina',v:'+6'},{l:'Physical Defense',v:'+5'},{l:'Block Effectiveness',v:'+0.175'},{l:'CC Resistance',v:'+0.1'},{l:'Armor Rating',v:'+0.6'},{l:'Health',v:'+8'},{l:'Block Chance',v:'+0.12'}] },
-  { name:'Wisdom', color:'#a855f7', desc:'Mental fortitude and magical resilience.',
-    gains:[{l:'Mana Pool',v:'+6'},{l:'Magic Damage',v:'+0.8'},{l:'Magical Defense',v:'+5.5'},{l:'Magic Resistance',v:'+0.25'},{l:'Spell Block',v:'+0.125'},{l:'Health',v:'+4'},{l:'Damage Reduction',v:'+0.03'}] },
-  { name:'Agility', color:'#06b6d4', desc:'Speed, reflexes, and positioning.',
-    gains:[{l:'Movement Speed',v:'+0.15'},{l:'Evasion',v:'+0.225'},{l:'Dodge CDR',v:'+0.15'},{l:'Crit Evasion',v:'+0.25'},{l:'Stamina',v:'+1'},{l:'Accuracy',v:'+0.1'},{l:'Attack Speed',v:'+0.05'}] },
-  { name:'Tactics', color:'#64748b', desc:'Strategic thinking and ability control.',
-    gains:[{l:'Stamina',v:'+3'},{l:'Ability Cost Red.',v:'+0.075'},{l:'Armor Penetration',v:'+0.2'},{l:'Block Penetration',v:'+0.175'},{l:'Defense Break',v:'+0.1'},{l:'Combo CDR',v:'+0.125'},{l:'Physical Damage',v:'+0.25'},{l:'Cooldown Reduction',v:'+0.05'}] },
+const CLASS_EQUIP = [
+  { cls:'Warrior', weapons:'Sword, Axe, Greatsword, Greataxe, Warhammer', offhand:'Shield', armor:'Metal', helmet:'Plate Helm', feet:'Plate Greaves' },
+  { cls:'Mage Priest', weapons:'Staff, Tome', offhand:'Relic', armor:'Cloth', helmet:'Cloth Crown', feet:'Cloth Sandals' },
+  { cls:'Worge', weapons:'Hammer, Staff, Dagger', offhand:'None', armor:'Leather, Cloth', helmet:'Leather Hood, Cloth Crown', feet:'Leather Boots' },
+  { cls:'Ranger', weapons:'Bow, Crossbow, Gun, Dagger, Lance', offhand:'None', armor:'Leather, Metal', helmet:'Leather Hood, Plate Helm', feet:'Leather Boots, Plate Greaves' },
 ];
 
-const CLASS_TIERS = [
-  { name:'Legendary', range:'1\u201310', color:'#89f7fe', desc:'Mythical power achieved through perfect synergy.' },
-  { name:'Warlord', range:'11\u201350', color:'#f97316', desc:'A dominant force on the battlefield.' },
-  { name:'Epic', range:'51\u2013100', color:'#a855f7', desc:'A hero of renown and great skill.' },
-  { name:'Hero', range:'101\u2013200', color:'#3b82f6', desc:'A capable adventurer with potential.' },
-  { name:'Normal', range:'201\u2013300', color:'#9ca3af', desc:'A standard combatant.' },
+const WEAPON_SKILLS = {
+  'Sword': {
+    basic: [{n:'Slash',d:'0.9x'},{n:'Thrust',d:'1.0x'}],
+    special: [{n:'Riposte',d:'1.6x',cd:2,fx:''},{n:'Blade Dance',d:'1.2x',cd:3,fx:'+ATK SPD 2t'},{n:'Mortal Wound',d:'1.3x',cd:3,fx:'Bleed 3t'}]
+  },
+  'Axe': {
+    basic: [{n:'Chop',d:'1.0x'},{n:'Hack',d:'1.1x'}],
+    special: [{n:'Rend',d:'1.4x',cd:3,fx:'Bleed 3t'},{n:'Whirlwind',d:'1.8x',cd:3,fx:'AoE'},{n:'Sunder Armor',d:'1.2x',cd:3,fx:'-30% DMG 2t'}]
+  },
+  'Greatsword': {
+    basic: [{n:'Sweep',d:'1.1x'},{n:'Overhead',d:'1.2x'}],
+    special: [{n:'Cleave',d:'2.0x',cd:2,fx:'AoE'},{n:'Steel Tempest',d:'1.7x',cd:3,fx:'AoE'},{n:'Decapitate',d:'1.5x',cd:4,fx:'Execute <30%'}]
+  },
+  'Greataxe': {
+    basic: [{n:'Slam',d:'1.2x'},{n:'Wild Swing',d:'1.1x'}],
+    special: [{n:'Rampage',d:'Buff',cd:5,fx:'+25% DMG 3t'},{n:'Bonecrusher',d:'2.2x',cd:3,fx:''},{n:'Bloodrage',d:'2.5x',cd:4,fx:'Self-damage'}]
+  },
+  'Warhammer': {
+    basic: [{n:'Smash',d:'1.1x'},{n:'Bash',d:'1.0x'}],
+    special: [{n:'Shockwave',d:'1.8x',cd:3,fx:'AoE Stun 1t'},{n:'Pulverize',d:'2.3x',cd:4,fx:''},{n:'Earthshatter',d:'1.5x',cd:3,fx:'AoE -15 DEF 3t'}]
+  },
+  'Hammer': {
+    basic: [{n:'Mace Strike',d:'1.0x'},{n:'Skull Crack',d:'1.1x'}],
+    special: [{n:'Concussive Blow',d:'1.2x',cd:3,fx:'Stun 1t'},{n:'Chain Smash',d:'1.6x',cd:2,fx:''},{n:'Thunderstrike',d:'1.8x',cd:3,fx:'Magic DoT 2t'}]
+  },
+  'Staff': {
+    basic: [{n:'Staff Strike',d:'1.0x \u2728'},{n:'Arcane Pulse',d:'0.9x \u2728'}],
+    special: [{n:'Arcane Nova',d:'2.0x',cd:3,fx:'AoE Magic'},{n:'Arcane Barrier',d:'Buff',cd:4,fx:'+18 DEF 3t'},{n:'Spirit Drain',d:'1.4x',cd:3,fx:'15% drain'}]
+  },
+  'Dagger': {
+    basic: [{n:'Quick Stab',d:'0.8x'},{n:'Slash',d:'0.9x'}],
+    special: [{n:'Backstab',d:'2.0x',cd:3,fx:'Guaranteed Crit'},{n:'Envenom',d:'0.8x',cd:3,fx:'Poison 4t'},{n:'Fan of Knives',d:'1.7x',cd:3,fx:'AoE'}]
+  },
+  'Bow': {
+    basic: [{n:'Quick Shot',d:'0.8x'},{n:'Steady Shot',d:'1.0x'}],
+    special: [{n:'Arrow Volley',d:'2.2x',cd:3,fx:'AoE'},{n:'Piercing Arrow',d:'1.8x',cd:3,fx:'Armor Pierce'},{n:'Poison Arrow',d:'0.9x',cd:3,fx:'Poison 3t'}]
+  },
+  'Crossbow': {
+    basic: [{n:'Bolt Shot',d:'1.0x'},{n:'Snap Shot',d:'0.9x'}],
+    special: [{n:'Heavy Bolt',d:'2.0x',cd:3,fx:'Stagger'},{n:'Explosive Bolt',d:'2.4x',cd:4,fx:'AoE'},{n:'Net Bolt',d:'0.8x',cd:4,fx:'Stun 1t'}]
+  },
+  'Gun': {
+    basic: [{n:'Gunshot',d:'1.1x'},{n:'Hip Fire',d:'0.9x'}],
+    special: [{n:'Sniper Round',d:'2.0x',cd:3,fx:'Guaranteed Crit'},{n:'Buckshot',d:'2.2x',cd:3,fx:'AoE'},{n:'Suppressive Fire',d:'1.0x',cd:4,fx:'AoE -35% DMG 2t'}]
+  },
+  'Lance': {
+    basic: [{n:'Thrust',d:'1.0x'},{n:'Quick Jab',d:'0.9x'}],
+    special: [{n:'Lance Charge',d:'2.2x',cd:3,fx:''},{n:'Impale',d:'1.5x',cd:3,fx:'Bleed 3t'},{n:'Sweeping Strike',d:'1.8x',cd:3,fx:'AoE'}]
+  },
+  'Tome': {
+    basic: [{n:'Arcane Bolt',d:'1.0x \u2728'},{n:'Eldritch Blast',d:'0.9x \u2728'}],
+    special: [{n:'Curse',d:'1.0x',cd:3,fx:'-35% DMG 3t'},{n:'Hex',d:'1.8x',cd:3,fx:'DoT 3t'},{n:'Restoration',d:'Heal',cd:4,fx:'20% HP'}]
+  },
+};
+
+const SAMPLE_ITEMS = [
+  { name:'Bloodfeud Blade', slot:'Weapon', type:'Sword', stats:'6 DMG, 3 Crit, 2 Block', tier:1 },
+  { name:'Wraithfang', slot:'Weapon', type:'Sword', stats:'7 DMG, 5 Crit, 2 Drain', tier:1 },
+  { name:'Gorehowl', slot:'Weapon', type:'Axe', stats:'8 DMG, 6 Crit DMG', tier:1 },
+  { name:'Skullsunder', slot:'Weapon', type:'Greataxe', stats:'12 DMG, 8 Crit DMG, 3 Pen', tier:1 },
+  { name:'Nightfang', slot:'Weapon', type:'Dagger', stats:'5 DMG, 8 Crit, 2 Drain', tier:1 },
+  { name:'Duskblade', slot:'Weapon', type:'Dagger', stats:'5 DMG, 11 Crit, 8 Crit DMG', tier:1 },
+  { name:'Voidcaster Staff', slot:'Weapon', type:'Staff', stats:'8 MAG, 4 Mana, 3 CDR', tier:1 },
+  { name:'Arcane Codex', slot:'Weapon', type:'Tome', stats:'6 MAG, 8 Mana, 2 CDR', tier:1 },
+  { name:'Longbow of the Hunt', slot:'Weapon', type:'Bow', stats:'7 DMG, 6 Crit, 3 Speed', tier:1 },
+  { name:'Grudge Repeater', slot:'Weapon', type:'Crossbow', stats:'8 DMG, 5 Crit DMG', tier:1 },
+  { name:'Ironguard Bulwark', slot:'Offhand', type:'Shield', stats:'6 DEF, 4 Block, 3 HP', tier:1 },
+  { name:'Warding Focus', slot:'Offhand', type:'Relic', stats:'5 MAG, 4 Resist, 3 Mana', tier:1 },
+  { name:'Dreadplate Armor', slot:'Armor', type:'Metal', stats:'8 DEF, 5 HP, 2 Block', tier:1 },
+  { name:'Shadow Vestments', slot:'Armor', type:'Cloth', stats:'3 DEF, 8 MAG, 5 Mana', tier:1 },
+  { name:'Stalker Leather', slot:'Armor', type:'Leather', stats:'5 DEF, 4 Evasion, 3 Speed', tier:1 },
+  { name:'Ironskull Helm', slot:'Helmet', type:'Plate', stats:'5 DEF, 3 HP', tier:1 },
+  { name:'Arcane Crown', slot:'Helmet', type:'Cloth', stats:'2 DEF, 5 MAG, 3 CDR', tier:1 },
+  { name:'Deathstride Greaves', slot:'Feet', type:'Plate', stats:'4 DEF, 3 Speed, 2 Block', tier:1 },
+  { name:'Windwalker Boots', slot:'Feet', type:'Leather', stats:'2 DEF, 5 Evasion, 4 Speed', tier:1 },
+  { name:'Signet of War', slot:'Ring', type:'Ring', stats:'3 DMG, 3 Crit, 2 Speed', tier:1 },
+  { name:'Band of Shadows', slot:'Ring', type:'Ring', stats:'4 MAG, 3 Crit, 2 Drain', tier:1 },
+  { name:'Grudge Talisman', slot:'Relic', type:'Relic', stats:'4 DMG, 4 DEF, 2 HP', tier:1 },
+];
+
+const POTIONS = [
+  { name:'Health Potion', color:'#ef4444', icon:'\u2764\uFE0F', desc:'Restores a percentage of maximum HP instantly. Essential for surviving tough encounters.', effect:'Restores 25% Max HP', cost:'50 Gold' },
+  { name:'Mana Potion', color:'#3b82f6', icon:'\uD83D\uDCA7', desc:'Replenishes mana to fuel powerful spells and abilities.', effect:'Restores 30% Max Mana', cost:'40 Gold' },
+  { name:'Stamina Tonic', color:'#f59e0b', icon:'\u26A1', desc:'Refills stamina for physical abilities and special attacks.', effect:'Restores 30% Max Stamina', cost:'40 Gold' },
+  { name:'Antidote', color:'#22c55e', icon:'\uD83C\uDF3F', desc:'Cures poison, bleed, and burn status effects immediately.', effect:'Removes all DoT effects', cost:'35 Gold' },
+  { name:'Elixir of Fortitude', color:'#a855f7', icon:'\uD83D\uDEE1\uFE0F', desc:'Temporarily boosts defense and resistance for the current battle.', effect:'+15 DEF, +10 Resist for 3 turns', cost:'80 Gold' },
+  { name:'Berserker Draught', color:'#f43f5e', icon:'\uD83D\uDD25', desc:'Temporarily boosts damage output at the cost of reduced defense.', effect:'+25% DMG, -10 DEF for 3 turns', cost:'75 Gold' },
+];
+
+const ATTRIBUTES = [
+  { name:'Strength', color:'#ef4444', desc:'Physical might and raw power.', full:'Increases raw damage output, physical defense, and health.',
+    gains:[{l:'Health',v:'+5'},{l:'Physical Damage',v:'+1.25'},{l:'Physical Defense',v:'+4'},{l:'Block Chance',v:'+0.2%'},{l:'Lifesteal',v:'+0.075%'},{l:'Mana',v:'+1'},{l:'Stamina',v:'+0.8'}] },
+  { name:'Intellect', color:'#3b82f6', desc:'Mental acuity and spellcasting power.', full:'Powers magical damage, mana regeneration, and cooldown reduction.',
+    gains:[{l:'Mana',v:'+9'},{l:'Magic Damage',v:'+1.5'},{l:'Magical Defense',v:'+2'},{l:'Mana Regen',v:'+0.04/s'},{l:'CDR',v:'+0.075%'},{l:'Health',v:'+3'},{l:'Stamina',v:'+0.4'}] },
+  { name:'Vitality', color:'#22c55e', desc:'Physical endurance and life force.', full:'Maximizes health pool and provides passive health regeneration.',
+    gains:[{l:'Health',v:'+25'},{l:'Physical Defense',v:'+1.5'},{l:'Health Regen',v:'+0.06/s'},{l:'Damage Reduction',v:'+0.04%'},{l:'Bleed Resist',v:'+0.15%'},{l:'Mana',v:'+1.5'},{l:'Stamina',v:'+1'}] },
+  { name:'Dexterity', color:'#f59e0b', desc:'Hand-eye coordination and finesse.', full:'Dominates critical chance, attack speed, and accuracy.',
+    gains:[{l:'Physical Damage',v:'+0.9'},{l:'Crit Chance',v:'+0.3%'},{l:'Accuracy',v:'+0.25%'},{l:'Attack Speed',v:'+0.2'},{l:'Evasion',v:'+0.125%'},{l:'Crit Damage',v:'+0.2%'},{l:'Defense',v:'+1.2'}] },
+  { name:'Endurance', color:'#6b7280', desc:'Stamina reserves and physical resistance.', full:'Builds stamina and provides armor scaling.',
+    gains:[{l:'Stamina',v:'+6'},{l:'Physical Defense',v:'+5'},{l:'Block Effectiveness',v:'+0.175%'},{l:'CC Reduction',v:'+0.1%'},{l:'Armor',v:'+0.6'},{l:'Health',v:'+8'},{l:'Block Chance',v:'+0.12%'}] },
+  { name:'Wisdom', color:'#a855f7', desc:'Mental fortitude and magical resilience.', full:'Primary counter to magical damage.',
+    gains:[{l:'Mana',v:'+6'},{l:'Magic Damage',v:'+0.8'},{l:'Magical Defense',v:'+5.5'},{l:'Magic Resistance',v:'+0.25%'},{l:'Health',v:'+4'},{l:'Stamina',v:'+0.5'},{l:'DR',v:'+0.03%'}] },
+  { name:'Agility', color:'#06b6d4', desc:'Speed, reflexes, and positioning.', full:'Increases evasion and movement speed.',
+    gains:[{l:'Move Speed',v:'+0.15'},{l:'Evasion',v:'+0.225%'},{l:'Crit Evasion',v:'+0.25%'},{l:'Stamina',v:'+1'},{l:'Attack Speed',v:'+0.05'},{l:'Physical Damage',v:'+0.3'},{l:'Health',v:'+3'}] },
+  { name:'Tactics', color:'#64748b', desc:'Strategic thinking and ability control.', full:'Grants scaling bonus to all stats.',
+    gains:[{l:'Stamina',v:'+3'},{l:'Ability Cost Red.',v:'+0.075%'},{l:'Armor Pen',v:'+0.2'},{l:'Block Pen',v:'+0.175'},{l:'Physical Damage',v:'+0.25'},{l:'Magic Damage',v:'+0.15'},{l:'CDR',v:'+0.05%'}] },
+];
+
+const CLASS_TIERS_DATA = [
+  { rank:'1-10', name:'Legendary', color:'#89f7fe', desc:'Mythical power achieved through perfect synergy.' },
+  { rank:'11-50', name:'Warlord', color:'#f97316', desc:'A dominant force on the battlefield.' },
+  { rank:'51-100', name:'Epic', color:'#a855f7', desc:'A hero of renown and great skill.' },
+  { rank:'101-200', name:'Hero', color:'#3b82f6', desc:'A capable adventurer with potential.' },
+  { rank:'201-300', name:'Normal', color:'#9ca3af', desc:'A standard combatant.' },
 ];
 
 const STAT_CAPS = {
-  'Block':75,'Crit Chance':75,'Block Effect':90,'Crit Damage':300,
-  'Accuracy':95,'Resistance':95,'Lifesteal':50,'Evasion':60,
-  'Damage Reduction':60,'Spell Block':50
+  'Block Chance':'75%','Crit Chance':'75%','Block Effect':'90%','Crit Damage':'300%',
+  'Accuracy':'95%','Resistance':'95%','Lifesteal':'50%','Evasion':'60%',
+  'Damage Reduction':'60%','Spell Block':'50%'
 };
 
-const UPGRADES = {1:100,2:250,3:500,4:1000,5:2500,6:5000,7:10000};
+// ═══════════ RENDER FUNCTIONS ═══════════
 
 function renderRaces() {
   const g = document.getElementById('racesGrid');
   g.innerHTML = RACES.map(r => `
-    <div class="card" style="border-left:4px solid ${r.color};">
-      <div class="race-header">
-        <img src="/images/races/${r.name.toLowerCase()}.png" alt="${r.name}" class="race-icon">
-        <h4 style="color:${r.color};">${r.name}</h4>
-        <span class="badge" style="background:${r.color}22;color:${r.color};border:1px solid ${r.color}44;">${r.trait}</span>
-      </div>
+    <div class="card" style="border-left:4px solid ${r.color}">
+      <div class="race-header"><div class="race-swatch" style="background:${r.color}"></div><h4 style="color:${r.color}">${r.name}</h4></div>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">${r.desc}</p>
-      <div style="color:var(--text);font-size:0.9rem;font-weight:500;">${r.bonuses}</div>
-    </div>`).join('');
+      <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic;margin-bottom:8px;">${r.lore}</p>
+      <div class="tag" style="border-color:${r.color};color:${r.color}">${r.bonuses}</div>
+      <div class="tag" style="border-color:${r.color};color:${r.color};margin-top:4px;">Trait: ${r.trait}</div>
+    </div>
+  `).join('');
 }
-
-const CLASS_ICONS = {
-  'Warrior': '/sprites/ui/icons/icon_warrior.png',
-  'Mage Priest': '/sprites/ui/icons/icon_mage.png',
-  'Worge': '/sprites/ui/icons/icon_worge.png',
-  'Ranger': '/sprites/ui/icons/icon_ranger.png'
-};
 
 function renderClasses() {
   const g = document.getElementById('classesGrid');
   g.innerHTML = CLASSES.map(c => `
-    <div class="card" style="border-top:3px solid ${c.color};">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-        <img src="${CLASS_ICONS[c.name] || ''}" alt="${c.name}" class="class-icon">
-        <h4 style="color:${c.color};">${c.name}</h4>
+    <div class="card" style="border-left:4px solid ${c.color}">
+      <h4 style="color:${c.color};margin-bottom:6px;">${c.name}</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:6px;">${c.desc}</p>
+      <div class="tag" style="margin-bottom:8px;">${c.attrs}</div>
+      <div class="ability-list">
+        ${c.abilities.map(a => `<span class="ability-tag">${a}</span>`).join('')}
       </div>
-      <div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:4px;">${c.desc}</div>
-      <div style="font-size:0.85rem;margin:8px 0;"><span style="color:var(--text-dim);">Base Stats:</span> <span style="color:${c.color};">${c.attrs}</span></div>
-      <div class="ability-list">${c.abilities.map(a => `<span class="ability-tag">${a}</span>`).join('')}</div>
-      <div style="margin-top:12px;padding:10px;background:rgba(255,215,0,0.05);border-radius:6px;border-left:3px solid ${c.color};">
-        <span style="color:var(--gold);font-size:0.82rem;font-weight:600;">Signature:</span>
-        <span style="color:var(--text);font-size:0.85rem;"> ${c.signature}</span>
+      <div style="margin-top:12px;padding:10px;background:rgba(255,215,0,0.06);border-radius:6px;border-left:3px solid ${c.color};">
+        <div style="color:var(--gold);font-size:0.8rem;font-weight:600;">Signature</div>
+        <div style="color:var(--text-dim);font-size:0.82rem;">${c.signature}</div>
       </div>
-    </div>`).join('');
+    </div>
+  `).join('');
 }
 
 function renderCombos() {
   const g = document.getElementById('combosGrid');
-  const combos = [];
-  RACES.forEach(r => CLASSES.forEach(c => combos.push({race:r,cls:c})));
-  g.innerHTML = combos.map(({race:r,cls:c}) => `
-    <div class="card combo-card" style="border-color:${r.color};" data-name="${r.name} ${c.name}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <div style="width:10px;height:10px;border-radius:50%;background:${r.color};"></div>
-        <span style="color:${r.color};font-weight:600;font-size:0.9rem;">${r.name}</span>
-        <span style="color:${c.color};font-size:0.85rem;">${c.name}</span>
-      </div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap;">
-        <span class="tag" style="color:${r.color};border-color:${r.color}44;">${r.trait}</span>
-      </div>
-    </div>`).join('');
+  let html = '';
+  let styleTag = '';
+  let animIdx = 0;
+  RACES.forEach(race => {
+    CLASSES.forEach(cls => {
+      const key = `${race.name}_${cls.name}`;
+      const sprite = COMBO_SPRITES[key];
+      let spriteHtml = '';
+      if (sprite) {
+        const displayH = Math.max(80, sprite.frameHeight ? Math.min(sprite.frameHeight, 100) : 80);
+        const scale = displayH / (sprite.frameHeight || 64);
+        const fw = (sprite.frameWidth || 128) * scale;
+        const totalW = fw * sprite.frames;
+        const animName = `comboAnim${animIdx++}`;
+        styleTag += `@keyframes ${animName}{from{background-position:0 0}to{background-position:-${totalW}px 0}}`;
+        const filterStyle = sprite.filter ? `filter:${sprite.filter};` : '';
+        const transformStyle = sprite.transform ? `transform:${sprite.transform};` : '';
+        spriteHtml = `<div class="sprite-animated" style="width:${fw}px;height:${displayH}px;background-image:url('${sprite.src}');background-size:${totalW}px ${displayH}px;animation:${animName} ${sprite.frames * 0.15}s steps(${sprite.frames}) infinite;${filterStyle}${transformStyle}"></div>`;
+      }
+      html += `
+        <div class="card combo-card" style="border-color:${race.color}" data-combo="${race.name} ${cls.name}">
+          ${spriteHtml}
+          <h4 style="color:${race.color};font-size:0.95rem;">${race.name} ${cls.name}</h4>
+          <div style="display:flex;gap:4px;margin-top:4px;">
+            <span class="tag" style="border-color:${race.color};color:${race.color};font-size:0.7rem;">${race.name}</span>
+            <span class="tag" style="border-color:${cls.color};color:${cls.color};font-size:0.7rem;">${cls.name}</span>
+          </div>
+          <div style="color:var(--text-dim);font-size:0.75rem;margin-top:6px;">Race: ${race.bonuses}</div>
+          <div style="color:var(--text-dim);font-size:0.75rem;">Trait: ${race.trait}</div>
+        </div>`;
+    });
+  });
+  const s = document.createElement('style');
+  s.textContent = styleTag;
+  document.head.appendChild(s);
+  g.innerHTML = html;
 }
 
 function renderWorld() {
-  const el = document.getElementById('worldContent');
-  el.innerHTML = REGIONS.map(r => `
-    <div class="region-header" style="background:${r.fill};border:1px solid ${r.color}33;">
-      <div class="region-dot" style="background:${r.color};box-shadow:0 0 10px ${r.color};"></div>
+  const c = document.getElementById('worldContent');
+  c.innerHTML = REGIONS.map(r => `
+    <div class="region-header" style="background:${r.fill};border-left:4px solid ${r.color}">
+      <div class="region-dot" style="background:${r.color}"></div>
       <h3 style="color:${r.color};font-family:'Cinzel',serif;font-size:1.2rem;">${r.name}</h3>
       <span style="color:var(--text-dim);font-size:0.85rem;">${r.locations.length} locations</span>
     </div>
-    <div class="grid grid-4">${r.locations.map(l => `
-      <div class="card location-card">
-        <div class="loc-dot" style="color:${r.color};background:${r.color};"></div>
-        <span class="loc-name">${l}</span>
-      </div>`).join('')}
-    </div>`).join('');
+    <div class="grid grid-4">
+      ${r.locations.map(l => `
+        <div class="card location-card">
+          <div class="loc-dot" style="color:${r.color};background:${r.color}"></div>
+          <span class="loc-name">${l}</span>
+        </div>`).join('')}
+    </div>
+  `).join('');
 }
 
-function renderEnemies(filter='all', search='') {
+function renderEnemies() {
   const g = document.getElementById('enemiesGrid');
-  const s = search.toLowerCase();
-  const filtered = ENEMIES.filter(e => {
-    if (filter !== 'all' && e.type !== filter) return false;
-    if (s && !e.name.toLowerCase().includes(s)) return false;
-    return true;
-  });
-  const maxHP = Math.max(...ENEMIES.map(e=>e.hp));
-  g.innerHTML = filtered.map(e => {
-    const badge = e.type === 'god' ? '<span class="badge badge-god">GOD</span>' :
-                  e.type === 'boss' ? '<span class="badge badge-boss">BOSS</span>' :
-                  '<span class="badge badge-regular">REGULAR</span>';
-    const hpNum = typeof e.hp === 'string' ? parseInt(e.hp) : e.hp;
-    const hpPct = Math.min(100, (hpNum / maxHP) * 100);
-    const faction = e.faction ? `<span class="tag" style="color:var(--gold);border-color:var(--gold);">${e.faction}</span>` : '';
+  g.innerHTML = ENEMIES.map(e => {
+    const badge = e.type === 'god' ? 'badge-god' : e.type === 'boss' ? 'badge-boss' : 'badge-regular';
+    const label = e.type === 'god' ? 'GOD' : e.type === 'boss' ? 'BOSS' : 'Regular';
+    const sprite = ENEMY_SPRITES[e.name];
+    let spriteHtml = '';
+    if (sprite) {
+      const scl = sprite.scale || 1;
+      const h = 80;
+      const fw = (sprite.frameWidth || 128) * (h / (sprite.frameWidth || 128)) * scl;
+      spriteHtml = `<div class="enemy-sprite" style="background-image:url('${sprite.src}');background-size:auto ${h * scl}px;width:${Math.max(80, fw)}px;height:${h}px;"></div>`;
+    }
     return `
-    <div class="card" style="border-left:4px solid ${e.color};" data-name="${e.name}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-        <div class="enemy-name" style="color:${e.color};">${e.name}</div>
-        ${badge}
+    <div class="card" style="border-left:4px solid ${e.color}" data-type="${e.type}" data-name="${e.name.toLowerCase()}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;">
+          <span class="badge ${badge}">${label}</span>
+          <div class="enemy-name" style="color:${e.color};margin-top:6px;">${e.name}</div>
+        </div>
+        ${spriteHtml}
       </div>
-      ${faction}
       <div class="enemy-stats">
-        <div class="enemy-stat"><div class="enemy-stat-val" style="color:#22c55e;">${e.hp}</div><div class="enemy-stat-lbl">HP</div></div>
-        <div class="enemy-stat"><div class="enemy-stat-val" style="color:#ef4444;">${e.dmg}</div><div class="enemy-stat-lbl">DMG</div></div>
-        <div class="enemy-stat"><div class="enemy-stat-val" style="color:#3b82f6;">${e.def}</div><div class="enemy-stat-lbl">DEF</div></div>
-        <div class="enemy-stat"><div class="enemy-stat-val" style="color:#f59e0b;">${e.spd}</div><div class="enemy-stat-lbl">SPD</div></div>
+        <div class="enemy-stat"><div class="enemy-stat-val" style="color:var(--green)">${e.hp}</div><div class="enemy-stat-lbl">HP</div></div>
+        <div class="enemy-stat"><div class="enemy-stat-val" style="color:var(--red)">${e.dmg}</div><div class="enemy-stat-lbl">DMG</div></div>
+        <div class="enemy-stat"><div class="enemy-stat-val" style="color:var(--blue)">${e.def}</div><div class="enemy-stat-lbl">DEF</div></div>
+        <div class="enemy-stat"><div class="enemy-stat-val" style="color:var(--cyan)">${e.spd}</div><div class="enemy-stat-lbl">SPD</div></div>
       </div>
-      <div style="margin-top:4px;">
-        <div class="stat-fill"><div class="stat-fill-inner" style="width:${hpPct}%;background:${e.color};"></div></div>
+      <div class="ability-list">
+        ${e.abilities.map(a => `<span class="ability-tag">${a.n}${a.d ? `<span class="dmg">${a.d}x</span>` : ''}${a.cd ? `<span class="cd">CD${a.cd}</span>` : ''}${a.note ? `<span style="color:var(--orange);font-size:0.7rem;margin-left:4px;">${a.note}</span>` : ''}</span>`).join('')}
       </div>
-      <div class="ability-list">${e.abilities.map(a => {
-        let txt = a.n;
-        if (a.d) txt += `<span class="dmg">${a.d}x</span>`;
-        if (a.cd) txt += `<span class="cd">CD:${a.cd}</span>`;
-        if (a.note) txt += `<span class="cd">${a.note}</span>`;
-        return `<span class="ability-tag">${txt}</span>`;
-      }).join('')}</div>
     </div>`;
   }).join('');
 }
 
 function renderEquipment() {
   const sg = document.getElementById('slotsGrid');
-  sg.innerHTML = SLOTS.map(s => `
+  sg.innerHTML = EQUIPMENT_SLOTS.map(s => `
     <div class="card" style="text-align:center;">
-      <img src="${s.icon}" alt="${s.name}" class="slot-icon">
-      <div style="font-weight:600;">${s.name}</div>
-    </div>`).join('');
+      <div style="font-size:2rem;margin-bottom:6px;">${s.icon}</div>
+      <h4 style="color:var(--gold);font-size:0.95rem;">${s.name}</h4>
+      <div style="color:var(--text-dim);font-size:0.8rem;">${s.desc}</div>
+    </div>
+  `).join('');
+
+  const wtg = document.getElementById('weaponTypesGrid');
+  wtg.innerHTML = WEAPON_TYPES.map(w => `
+    <div class="card">
+      <h4 style="color:var(--gold);font-size:0.95rem;margin-bottom:4px;">${w.name}</h4>
+      <span class="tag" style="border-color:${w.hand==='2h'?'var(--red)':'var(--green)'};color:${w.hand==='2h'?'var(--red)':'var(--green)'}">${w.hand.toUpperCase()}</span>
+      <div style="margin-top:6px;color:var(--text-dim);font-size:0.8rem;">Classes: ${w.classes.join(', ')}</div>
+    </div>
+  `).join('');
+
+  const ceg = document.getElementById('classEquipGrid');
+  ceg.innerHTML = CLASS_EQUIP.map(c => `
+    <div class="card">
+      <h4 style="color:var(--gold);margin-bottom:8px;">${c.cls}</h4>
+      <div style="font-size:0.85rem;color:var(--text-dim);">
+        <div style="margin:4px 0;"><strong style="color:var(--text);">Weapons:</strong> ${c.weapons}</div>
+        <div style="margin:4px 0;"><strong style="color:var(--text);">Offhand:</strong> ${c.offhand}</div>
+        <div style="margin:4px 0;"><strong style="color:var(--text);">Armor:</strong> ${c.armor}</div>
+        <div style="margin:4px 0;"><strong style="color:var(--text);">Helmet:</strong> ${c.helmet}</div>
+        <div style="margin:4px 0;"><strong style="color:var(--text);">Feet:</strong> ${c.feet}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const wsc = document.getElementById('weaponSkillsContent');
+  wsc.innerHTML = Object.entries(WEAPON_SKILLS).map(([wname, data]) => `
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="color:var(--gold);margin-bottom:12px;">${wname}</h4>
+      <table class="weapon-skill-table">
+        <thead><tr><th>Skill</th><th>Damage</th><th>CD</th><th>Effect</th><th>Type</th></tr></thead>
+        <tbody>
+          ${data.basic.map(s => `<tr><td style="color:var(--text)">${s.n}</td><td><span style="color:var(--red)">${s.d}</span></td><td style="color:var(--text-dim)">-</td><td style="color:var(--text-dim)">-</td><td><span class="tag" style="font-size:0.7rem;">Basic</span></td></tr>`).join('')}
+          ${data.special.map(s => `<tr><td style="color:var(--text)">${s.n}</td><td><span style="color:var(--red)">${s.d}</span></td><td><span style="color:var(--cyan)">${s.cd}t</span></td><td style="color:var(--orange);font-size:0.8rem;">${s.fx || '-'}</td><td><span class="tag" style="font-size:0.7rem;border-color:var(--gold);color:var(--gold);">Special</span></td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('');
 
   const tc = document.getElementById('tiersContent');
   tc.innerHTML = TIERS.map(t => `
-    <div class="tier-row" style="border-color:${t.color};">
-      <div style="min-width:80px;font-family:'Cinzel',serif;font-weight:700;color:${t.color};">T${t.tier}</div>
-      <div style="flex:1;">
-        <span style="color:${t.color};font-weight:600;">${t.name}</span>
-      </div>
-      <div style="display:flex;gap:20px;font-size:0.85rem;">
-        <span><span style="color:var(--text-dim);">Mult:</span> <span style="color:${t.color};font-weight:600;">${t.mult}x</span></span>
-        <span><span style="color:var(--text-dim);">Flat:</span> <span style="color:${t.color};font-weight:600;">+${t.flat}</span></span>
-      </div>
-    </div>`).join('');
+    <div class="tier-row" style="border-color:${t.color}">
+      <div style="font-weight:700;color:${t.color};min-width:60px;">${t.name}</div>
+      <div style="color:var(--text-dim);font-size:0.85rem;flex:1;">Multiplier: <strong style="color:var(--text)">\u00D7${t.mult}</strong></div>
+      <div style="color:var(--text-dim);font-size:0.85rem;">Flat: <strong style="color:var(--text)">+${t.flat}</strong></div>
+    </div>
+  `).join('');
 
-  const ug = document.getElementById('upgradeGrid');
-  ug.innerHTML = Object.entries(UPGRADES).map(([k,v]) => `
+  renderTierCalc();
+  renderSampleItems(1);
+  renderUpgradeCosts();
+}
+
+function renderTierCalc() {
+  const c = document.getElementById('tierCalcContent');
+  const baseItem = { name:'Bloodfeud Blade', baseDmg:6, baseCrit:3, baseBlock:2 };
+  let html = `<p style="color:var(--text);font-size:0.95rem;margin-bottom:12px;"><strong style="color:var(--gold);">${baseItem.name}</strong> (T1 Base: ${baseItem.baseDmg} DMG, ${baseItem.baseCrit} Crit, ${baseItem.baseBlock} Block)</p>`;
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">';
+  TIERS.forEach(t => {
+    const dmg = Math.round(baseItem.baseDmg * t.mult + t.flat);
+    const crit = Math.round((baseItem.baseCrit * t.mult + Math.round(t.flat * 0.15)) * 10) / 10;
+    html += `<div class="card" style="text-align:center;padding:12px;border-top:3px solid ${t.color};">
+      <div style="color:${t.color};font-weight:700;font-size:0.9rem;">${t.name}</div>
+      <div style="color:var(--red);font-size:1.2rem;font-weight:700;margin:4px 0;">${dmg} DMG</div>
+      <div style="color:var(--orange);font-size:0.8rem;">${crit} Crit</div>
+    </div>`;
+  });
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+let currentItemTier = 1;
+function renderSampleItems(tier) {
+  currentItemTier = tier;
+  const sel = document.getElementById('itemTierSelector');
+  sel.innerHTML = TIERS.map(t => `<button class="tier-btn ${t.tier===tier?'active':''}" style="${t.tier===tier?`color:${t.color};border-color:${t.color}`:''}" onclick="renderSampleItems(${t.tier})">T${t.tier}</button>`).join('');
+  const g = document.getElementById('sampleItemsGrid');
+  const t = TIERS.find(x => x.tier === tier);
+  g.innerHTML = SAMPLE_ITEMS.map(item => `
+    <div class="card" style="border-top:3px solid ${t.color}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h4 style="color:${t.color};font-size:0.95rem;">${item.name}</h4>
+        <span class="tag" style="border-color:${t.color};color:${t.color};font-size:0.7rem;">${t.name}</span>
+      </div>
+      <div style="color:var(--text-dim);font-size:0.8rem;margin-bottom:4px;">${item.slot} \u2022 ${item.type}</div>
+      <div style="color:var(--text);font-size:0.85rem;">${item.stats} <span style="color:var(--text-dim);font-size:0.75rem;">(base \u00D7${t.mult} +${t.flat})</span></div>
+    </div>
+  `).join('');
+}
+
+function renderUpgradeCosts() {
+  const g = document.getElementById('upgradeGrid');
+  g.innerHTML = Object.entries(UPGRADE_COSTS).map(([tier, cost]) => `
     <div class="card" style="text-align:center;">
-      <div style="color:var(--gold);font-family:'Cinzel',serif;font-weight:700;">T${k} \u2192 T${parseInt(k)+1}</div>
-      <div style="color:var(--text);font-size:1.1rem;font-weight:600;margin-top:4px;">${v.toLocaleString()} gold</div>
-    </div>`).join('');
+      <div style="color:var(--gold);font-weight:700;">T${tier} \u2192 T${parseInt(tier)+1}</div>
+      <div style="color:var(--text);font-size:1.1rem;font-weight:600;margin-top:4px;">${cost.toLocaleString()}</div>
+      <div style="color:var(--text-dim);font-size:0.75rem;">gold</div>
+    </div>
+  `).join('');
 }
 
 function renderAttributes() {
   const g = document.getElementById('attrsGrid');
-  g.innerHTML = ATTRS.map(a => `
-    <div class="card attr-card" style="border-color:${a.color};">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-        <img src="/images/attributes/${a.name.toLowerCase()}.png" alt="${a.name}" class="attr-icon-img">
-        <h4 style="color:${a.color};">${a.name}</h4>
+  g.innerHTML = ATTRIBUTES.map(a => `
+    <div class="card attr-card" style="border-color:${a.color}">
+      <h4 style="color:${a.color};margin-bottom:4px;">${a.name}</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:4px;">${a.desc}</p>
+      <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic;margin-bottom:10px;">${a.full}</p>
+      <div class="attr-gains">
+        ${a.gains.map(g => `<div class="attr-gain"><span class="attr-gain-label">${g.l}</span><span class="attr-gain-value" style="color:${a.color}">${g.v}</span></div>`).join('')}
       </div>
-      <p style="color:var(--text-dim);font-size:0.85rem;">${a.desc}</p>
-      <div class="attr-gains">${a.gains.map(g => `
-        <div class="attr-gain">
-          <span class="attr-gain-label">${g.l}</span>
-          <span class="attr-gain-value" style="color:${a.color};">${g.v}</span>
-        </div>`).join('')}
-      </div>
-    </div>`).join('');
+    </div>
+  `).join('');
 }
 
-function renderCombat() {
-  const ctg = document.getElementById('classTiersGrid');
-  ctg.innerHTML = CLASS_TIERS.map(t => `
-    <div class="card" style="border-top:3px solid ${t.color};">
+function renderClassTiers() {
+  const g = document.getElementById('classTiersGrid');
+  g.innerHTML = CLASS_TIERS_DATA.map(t => `
+    <div class="card" style="border-top:3px solid ${t.color}">
       <h4 style="color:${t.color};margin-bottom:4px;">${t.name}</h4>
-      <div style="color:var(--text-dim);font-size:0.85rem;">Rank ${t.range}</div>
-      <p style="color:var(--text);font-size:0.85rem;margin-top:6px;">${t.desc}</p>
-    </div>`).join('');
+      <div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:4px;">Rank ${t.rank}</div>
+      <p style="color:var(--text-dim);font-size:0.82rem;">${t.desc}</p>
+    </div>
+  `).join('');
+}
 
-  const scg = document.getElementById('statCapsGrid');
-  scg.innerHTML = Object.entries(STAT_CAPS).map(([k,v]) => `
+function renderStatCaps() {
+  const g = document.getElementById('statCapsGrid');
+  g.innerHTML = Object.entries(STAT_CAPS).map(([stat, cap]) => `
     <div class="card" style="text-align:center;">
-      <div style="color:var(--gold);font-weight:600;font-size:0.9rem;">${k}</div>
-      <div style="color:var(--text);font-size:1.3rem;font-weight:700;margin-top:4px;">${v}%</div>
-    </div>`).join('');
+      <div style="color:var(--gold);font-weight:600;font-size:0.9rem;">${stat}</div>
+      <div style="color:var(--text);font-size:1.3rem;font-weight:700;margin-top:4px;">${cap}</div>
+    </div>
+  `).join('');
 }
 
-function init() {
-  renderRaces();
-  renderClasses();
-  renderCombos();
-  renderWorld();
-  renderEnemies();
-  renderEquipment();
-  renderAttributes();
-  renderCombat();
-
-  document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
-    });
-  });
-
-  let activeFilter = 'all';
-  document.querySelectorAll('[data-filter]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFilter = btn.dataset.filter;
-      renderEnemies(activeFilter, document.getElementById('enemySearch').value);
-    });
-  });
-  document.getElementById('enemySearch').addEventListener('input', e => {
-    renderEnemies(activeFilter, e.target.value);
-  });
-
-  document.getElementById('comboSearch').addEventListener('input', e => {
-    const s = e.target.value.toLowerCase();
-    document.querySelectorAll('#combosGrid .card').forEach(card => {
-      card.style.display = card.dataset.name.toLowerCase().includes(s) ? '' : 'none';
-    });
-  });
+function renderPotions() {
+  const g = document.getElementById('potionsGrid');
+  g.innerHTML = POTIONS.map(p => `
+    <div class="card potion-card">
+      <div class="potion-icon" style="background:${p.color}22;border:1px solid ${p.color}44;">${p.icon}</div>
+      <div>
+        <h4 style="color:${p.color};margin-bottom:4px;">${p.name}</h4>
+        <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:6px;">${p.desc}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="tag" style="border-color:${p.color};color:${p.color};">${p.effect}</span>
+          <span class="tag" style="border-color:var(--gold);color:var(--gold);">${p.cost}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// ═══════════ INIT ═══════════
+
+renderRaces();
+renderClasses();
+renderCombos();
+renderWorld();
+renderEnemies();
+renderEquipment();
+renderAttributes();
+renderClassTiers();
+renderStatCaps();
+renderPotions();
+
+// Tab navigation
+document.querySelectorAll('.nav-btn[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Combo search
+document.getElementById('comboSearch').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#combosGrid .card').forEach(card => {
+    card.style.display = card.dataset.combo.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// Enemy search & filter
+document.getElementById('enemySearch').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#enemiesGrid .card').forEach(card => {
+    const matchName = card.dataset.name.includes(q);
+    const matchType = !card.dataset.activeFilter || card.dataset.activeFilter === 'all' || card.dataset.type === card.dataset.activeFilter;
+    card.style.display = matchName ? '' : 'none';
+  });
+});
+
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const q = document.getElementById('enemySearch').value.toLowerCase();
+    document.querySelectorAll('#enemiesGrid .card').forEach(card => {
+      const matchType = filter === 'all' || card.dataset.type === filter;
+      const matchName = card.dataset.name.includes(q);
+      card.style.display = (matchType && matchName) ? '' : 'none';
+    });
+  });
+});
 </script>
 </body>
 </html>
