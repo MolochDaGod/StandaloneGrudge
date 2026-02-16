@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grudge-warlords-v3';
+const CACHE_NAME = 'grudge-warlords-v4';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
@@ -37,6 +37,8 @@ self.addEventListener('fetch', (event) => {
   const isSkipCache = SKIP_CACHE_EXTENSIONS.some((ext) => url.pathname.toLowerCase().endsWith(ext));
   if (isSkipCache) return;
 
+  if (event.request.headers.get('range')) return;
+
   const isCacheableAsset = CACHEABLE_EXTENSIONS.some((ext) => url.pathname.toLowerCase().endsWith(ext));
 
   if (isCacheableAsset) {
@@ -44,7 +46,7 @@ self.addEventListener('fetch', (event) => {
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
-          if (response.ok && response.status === 200) {
+          if (response.status === 200 && response.type !== 'opaque') {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, clone).catch(() => {});
