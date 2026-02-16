@@ -199,9 +199,6 @@ function GameApp() {
     );
   }
 
-  const fullBleedScreens = ['title', 'world', 'battle', 'intro', 'lobby'];
-  const isFullBleed = fullBleedScreens.includes(screen);
-
   const showFrame = false;
 
   const renderScreen = () => {
@@ -234,20 +231,10 @@ function GameApp() {
     }
   };
 
-  const contentStyle = isFullBleed ? {
+  const contentStyle = {
     position: 'relative', zIndex: 10501, width: '100%', height: '100%',
     animation: transitioning ? 'none' : getScreenAnimation(),
     opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
-  } : {
-    position: 'absolute', zIndex: 10501,
-    top: 'var(--frame-inset-top)',
-    left: 'var(--frame-inset-side)',
-    right: 'var(--frame-inset-side)',
-    bottom: 'var(--frame-inset-bottom)',
-    animation: transitioning ? 'none' : getScreenAnimation(),
-    opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
-    overflow: 'hidden',
-    borderRadius: 2,
   };
 
   return (
