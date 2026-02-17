@@ -152,50 +152,184 @@ Primary: wins DESC → losses ASC → winRate DESC
 ### Discord Webhooks
 Auto-broadcasts: new challengers, relegations, 5-win streaks with rank badge info
 
-## Sprite System — Best Practices
+## Sprite System — Complete Reference
 
 ### Architecture
-- `src/data/spriteMap.js` — Central registry of ALL sprite data
-- `src/components/SpriteAnimation.jsx` — Renders sprite sheet animations
-- Sprite sheets: horizontal strip PNGs in `public/sprites/`
+- `src/data/spriteMap.js` — Central registry of ALL sprite data (88 sprite sheet folders, 24 race/class combos, named heroes)
+- `src/components/SpriteAnimation.jsx` — Renders sprite sheet animations with equipment overlays
+- Sprite sheets stored in `public/sprites/<name>/` as horizontal strip PNGs
+- Effect sprite sheets stored in `dist/effects/` organized by category
+
+### Sprite Sheet Anatomy
+A sprite sheet is a single PNG containing all frames of one animation laid out horizontally:
+```
+|  Frame 1  |  Frame 2  |  Frame 3  |  Frame 4  |  Frame 5  |  Frame 6  |
+|  100x100  |  100x100  |  100x100  |  100x100  |  100x100  |  100x100  |
+Total PNG: 600x100, frameWidth=100, frameHeight=100, frames=6
+```
+**Critical formula:** `imageWidth / frameWidth = frames` — mismatch causes visual glitches.
+
+Common frame sizes in this project:
+- Standard characters: 100x100 per frame
+- Metal Slug style: 100x100 per frame (pirate-grunt)
+- Wizard pack / Elf-mage: 231x190 per frame
+- Evil Wizard 3 boss: 140x140 per frame
+- Most enemies: 100x100 per frame
+
+### Standard Animation Set
+Each sprite should include these animation keys:
+| Key | Purpose | Typical Frames | Notes |
+|---|---|---|---|
+| idle | Standing pose loop | 4-10 | Always required |
+| attack1 | Primary attack | 6-13 | Always required |
+| attack2 | Secondary/special attack | 6-13 | Optional |
+| hurt | Taking damage | 3-4 | Short, impactful |
+| death | Dying sequence | 4-18 | Play once, no loop |
+| run | Movement animation | 6-8 | Used in scenes |
+| jump | Jump/leap | 2-3 | Optional |
+| fall | Falling | 2-3 | Optional |
 
 ### Sprite Data Structure
 ```javascript
 {
   frameWidth: 100,    // Width of single frame in pixels
   frameHeight: 100,   // Height of single frame in pixels
-  filter: '',         // CSS filter string (hue-rotate, saturate, etc.)
-  facesLeft: false,   // True if sprite faces left by default
+  filter: '',         // CSS filter string for recoloring
+  facesLeft: false,   // True if sprite's default orientation faces left
+  scale: 1,           // Optional per-sheet scale override (use sparingly)
   idle: { src: '/sprites/hero/idle.png', frames: 6 },
   attack1: { src: '/sprites/hero/attack1.png', frames: 8 },
-  // ... more animations
+  hurt: { src: '/sprites/hero/hurt.png', frames: 3 },
+  death: { src: '/sprites/hero/death.png', frames: 7 },
+  run: { src: '/sprites/hero/run.png', frames: 8 },
 }
 ```
 
-### SpriteAnimation Props
+### SpriteAnimation Component Props
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | spriteData | object | required | Sprite definition from spriteMap |
 | animation | string | 'idle' | Animation key to play |
 | scale | number | 2 | Display scale multiplier |
-| flip | boolean | false | Mirror horizontally |
-| loop | boolean | true | Loop animation |
-| speed | number | 120 | MS per frame |
-| containerless | boolean | false | Zero-width container for battle positioning |
-| equipmentOverlays | array | null | Equipment tint overlays |
+| flip | boolean | false | Mirror horizontally (CSS scaleX(-1)) |
+| loop | boolean | true | Loop animation or play once |
+| speed | number | 120 | Milliseconds per frame |
+| containerless | boolean | true | Zero-width container for battle positioning |
+| onAnimationEnd | function | null | Callback when non-looping animation finishes |
+| equipmentOverlays | array | null | Equipment tint overlays by slot/tier |
 
-### Golden Rules
+### Rendering Pipeline
+1. **Scale calculation:** `displayScale = targetHeight / frameHeight` (target = 200px)
+2. **Display size:** `displayWidth = frameWidth * displayScale`, `displayHeight = targetHeight`
+3. **Sprite strip rendering:** Uses CSS `background-image` + `background-position` to show one frame
+4. **Frame cycling:** `setInterval` advances frame index, `backgroundPosition` shifts by `-frameWidth * displayScale * frameIndex`
+5. **Flip logic (battle):** `facesLeft ? team === 'player' : team === 'enemy'` — ensures all units face their opponents
+6. **Containerless mode:** Wrapper div has `width: 0, overflow: visible` for precise absolute positioning in battles
+
+### Flip Logic Deep Dive
+```
+facesLeft=true  + player team → flip=true  (sprite faces right, toward enemies) ✓
+facesLeft=true  + enemy team  → flip=false (sprite stays facing left, toward players) ✓
+facesLeft=false + player team → flip=false (sprite stays facing right, toward enemies) ✓  
+facesLeft=false + enemy team  → flip=true  (sprite faces left, toward players) ✓
+```
+
+### Battle Positioning System
+- Units positioned using percentage-based coordinates (x=0-100%, y=0-100%)
+- Player units: x≈18-32% (left side), Enemy units: x≈55-74% (right side)
+- Y positioning: base y=88% with ±10% spread per unit in row
+- Row system: Protection(x=22) → Battle(x=32) → Back(x=18) for players
+- Row system: Charge(x=55) → Vanguard(x=65) → Formation(x=74) for enemies
+- `transform: translate(-50%, -100%)` anchors sprites at bottom-center
+- `bodyY(unit)` calculates mid-body position for projectile targeting
+
+### Projectile Targeting
+- Angle calculation: `Math.atan2(dy, dx) * (180 / Math.PI)` — always use raw angle
+- Player→Enemy: angle ≈ 0° (pointing right), Enemy→Player: angle ≈ 180° (pointing left)
+- Projectile sprites/CSS shapes face RIGHT by default — rotation handles direction
+- Never add +180° offsets — atan2 already produces correct angles for both directions
+- Specialized projectiles: FireballProjectile, WaterArrowProjectile, IceStormProjectile, PoisonGustProjectile
+- Generic projectiles: daggers (CSS-drawn), beams (image), orbs (radial gradient), electric (ThunderProjectileSprite)
+
+### Storage & File Organization Best Practices
+```
+public/sprites/
+  ├── <character-name>/          # One folder per sprite sheet
+  │   ├── idle.png               # Horizontal strip: frameW * frames × frameH
+  │   ├── attack1.png
+  │   ├── hurt.png
+  │   ├── death.png
+  │   └── run.png
+  ├── bosses/                    # Boss variants
+  ├── companions/                # Summoned companions
+  ├── effects/                   # Legacy effects location
+  └── ui/                        # UI sprites (cursor, bars)
+
+dist/effects/                    # All VFX effect sprite sheets
+  ├── pixel/                     # 20 numbered spritesheet effects (600x600 to 1100x1100)
+  ├── slash/                     # Melee slash effects (5 colors × 3 sizes + demon slashes)
+  ├── beams/                     # Beam trail projectiles (5 colors, 1024x128)
+  ├── retro_impact/              # Hit impact sprites (14 colors × 2 variants, 576x384)
+  ├── bullet_impact/             # Bullet hit effects (5 colors)
+  ├── custom/                    # Hand-crafted ability effects (14 effects)
+  └── *.png                      # Root-level standalone effects
+
+public/icons/
+  ├── ability_*.png              # 28 ability icons (painted RPG style, 1024x1024)
+  ├── fireball_frame_*.png       # Fireball projectile animation frames
+  └── water_arrow_frame_*.png    # Water arrow projectile animation frames
+```
+
+### Effect Asset Catalog
+
+#### Melee Slash Effects (`dist/effects/slash/`)
+| File Pattern | Dimensions | Frames | Description |
+|---|---|---|---|
+| slash_{color}_sm.png | 256x32 | 8 frames (32x32) | Small slash arcs |
+| slash_{color}_md.png | 512x64 | 8 frames (64x64) | Medium slash arcs |
+| slash_{color}_lg.png | 768x96 | 8 frames (96x96) | Large slash arcs |
+| demon_slash_{1-3}.png | 336x48 | 7 frames (48x48) | Demon-style dark slashes |
+Colors: blue, green, orange, purple, red
+
+#### Beam Trails (`dist/effects/beams/`)
+| File | Dimensions | Description |
+|---|---|---|
+| beam_{color}.png | 1024x128 | Horizontal beam projectile trail |
+Colors: blue, green, orange, purple, red
+
+#### Hit Impacts (`dist/effects/retro_impact/`)
+| File Pattern | Dimensions | Description |
+|---|---|---|
+| impact{Color}{A-D}.png | 576x384 | Retro-style impact bursts (6x4 grid = 24 frames, 96x96 each) |
+| retro_impact_{A-F}.png | various | Generic impact variants |
+| energy_projectile.png | 200x50 | Energy ball projectile |
+Colors: Blue, Cyan, Fire, Green, Magenta, Orange, Pink, Purple, Red, Teal, White, Yellow
+
+#### Custom Ability Effects (`dist/effects/custom/`)
+14 hand-crafted effects: arcanebolt, arcanelighting, arcanemist, arcaneslash, beam, crit, flamestrike, frostbolt, frozen, healingregen, healingwave, hit, holyheal, holylight
+
+#### Pixel Sprite Effects (`dist/effects/pixel/`)
+20 numbered spritesheets (NxN square grids): weaponhit, fire, nebula, vortex, phantom, loading, sunburn, felspell, midnight, freezing, magicspell, magic8, bluefire, casting, magickahit, flamelash, firespin, protectioncircle, brightfire, magicbubbles
+Plus: elemental effects (earth, ice, water, fire, smoke, thrust), smear effects (horizontal/vertical)
+
+#### Root Effects (`dist/effects/`)
+Standalone sheets: fire_explosion, heal_spritesheet, hit_effect_{1-3}, holy_impact, holy_repeatable, holy_vfx_02, resurrect_sprite, slash_spritesheet, star_burst, thunder_hit/projectile, wind_breath/hit/projectile, worge_tornado, damage_numbers, explosion_crit
+
+### Golden Rules for Sprites
 1. Frame counts MUST match actual PNG dimensions: `imageWidth / frameWidth = frames`
-2. All sprites scale to 200px display height via: `scale = 200 / frameHeight`
+2. All battle sprites scale to 200px display height via: `scale = 200 / frameHeight`
 3. Never add per-combo scale overrides — uniform scaling only
 4. `containerless={true}` for battle sprites (zero-width, absolute positioning)
 5. `containerless={false}` for admin tools and UI previews
+6. All sprite PNGs must use `image-rendering: pixelated` for crisp pixel art
+7. Minimum display height: 80px for any sprite anywhere in the game
+8. Projectile sprites face RIGHT by default — atan2 rotation handles both directions
+9. Equipment overlays use `mixBlendMode: 'color'` with tier-based opacity
+10. Always verify frameWidth/frameHeight against actual PNG before registering in spriteMap
 
 ### Admin Sprite Viewport Pattern (CRITICAL)
 Fixed-size viewport containers prevent sprite overflow collisions:
-
 ```jsx
-// Fixed viewport — sprite centered via absolute positioning
 <div style={{
   width: VIEWPORT_W, height: VIEWPORT_H,
   position: 'relative', overflow: 'hidden',
@@ -211,13 +345,21 @@ Fixed-size viewport containers prevent sprite overflow collisions:
   </div>
 </div>
 ```
-
 Viewport sizes: AdminSprite = 500x420px, AdminSize = 200x200px
 
 ### CSS Filters for Racial Recoloring
 - Orc green: `hue-rotate(90deg) saturate(1.4) brightness(1.05)`
 - Undead: `hue-rotate(180deg) saturate(0.6) brightness(0.8) sepia(0.3)`
 - Dwarf transform: `scaleX(1.1) scaleY(0.85)` at `transformOrigin: bottom center`
+
+### Adding New Sprites Checklist
+1. Place sprite strip PNGs in `public/sprites/<name>/` folder
+2. Verify frame dimensions with `identify` (imageWidth / frameWidth = frames)
+3. Register in `spriteMap.js` under `spriteSheets` with correct frameWidth/frameHeight/frames
+4. Set `facesLeft: true` only if sprite's default pose faces left
+5. Add race/class mapping in `raceClassSpriteMap` if applicable
+6. Test in Admin Sprite Editor (`/admin` → Sprite tab) before battle use
+7. Verify flip logic works correctly for both player and enemy teams
 
 ## Admin Tools
 

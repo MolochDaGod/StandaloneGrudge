@@ -357,17 +357,55 @@ export default function AdminMaker() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 4, fontSize: '0.6rem' }}>
           {[
             ['Containerless Default', 'Sprites render w:0 h:0 overflow:visible. Never push UI. Admin panels use containerless={false}.'],
-            ['Bottom-Center Anchor', 'All sprites anchor bottom-center. Characters "stand" on anchor point.'],
+            ['Bottom-Center Anchor', 'All sprites anchor bottom-center via transform: translate(-50%, -100%).'],
             ['Horizontal Strip Format', 'Each anim = single horizontal PNG strip. Frame 0 left, animate via backgroundPosition.'],
+            ['Frame Math', 'imageWidth / frameWidth = frames. Mismatch = visual glitch. Always verify with identify.'],
+            ['200px Target Height', 'All battle sprites scale to 200px: displayScale = 200 / frameHeight. No per-combo overrides.'],
+            ['Flip Logic', 'facesLeft ? team===player : team===enemy. Ensures all units face opponents.'],
+            ['Min 80px', 'All sprites must be minimum 80px display height anywhere in the game.'],
+            ['Projectile Direction', 'All projectile shapes face RIGHT. atan2(dy,dx) handles rotation for both directions. Never add +180.'],
             ['Race Recoloring', 'CSS filter chains (hue-rotate, saturate, brightness) recolor base sprites for races.'],
-            ['facesLeft Flag', 'Some sheets face left. facesLeft:true flips them to face right in battle.'],
-            ['Equipment Overlays', 'Tier glow overlays render on top in zones: weapon 45%, helmet 0-28%, armor 28-63%, feet 75-100%.'],
-            ['Named Heroes', 'namedHeroId bypasses race/class map. Custom sprites, avatars, card BGs.'],
-            ['Effects Separate', 'VFX are separate sheets. Overlay above chars via z-index. Never bake into char sheets.'],
+            ['Effects Separate', 'VFX are separate sheets in dist/effects/. Overlay above chars via z-index. Never bake into char sheets.'],
           ].map(([t, d]) => (
             <div key={t} style={{ padding: '4px 8px', borderLeft: '2px solid #ffd700', background: 'rgba(255,215,0,0.04)' }}>
               <span style={{ color: '#ffd700', fontWeight: 600 }}>{t}: </span>
               <span style={{ color: '#9ca3af' }}>{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 700, marginBottom: 6 }}>⚔ Melee Hit Effects (dist/effects/slash/)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 6, fontSize: '0.55rem' }}>
+          {[
+            ['Slash SM', '256x32 (8×32x32)', 'blue, green, orange, purple, red', '5 colors'],
+            ['Slash MD', '512x64 (8×64x64)', 'blue, green, orange, purple, red', '5 colors'],
+            ['Slash LG', '768x96 (8×96x96)', 'blue, green, orange, purple, red', '5 colors'],
+            ['Demon Slash', '336x48 (7×48x48)', 'demon_slash_1/2/3', '3 dark variants'],
+          ].map(([name, dims, colors, note]) => (
+            <div key={name} style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 4, padding: 6, border: '1px solid rgba(239,68,68,0.1)' }}>
+              <div style={{ color: '#f87171', fontWeight: 600 }}>{name}</div>
+              <div style={{ color: '#9ca3af', fontFamily: 'monospace', fontSize: '0.5rem' }}>{dims}</div>
+              <div style={{ color: '#6b7280', fontSize: '0.48rem' }}>{colors} ({note})</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: '0.75rem', color: '#3b82f6', fontWeight: 700, marginBottom: 6 }}>✦ Effect Asset Map</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: '0.55rem' }}>
+          {[
+            ['Beams (5)', 'dist/effects/beams/', '1024x128 each', 'blue, green, orange, purple, red'],
+            ['Retro Impacts (30+)', 'dist/effects/retro_impact/', '576x384 (6×4 grid, 96×96)', '14 colors × 2 variants + 6 retro'],
+            ['Bullet Impacts (5)', 'dist/effects/bullet_impact/', 'Various sizes', 'blue, green, purple, red, yellow'],
+            ['Custom Effects (14)', 'dist/effects/custom/', 'Various sizes', 'arcanebolt, flamestrike, frostbolt, frozen, etc.'],
+            ['Pixel Sheets (20)', 'dist/effects/pixel/', '600-1100px square grids', 'weaponhit, fire, nebula, vortex, phantom, etc.'],
+            ['Root Effects (20+)', 'dist/effects/', 'Various sizes', 'fire_explosion, heal, hit_effect, holy, thunder, wind, tornado'],
+          ].map(([name, path, dims, desc]) => (
+            <div key={name} style={{ background: 'rgba(59,130,246,0.06)', borderRadius: 4, padding: 6, border: '1px solid rgba(59,130,246,0.1)' }}>
+              <div style={{ color: '#60a5fa', fontWeight: 600 }}>{name}</div>
+              <div style={{ color: '#9ca3af', fontFamily: 'monospace', fontSize: '0.48rem' }}>{path}</div>
+              <div style={{ color: '#6b7280', fontSize: '0.48rem' }}>{dims} — {desc}</div>
             </div>
           ))}
         </div>
