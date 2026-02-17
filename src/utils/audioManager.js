@@ -317,8 +317,24 @@ function startSceneMusic() {
   startFileMusic('scene', '/audio/elevate_your_mind.mp3');
 }
 
+const mapRotationTracks = [
+  '/audio/bgm_harukaze.ogg',
+  '/audio/bgm_tavern.ogg',
+  '/audio/bgm_camping.ogg',
+];
+let mapRotationIndex = 0;
+
 function startMapMusic() {
-  startFileMusic('map', '/audio/bgm_harukaze.ogg');
+  const src = mapRotationTracks[mapRotationIndex % mapRotationTracks.length];
+  mapRotationIndex++;
+  currentBgm = null;
+  startFileMusic('map', src);
+  if (sceneAudio) {
+    sceneAudio.loop = false;
+    sceneAudio.addEventListener('ended', () => {
+      if (currentBgm === 'map') startMapMusic();
+    }, { once: true });
+  }
 }
 
 function startCampMusic() {
