@@ -626,14 +626,16 @@ function FireballProjectile({ startX, startY, endX, endY, phase }) {
   const [frame, setFrame] = React.useState(0);
   const displaySize = 56;
   const riseY = startY - 14;
-  const [rotation, setRotation] = React.useState(0);
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
 
   React.useEffect(() => {
     let f = 0;
     const interval = setInterval(() => {
       f = (f + 1) % FIREBALL_FRAMES.length;
       setFrame(f);
-      setRotation(prev => prev + 45);
     }, 80);
     return () => clearInterval(interval);
   }, []);
@@ -660,13 +662,11 @@ function FireballProjectile({ startX, startY, endX, endY, phase }) {
         : phase === 'fly'
           ? 'left 0.5s ease-in, top 0.5s ease-in'
           : 'none',
-      transform: 'translate(-50%, -50%)',
+      transform: `translate(-50%, -50%) rotate(${phase === 'fly' ? travelAngle : 0}deg)`,
       zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
         width: displaySize, height: displaySize,
-        transform: `rotate(${rotation}deg)`,
-        transition: 'transform 0.08s linear',
       }}>
         <img
           src={FIREBALL_FRAMES[frame]}
@@ -847,7 +847,7 @@ function WaterArrowProjectile({ startX, startY, endX, endY, phase }) {
     }}>
       <div style={{
         width: displaySize, height: displaySize,
-        transform: `rotate(${angle + 180}deg)`,
+        transform: `rotate(${angle}deg)`,
       }}>
         <img
           src={WATER_ARROW_FRAMES[frame]}
@@ -927,6 +927,10 @@ function IceStormProjectile({ startX, startY, endX, endY, phase }) {
   const scaleX = displaySize / frameW;
   const riseY = startY - 14;
 
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+
   React.useEffect(() => {
     let f = 0;
     const interval = setInterval(() => {
@@ -954,7 +958,7 @@ function IceStormProjectile({ startX, startY, endX, endY, phase }) {
         : phase === 'fly'
           ? 'left 0.5s ease-in, top 0.5s ease-in'
           : 'none',
-      transform: 'translate(-50%, -50%)',
+      transform: `translate(-50%, -50%) rotate(${phase === 'fly' ? travelAngle : 0}deg)`,
       zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
     }}>
       <div style={{
