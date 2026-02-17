@@ -102,6 +102,41 @@ export async function initDatabase() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_chain VARCHAR(32);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_created_at TIMESTAMPTZ;
 
+      CREATE TABLE IF NOT EXISTS arena_teams (
+        team_id TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        owner_name TEXT NOT NULL DEFAULT 'Unknown Warlord',
+        status TEXT NOT NULL DEFAULT 'ranked',
+        heroes JSONB NOT NULL DEFAULT '[]',
+        hero_count INTEGER NOT NULL DEFAULT 0,
+        avg_level INTEGER NOT NULL DEFAULT 1,
+        share_token TEXT,
+        snapshot_hash TEXT,
+        wins INTEGER NOT NULL DEFAULT 0,
+        losses INTEGER NOT NULL DEFAULT 0,
+        total_battles INTEGER NOT NULL DEFAULT 0,
+        rewards JSONB NOT NULL DEFAULT '{"gold":0,"resources":0,"equipment":[]}',
+        demoted_at TIMESTAMPTZ,
+        demote_reason TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS arena_battles (
+        id SERIAL PRIMARY KEY,
+        battle_id TEXT NOT NULL,
+        team_id TEXT NOT NULL,
+        challenger_name TEXT NOT NULL DEFAULT 'Arena Challenger',
+        result TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_arena_teams_wins ON arena_teams(wins DESC);
+      CREATE INDEX IF NOT EXISTS idx_arena_teams_owner ON arena_teams(owner_id);
+      CREATE INDEX IF NOT EXISTS idx_arena_teams_status ON arena_teams(status);
+      CREATE INDEX IF NOT EXISTS idx_arena_battles_team ON arena_battles(team_id);
+      CREATE INDEX IF NOT EXISTS idx_arena_battles_created ON arena_battles(created_at DESC);
+
       CREATE INDEX IF NOT EXISTS idx_characters_account ON characters(account_id);
       CREATE INDEX IF NOT EXISTS idx_inventory_character ON inventory_items(character_id);
       CREATE INDEX IF NOT EXISTS idx_crafted_character ON crafted_items(character_id);

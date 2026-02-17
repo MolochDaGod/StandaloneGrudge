@@ -515,8 +515,6 @@ app.get('/api/external/callback', async (req, res) => {
   }
 });
 
-const arenaTeams = new Map();
-const arenaBattles = [];
 const challengeNonces = new Map();
 let arenaSeq = 0;
 
@@ -547,7 +545,33 @@ function computeSha256Hex(str) {
   return hashModule.digest('hex').slice(0, 16);
 }
 
-app.post('/api/arena/submit', (req, res) => {
+async function arenaQuery(text, params) {
+  const { query: dbQuery } = await import('./src/server/db.js');
+  return dbQuery(text, params);
+}
+
+function teamRowToObj(row) {
+  return {
+    teamId: row.team_id,
+    ownerId: row.owner_id,
+    ownerName: row.owner_name,
+    status: row.status,
+    heroes: row.heroes,
+    heroCount: row.hero_count,
+    avgLevel: row.avg_level,
+    shareToken: row.share_token,
+    snapshotHash: row.snapshot_hash,
+    wins: row.wins,
+    losses: row.losses,
+    totalBattles: row.total_battles,
+    rewards: row.rewards,
+    createdAt: new Date(row.created_at).getTime(),
+    demotedAt: row.demoted_at ? new Date(row.demoted_at).getTime() : null,
+    demoteReason: row.demote_reason,
+  };
+}
+
+app.post('/api/arena/submit', async (req, res) => {
   try {
     const { ownerId, ownerName, heroes, shareToken } = req.body;
     if (!ownerId || !heroes || !Array.isArray(heroes) || heroes.length === 0 || heroes.length > 3) {
@@ -560,48 +584,32 @@ app.post('/api/arena/submit', (req, res) => {
       }
     }
 
-    for (const [id, team] of arenaTeams) {
-      if (team.ownerId === ownerId && team.status === 'ranked') {
-        team.status = 'unranked';
-        team.demotedAt = Date.now();
-        team.demoteReason = 'replaced';
-      }
-    }
+    await arenaQuery(
+      `UPDATE arena_teams SET status = 'unranked', demoted_at = NOW(), demote_reason = 'replaced', updated_at = NOW() WHERE owner_id = $1 AND status = 'ranked'`,
+      [ownerId]
+    );
 
     const teamId = generateArenaUuid('TEAM');
     const snapshotJson = JSON.stringify(heroes);
     const snapshotHash = computeSha256Hex(snapshotJson);
+    const heroCount = heroes.length;
+    const avgLevel = Math.round(heroes.reduce((s, h) => s + (h.level || 1), 0) / heroCount);
 
-    const team = {
-      teamId,
-      ownerId,
-      ownerName: ownerName || 'Unknown Warlord',
-      status: 'ranked',
-      heroes,
-      heroCount: heroes.length,
-      shareToken: shareToken || null,
-      snapshotHash,
-      wins: 0,
-      losses: 0,
-      totalBattles: 0,
-      rewards: { gold: 0, resources: 0, equipment: [] },
-      createdAt: Date.now(),
-      demotedAt: null,
-      demoteReason: null,
-      avgLevel: Math.round(heroes.reduce((s, h) => s + (h.level || 1), 0) / heroes.length),
-    };
-
-    arenaTeams.set(teamId, team);
+    await arenaQuery(
+      `INSERT INTO arena_teams (team_id, owner_id, owner_name, status, heroes, hero_count, avg_level, share_token, snapshot_hash, wins, losses, total_battles, rewards)
+       VALUES ($1, $2, $3, 'ranked', $4, $5, $6, $7, $8, 0, 0, 0, '{"gold":0,"resources":0,"equipment":[]}')`,
+      [teamId, ownerId, ownerName || 'Unknown Warlord', JSON.stringify(heroes), heroCount, avgLevel, shareToken || null, snapshotHash]
+    );
 
     sendWebhookMessage({
       embeds: [{
         title: 'New Arena Challenger!',
-        description: `**${team.ownerName}** has entered the Ranked Arena!`,
+        description: `**${ownerName || 'Unknown Warlord'}** has entered the Ranked Arena!`,
         color: EMBED_COLORS.challenge,
         fields: [
-          { name: 'Team', value: team.heroes.map(h => `${h.name} (Lv.${h.level || 1} ${h.raceId} ${h.classId})`).join('\n'), inline: false },
-          { name: 'Avg Level', value: `${team.avgLevel}`, inline: true },
-          { name: 'Heroes', value: `${team.heroCount}`, inline: true },
+          { name: 'Team', value: heroes.map(h => `${h.name} (Lv.${h.level || 1} ${h.raceId} ${h.classId})`).join('\n'), inline: false },
+          { name: 'Avg Level', value: `${avgLevel}`, inline: true },
+          { name: 'Heroes', value: `${heroCount}`, inline: true },
         ],
         footer: { text: 'GRUDA PvP Arena | grudgewarlords.com/arena' },
         timestamp: new Date().toISOString(),
@@ -621,76 +629,93 @@ app.post('/api/arena/submit', (req, res) => {
   }
 });
 
-app.get('/api/arena/lobby', (req, res) => {
-  const { status, page, limit: lim } = req.query;
-  const pageNum = Math.max(0, parseInt(page) || 0);
-  const pageSize = Math.min(50, Math.max(1, parseInt(lim) || 20));
+app.get('/api/arena/lobby', async (req, res) => {
+  try {
+    const { status, page, limit: lim } = req.query;
+    const pageNum = Math.max(0, parseInt(page) || 0);
+    const pageSize = Math.min(50, Math.max(1, parseInt(lim) || 20));
+    const offset = pageNum * pageSize;
 
-  let teams = Array.from(arenaTeams.values());
+    let whereClause = '';
+    const params = [];
+    if (status === 'ranked' || status === 'unranked') {
+      whereClause = 'WHERE status = $1';
+      params.push(status);
+    }
 
-  if (status === 'ranked' || status === 'unranked') {
-    teams = teams.filter(t => t.status === status);
+    const countResult = await arenaQuery(`SELECT COUNT(*) as count FROM arena_teams ${whereClause}`, params);
+    const total = parseInt(countResult.rows[0].count);
+
+    const teamsResult = await arenaQuery(
+      `SELECT * FROM arena_teams ${whereClause}
+       ORDER BY CASE WHEN status = 'ranked' THEN 0 ELSE 1 END, wins DESC, losses ASC, created_at DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+
+    const safe = teamsResult.rows.map(row => {
+      const t = teamRowToObj(row);
+      return {
+        teamId: t.teamId,
+        ownerName: t.ownerName,
+        status: t.status,
+        heroCount: t.heroCount,
+        avgLevel: t.avgLevel,
+        wins: t.wins,
+        losses: t.losses,
+        totalBattles: t.totalBattles,
+        createdAt: t.createdAt,
+        heroSummary: (t.heroes || []).map(h => ({
+          name: h.name,
+          raceId: h.raceId,
+          classId: h.classId,
+          level: h.level || 1,
+        })),
+      };
+    });
+
+    res.json({ teams: safe, total, page: pageNum, pageSize, totalPages: Math.ceil(total / pageSize) });
+  } catch (err) {
+    console.error('Arena lobby error:', err);
+    res.status(500).json({ error: 'Failed to load lobby' });
   }
-
-  teams.sort((a, b) => {
-    if (a.status === 'ranked' && b.status !== 'ranked') return -1;
-    if (b.status === 'ranked' && a.status !== 'ranked') return 1;
-    return b.wins - a.wins || a.losses - b.losses || b.createdAt - a.createdAt;
-  });
-
-  const total = teams.length;
-  const paged = teams.slice(pageNum * pageSize, (pageNum + 1) * pageSize);
-
-  const safe = paged.map(t => ({
-    teamId: t.teamId,
-    ownerName: t.ownerName,
-    status: t.status,
-    heroCount: t.heroCount,
-    avgLevel: t.avgLevel,
-    wins: t.wins,
-    losses: t.losses,
-    totalBattles: t.totalBattles,
-    createdAt: t.createdAt,
-    heroSummary: t.heroes.map(h => ({
-      name: h.name,
-      raceId: h.raceId,
-      classId: h.classId,
-      level: h.level || 1,
-    })),
-  }));
-
-  res.json({ teams: safe, total, page: pageNum, pageSize, totalPages: Math.ceil(total / pageSize) });
 });
 
-app.get('/api/arena/team/:teamId', (req, res) => {
-  const team = arenaTeams.get(req.params.teamId);
-  if (!team) return res.status(404).json({ error: 'Team not found' });
+app.get('/api/arena/team/:teamId', async (req, res) => {
+  try {
+    const result = await arenaQuery('SELECT * FROM arena_teams WHERE team_id = $1', [req.params.teamId]);
+    if (!result.rows[0]) return res.status(404).json({ error: 'Team not found' });
+    const team = teamRowToObj(result.rows[0]);
 
-  const nonce = crypto.randomBytes(16).toString('hex');
-  challengeNonces.set(nonce, { teamId: team.teamId, createdAt: Date.now() });
-  if (challengeNonces.size > 1000) {
-    const cutoff = Date.now() - 30 * 60 * 1000;
-    for (const [k, v] of challengeNonces) { if (v.createdAt < cutoff) challengeNonces.delete(k); }
+    const nonce = crypto.randomBytes(16).toString('hex');
+    challengeNonces.set(nonce, { teamId: team.teamId, createdAt: Date.now() });
+    if (challengeNonces.size > 1000) {
+      const cutoff = Date.now() - 30 * 60 * 1000;
+      for (const [k, v] of challengeNonces) { if (v.createdAt < cutoff) challengeNonces.delete(k); }
+    }
+
+    res.json({
+      teamId: team.teamId,
+      ownerId: team.ownerId,
+      ownerName: team.ownerName,
+      status: team.status,
+      heroes: team.heroes,
+      snapshotHash: team.snapshotHash,
+      wins: team.wins,
+      losses: team.losses,
+      totalBattles: team.totalBattles,
+      rewards: team.rewards,
+      createdAt: team.createdAt,
+      avgLevel: team.avgLevel,
+      challengeNonce: nonce,
+    });
+  } catch (err) {
+    console.error('Arena team error:', err);
+    res.status(500).json({ error: 'Failed to load team' });
   }
-
-  res.json({
-    teamId: team.teamId,
-    ownerId: team.ownerId,
-    ownerName: team.ownerName,
-    status: team.status,
-    heroes: team.heroes,
-    snapshotHash: team.snapshotHash,
-    wins: team.wins,
-    losses: team.losses,
-    totalBattles: team.totalBattles,
-    rewards: team.rewards,
-    createdAt: team.createdAt,
-    avgLevel: team.avgLevel,
-    challengeNonce: nonce,
-  });
 });
 
-app.post('/api/arena/battle/result', (req, res) => {
+app.post('/api/arena/battle/result', async (req, res) => {
   try {
     const { teamId, challengerName, challengerHeroes, result, battleLog, challengeNonce } = req.body;
     if (!teamId || !result) return res.status(400).json({ error: 'teamId and result required' });
@@ -708,51 +733,78 @@ app.post('/api/arena/battle/result', (req, res) => {
     }
     challengeNonces.delete(challengeNonce);
 
-    const team = arenaTeams.get(teamId);
-    if (!team) return res.status(404).json({ error: 'Team not found' });
+    const { getClient } = await import('./src/server/db.js');
+    const client = await getClient();
+    let team, battleId, rewardData, newWins, newLosses, newStatus, demoted, demoteReason;
 
-    const battleId = generateArenaUuid('BTLE');
-    const battle = {
-      battleId,
-      teamId,
-      challengerName: challengerName || 'Arena Challenger',
-      result,
-      timestamp: Date.now(),
-    };
-    arenaBattles.push(battle);
-    if (arenaBattles.length > 500) arenaBattles.splice(0, arenaBattles.length - 500);
+    try {
+      await client.query('BEGIN');
 
-    team.totalBattles++;
+      const teamResult = await client.query('SELECT * FROM arena_teams WHERE team_id = $1 FOR UPDATE', [teamId]);
+      if (!teamResult.rows[0]) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Team not found' });
+      }
+      team = teamRowToObj(teamResult.rows[0]);
 
-    let rewardData = null;
+      battleId = generateArenaUuid('BTLE');
 
-    if (result === 'team_won') {
-      team.wins++;
-      if (team.status === 'ranked') {
-        const goldReward = 50 + team.avgLevel * 10 + team.wins * 5;
-        const resourceReward = 10 + team.avgLevel * 2;
-        team.rewards.gold += goldReward;
-        team.rewards.resources += resourceReward;
+      await client.query(
+        `INSERT INTO arena_battles (battle_id, team_id, challenger_name, result) VALUES ($1, $2, $3, $4)`,
+        [battleId, teamId, challengerName || 'Arena Challenger', result]
+      );
 
-        if (team.wins % 5 === 0) {
-          const eqTier = Math.min(8, Math.max(1, Math.ceil(team.avgLevel / 3)));
-          const equipReward = { type: 'equipment', tier: eqTier, wonAt: Date.now() };
-          team.rewards.equipment.push(equipReward);
-          rewardData = { gold: goldReward, resources: resourceReward, equipment: equipReward };
-        } else {
-          rewardData = { gold: goldReward, resources: resourceReward };
+      rewardData = null;
+      newWins = team.wins;
+      newLosses = team.losses;
+      newStatus = team.status;
+      let newRewards = { ...team.rewards };
+      demoteReason = team.demoteReason;
+
+      if (result === 'team_won') {
+        newWins++;
+        if (team.status === 'ranked') {
+          const goldReward = 50 + team.avgLevel * 10 + newWins * 5;
+          const resourceReward = 10 + team.avgLevel * 2;
+          newRewards.gold = (newRewards.gold || 0) + goldReward;
+          newRewards.resources = (newRewards.resources || 0) + resourceReward;
+
+          if (newWins % 5 === 0) {
+            const eqTier = Math.min(8, Math.max(1, Math.ceil(team.avgLevel / 3)));
+            const equipReward = { type: 'equipment', tier: eqTier, wonAt: Date.now() };
+            if (!Array.isArray(newRewards.equipment)) newRewards.equipment = [];
+            newRewards.equipment.push(equipReward);
+            rewardData = { gold: goldReward, resources: resourceReward, equipment: equipReward };
+          } else {
+            rewardData = { gold: goldReward, resources: resourceReward };
+          }
+        }
+      } else if (result === 'team_lost') {
+        newLosses++;
+        if (team.status === 'ranked' && newLosses >= 3) {
+          newStatus = 'unranked';
+          demoteReason = 'losses';
         }
       }
-    } else if (result === 'team_lost') {
-      team.losses++;
-      if (team.status === 'ranked' && team.losses >= 3) {
-        team.status = 'unranked';
-        team.demotedAt = Date.now();
-        team.demoteReason = 'losses';
-      }
-    }
 
-    const demoted = team.status === 'unranked' && team.demoteReason === 'losses' && team.losses === 3;
+      demoted = newStatus === 'unranked' && demoteReason === 'losses' && newLosses === 3;
+
+      await client.query(
+        `UPDATE arena_teams SET wins = $1, losses = $2, total_battles = total_battles + 1, status = $3,
+         rewards = $4, demoted_at = $5, demote_reason = $6, updated_at = NOW()
+         WHERE team_id = $7`,
+        [newWins, newLosses, newStatus, JSON.stringify(newRewards),
+         demoted ? new Date() : team.demotedAt ? new Date(team.demotedAt) : null,
+         demoteReason, teamId]
+      );
+
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
 
     if (demoted) {
       sendWebhookMessage({
@@ -761,14 +813,14 @@ app.post('/api/arena/battle/result', (req, res) => {
           description: `**${team.ownerName}**'s team has been relegated to Unranked after 3 defeats!`,
           color: EMBED_COLORS.event,
           fields: [
-            { name: 'Record', value: `${team.wins}W / ${team.losses}L`, inline: true },
-            { name: 'Defeated By', value: battle.challengerName, inline: true },
+            { name: 'Record', value: `${newWins}W / ${newLosses}L`, inline: true },
+            { name: 'Defeated By', value: challengerName || 'Arena Challenger', inline: true },
           ],
           footer: { text: 'GRUDA PvP Arena' },
           timestamp: new Date().toISOString(),
         }],
       }).catch(err => console.error('Relegation webhook error:', err.message));
-    } else if (team.wins > 0 && team.wins % 5 === 0 && result === 'team_won') {
+    } else if (newWins > 0 && newWins % 5 === 0 && result === 'team_won') {
       const rankTiers = [
         { name: 'Bronze', minWins: 0 },
         { name: 'Silver', minWins: 5 },
@@ -778,17 +830,17 @@ app.post('/api/arena/battle/result', (req, res) => {
         { name: 'Legend', minWins: 100 },
       ];
       let rank = rankTiers[0];
-      for (const t of rankTiers) { if (team.wins >= t.minWins) rank = t; }
+      for (const t of rankTiers) { if (newWins >= t.minWins) rank = t; }
 
       sendWebhookMessage({
         embeds: [{
           title: `${rank.name === 'Legend' ? '🏆' : '⚔️'} Win Streak! ${rank.name} Rank`,
-          description: `**${team.ownerName}**'s team reached **${team.wins} wins** in the Arena! Rank: **${rank.name}**`,
+          description: `**${team.ownerName}**'s team reached **${newWins} wins** in the Arena! Rank: **${rank.name}**`,
           color: EMBED_COLORS.milestone,
           fields: [
-            { name: 'Record', value: `${team.wins}W / ${team.losses}L`, inline: true },
+            { name: 'Record', value: `${newWins}W / ${newLosses}L`, inline: true },
             { name: 'Rank', value: `${rank.name}`, inline: true },
-            { name: 'Status', value: team.status, inline: true },
+            { name: 'Status', value: newStatus, inline: true },
           ],
           footer: { text: 'GRUDA PvP Arena | grudgewarlords.com/arena' },
           timestamp: new Date().toISOString(),
@@ -799,9 +851,9 @@ app.post('/api/arena/battle/result', (req, res) => {
     res.json({
       success: true,
       battleId,
-      teamStatus: team.status,
-      wins: team.wins,
-      losses: team.losses,
+      teamStatus: newStatus,
+      wins: newWins,
+      losses: newLosses,
       demoted,
       rewards: rewardData,
     });
@@ -811,62 +863,90 @@ app.post('/api/arena/battle/result', (req, res) => {
   }
 });
 
-app.get('/api/arena/rewards/:teamId', (req, res) => {
-  const team = arenaTeams.get(req.params.teamId);
-  if (!team) return res.status(404).json({ error: 'Team not found' });
-  res.json({
-    teamId: team.teamId,
-    ownerName: team.ownerName,
-    status: team.status,
-    wins: team.wins,
-    losses: team.losses,
-    rewards: team.rewards,
-  });
+app.get('/api/arena/rewards/:teamId', async (req, res) => {
+  try {
+    const result = await arenaQuery('SELECT * FROM arena_teams WHERE team_id = $1', [req.params.teamId]);
+    if (!result.rows[0]) return res.status(404).json({ error: 'Team not found' });
+    const team = teamRowToObj(result.rows[0]);
+    res.json({
+      teamId: team.teamId,
+      ownerName: team.ownerName,
+      status: team.status,
+      wins: team.wins,
+      losses: team.losses,
+      rewards: team.rewards,
+    });
+  } catch (err) {
+    console.error('Arena rewards error:', err);
+    res.status(500).json({ error: 'Failed to load rewards' });
+  }
 });
 
-app.get('/api/arena/stats', (req, res) => {
-  const all = Array.from(arenaTeams.values());
-  res.json({
-    totalTeams: all.length,
-    rankedTeams: all.filter(t => t.status === 'ranked').length,
-    unrankedTeams: all.filter(t => t.status === 'unranked').length,
-    totalBattles: arenaBattles.length,
-    recentBattles: arenaBattles.slice(-10).reverse(),
-  });
+app.get('/api/arena/stats', async (req, res) => {
+  try {
+    const teamStats = await arenaQuery(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status = 'ranked') as ranked, COUNT(*) FILTER (WHERE status = 'unranked') as unranked FROM arena_teams`);
+    const battleCount = await arenaQuery('SELECT COUNT(*) as total FROM arena_battles');
+    const recentBattles = await arenaQuery('SELECT battle_id, team_id, challenger_name, result, created_at FROM arena_battles ORDER BY created_at DESC LIMIT 10');
+
+    const row = teamStats.rows[0];
+    res.json({
+      totalTeams: parseInt(row.total),
+      rankedTeams: parseInt(row.ranked),
+      unrankedTeams: parseInt(row.unranked),
+      totalBattles: parseInt(battleCount.rows[0].total),
+      recentBattles: recentBattles.rows.map(b => ({
+        battleId: b.battle_id,
+        teamId: b.team_id,
+        challengerName: b.challenger_name,
+        result: b.result,
+        timestamp: new Date(b.created_at).getTime(),
+      })),
+    });
+  } catch (err) {
+    console.error('Arena stats error:', err);
+    res.json({ totalTeams: 0, rankedTeams: 0, unrankedTeams: 0, totalBattles: 0, recentBattles: [] });
+  }
 });
 
-app.get('/api/arena/leaderboard', (req, res) => {
-  const { limit: lim } = req.query;
-  const pageSize = Math.min(100, Math.max(1, parseInt(lim) || 20));
+app.get('/api/arena/leaderboard', async (req, res) => {
+  try {
+    const { limit: lim } = req.query;
+    const pageSize = Math.min(100, Math.max(1, parseInt(lim) || 20));
 
-  const all = Array.from(arenaTeams.values());
-  const ranked = all
-    .filter(t => t.totalBattles > 0)
-    .map(t => ({
-      teamId: t.teamId,
-      ownerName: t.ownerName,
-      status: t.status,
-      wins: t.wins,
-      losses: t.losses,
-      totalBattles: t.totalBattles,
-      avgLevel: t.avgLevel,
-      heroCount: t.heroCount,
-      heroes: t.heroes.map(h => ({ name: h.name, raceId: h.raceId, classId: h.classId, level: h.level || 1 })),
-      winRate: t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0,
-      createdAt: t.createdAt,
-    }))
-    .sort((a, b) => b.wins - a.wins || a.losses - b.losses || b.winRate - a.winRate);
+    const result = await arenaQuery(
+      `SELECT * FROM arena_teams WHERE total_battles > 0 ORDER BY wins DESC, losses ASC, created_at ASC LIMIT $1`,
+      [pageSize]
+    );
 
-  const leaderboard = ranked.slice(0, pageSize).map((t, i) => ({
-    ...t,
-    rank: i + 1,
-  }));
+    const leaderboard = result.rows.map((row, i) => {
+      const t = teamRowToObj(row);
+      return {
+        rank: i + 1,
+        teamId: t.teamId,
+        ownerName: t.ownerName,
+        status: t.status,
+        wins: t.wins,
+        losses: t.losses,
+        totalBattles: t.totalBattles,
+        avgLevel: t.avgLevel,
+        heroCount: t.heroCount,
+        heroes: (t.heroes || []).map(h => ({ name: h.name, raceId: h.raceId, classId: h.classId, level: h.level || 1 })),
+        winRate: t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0,
+        createdAt: t.createdAt,
+      };
+    });
 
-  res.json({
-    leaderboard,
-    totalEntries: ranked.length,
-    updatedAt: Date.now(),
-  });
+    const totalResult = await arenaQuery('SELECT COUNT(*) as count FROM arena_teams WHERE total_battles > 0');
+
+    res.json({
+      leaderboard,
+      totalEntries: parseInt(totalResult.rows[0].count),
+      updatedAt: Date.now(),
+    });
+  } catch (err) {
+    console.error('Arena leaderboard error:', err);
+    res.json({ leaderboard: [], totalEntries: 0, updatedAt: Date.now() });
+  }
 });
 
 app.post('/api/auth/verify', (req, res) => {
@@ -953,16 +1033,17 @@ app.get('/api/public/profile', requireSession, async (req, res) => {
 
 app.get('/api/public/leaderboard', async (req, res) => {
   try {
-    const entries = [];
-    for (const [, team] of arenaTeams) {
-      entries.push({
-        ownerName: team.ownerName, rank: team.rank || 0,
-        wins: team.wins || 0, losses: team.losses || 0,
-        heroCount: team.heroes?.length || 0,
-      });
-    }
-    entries.sort((a, b) => b.rank - a.rank);
-    res.json({ leaderboard: entries.slice(0, 50) });
+    const result = await arenaQuery(
+      `SELECT owner_name, wins, losses, hero_count FROM arena_teams WHERE total_battles > 0 ORDER BY wins DESC LIMIT 50`
+    );
+    const entries = result.rows.map((row, i) => ({
+      ownerName: row.owner_name,
+      rank: i + 1,
+      wins: row.wins || 0,
+      losses: row.losses || 0,
+      heroCount: row.hero_count || 0,
+    }));
+    res.json({ leaderboard: entries });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -973,11 +1054,13 @@ app.get('/api/public/stats', async (req, res) => {
     const { query: dbQuery } = await import('./src/server/db.js');
     const accountCount = await dbQuery('SELECT COUNT(*) as count FROM accounts');
     const charCount = await dbQuery('SELECT COUNT(*) as count FROM characters');
+    const arenaTeamCount = await dbQuery('SELECT COUNT(*) as count FROM arena_teams');
+    const arenaBattleCount = await dbQuery('SELECT COUNT(*) as count FROM arena_battles');
     res.json({
       totalPlayers: parseInt(accountCount.rows[0]?.count || 0),
       totalHeroes: parseInt(charCount.rows[0]?.count || 0),
-      arenaTeams: arenaTeams.size,
-      arenaBattles: arenaBattles.length,
+      arenaTeams: parseInt(arenaTeamCount.rows[0]?.count || 0),
+      arenaBattles: parseInt(arenaBattleCount.rows[0]?.count || 0),
       serverTime: Date.now(),
     });
   } catch (err) {
@@ -1142,7 +1225,7 @@ app.use((err, req, res, next) => {
 (async () => {
   const connected = await testConnection();
   if (connected) await initDatabase();
-  await startBot(arenaTeams, arenaBattles);
+  await startBot();
 })();
 
 const server = app.listen(PORT, '0.0.0.0', () => {
