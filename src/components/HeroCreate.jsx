@@ -342,7 +342,7 @@ export default function HeroCreate() {
                     {id === 'worge' ? (
                       <WorgeMorphPreview raceId={selectedRace} namedHeroId={(() => { const nh = Object.values(namedHeroes).find(n => n.race === selectedRace && n.class === 'worge' && n.unlocked); return nh?.id || null; })()} scale={0.8} speed={150} />
                     ) : (
-                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8 * getRaceHeightScale(selectedRace)} speed={150} containerless={false} />
+                      <SpriteAnimation spriteData={getPlayerSprite(id, selectedRace)} animation="idle" scale={0.8} speed={150} containerless={false} />
                     )}
                   </div>
                   <div>

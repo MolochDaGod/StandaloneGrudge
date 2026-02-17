@@ -56,6 +56,46 @@ function getScreenFromPath(pathname) {
   return null;
 }
 
+function guardScreen(targetScreen, state) {
+  const hasCharacter = state.playerName && state.playerClass && state.playerRace;
+  const hasHeroes = state.heroRoster && state.heroRoster.length > 0;
+  const hasBattle = state.battleUnits && state.battleUnits.length > 0;
+  const hasLocation = !!state.currentLocationId;
+
+  switch (targetScreen) {
+    case 'title':
+    case 'lobby':
+    case 'create':
+      return targetScreen;
+
+    case 'intro':
+      return targetScreen;
+
+    case 'world':
+    case 'account':
+    case 'training':
+    case 'heroCreate':
+    case 'character':
+    case 'skills':
+      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
+      return targetScreen;
+
+    case 'location':
+    case 'scene':
+      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
+      if (!hasLocation) return 'world';
+      return targetScreen;
+
+    case 'battle':
+      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
+      if (!hasBattle) return 'world';
+      return targetScreen;
+
+    default:
+      return 'title';
+  }
+}
+
 function GameApp() {
   const screen = useGameStore(s => s.screen);
   const setScreen = useGameStore(s => s.setScreen);

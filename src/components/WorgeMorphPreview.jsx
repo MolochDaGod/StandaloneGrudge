@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite, getWorgTransformSprite, getRaceHeightScale } from '../data/spriteMap';
 
-export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, speed = 150 }) {
+export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, speed = 150, applyRaceHeight = false }) {
   const [transformed, setTransformed] = useState(false);
 
   const normalSprite = getPlayerSprite('worge', raceId, namedHeroId);
@@ -18,14 +18,14 @@ export default function WorgeMorphPreview({ raceId, namedHeroId, scale = 3, spee
   const sprite = transformed ? formSprite : normalSprite;
   const label = transformed ? 'Beast Form' : 'Normal';
   const color = transformed ? '#d97706' : '#22c55e';
-  const heightScale = getRaceHeightScale(raceId, transformed);
+  const finalScale = applyRaceHeight ? scale * getRaceHeightScale(raceId, transformed) : scale;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <SpriteAnimation
         spriteData={sprite}
         animation="idle"
-        scale={scale * heightScale}
+        scale={finalScale}
         speed={speed}
       />
       <div style={{
