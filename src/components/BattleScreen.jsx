@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS, getRaceHeightScale } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
@@ -1207,7 +1207,9 @@ function getUnitEffectSize(unit) {
   const base = 200;
   const bossScale = (unit.team === 'enemy' && unit.isBoss) ? (unit.bossScale || 1.6) : 1;
   const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
-  const unitWidth = base * bossScale * comboScale;
+  const isBearForm = unit.classId === 'worge' && unit.bearForm;
+  const raceScale = unit.raceId ? getRaceHeightScale(unit.raceId, isBearForm) : 1;
+  const unitWidth = base * bossScale * comboScale * raceScale;
   return Math.round(unitWidth * 0.85);
 }
 
@@ -1491,7 +1493,9 @@ function BattleScreenInner() {
     const isBossUnit = unit.team === 'enemy' && unit.isBoss;
     const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
     const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
-    const scale = bossScaleVal * comboScale;
+    const isBearForm = unit.classId === 'worge' && unit.bearForm;
+    const raceScale = unit.raceId ? getRaceHeightScale(unit.raceId, isBearForm) : 1;
+    const scale = bossScaleVal * comboScale * raceScale;
     const offset = 18 * scale;
     return unit.position.y - Math.min(offset, 35);
   }, []);
@@ -2640,9 +2644,11 @@ function BattleScreenInner() {
           const isBossUnit = unit.team === 'enemy' && unit.isBoss;
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+          const isBearForm = unit.classId === 'worge' && unit.bearForm;
+          const raceScale = unit.raceId ? getRaceHeightScale(unit.raceId, isBearForm) : 1;
           const adminScale = spriteData?.scale || 1;
           const comboOffset = { x: 0, y: 0 };
-          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * raceScale * bossScaleVal * comboScale * adminScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const hitW = Math.round(spriteSize * 0.5);

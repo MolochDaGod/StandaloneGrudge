@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets, getRaceHeightScale } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import {
@@ -961,11 +961,13 @@ function HeroSlideshow() {
   const spriteFrameH = spriteData?.frameHeight || 100;
   const baseFrameSize = spriteFrameH;
   const battleComboScale = BATTLE_SCALE_OVERRIDES[comboKey] || 1;
+  const raceScale = getRaceHeightScale(combo.raceId, false);
   const adminScale = spriteData?.scale || 1;
-  const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale * adminScale;
+  const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale * raceScale * adminScale;
   const spriteScale = scaleOverride ? battleScale * scaleOverride : battleScale;
   const transformFrameH = worgeTransformData?.frameHeight || 100;
-  const transformScaleBase = (spriteFrameH * spriteScale) / transformFrameH;
+  const bearRaceScale = getRaceHeightScale(combo.raceId, true);
+  const transformScaleBase = (battleTargetSize / transformFrameH) * bearRaceScale;
   const transformScale = transformScaleBase * (worgeTransformData?.transformScaleMult || 1);
 
   const intervalRefs = useRef([]);

@@ -3,7 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { InlineIcon } from '../data/uiSprites.jsx';
 import { TIERS, EQUIPMENT_SLOTS, getEquipmentStatBonuses, canClassEquip } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, getRaceHeightScale } from '../data/spriteMap';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
@@ -371,7 +371,7 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 overflow: 'hidden',
               }}>
-                <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85} speed={200} containerless={false} />
+                <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85 * getRaceHeightScale(hero.raceId)} speed={200} containerless={false} />
               </div>
               <div style={{
                 position: 'absolute', bottom: 2, right: 2, zIndex: 2,

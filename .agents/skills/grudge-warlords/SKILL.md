@@ -218,6 +218,15 @@ Each sprite should include these animation keys:
 | onAnimationEnd | function | null | Callback when non-looping animation finishes |
 | equipmentOverlays | array | null | Equipment tint overlays by slot/tier |
 
+### Race Height Scaling System
+Centralized lore-accurate height system in `spriteMap.js`:
+- `RACE_HEIGHT_FT`: dwarf=5, human/undead=6, elf/orc=6.33, barbarian/worge(bear)=7
+- `getRaceHeightScale(raceId, isBearForm)`: returns proportional scale vs 6ft human baseline
+- Human baseline = 200px display height; dwarf=167px, elf/orc=211px, barbarian=233px
+- Applied multiplicatively: `baseScale * getRaceHeightScale(raceId)` in all UI contexts
+- Bear form worges always render at 7ft (233px) regardless of base race
+- Boss scale, admin scale, and frame normalization stack independently
+
 ### Rendering Pipeline
 1. **Scale calculation:** `displayScale = targetHeight / frameHeight` (target = 200px)
 2. **Display size:** `displayWidth = frameWidth * displayScale`, `displayHeight = targetHeight`
