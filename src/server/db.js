@@ -102,6 +102,27 @@ export async function initDatabase() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_chain VARCHAR(32);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_created_at TIMESTAMPTZ;
 
+      CREATE TABLE IF NOT EXISTS discord_sessions (
+        token VARCHAR(128) PRIMARY KEY,
+        discord_id VARCHAR(64) NOT NULL,
+        username VARCHAR(128) NOT NULL,
+        is_extension BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days'
+      );
+      CREATE INDEX IF NOT EXISTS idx_discord_sessions_discord ON discord_sessions(discord_id);
+      CREATE INDEX IF NOT EXISTS idx_discord_sessions_expires ON discord_sessions(expires_at);
+
+      CREATE TABLE IF NOT EXISTS game_saves (
+        id SERIAL PRIMARY KEY,
+        discord_id VARCHAR(64) NOT NULL UNIQUE,
+        save_data JSONB NOT NULL,
+        version INTEGER DEFAULT 1,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_game_saves_discord ON game_saves(discord_id);
+
       CREATE TABLE IF NOT EXISTS arena_teams (
         team_id TEXT PRIMARY KEY,
         owner_id TEXT NOT NULL,

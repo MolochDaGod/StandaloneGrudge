@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import useGameStore from '../stores/gameStore';
 
 export default function DiscordAuth() {
   const [status, setStatus] = useState('loading');
@@ -41,6 +42,7 @@ export default function DiscordAuth() {
         setGuildJoined(data.guildJoined || false);
         if (data.sessionToken) {
           localStorage.setItem('grudge_session_token', data.sessionToken);
+          useGameStore.getState().loadFromServer().catch(() => {});
         }
         localStorage.setItem('discordUser', JSON.stringify(data.user));
         setStatus('success');

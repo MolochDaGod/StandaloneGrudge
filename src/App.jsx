@@ -113,14 +113,34 @@ function GameApp() {
 
   useEffect(() => {
     const path = window.location.pathname;
-    const initialScreen = getScreenFromPath(path);
-    if (initialScreen && initialScreen !== screen) {
-      skipPushRef.current = true;
-      setScreen(initialScreen);
-    } else if (!initialScreen && path !== '/' && !SLUG_TO_SCREEN[path]) {
-      window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
+    const urlScreen = SLUG_TO_SCREEN[path];
+    const state = useGameStore.getState();
+
+    if (urlScreen) {
+      const guarded = guardScreen(urlScreen, state);
+      if (guarded !== screen) {
+        skipPushRef.current = true;
+        setScreen(guarded);
+      }
+    } else if (path !== '/' && !SLUG_TO_SCREEN[path]) {
+      const guarded = guardScreen(screen, state);
+      if (guarded !== screen) {
+        skipPushRef.current = true;
+        setScreen(guarded);
+      } else {
+        window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
+      }
     }
   }, []);
+
+  useEffect(() => {
+    const state = useGameStore.getState();
+    const guarded = guardScreen(screen, state);
+    if (guarded !== screen) {
+      skipPushRef.current = true;
+      setScreen(guarded);
+    }
+  }, [screen]);
 
   const SCREEN_TITLES = {
     title: 'Grudge Warlords',
@@ -153,9 +173,11 @@ function GameApp() {
 
   useEffect(() => {
     const onPopState = (e) => {
-      const targetScreen = e.state?.screen || getScreenFromPath(window.location.pathname) || 'title';
+      const raw = e.state?.screen || SLUG_TO_SCREEN[window.location.pathname] || 'title';
+      const state = useGameStore.getState();
+      const guarded = guardScreen(raw, state);
       skipPushRef.current = true;
-      setScreen(targetScreen);
+      setScreen(guarded);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -227,6 +249,33 @@ function GameApp() {
     };
     window.addEventListener('game-screen-shake', handleShake);
     return () => window.removeEventListener('game-screen-shake', handleShake);
+  }, []);
+
+  const saveTimerRef = useRef(null);
+  const debouncedSave = () => {
+    if (!localStorage.getItem('grudge_session_token')) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      useGameStore.getState().saveToServer().catch(() => {});
+    }, 3000);
+  };
+
+  useEffect(() => {
+    const SAVE_SCREENS = ['lobby', 'world', 'character', 'training', 'location'];
+    if (SAVE_SCREENS.includes(screen)) debouncedSave();
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [screen]);
+
+  const prevSaveKeyRef = useRef('');
+  useEffect(() => {
+    const unsub = useGameStore.subscribe((state) => {
+      const key = `${state.gold}_${state.level}_${state.victories}_${state.heroRoster?.length || 0}`;
+      if (key !== prevSaveKeyRef.current && prevSaveKeyRef.current !== '') {
+        debouncedSave();
+      }
+      prevSaveKeyRef.current = key;
+    });
+    return unsub;
   }, []);
 
   if (!ready) {
