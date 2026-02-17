@@ -1281,19 +1281,27 @@ if (isProd) {
     app.get(`/${page}`, (req, res) => {
       const filePath = path.join(__dirname_server, 'dist', `${page}.html`);
       res.sendFile(filePath, err => {
-        if (err) res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
+        if (err && !res.headersSent) {
+          res.sendFile(path.join(__dirname_server, 'dist', 'index.html'), err2 => {
+            if (err2 && !res.headersSent) res.status(500).send('Server error');
+          });
+        }
       });
     });
   });
 
   app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
+    res.sendFile(path.join(__dirname_server, 'dist', 'index.html'), err => {
+      if (err && !res.headersSent) res.status(500).send('Server error');
+    });
   });
 }
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 (async () => {
