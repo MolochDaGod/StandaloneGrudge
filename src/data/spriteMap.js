@@ -137,6 +137,19 @@ export const spriteSheets = {
     hurt: { src: '/sprites/viking/hurt.png', frames: 1 },
     death: { src: '/sprites/viking/death.png', frames: 3 },
   },
+  'bandit-necro': {
+    folder: 'bandit-necro',
+    frameWidth: 32,
+    frameHeight: 32,
+    facesLeft: false,
+    idle: { src: '/sprites/bandit-necro/idle.png', frames: 8 },
+    walk: { src: '/sprites/bandit-necro/walk.png', frames: 8 },
+    run: { src: '/sprites/bandit-necro/walk.png', frames: 8 },
+    attack1: { src: '/sprites/bandit-necro/attack1.png', frames: 8 },
+    attack2: { src: '/sprites/bandit-necro/attack2.png', frames: 8 },
+    hurt: { src: '/sprites/bandit-necro/hurt.png', frames: 4 },
+    death: { src: '/sprites/bandit-necro/death.png', frames: 8 },
+  },
   'dwarf-worge': {
     folder: 'dwarf-worge',
     frameWidth: 100,
@@ -1009,7 +1022,7 @@ export const raceClassSpriteMap = {
   dwarf: {
     warrior: spriteSheets['crystal-mauler'],
     mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' },
-    worge: spriteSheets['dwarf-worge'],
+    worge: spriteSheets['bandit-necro'],
     ranger: spriteSheets['dwarf-ranger'],
   },
 };
@@ -1020,7 +1033,7 @@ export const raceClassDefaultSpriteKeys = {
   elf: { warrior: 'hero-knight', mage: 'evil-wizard-3', worge: 'priest', ranger: 'elf-ranger' },
   undead: { warrior: 'shadow-warrior', mage: 'necromancer', worge: 'skeleton', ranger: 'undead-ranger' },
   barbarian: { warrior: 'barbarian-warrior', mage: 'barbarian-mage', worge: 'soldier', ranger: 'martial-hero' },
-  dwarf: { warrior: 'crystal-mauler', mage: 'fire-wizard', worge: 'dwarf-worge', ranger: 'dwarf-ranger' },
+  dwarf: { warrior: 'crystal-mauler', mage: 'fire-wizard', worge: 'bandit-necro', ranger: 'dwarf-ranger' },
 };
 
 export const raceClassDefaultProps = {
@@ -1060,7 +1073,7 @@ export const worgTransformSprite = {
   elf: { ...spriteSheets.werebear, transformScaleMult: 1.1 },
   undead: { ...spriteSheets.werewolf, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)', transformScaleMult: 1.0 },
   barbarian: { ...spriteSheets.werebear, transformScaleMult: 1.1 },
-  dwarf: { ...spriteSheets.werebear, transformScaleMult: 1.15 },
+  dwarf: { ...spriteSheets['dwarf-worge'], transformScaleMult: 1.0 },
 };
 
 export const worgBearTransformSprite = {
