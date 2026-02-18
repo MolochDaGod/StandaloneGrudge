@@ -26,6 +26,7 @@ import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
 import GameContextMenuRenderer from './components/GameContextMenu';
 import { HERO_CREATE_MODAL } from './constants/layers';
+import GameContainer from './components/GameContainer';
 
 const SCREEN_SLUGS = {
   title: '/',
@@ -290,7 +291,11 @@ export default function App() {
   }
   if (path === '/discordauth') return <DiscordAuth />;
 
-  return <GameApp />;
+  return (
+    <GameContainer>
+      <GameApp />
+    </GameContainer>
+  );
 }
 
 export { SCREEN_SLUGS };

@@ -94,7 +94,18 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 - **CDNFonts CDN** — LifeCraft font
 - **Web Audio API** — Sound effects and music
 
+## Viewport & Container System
+- **Reference Resolution:** 1280×720 (16:9) defined in `src/utils/viewport.js`
+- **GameContainer:** `src/components/GameContainer.jsx` wraps the game, injects CSS variables via ResizeObserver
+- **CSS Variables (auto-updated):** `--game-scale`, `--game-w`, `--game-h`, `--ui-scale`, `--font-scale`, `--container-w`, `--container-h`
+- **Context Hook:** `useGameViewport()` returns `{ width, height, scale, ready }` for any component
+- **Helper Functions:** `refToPercent()`, `percentToRef()`, `refToPx()`, `scaledSize()`, `clampGameDimensions()`
+- **CSS Classes:** `.game-screen` (absolute fill), `.game-layer` (absolute fill, no pointer events), `.game-panel` (absolute positioned, interactive)
+- **Container Queries:** `.game-viewport` has `container-type: size` for future `@container` usage
+- `uiLayoutConfig.js` now imports REF_W/REF_H from viewport.js (single source of truth)
+
 ## Recent Changes (February 2026)
+- Added viewport/container management system (GameContainer, viewport.js, CSS variables)
 - Fixed admin dashboard to use correct Grudge attribute system (STR/VIT/END/DEX/AGI/INT/WIS/TAC) instead of placeholder stats
 - Added per-card animation selection to admin Characters tab (ComboCard component)
 - Removed duplicate CLASS_TIERS from attributes.js (now imports from classes.js)

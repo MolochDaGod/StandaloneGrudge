@@ -1,8 +1,10 @@
+import { REF_W, REF_H } from './viewport';
+
 const STORAGE_KEY = 'grudge_ui_layouts';
 const ICON_STORAGE_KEY = 'grudge_icon_placements';
 
-const CANVAS_W = 1280;
-const CANVAS_H = 720;
+const CANVAS_W = REF_W;
+const CANVAS_H = REF_H;
 
 export const ICON_GROUPS = {
   hotbarIcons: {
