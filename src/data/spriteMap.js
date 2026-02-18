@@ -1267,7 +1267,7 @@ export const steampunkMechSprite = {
   frameWidth: 72,
   frameHeight: 72,
   facesLeft: false,
-  scale: 2.0,
+  scale: 1.0,
   idle: { src: '/sprites/steampunk-mech/idle.png', frames: 4 },
   walk: { src: '/sprites/steampunk-mech/walk.png', frames: 6 },
   run: { src: '/sprites/steampunk-mech/walk.png', frames: 6 },
