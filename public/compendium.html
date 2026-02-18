@@ -177,12 +177,13 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 <body>
 
 <nav class="site-nav">
-  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <a href="https://grudgeplatform.com"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
   <div class="site-nav-links">
-    <a href="/compendium.html" class="site-nav-link active">Compendium</a>
-    <a href="/hero-codex.html" class="site-nav-link">Hero Codex</a>
-    <a href="/arena.html" class="site-nav-link">Arena</a>
-    <a href="/" class="site-nav-link">Play Game</a>
+    <a href="https://grudgeplatform.com/compendium" class="site-nav-link active">Compendium</a>
+    <a href="https://grudgeplatform.com/hero-codex" class="site-nav-link">Hero Codex</a>
+    <a href="https://grudgeplatform.com/arena" class="site-nav-link">Arena</a>
+    <a href="https://grudge-rpg.replit.app" class="site-nav-link">Play Game</a>
+    <a href="https://discord.gg/KmAC5aXs84" class="site-nav-link" target="_blank" rel="noopener">Discord</a>
   </div>
 </nav>
 
@@ -540,10 +541,11 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 <footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
   <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
   <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
-    <a href="/compendium.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
-    <a href="/hero-codex.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
-    <a href="/arena.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
-    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+    <a href="https://grudgeplatform.com/compendium" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="https://grudgeplatform.com/hero-codex" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="https://grudgeplatform.com/arena" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="https://grudge-rpg.replit.app" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+    <a href="https://discord.gg/KmAC5aXs84" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;" target="_blank" rel="noopener">Discord</a>
   </div>
   &copy; 2026 Grudge Warlords. All rights reserved.
 </footer>
@@ -858,9 +860,18 @@ const STAT_CAPS = {
 // ═══════════ RENDER FUNCTIONS ═══════════
 
 function renderRaces() {
+  const raceImages = {
+    'Human': '/backgrounds/verdant_plains.png',
+    'Orc': '/backgrounds/blood_canyon.png',
+    'Elf': '/backgrounds/mystic_grove.png',
+    'Undead': '/backgrounds/cursed_ruins.png',
+    'Barbarian': '/backgrounds/volcanic_field.png',
+    'Dwarf': '/backgrounds/crystal_caves.png'
+  };
   const g = document.getElementById('racesGrid');
   g.innerHTML = RACES.map(r => `
     <div class="card" style="border-left:4px solid ${r.color}">
+      <div style="width:100%;height:80px;background:url('${raceImages[r.name]}') center/cover;border-radius:8px 8px 0 0;margin:-16px -16px 12px -16px;width:calc(100% + 32px);"></div>
       <div class="race-header"><div class="race-swatch" style="background:${r.color}"></div><h4 style="color:${r.color}">${r.name}</h4></div>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">${r.desc}</p>
       <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic;margin-bottom:8px;">${r.lore}</p>
@@ -871,6 +882,34 @@ function renderRaces() {
 }
 
 function renderClasses() {
+  const classAbilityIcons = {
+    'Slash': '/icons/ability_dual_slash.png',
+    'Power Strike': '/icons/ability_whirlwind.png',
+    'War Cry': '/icons/ability_war_cry.png',
+    'Shield Bash': '/icons/ability_shatter.png',
+    'Cleave': '/icons/ability_sever.png',
+    'Demon Blade': '/icons/ability_demon_blade.png',
+    'Invincible': '/icons/ability_invincible.png',
+    'Arcane Bolt': '/icons/ability_arcane_bolt.png',
+    'Fireball': '/icons/ability_fireball.png',
+    'Divine Heal': '/icons/ability_heal.png',
+    'Ice Storm': '/icons/ability_ice_mastery.png',
+    'Mana Shield': '/icons/ability_mana_shield.png',
+    'Mace Strike': '/icons/ability_weapon_mastery.png',
+    'Lightning Lash': '/icons/ability_lightning.png',
+    "Nature's Grasp": '/icons/ability_entangle_roots.png',
+    'Dagger Toss': '/icons/ability_blade_storm.png',
+    'Heal Totem': '/icons/ability_soothing_rain.png',
+    'Fire Totem': '/icons/ability_fire_mastery.png',
+    'Fear Totem': '/icons/ability_bewilderment.png',
+    'Quick Shot': '/icons/ability_swift_draw.png',
+    'Aimed Shot': '/icons/ability_swift_blade.png',
+    'Poison Arrow': '/icons/ability_molotov.png',
+    'Evasive Roll': '/icons/ability_evasion.png',
+    'Arrow Volley': '/icons/ability_blade_storm.png',
+    'Focus': '/icons/ability_arcane_focus.png',
+    'Bear Form': '/icons/ability_bear_form.png',
+  };
   const g = document.getElementById('classesGrid');
   g.innerHTML = CLASSES.map(c => `
     <div class="card" style="border-left:4px solid ${c.color}">
@@ -878,7 +917,12 @@ function renderClasses() {
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:6px;">${c.desc}</p>
       <div class="tag" style="margin-bottom:8px;">${c.attrs}</div>
       <div class="ability-list">
-        ${c.abilities.map(a => `<span class="ability-tag">${a}</span>`).join('')}
+        ${c.abilities.map(a => {
+          const abilityName = a.split(' (')[0];
+          const icon = classAbilityIcons[abilityName];
+          const iconHtml = icon ? `<img src="${icon}" style="width:20px;height:20px;border-radius:3px;vertical-align:middle;margin-right:4px;">` : '';
+          return `<span class="ability-tag">${iconHtml}${a}</span>`;
+        }).join('')}
       </div>
       <div style="margin-top:12px;padding:10px;background:rgba(255,215,0,0.06);border-radius:6px;border-left:3px solid ${c.color};">
         <div style="color:var(--gold);font-size:0.8rem;font-weight:600;">Signature</div>
@@ -929,19 +973,50 @@ function renderCombos() {
 }
 
 function renderWorld() {
+  const regionBgs = {
+    'Verdant Wilds': '/backgrounds/verdant_plains.png',
+    'Shadow Realm': '/backgrounds/shadow_citadel.png',
+    'Volcanic Wastes': '/backgrounds/blood_canyon.png',
+    'Frozen Peaks': '/backgrounds/ice_field.png',
+    'Ashenmoor': '/backgrounds/storm_ruins.png'
+  };
+  const locationBgs = {
+    'Verdant Plains': '/backgrounds/verdant_plains.png',
+    'Dark Forest': '/backgrounds/dark_forest.png',
+    'Mystic Grove': '/backgrounds/mystic_grove.png',
+    'Whispering Caverns': '/backgrounds/whispering_caverns.png',
+    'Haunted Marsh': '/backgrounds/haunted_marsh.png',
+    'Crystal Caves': '/backgrounds/crystal_caves.png',
+    'Thornwood Pass': '/backgrounds/thornwood_pass.png',
+    'Blight Hollow': '/backgrounds/blight_hollow.png',
+    'Cursed Ruins': '/backgrounds/cursed_ruins.png',
+    'Shadow Forest': '/backgrounds/shadow_forest.png',
+    'Shadow Citadel': '/backgrounds/shadow_citadel.png',
+    'Abyssal Depths': '/backgrounds/abyssal_depths.png',
+    'Void Threshold': '/backgrounds/void_threshold.png',
+    'Void Throne': '/backgrounds/void_throne.png',
+    'Hall of Odin': '/backgrounds/hall_of_odin.png',
+    'Sanctum of Omni': '/backgrounds/sanctum_of_omni.png',
+    'Sunken Temple': '/backgrounds/sunken_temple.png',
+    'Blood Canyon': '/backgrounds/blood_canyon.png',
+    'Dragon Peaks': '/backgrounds/dragon_peaks.png',
+    'Corrupted Spire': '/backgrounds/corrupted_spire.png',
+    'Demon Gate': '/backgrounds/demon_gate.png',
+    'Maw of Madra': '/backgrounds/maw_of_madra.png',
+  };
   const c = document.getElementById('worldContent');
   c.innerHTML = REGIONS.map(r => `
-    <div class="region-header" style="background:${r.fill};border-left:4px solid ${r.color}">
+    <div class="region-header" style="background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('${regionBgs[r.name]}') center/cover;border-left:4px solid ${r.color}">
       <div class="region-dot" style="background:${r.color}"></div>
       <h3 style="color:${r.color};font-family:'Cinzel',serif;font-size:1.2rem;">${r.name}</h3>
       <span style="color:var(--text-dim);font-size:0.85rem;">${r.locations.length} locations</span>
     </div>
     <div class="grid grid-4">
-      ${r.locations.map(l => `
-        <div class="card location-card">
-          <div class="loc-dot" style="color:${r.color};background:${r.color}"></div>
-          <span class="loc-name">${l}</span>
-        </div>`).join('')}
+      ${r.locations.map(l => {
+        const bg = locationBgs[l];
+        const bgThumb = bg ? `<div style="width:100%;height:50px;background:url('${bg}') center/cover;border-radius:6px;margin-bottom:6px;"></div>` : '';
+        return `<div class="card location-card">${bgThumb}<div class="loc-dot" style="color:${r.color};background:${r.color}"></div><span class="loc-name">${l}</span></div>`;
+      }).join('')}
     </div>
   `).join('');
 }
@@ -982,14 +1057,26 @@ function renderEnemies() {
 }
 
 function renderEquipment() {
+  const slotIcons = {
+    'Weapon': '/sprites/ui/icons/eq_weapon.png',
+    'Offhand': '/sprites/ui/icons/eq_shield.png',
+    'Helmet': '/sprites/ui/icons/eq_helmet.png',
+    'Armor': '/sprites/ui/icons/eq_armor.png',
+    'Feet': '/sprites/ui/icons/eq_boots.png',
+    'Ring': '/sprites/ui/icons/eq_ring.png',
+    'Relic': '/sprites/ui/icons/eq_ring.png'
+  };
   const sg = document.getElementById('slotsGrid');
-  sg.innerHTML = EQUIPMENT_SLOTS.map(s => `
+  sg.innerHTML = EQUIPMENT_SLOTS.map(s => {
+    const iconPath = slotIcons[s.name];
+    const iconImg = iconPath ? `<img src="${iconPath}" style="width:28px;height:28px;image-rendering:pixelated;margin-right:8px;">` : '';
+    return `
     <div class="card" style="text-align:center;">
-      <div style="font-size:2rem;margin-bottom:6px;">${s.icon}</div>
+      <div style="font-size:2rem;margin-bottom:6px;">${iconImg}${s.icon}</div>
       <h4 style="color:var(--gold);font-size:0.95rem;">${s.name}</h4>
       <div style="color:var(--text-dim);font-size:0.8rem;">${s.desc}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   const wtg = document.getElementById('weaponTypesGrid');
   wtg.innerHTML = WEAPON_TYPES.map(w => `
@@ -1091,10 +1178,23 @@ function renderUpgradeCosts() {
 }
 
 function renderAttributes() {
+  const attrIcons = {
+    'Strength': '/icons/ability_execute.png',
+    'Intellect': '/icons/ability_arcane_bolt.png',
+    'Vitality': '/icons/ability_heal.png',
+    'Dexterity': '/icons/ability_precision.png',
+    'Endurance': '/icons/ability_iron_hide.png',
+    'Wisdom': '/icons/ability_purify.png',
+    'Agility': '/icons/ability_evasion.png',
+    'Tactics': '/icons/ability_expose_weakness.png'
+  };
   const g = document.getElementById('attrsGrid');
   g.innerHTML = ATTRIBUTES.map(a => `
     <div class="card attr-card" style="border-color:${a.color}">
-      <h4 style="color:${a.color};margin-bottom:4px;">${a.name}</h4>
+      <div style="display:flex;align-items:center;margin-bottom:4px;">
+        <img src="${attrIcons[a.name]}" style="width:36px;height:36px;border-radius:6px;margin-right:10px;">
+        <h4 style="color:${a.color}">${a.name}</h4>
+      </div>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:4px;">${a.desc}</p>
       <p style="color:var(--text-dim);font-size:0.8rem;font-style:italic;margin-bottom:10px;">${a.full}</p>
       <div class="attr-gains">
