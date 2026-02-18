@@ -12,7 +12,7 @@ import { cities } from '../data/cities';
 import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRows, getRowName, getAIRowPreference, isUnitRanged, PLAYER_ROWS, ENEMY_ROWS } from '../data/battleRows';
 import { getSavedBattleRow, getSavedBattleColumn } from '../utils/battlePositionsStorage';
 import { adminConfig } from '../utils/adminConfig';
-import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS } from '../data/spriteMap';
+import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS, namedHeroes } from '../data/spriteMap';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -111,7 +111,14 @@ function createHeroBattleUnit(hero) {
     defenseBreak: stats.defenseBreak || 0,
     criticalEvasion: stats.criticalEvasion || 0,
     abilityLoadout: hero.abilityLoadout || getDefaultLoadout(hero.classId, heroWeaponType),
-    abilities: Object.values(getAllAbilityMap(hero.classId, heroWeaponType, hero.unlockedSkills || {})),
+    abilities: (() => {
+      let abs = Object.values(getAllAbilityMap(hero.classId, heroWeaponType, hero.unlockedSkills || {}));
+      const nh = hero.namedHeroId && namedHeroes[hero.namedHeroId];
+      if (nh?.abilityOverrides) {
+        abs = abs.map(a => nh.abilityOverrides[a.id] ? { ...a, ...nh.abilityOverrides[a.id] } : a);
+      }
+      return abs;
+    })(),
     cooldowns: {},
     buffs: [], dots: [], stunned: false, alive: true,
     level: hero.level,

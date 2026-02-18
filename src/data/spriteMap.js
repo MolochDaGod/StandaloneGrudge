@@ -1298,6 +1298,9 @@ export const namedHeroes = {
     color: '#c97b2a',
     cardBg: '/ui/admin_avatar.png',
     avatar: '/ui/admin_avatar.png',
+    abilityOverrides: {
+      war_cry: { name: 'Call Airship', icon: 'battle', description: 'Signal the airship for a bombardment run, boosting damage by 30% for 3 turns' }
+    },
   },
 };
 
@@ -2099,6 +2102,7 @@ export const abilityEffectMap = {
     'Slash': { effect: 'critSlash', beam: null, anim: 'attack1', followUp: [{ effect: 'smearH1', delay: 100 }, { effect: 'impactWhiteA', delay: 250 }, { effect: 'smokeVfx1', delay: 420 }] },
     'Power Strike': { effect: 'hitBurst', beam: null, anim: 'attack3', followUp: [{ effect: 'critSlash', delay: 150 }, { effect: 'impactOrangeA', delay: 320 }, { effect: 'earthBump', delay: 500 }] },
     'War Cry': { effect: 'beamHoly', beam: null, anim: 'cast', followUp: [{ effect: 'impactYellowA', delay: 200 }, { effect: 'impactOrangeB', delay: 400 }, { effect: 'smokeVfx2', delay: 600 }] },
+    'Call Airship': { effect: 'beamHoly', beam: null, anim: 'special', fallbackAnim: 'cast', followUp: [{ effect: 'smokeVfx2', delay: 150 }, { effect: 'fireExplosion', delay: 350 }, { effect: 'impactFireA', delay: 520 }, { effect: 'impactOrangeA', delay: 700 }] },
     'Shield Bash': { effect: 'hitBurst', beam: null, anim: 'block', followUp: [{ effect: 'thrust1', delay: 120 }, { effect: 'impactWhiteA', delay: 280 }, { effect: 'smokeVfx1', delay: 450 }] },
     'Cleave': { effect: 'arcaneslash', beam: null, anim: 'attack2', isAoE: true, comboAnims: ['attack1', 'attack2', 'attack3'], followUp: [{ effect: 'critSlash', delay: 150 }, { effect: 'smearH2', delay: 300 }, { effect: 'impactRedA', delay: 450 }, { effect: 'smokeVfx1', delay: 600 }] },
     'Demon Blade': { effect: 'demonSlash3', beam: 'blue', anim: 'attack3', followUp: [{ effect: 'arcaneslash', delay: 150, filter: 'hue-rotate(200deg) saturate(2)' }, { effect: 'impactBlueA', delay: 320 }, { effect: 'impactMagentaA', delay: 500 }] },
