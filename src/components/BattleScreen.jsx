@@ -74,40 +74,41 @@ const BUFF_LABELS = {
   speed_down: { text: '-SPD', color: '#6b7280' },
 };
 
+const BB = '/backgrounds/Battlebackgrounds';
 const BASE_LOCATION_BACKGROUNDS = {
-  verdant_plains: '/backgrounds/castle_arena.jpg',
-  dark_forest: '/backgrounds/dark_forest.png',
-  cursed_ruins: '/backgrounds/enchanted_stones.jpg',
-  blood_canyon: '/backgrounds/blood_canyon.png',
-  dragon_peaks: '/backgrounds/dragon_peaks.png',
-  shadow_citadel: '/backgrounds/castle_prison.jpg',
-  demon_gate: '/backgrounds/vampire_castle.jpg',
-  void_throne: '/backgrounds/throne_room.jpg',
-  molten_core: '/backgrounds/lava_cave.jpg',
-  obsidian_wastes: '/backgrounds/volcanic_field.png',
-  ruins_of_ashenmoor: '/backgrounds/colosseum_arena.jpg',
-  infernal_forge: '/backgrounds/infernal_arena.png',
-  dreadmaw_canyon: '/backgrounds/empty_cave.jpg',
-  mystic_grove: '/backgrounds/forest_hut.jpg',
-  whispering_caverns: '/backgrounds/cave_arena.jpg',
-  haunted_marsh: '/backgrounds/dead_forest.jpg',
-  crystal_caves: '/backgrounds/crystal_cave.jpg',
-  thornwood_pass: '/backgrounds/thornwood_pass.png',
-  sunken_temple: '/backgrounds/castle_corridor.jpg',
-  iron_peaks: '/backgrounds/boss_mountain.png',
-  shadow_forest: '/backgrounds/magic_forest.jpg',
-  frozen_tundra: '/backgrounds/winter_arena.png',
-  blight_hollow: '/backgrounds/spider_cave.jpg',
-  stormspire_peak: '/backgrounds/castle_tower.jpg',
-  corrupted_spire: '/backgrounds/corrupted_spire.png',
-  abyssal_depths: '/backgrounds/abyssal_depths.png',
-  ashen_battlefield: '/backgrounds/prison_arena.jpg',
-  windswept_ridge: '/backgrounds/terrace.jpg',
-  void_threshold: '/backgrounds/magic_portal.jpg',
-  crystal_lake: '/backgrounds/winter_arena.png',
-  hall_of_odin: '/backgrounds/castle_hall.jpg',
-  maw_of_madra: '/backgrounds/maw_of_madra.png',
-  sanctum_of_omni: '/backgrounds/sanctum_of_omni.png',
+  verdant_plains: `${BB}/castle_arena.jpg`,
+  dark_forest: `${BB}/magic_forest.jpg`,
+  cursed_ruins: `${BB}/enchanted_stones.jpg`,
+  blood_canyon: `${BB}/empty_cave.jpg`,
+  dragon_peaks: `${BB}/castle_tower.jpg`,
+  shadow_citadel: `${BB}/castle_prison.jpg`,
+  demon_gate: `${BB}/prison_arena.jpg`,
+  void_throne: `${BB}/magic_portal.jpg`,
+  molten_core: `${BB}/lava_cave.jpg`,
+  obsidian_wastes: `${BB}/lava_cave.jpg`,
+  ruins_of_ashenmoor: `${BB}/colosseum_arena.jpg`,
+  infernal_forge: `${BB}/lava_cave.jpg`,
+  dreadmaw_canyon: `${BB}/empty_cave.jpg`,
+  mystic_grove: `${BB}/forest_hut.jpg`,
+  whispering_caverns: `${BB}/cave_arena.jpg`,
+  haunted_marsh: `${BB}/dead_forest.jpg`,
+  crystal_caves: `${BB}/crystal_cave.jpg`,
+  thornwood_pass: `${BB}/enchanted_stones.jpg`,
+  sunken_temple: `${BB}/castle_corridor.jpg`,
+  iron_peaks: `${BB}/castle_tower.jpg`,
+  shadow_forest: `${BB}/magic_forest.jpg`,
+  frozen_tundra: `${BB}/winter_arena.png`,
+  blight_hollow: `${BB}/spider_cave.jpg`,
+  stormspire_peak: `${BB}/castle_arena.jpg`,
+  corrupted_spire: `${BB}/empty_cave.jpg`,
+  abyssal_depths: `${BB}/crystal_cave.jpg`,
+  ashen_battlefield: `${BB}/prison_arena.jpg`,
+  windswept_ridge: `${BB}/castle_arena.jpg`,
+  void_threshold: `${BB}/magic_portal.jpg`,
+  crystal_lake: `${BB}/winter_arena.png`,
+  hall_of_odin: `${BB}/castle_hall.jpg`,
+  maw_of_madra: `${BB}/dead_forest.jpg`,
+  sanctum_of_omni: `${BB}/cave_arena.jpg`,
 };
 
 function getLocationBackgrounds() {
@@ -1422,7 +1423,7 @@ function BattleScreenInner() {
     if (dungeonTheme === 'void') return isDungeonBoss ? '/backgrounds/portal_arena.png' : '/backgrounds/purple_dungeon.png';
     return isDungeonBoss ? '/backgrounds/scene_field.png' : '/backgrounds/scene_dungeon.png';
   };
-  const bgImage = isArena ? '/backgrounds/arena.png' : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? '/backgrounds/verdant_plains.png' : '/backgrounds/battle_arena_default.png'));
+  const bgImage = isArena ? `${BB}/arena.png` : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? `${BB}/castle_arena.jpg` : `${BB}/battle_arena_default.png`));
   const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
 
   const currentUnitId = battleTurnOrder[battleCurrentTurn];

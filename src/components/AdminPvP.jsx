@@ -6,11 +6,11 @@ import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 
 const ARENA_BGS = [
-  { id: 'arena', src: '/backgrounds/arena.png', label: 'Arena' },
-  { id: 'infernal', src: '/backgrounds/infernal_arena.png', label: 'Infernal' },
-  { id: 'winter', src: '/backgrounds/winter_arena.png', label: 'Winter' },
-  { id: 'portal', src: '/backgrounds/portal_arena.png', label: 'Portal' },
-  { id: 'default', src: '/backgrounds/battle_arena_default.png', label: 'Default' },
+  { id: 'arena', src: '/backgrounds/Battlebackgrounds/arena.png', label: 'Arena' },
+  { id: 'colosseum', src: '/backgrounds/Battlebackgrounds/colosseum_arena.jpg', label: 'Colosseum' },
+  { id: 'winter', src: '/backgrounds/Battlebackgrounds/winter_arena.png', label: 'Winter' },
+  { id: 'castle', src: '/backgrounds/Battlebackgrounds/castle_arena.jpg', label: 'Castle' },
+  { id: 'default', src: '/backgrounds/Battlebackgrounds/battle_arena_default.png', label: 'Default' },
 ];
 
 const RACES = Object.keys(raceDefinitions);
