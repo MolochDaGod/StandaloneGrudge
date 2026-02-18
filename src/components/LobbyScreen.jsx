@@ -1983,10 +1983,22 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const completedQuests = useGameStore(s => s.completedQuests);
   const harvestResources = useGameStore(s => s.harvestResources);
   const playerName = useGameStore(s => s.playerName);
+  const setPlayerName = useGameStore(s => s.setPlayerName);
   const resetGame = useGameStore(s => s.resetGame);
   const setScreen = useGameStore(s => s.setScreen);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [exportCopied, setExportCopied] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(playerName || 'Hero');
+  const [puterUser, setPuterUser] = useState(null);
+  const [puterLoading, setPuterLoading] = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
+      window.puter.auth.getUser().then(u => setPuterUser(u)).catch(() => {});
+    }
+  }, []);
 
   const conqueredCount = Object.values(zoneConquer || {}).filter(v => v >= 100).length;
   const exploredCount = Object.keys(zoneConquer || {}).length;
@@ -1995,6 +2007,56 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const totalLosses = (heroRoster || []).reduce((s, h) => s + (h.battleRecord?.losses || 0), 0);
   const totalKills = (heroRoster || []).reduce((s, h) => s + (h.battleRecord?.kills || 0), 0);
   const totalResources = Object.values(harvestResources || {}).reduce((s, v) => s + v, 0);
+
+  const handleSaveName = () => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed.length >= 2 && trimmed.length <= 24) {
+      setPlayerName(trimmed);
+      const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+      s.username = trimmed;
+      localStorage.setItem('grudge-session', JSON.stringify(s));
+      setEditingName(false);
+    }
+  };
+
+  const handleDiscordLogin = async () => {
+    setDiscordLoading(true);
+    try {
+      const res = await fetch('/api/discord/login');
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch { }
+    setDiscordLoading(false);
+  };
+
+  const handlePuterLogin = async () => {
+    if (!window.puter) return;
+    setPuterLoading(true);
+    try {
+      await window.puter.auth.signIn();
+      const user = await window.puter.auth.getUser();
+      setPuterUser(user);
+      const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+      s.type = 'puter';
+      s.puterUsername = user.username;
+      s.loginTime = Date.now();
+      localStorage.setItem('grudge-session', JSON.stringify(s));
+    } catch {}
+    setPuterLoading(false);
+  };
+
+  const handlePuterLogout = () => {
+    if (window.puter?.auth?.signOut) window.puter.auth.signOut();
+    setPuterUser(null);
+    const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+    if (s.type === 'puter') {
+      s.type = 'guest';
+      delete s.puterUsername;
+    }
+    localStorage.setItem('grudge-session', JSON.stringify(s));
+  };
 
   const handleExport = () => {
     try {
@@ -2033,16 +2095,138 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
     }}>{text}</div>
   );
 
+  const loginBtnStyle = (color, bgAlpha = 0.1) => ({
+    display: 'flex', alignItems: 'center', gap: 10,
+    background: `rgba(${color}, ${bgAlpha})`, border: `1px solid rgba(${color}, 0.3)`,
+    borderRadius: 8, color: '#e2e8f0', padding: '10px 16px', cursor: 'pointer',
+    fontSize: '0.8rem', fontFamily: "'Jost', sans-serif", width: '100%',
+    transition: 'all 0.2s ease', textAlign: 'left',
+  });
+
+  const loginType = session.type || 'guest';
+  const isDiscordConnected = loginType === 'discord';
+  const isPuterConnected = loginType === 'puter' || !!puterUser;
+
   return (
-    <div style={{ maxWidth: 800 }}>
-      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 20 }}>
+    <div style={{ maxWidth: 800, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <h2 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 8 }}>
         Account
       </h2>
 
       <div style={{ ...panelStyle }}>
-        {sectionTitle('Profile')}
-        <AccountInfoRow icon="Briefcase" label="Player" value={playerName || 'Adventurer'} />
-        <AccountInfoRow icon="Cloud" label="Login" value={session.type === 'discord' ? 'Discord' : 'Guest'} valueColor={session.type === 'discord' ? '#5865F2' : '#FAAC47'} />
+        {sectionTitle('Username')}
+        {editingName ? (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              maxLength={24}
+              autoFocus
+              style={{
+                flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(250,172,71,0.3)',
+                borderRadius: 6, padding: '8px 12px', color: '#FAAC47', fontSize: '0.9rem',
+                fontFamily: "'Cinzel', serif", outline: 'none',
+              }}
+              onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
+            />
+            <button onClick={handleSaveName} style={{
+              background: 'rgba(110,231,183,0.15)', border: '1px solid rgba(110,231,183,0.3)',
+              borderRadius: 6, color: '#6ee7b7', padding: '8px 14px', cursor: 'pointer', fontSize: '0.75rem',
+            }}>Save</button>
+            <button onClick={() => { setEditingName(false); setNameInput(playerName || 'Hero'); }} style={{
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6, color: '#999', padding: '8px 14px', cursor: 'pointer', fontSize: '0.75rem',
+            }}>Cancel</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.2))',
+                border: '1px solid rgba(250,172,71,0.3)', fontSize: '1rem',
+              }}>
+                {(playerName || 'H')[0].toUpperCase()}
+              </div>
+              <div>
+                <div className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1rem' }}>{playerName || 'Hero'}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.65rem' }}>
+                  {isDiscordConnected ? 'Discord' : isPuterConnected ? 'Puter' : 'Guest'} Account
+                </div>
+              </div>
+            </div>
+            <button onClick={() => { setNameInput(playerName || 'Hero'); setEditingName(true); }} style={{
+              background: 'rgba(250,172,71,0.1)', border: '1px solid rgba(250,172,71,0.2)',
+              borderRadius: 6, color: '#FAAC47', padding: '6px 12px', cursor: 'pointer', fontSize: '0.7rem',
+            }}>Edit</button>
+          </div>
+        )}
+      </div>
+
+      <div style={{ ...panelStyle }}>
+        {sectionTitle('Login Options')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={isDiscordConnected ? undefined : handleDiscordLogin} disabled={discordLoading}
+            style={{
+              ...loginBtnStyle('88,101,242'),
+              ...(isDiscordConnected ? { borderColor: 'rgba(88,101,242,0.5)', background: 'rgba(88,101,242,0.15)' } : {}),
+              opacity: discordLoading ? 0.6 : 1,
+            }}>
+            <svg width="22" height="17" viewBox="0 0 71 55" fill="#5865F2">
+              <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
+            </svg>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: '#5865F2' }}>
+                {isDiscordConnected ? 'Discord Connected' : discordLoading ? 'Redirecting...' : 'Connect Discord'}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>
+                {isDiscordConnected ? `Logged in as ${session.username || 'User'}` : 'Sync progress, join community, leaderboards'}
+              </div>
+            </div>
+            {isDiscordConnected && <span style={{ color: '#6ee7b7', fontSize: '0.7rem' }}>Active</span>}
+          </button>
+
+          <button onClick={isPuterConnected ? handlePuterLogout : handlePuterLogin} disabled={puterLoading}
+            style={{
+              ...loginBtnStyle('147,197,253'),
+              ...(isPuterConnected ? { borderColor: 'rgba(147,197,253,0.5)', background: 'rgba(147,197,253,0.15)' } : {}),
+              opacity: puterLoading ? 0.6 : 1,
+            }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: 4,
+              background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.7rem', fontWeight: 800, color: '#fff',
+            }}>P</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: '#93c5fd' }}>
+                {isPuterConnected ? 'Puter Connected' : puterLoading ? 'Signing in...' : 'Sign in with Puter'}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>
+                {isPuterConnected
+                  ? `Signed in as ${puterUser?.username || session.puterUsername || 'User'} — tap to sign out`
+                  : 'Free cloud account, no API keys needed'}
+              </div>
+            </div>
+            {isPuterConnected && <span style={{ color: '#6ee7b7', fontSize: '0.7rem' }}>Active</span>}
+          </button>
+
+          <div style={{
+            ...loginBtnStyle('255,255,255', 0.03),
+            opacity: 0.4, cursor: 'default', borderStyle: 'dashed',
+          }}>
+            <EssentialIcon name="Briefcase" size={20} style={{ opacity: 0.4 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, color: '#999' }}>Email Login</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>Coming soon</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ ...panelStyle }}>
+        {sectionTitle('Profile Info')}
+        <AccountInfoRow icon="Cloud" label="Login Method" value={isDiscordConnected ? 'Discord' : isPuterConnected ? 'Puter' : 'Guest'} valueColor={isDiscordConnected ? '#5865F2' : isPuterConnected ? '#93c5fd' : '#FAAC47'} />
         <AccountInfoRow icon="CheckCircle" label="Status" value="Active" valueColor="#6ee7b7" />
         <AccountInfoRow icon="File" label="Save Data" value={hasExistingSave ? 'Local Storage' : 'No save'} valueColor={hasExistingSave ? '#6ee7b7' : '#ef4444'} />
         {session.loginTime && (
@@ -2050,7 +2234,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
         )}
       </div>
 
-      <div style={{ ...panelStyle, marginTop: 12 }}>
+      <div style={{ ...panelStyle }}>
         {sectionTitle('Campaign Stats')}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
           <StatBox label="Level" value={level || 1} color="#FAAC47" />
@@ -2066,7 +2250,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
         </div>
       </div>
 
-      <div style={{ ...panelStyle, marginTop: 12 }}>
+      <div style={{ ...panelStyle }}>
         {sectionTitle('World Progress')}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <StatBox label="Zones Explored" value={`${exploredCount}/32`} color="#93c5fd" />
@@ -2088,7 +2272,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
         )}
       </div>
 
-      <div style={{ ...panelStyle, marginTop: 12 }}>
+      <div style={{ ...panelStyle }}>
         {sectionTitle('Save Management')}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={handleExport} style={{
@@ -2136,26 +2320,6 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
           </div>
         )}
       </div>
-
-      {session.type === 'guest' && (
-        <div style={{
-          ...panelStyle, marginTop: 12,
-          background: 'linear-gradient(135deg, rgba(88,101,242,0.1), rgba(88,101,242,0.05))',
-          border: '1px solid rgba(88,101,242,0.25)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <svg width="20" height="16" viewBox="0 0 71 55" fill="#5865F2">
-              <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
-            </svg>
-            <span className="font-cinzel" style={{ color: '#5865F2', fontSize: '0.9rem' }}>
-              Connect Discord
-            </span>
-          </div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.6 }}>
-            Link your Discord account to save progress across devices, join the community, and appear on leaderboards.
-          </div>
-        </div>
-      )}
     </div>
   );
 }
