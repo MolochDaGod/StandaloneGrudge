@@ -389,6 +389,9 @@ const useGameStore = create(persist((set, get) => ({
     { id: 'dragon_vyraxes', templateId: 'red_dragon_2', name: 'Vyraxes', nodeId: 'infernal_forge', alive: true, lastMove: 0 },
   ],
   pendingDragonFight: null,
+  roamingAirship: { nodeId: 'thornwood_pass', lastMove: 0 },
+  pirateShopInventory: [],
+  pirateShopLastRefresh: 0,
   inventory: [],
   shopInventory: [],
   shopLastRefresh: 0,
@@ -2469,6 +2472,80 @@ const useGameStore = create(persist((set, get) => ({
     return state.roamingDragons.find(d => d.alive && d.nodeId === nodeId) || null;
   },
 
+  tickAirshipMovement: () => {
+    const state = get();
+    const now = Date.now();
+    const AIRSHIP_MOVE_INTERVAL = 45000;
+    const airship = state.roamingAirship;
+    if (now - airship.lastMove < AIRSHIP_MOVE_INTERVAL) return null;
+    const AIRSHIP_ADJACENCY = {
+      verdant_plains: ['dark_forest', 'whispering_caverns', 'thornwood_pass'],
+      dark_forest: ['verdant_plains', 'mystic_grove', 'haunted_marsh'],
+      mystic_grove: ['dark_forest', 'crystal_caves'],
+      whispering_caverns: ['verdant_plains', 'haunted_marsh'],
+      haunted_marsh: ['dark_forest', 'cursed_ruins', 'thornwood_pass'],
+      cursed_ruins: ['haunted_marsh', 'sunken_temple', 'thornwood_pass'],
+      crystal_caves: ['mystic_grove', 'iron_peaks'],
+      thornwood_pass: ['haunted_marsh', 'cursed_ruins', 'sunken_temple', 'blood_canyon'],
+      sunken_temple: ['cursed_ruins', 'thornwood_pass'],
+      iron_peaks: ['crystal_caves', 'frozen_tundra', 'shadow_forest'],
+      blood_canyon: ['thornwood_pass', 'ashen_battlefield', 'dragon_peaks'],
+      frozen_tundra: ['iron_peaks', 'windswept_ridge'],
+      dragon_peaks: ['blood_canyon', 'dreadmaw_canyon', 'ruins_of_ashenmoor'],
+      ashen_battlefield: ['blood_canyon', 'molten_core', 'obsidian_wastes'],
+      windswept_ridge: ['frozen_tundra', 'blight_hollow', 'stormspire_peak'],
+      molten_core: ['ashen_battlefield', 'obsidian_wastes'],
+      shadow_forest: ['iron_peaks', 'blight_hollow'],
+      obsidian_wastes: ['ashen_battlefield', 'molten_core', 'demon_gate'],
+      ruins_of_ashenmoor: ['dragon_peaks', 'shadow_citadel'],
+      blight_hollow: ['shadow_forest', 'windswept_ridge', 'stormspire_peak'],
+      shadow_citadel: ['ruins_of_ashenmoor', 'stormspire_peak', 'abyssal_depths'],
+      stormspire_peak: ['windswept_ridge', 'blight_hollow', 'shadow_citadel'],
+      demon_gate: ['obsidian_wastes', 'infernal_forge', 'dreadmaw_canyon'],
+      abyssal_depths: ['shadow_citadel', 'void_threshold'],
+      infernal_forge: ['demon_gate', 'dreadmaw_canyon'],
+      dreadmaw_canyon: ['demon_gate', 'infernal_forge', 'dragon_peaks'],
+      void_threshold: ['abyssal_depths', 'corrupted_spire'],
+      corrupted_spire: ['void_threshold', 'void_throne'],
+    };
+    const neighbors = AIRSHIP_ADJACENCY[airship.nodeId] || ['thornwood_pass'];
+    const newNode = neighbors[Math.floor(Math.random() * neighbors.length)];
+    const updated = { nodeId: newNode, lastMove: now };
+    set({ roamingAirship: updated });
+    const heroZone = state.heroStandingZone || state.currentLocation;
+    if (newNode === heroZone && state.screen === 'world') return updated;
+    return null;
+  },
+
+  getAirshipAtNode: (nodeId) => {
+    const state = get();
+    return state.roamingAirship.nodeId === nodeId ? state.roamingAirship : null;
+  },
+
+  refreshPirateShop: () => {
+    const state = get();
+    const classId = state.playerClass;
+    const inventory = generateShopInventory(Math.max(state.level + 2, 5), classId);
+    const pirateItems = inventory.map(item => ({
+      ...item,
+      id: item.id.replace('shop_', 'pirate_'),
+      tier: Math.min(8, (item.tier || 1) + 1),
+      stats: item.stats ? scaleItemStats(item.stats, Math.min(8, (item.tier || 1) + 1)) : item.stats,
+    }));
+    set({ pirateShopInventory: pirateItems, pirateShopLastRefresh: Date.now() });
+  },
+
+  buyPirateItem: (itemId, price) => {
+    const state = get();
+    const item = state.pirateShopInventory.find(i => i.id === itemId);
+    if (!item || state.gold < price) return;
+    set({
+      gold: state.gold - price,
+      inventory: [...state.inventory, { ...item, id: `inv_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` }],
+      pirateShopInventory: state.pirateShopInventory.filter(i => i.id !== itemId),
+    });
+  },
+
   startDragonBattle: (dragonId) => {
     const state = get();
     const dragon = state.roamingDragons.find(d => d.id === dragonId && d.alive);
@@ -3378,6 +3455,9 @@ const useGameStore = create(persist((set, get) => ({
     trainingPhase: state.trainingPhase,
     dungeonProgress: state.dungeonProgress,
     roamingDragons: state.roamingDragons,
+    roamingAirship: state.roamingAirship,
+    pirateShopInventory: state.pirateShopInventory,
+    pirateShopLastRefresh: state.pirateShopLastRefresh,
   }),
 }));
 

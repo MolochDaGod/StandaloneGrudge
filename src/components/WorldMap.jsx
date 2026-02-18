@@ -414,6 +414,7 @@ export default function WorldMap() {
     randomEvents, addRandomEvent, cleanExpiredEvents, startEventBattle, lastEventSpawn,
     enterScene,
     roamingDragons, tickDragonMovement, getDragonAtNode, startDragonBattle,
+    roamingAirship, tickAirshipMovement, getAirshipAtNode,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -1021,6 +1022,7 @@ export default function WorldMap() {
   }, [randomEvents, level, addRandomEvent, getUnlockedLocations]);
 
   const [dragonEncounter, setDragonEncounter] = useState(null);
+  const [airshipEncounter, setAirshipEncounter] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1031,6 +1033,16 @@ export default function WorldMap() {
     }, 5000);
     return () => clearInterval(interval);
   }, [tickDragonMovement]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tickAirshipMovement) {
+        const landed = tickAirshipMovement();
+        if (landed) setAirshipEncounter(true);
+      }
+    }, 45000);
+    return () => clearInterval(interval);
+  }, [tickAirshipMovement]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1981,6 +1993,55 @@ export default function WorldMap() {
             </div>
           );
         })}
+
+        {roamingAirship && (() => {
+          const pos = getNodePos(roamingAirship.nodeId);
+          if (!pos) return null;
+          const ds = calcNodeScale(camZoom, 0.5);
+          const displaySize = 120;
+          return (
+            <div
+              onClick={() => setAirshipEncounter(true)}
+              style={{
+                position: 'absolute',
+                left: `${pos.x}%`, top: `${pos.y - 4}%`,
+                transform: `translate(-50%, -100%) scale(${ds})`,
+                zIndex: MAP_LAYERS.HERO + 3,
+                cursor: 'pointer',
+                transition: 'left 2s ease-in-out, top 2s ease-in-out',
+                filter: 'drop-shadow(0 8px 24px rgba(212,160,23,0.5))',
+              }}
+            >
+              <div style={{
+                width: displaySize, height: displaySize * 0.7,
+                backgroundImage: 'url(/icons/pack/misc/Air_Ship.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                animation: 'dragonFloat 4s ease-in-out infinite',
+              }} />
+              <div style={{
+                position: 'absolute', bottom: -14, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.65rem', fontFamily: 'Cinzel, serif', fontWeight: 700,
+                color: '#d4a017',
+                textShadow: '0 0 8px rgba(212,160,23,0.8), 0 2px 4px rgba(0,0,0,0.9)',
+                whiteSpace: 'nowrap',
+              }}>
+                ⚓ The Grudge
+              </div>
+              <div style={{
+                position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.5rem', fontFamily: 'Jost, sans-serif', fontWeight: 600,
+                color: '#fbbf24',
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                whiteSpace: 'nowrap',
+                letterSpacing: 1,
+              }}>
+                PIRATE AIRSHIP
+              </div>
+            </div>
+          );
+        })()}
 
         {cities.map((city) => {
           const pos = getNodePos(city.id);
@@ -3241,6 +3302,67 @@ export default function WorldMap() {
                   icon="travel" label="Flee" sublabel="Live to fight another day"
                   color="#666"
                   onClick={() => setDragonEncounter(null)}
+                />
+              </div>
+            </div>
+          </div>,
+          outerRef.current
+        )}
+
+        {airshipEncounter && outerRef.current && createPortal(
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: MAP_LAYERS.POPUPS + 10,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeIn 0.3s ease-out',
+          }}
+          onClick={() => setAirshipEncounter(null)}
+          >
+            <div onClick={e => e.stopPropagation()} style={{
+              background: 'linear-gradient(135deg, rgba(30,20,5,0.98), rgba(50,35,10,0.98))',
+              border: '2px solid #d4a017',
+              borderRadius: 16, padding: 0, minWidth: 300, maxWidth: 420,
+              boxShadow: '0 0 60px rgba(212,160,23,0.4)',
+              animation: 'slideInLeft 0.3s ease-out',
+            }}>
+              <div style={{
+                padding: '20px 24px 16px', textAlign: 'center',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                background: 'linear-gradient(135deg, rgba(212,160,23,0.15), transparent)',
+              }}>
+                <div style={{
+                  fontSize: '0.7rem', fontFamily: 'Jost, sans-serif', fontWeight: 600,
+                  color: '#fbbf24', letterSpacing: 2, marginBottom: 8,
+                  textTransform: 'uppercase',
+                }}>
+                  Pirate Airship Sighted
+                </div>
+                <div style={{
+                  fontFamily: "'LifeCraft', Cinzel, serif", fontSize: '1.5rem', fontWeight: 700,
+                  color: '#d4a017',
+                  textShadow: '0 0 12px rgba(212,160,23,0.6)',
+                  marginBottom: 6,
+                }}>
+                  ⚓ The Grudge
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Racalvin's legendary airship hovers nearby! The Pirate King and Captain John Wayne are aboard, offering rare goods and high-tier equipment to those brave enough to trade.
+                </div>
+              </div>
+              <div style={{ padding: '12px 24px 20px', display: 'flex', gap: 10 }}>
+                <MenuButton
+                  icon="gold" label="Trade with Pirates" sublabel="Browse rare pirate wares"
+                  color="#d4a017"
+                  onClick={() => {
+                    setAirshipEncounter(null);
+                    enterScene('airship', 'world');
+                  }}
+                  glow
+                />
+                <MenuButton
+                  icon="travel" label="Ignore" sublabel="Let them pass"
+                  color="#666"
+                  onClick={() => setAirshipEncounter(null)}
                 />
               </div>
             </div>
