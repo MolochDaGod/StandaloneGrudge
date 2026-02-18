@@ -15,7 +15,7 @@ export const REGIONS = {
   },
   gold: {
     bg: '/backgrounds/wc_gold.png',
-    title: 'The Iron Highlands',
+    title: 'The Ashenmoor',
     subtitle: 'Where Empires Crumble to Dust',
     entryFrom: { x: -10, y: 90 },
     pauseAt: { x: 28, y: 68 },
@@ -27,7 +27,7 @@ export const REGIONS = {
   },
   blue: {
     bg: '/backgrounds/wc_blue.png',
-    title: 'The Frozen Reaches',
+    title: 'The Frozen Peaks',
     subtitle: 'Where the Wind Howls Your Name',
     entryFrom: { x: 110, y: 90 },
     pauseAt: { x: 65, y: 68 },
@@ -51,7 +51,7 @@ export const REGIONS = {
   },
   purple: {
     bg: '/backgrounds/wc_purple.png',
-    title: 'The Void Expanse',
+    title: 'The Shadow Realm',
     subtitle: 'Where Reality Unravels',
     entryFrom: { x: -10, y: 88 },
     pauseAt: { x: 30, y: 65 },
@@ -74,16 +74,17 @@ export const ZONE_TO_REGION = {
   thornwood_pass: 'green',
   sunken_temple: 'green',
 
-  iron_peaks: 'gold',
-  shadow_forest: 'gold',
-  blood_canyon: 'gold',
-  dragon_peaks: 'gold',
-  frozen_tundra: 'gold',
-
+  iron_peaks: 'blue',
+  frozen_tundra: 'blue',
   windswept_ridge: 'blue',
+  shadow_forest: 'blue',
   blight_hollow: 'blue',
   stormspire_peak: 'blue',
 
+  ruins_of_ashenmoor: 'gold',
+  dragon_peaks: 'gold',
+
+  blood_canyon: 'red',
   ashen_battlefield: 'red',
   molten_core: 'red',
   obsidian_wastes: 'red',
@@ -92,7 +93,6 @@ export const ZONE_TO_REGION = {
   dreadmaw_canyon: 'red',
   mothers_den: 'red',
 
-  ruins_of_ashenmoor: 'purple',
   shadow_citadel: 'purple',
   abyssal_depths: 'purple',
   void_threshold: 'purple',
