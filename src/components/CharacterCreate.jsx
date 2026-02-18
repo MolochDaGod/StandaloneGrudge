@@ -177,9 +177,10 @@ export default function CharacterCreate() {
         opacity: 0.35, zIndex: 0, pointerEvents: 'none',
       }} />
       <header style={{
-        background: 'linear-gradient(135deg, rgba(14,22,48,0.8), rgba(20,26,43,0.6))',
+        background: 'linear-gradient(135deg, rgba(14,22,48,0.95), rgba(20,26,43,0.9))',
         borderBottom: '2px solid var(--border)', padding: '14px 20px', textAlign: 'center',
-        position: 'relative', zIndex: 1,
+        position: 'sticky', top: 0, zIndex: 10,
+        backdropFilter: 'blur(8px)',
       }}>
         <h1 className="font-cinzel" style={{ color: 'var(--accent)', fontSize: '1.4rem', marginBottom: 10 }}>
           Create Your Warlord
