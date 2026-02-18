@@ -16,16 +16,16 @@ const PORT = isProd ? 5000 : 3001;
 
 const app = express();
 
-const REPLIT_DEPLOY_DOMAIN = process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : null;
-const REPLIT_DEV_DOMAIN = process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : null;
+const replitDomains = (process.env.REPLIT_DOMAINS || '').split(',').map(d => d.trim()).filter(Boolean).map(d => `https://${d}`);
+const replitDevDomains = (process.env.REPLIT_DEV_DOMAIN || '').split(',').map(d => d.trim()).filter(Boolean).map(d => `https://${d}`);
 
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
   'https://grudge-rpg.replit.app',
-  REPLIT_DEPLOY_DOMAIN,
-  REPLIT_DEV_DOMAIN,
-].filter(Boolean);
+  ...replitDomains,
+  ...replitDevDomains,
+];
 
 const CSP_FRAME_ANCESTORS = [
   "frame-ancestors 'self'",
@@ -34,9 +34,9 @@ const CSP_FRAME_ANCESTORS = [
   'https://grudge-rpg.replit.app',
   'https://puter.com',
   'https://*.puter.com',
-  REPLIT_DEPLOY_DOMAIN,
-  REPLIT_DEV_DOMAIN,
-].filter(Boolean).join(' ');
+  ...replitDomains,
+  ...replitDevDomains,
+].join(' ');
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
