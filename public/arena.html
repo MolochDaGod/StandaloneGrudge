@@ -4,18 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GRUDA Arena | Grudge Warlords</title>
+<meta name="description" content="GRUDA Arena — Ranked PvP leaderboard for Grudge Warlords. See the top Warlords, recent battles, and arena standings.">
+<meta property="og:title" content="GRUDA Arena | Grudge Warlords">
+<meta property="og:description" content="Live PvP ranked battles. Climb the leaderboard and prove your worth.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0a0a12;--bg2:#12121f;--bg3:#1a1a2e;--bg4:#16213e;
-  --red:#e94560;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;
+  --red:#e94560;--gold:#ffd700;--gold-dim:#a07c12;--silver:#c0c0c0;--bronze:#cd7f32;
   --platinum:#70d6ff;--diamond:#b9f2ff;--legend:#ff6b6b;
   --text:#e0e0e0;--dim:#888;--border:#2a2a3e;
 }
-body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(233,69,96,0.05) 0%,transparent 50%)}
 h1,h2,h3,h4{font-family:'Cinzel',serif}
+
+.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(233,69,96,0.25);padding:0 24px;display:flex;align-items:center;gap:20px;height:56px}
+.site-nav-brand{font-family:'LifeCraft',serif;font-size:1.3rem;color:var(--red);text-decoration:none;letter-spacing:2px;text-shadow:0 0 12px rgba(233,69,96,0.3)}
+.site-nav-links{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.site-nav-link{font-family:'Cinzel',serif;font-size:0.8rem;color:#c0a060;text-decoration:none;padding:8px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:0.5px;font-weight:600}
+.site-nav-link:hover{color:var(--gold);background:rgba(255,215,0,0.08)}
+.site-nav-link.active{color:var(--gold);background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.2)}
 
 .arena-wrap{max-width:1200px;margin:0 auto;padding:20px}
 
@@ -25,7 +38,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .arena-header .live-dot{display:inline-block;width:8px;height:8px;background:#4caf50;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
-.stats-bar{display:flex;justify-content:center;gap:30px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin:20px 0;flex-wrap:wrap}
+.stats-bar{display:flex;justify-content:center;gap:30px;padding:18px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin:20px 0;flex-wrap:wrap}
 .stat-item{text-align:center}
 .stat-item .val{font-size:24px;font-weight:700;color:var(--red);font-family:'Cinzel',serif}
 .stat-item .label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
@@ -36,17 +49,17 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .tab.active{color:var(--red);border-bottom-color:var(--red)}
 
 .filter-row{display:flex;gap:10px;margin:12px 0;align-items:center;flex-wrap:wrap}
-.filter-btn{padding:6px 16px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;transition:all 0.2s;font-family:'Jost',sans-serif}
+.filter-btn{padding:6px 16px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:6px;cursor:pointer;font-size:13px;transition:all 0.2s;font-family:'Jost',sans-serif}
 .filter-btn:hover{border-color:var(--red);color:var(--text)}
-.filter-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+.filter-btn.active{background:rgba(233,69,96,0.15);color:var(--red);border-color:var(--red)}
 
 .panel{display:none}
 .panel.active{display:block}
 
 .team-grid{display:grid;gap:12px;margin-top:16px}
 
-.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;transition:border-color 0.2s,transform 0.2s}
-.team-card:hover{border-color:var(--red);transform:translateY(-1px)}
+.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;transition:all 0.2s}
+.team-card:hover{border-color:rgba(233,69,96,0.4);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
 .team-card.ranked{border-left:3px solid var(--red)}
 .team-card.unranked{border-left:3px solid var(--dim);opacity:0.8}
 
@@ -58,8 +71,8 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .team-rank .pos.default-rank{color:var(--dim)}
 
 .team-info h3{font-size:16px;color:var(--text);margin-bottom:4px}
-.team-info .heroes-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.hero-tag{font-size:11px;padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--dim)}
+.team-info .heroes-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.hero-tag{font-size:11px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--dim)}
 .hero-tag .lvl{color:var(--red);font-weight:600}
 .team-info .status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-left:8px}
 .status-badge.ranked{background:rgba(233,69,96,0.2);color:var(--red)}
@@ -73,11 +86,11 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .team-stats .battles{font-size:11px;color:var(--dim)}
 
 .lb-table{width:100%;border-collapse:collapse;margin-top:16px}
-.lb-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--red);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-family:'Cinzel',serif}
-.lb-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px}
-.lb-table tr:hover{background:var(--bg3)}
+.lb-table th{text-align:left;padding:12px 14px;border-bottom:2px solid var(--red);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-family:'Cinzel',serif}
+.lb-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:14px}
+.lb-table tr:hover{background:rgba(233,69,96,0.04)}
 .lb-table .rank-cell{font-weight:900;font-family:'Cinzel',serif;font-size:16px}
-.rank-badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.rank-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
 .rank-bronze{background:rgba(205,127,50,0.2);color:var(--bronze)}
 .rank-silver{background:rgba(192,192,192,0.2);color:var(--silver)}
 .rank-gold{background:rgba(255,215,0,0.2);color:var(--gold)}
@@ -85,38 +98,37 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 .rank-diamond{background:rgba(185,242,255,0.2);color:var(--diamond)}
 .rank-legend{background:rgba(255,107,107,0.2);color:var(--legend)}
 
-.recent-battle{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px}
+.recent-battle{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;transition:border-color 0.2s}
+.recent-battle:hover{border-color:rgba(233,69,96,0.3)}
 .recent-battle .result-icon{font-size:20px;min-width:30px;text-align:center}
 .recent-battle .battle-info{flex:1}
 .recent-battle .battle-info .names{font-weight:600;font-size:14px}
-.recent-battle .battle-info .time{font-size:11px;color:var(--dim);margin-top:2px}
+.recent-battle .battle-info .time{font-size:11px;color:var(--dim);margin-top:3px}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--dim)}
 .empty-state h3{color:var(--text);margin-bottom:8px;font-size:20px}
-.empty-state p{font-size:14px;max-width:400px;margin:0 auto}
-.empty-state .cta{display:inline-block;margin-top:20px;padding:10px 24px;background:var(--red);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;transition:background 0.2s}
-.empty-state .cta:hover{background:#d63050}
+.empty-state p{font-size:14px;max-width:400px;margin:0 auto;line-height:1.6}
+.empty-state .cta{display:inline-block;margin-top:20px;padding:12px 28px;background:var(--red);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;transition:all 0.2s;box-shadow:0 4px 12px rgba(233,69,96,0.3)}
+.empty-state .cta:hover{background:#d63050;transform:translateY(-1px)}
 
 .pagination{display:flex;justify-content:center;gap:8px;margin-top:20px}
-.page-btn{padding:6px 14px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;font-family:'Jost',sans-serif}
+.page-btn{padding:6px 14px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:6px;cursor:pointer;font-size:13px;font-family:'Jost',sans-serif;transition:all 0.2s}
 .page-btn:hover{border-color:var(--red);color:var(--text)}
 .page-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
 .page-btn:disabled{opacity:0.3;cursor:not-allowed}
 
-.discord-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;background:#5865F2;border-radius:8px;margin:20px 0;color:#fff;font-size:14px}
-.discord-bar a{color:#fff;font-weight:700;text-decoration:none;padding:6px 16px;background:rgba(255,255,255,0.2);border-radius:4px;transition:background 0.2s}
+.discord-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 24px;background:linear-gradient(135deg,#5865F2,#4752c4);border-radius:10px;margin:20px 0;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(88,101,242,0.3)}
+.discord-bar a{color:#fff;font-weight:700;text-decoration:none;padding:8px 18px;background:rgba(255,255,255,0.2);border-radius:6px;transition:all 0.2s}
 .discord-bar a:hover{background:rgba(255,255,255,0.3)}
 
 .loading{text-align:center;padding:40px;color:var(--dim)}
 .loading .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(139,0,0,0.4);padding:0 20px;display:flex;align-items:center;gap:20px;height:56px;}
-.site-nav-logo{height:40px;margin-right:8px;}
-.site-nav-links{display:flex;gap:6px;flex-wrap:wrap;}
-.site-nav-link{font-family:'LifeCraft',serif;font-size:1.1rem;color:#c0a060;text-decoration:none;padding:6px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:1px;}
-.site-nav-link:hover{color:#ffd700;background:rgba(255,215,0,0.08);}
-.site-nav-link.active{color:#ffd700;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);}
+.site-footer{text-align:center;padding:30px 20px;border-top:1px solid var(--border);margin-top:40px;color:var(--dim);font-size:0.8rem}
+.site-footer .footer-links{display:flex;gap:20px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.site-footer .footer-links a{color:#c0a060;text-decoration:none;font-family:'Cinzel',serif;font-size:0.8rem;transition:color 0.2s}
+.site-footer .footer-links a:hover{color:var(--gold)}
 
 @media(max-width:600px){
   .team-card{grid-template-columns:1fr;gap:8px}
@@ -124,19 +136,21 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   .team-stats{text-align:left}
   .stats-bar{gap:16px}
   .lb-table{font-size:12px}
-  .lb-table th,.lb-table td{padding:6px 8px}
+  .lb-table th,.lb-table td{padding:8px}
+  .site-nav{padding:0 12px;gap:10px}
+  .site-nav-link{padding:6px 10px;font-size:0.7rem}
 }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <a href="https://grudgeplatform.com" class="site-nav-brand">GRUDGE WARLORDS</a>
   <div class="site-nav-links">
-    <a href="/compendium.html" class="site-nav-link">Compendium</a>
-    <a href="/hero-codex.html" class="site-nav-link">Hero Codex</a>
-    <a href="/arena.html" class="site-nav-link active">Arena</a>
-    <a href="/" class="site-nav-link">Play Game</a>
+    <a href="https://grudgeplatform.com/compendium" class="site-nav-link">Compendium</a>
+    <a href="https://grudge-heros.puter.site/" class="site-nav-link">Heroes</a>
+    <a href="https://grudgeplatform.com/arena" class="site-nav-link active">Arena</a>
+    <a href="https://grudgeplatform.com/discordauth" class="site-nav-link">Login</a>
   </div>
 </nav>
 
@@ -149,7 +163,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   <div class="discord-bar">
     <svg width="20" height="15" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.4.2a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.4 37.4 0 0 0 25.4.3a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 5a.2.2 0 0 0-.1.1C1.5 18.7-.9 32 .3 45.1v.1a58.8 58.8 0 0 0 17.9 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.8 38.8 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42 42 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3 36.4 36.4 0 0 1-5.5 2.7.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.8.2.2 0 0 0 .3.1A58.6 58.6 0 0 0 71 45.2v-.1C72.4 30.1 68.4 17 60.2 5a.2.2 0 0 0-.1 0zM23.7 37a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.3 3.1 6.2 7a6.7 6.7 0 0 1-6.2 7zm23.2 0a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.4 3.1 6.3 7a6.8 6.8 0 0 1-6.3 7z"/></svg>
     Join the fight &mdash;
-    <a href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord Server</a>
+    <a href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener">Join Discord Server</a>
   </div>
 
   <div id="stats-bar" class="stats-bar">
@@ -190,26 +204,37 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   </div>
 </div>
 
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="https://grudgeplatform.com/compendium">Compendium</a>
+    <a href="https://grudge-heros.puter.site/">Heroes</a>
+    <a href="https://grudgeplatform.com/arena">Arena</a>
+    <a href="https://grudgeplatform.com/discordauth">Login</a>
+    <a href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener">Discord</a>
+  </div>
+  &copy; 2026 Grudge Studio. All rights reserved.
+</footer>
+
 <script>
 (function() {
   'use strict';
 
-  var API = window.location.origin;
+  var API_ORIGIN = 'https://grudge-rpg.replit.app';
 
   var RACE_NAMES = {
-    human:'Human', elf:'Elf', dwarf:'Dwarf', orc:'Orc', undead:'Undead', demon:'Demon',
-    Human:'Human', Elf:'Elf', Dwarf:'Dwarf', Orc:'Orc', Undead:'Undead', Demon:'Demon'
+    human:'Human', elf:'Elf', dwarf:'Dwarf', orc:'Orc', gnome:'Gnome', worge:'Worge',
+    Human:'Human', Elf:'Elf', Dwarf:'Dwarf', Orc:'Orc', Gnome:'Gnome', Worge:'Worge'
   };
   var CLASS_NAMES = {
-    warrior:'Warrior', mage:'Mage', ranger:'Ranger', cleric:'Cleric',
-    Warrior:'Warrior', Mage:'Mage', Ranger:'Ranger', Cleric:'Cleric'
+    warrior:'Warrior', mage:'Mage', ranger:'Ranger', druid:'Druid',
+    Warrior:'Warrior', Mage:'Mage', Ranger:'Ranger', Druid:'Druid'
   };
 
   var currentFilter = 'all';
   var currentPage = 0;
 
   function api(path) {
-    return fetch(API + path).then(function(r) {
+    return fetch(API_ORIGIN + path).then(function(r) {
       if (!r.ok) throw new Error('API error ' + r.status);
       return r.json();
     });
@@ -232,7 +257,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   }
 
   function timeAgo(ts) {
-    var diff = Date.now() - ts;
+    var diff = Date.now() - new Date(ts).getTime();
     var mins = Math.floor(diff / 60000);
     if (mins < 1) return 'just now';
     if (mins < 60) return mins + 'm ago';
@@ -250,14 +275,14 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 
   function loadStats() {
     api('/api/arena/stats').then(function(arena) {
-      document.getElementById('stat-teams').textContent = arena.totalTeams;
-      document.getElementById('stat-ranked').textContent = arena.rankedTeams;
-      document.getElementById('stat-battles').textContent = arena.totalBattles;
+      document.getElementById('stat-teams').textContent = arena.totalTeams || 0;
+      document.getElementById('stat-ranked').textContent = arena.rankedTeams || 0;
+      document.getElementById('stat-battles').textContent = arena.totalBattles || 0;
     }).catch(function() {});
     api('/api/public/stats').then(function(pub) {
       document.getElementById('stat-players').textContent = pub.totalPlayers || 0;
     }).catch(function() {
-      document.getElementById('stat-players').textContent = '—';
+      document.getElementById('stat-players').textContent = '\u2014';
     });
   }
 
@@ -271,7 +296,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
           '<div class="empty-state">' +
             '<h3>No Warriors Yet</h3>' +
             '<p>The arena awaits its first challengers. Submit your war party in-game to appear here!</p>' +
-            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener">Join Discord to Play</a>' +
           '</div>';
         document.getElementById('lobby-pagination').innerHTML = '';
         return;
@@ -284,7 +309,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
           return '<span class="hero-tag"><span class="lvl">Lv.' + h.level + '</span> ' +
             escHtml(RACE_NAMES[h.raceId] || h.raceId) + ' ' +
             escHtml(CLASS_NAMES[h.classId] || h.classId) +
-            ' &mdash; ' + escHtml(h.name) + '</span>';
+            ' \u2014 ' + escHtml(h.name) + '</span>';
         }).join('');
 
         var wr = t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0;
@@ -324,7 +349,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
       } else {
         pagEl.innerHTML = '';
       }
-    }).catch(function(err) {
+    }).catch(function() {
       document.getElementById('lobby-content').innerHTML =
         '<div class="empty-state"><h3>Connection Error</h3><p>Could not reach the arena server. Please try again later.</p></div>';
     });
@@ -343,7 +368,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
           '<div class="empty-state">' +
             '<h3>Leaderboard Empty</h3>' +
             '<p>No battles have been fought yet. Be the first to claim glory!</p>' +
-            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener">Join Discord to Play</a>' +
           '</div>';
         return;
       }
@@ -389,7 +414,7 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
         el.innerHTML =
           '<div class="empty-state">' +
             '<h3>No Battles Yet</h3>' +
-            '<p>The arena is quiet... for now.</p>' +
+            '<p>The arena is quiet\u2026 for now.</p>' +
           '</div>';
         return;
       }
@@ -405,12 +430,12 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
                 '<span style="color:' + (won ? '#4caf50' : 'var(--red)') + '">' +
                   escHtml(b.challengerName) +
                 '</span>' +
-                ' challenged team ' +
-                '<span style="color:var(--dim)">' + escHtml(b.teamId).slice(0, 20) + '...</span>' +
+                ' vs ' +
+                '<span style="color:var(--dim)">' + escHtml(b.defenderName || b.teamId || 'Unknown') + '</span>' +
               '</div>' +
               '<div class="time">' +
-                (won ? 'Defender held' : 'Challenger defeated') +
-                ' &bull; ' + timeAgo(b.timestamp) +
+                (won ? 'Victory' : 'Defeat') +
+                ' \u2022 ' + timeAgo(b.timestamp || b.created_at) +
               '</div>' +
             '</div>' +
           '</div>';
@@ -460,19 +485,6 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 
 })();
 </script>
-
-</div>
-
-<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
-  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
-  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
-    <a href="/compendium.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
-    <a href="/hero-codex.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
-    <a href="/arena.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
-    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
-  </div>
-  &copy; 2026 Grudge Warlords. All rights reserved.
-</footer>
 
 </body>
 </html>
