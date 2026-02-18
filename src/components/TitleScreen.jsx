@@ -190,8 +190,8 @@ export default function TitleScreen() {
           Grudge Studio Presents
         </div>
 
-        <h1 className="font-cinzel" style={{
-          fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+        <h1 className="font-warcraft" style={{
+          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
           background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
           backgroundSize: '200% auto',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -204,10 +204,16 @@ export default function TitleScreen() {
           GRUDGE<br/>WARLORDS
         </h1>
 
-        <div style={{
-          fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: 3,
-          textTransform: 'uppercase', marginBottom: 50,
-          animation: 'subtitleReveal 1.2s ease 0.6s both, taglinePulse 4s ease-in-out 2s infinite',
+        <div className="font-warcraft" style={{
+          fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
+          background: 'linear-gradient(90deg, #D8B4FE 0%, #E9D5FF 15%, #86EFAC 35%, #BBF7D0 50%, #86EFAC 65%, #E9D5FF 85%, #D8B4FE 100%)',
+          backgroundSize: '200% auto',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          WebkitTextStroke: '1.5px rgba(0,0,0,0.8)',
+          paintOrder: 'stroke fill',
+          letterSpacing: 6, textTransform: 'uppercase', marginBottom: 40, marginTop: 4,
+          animation: 'titleShimmer 5s linear infinite, fadeIn 1s ease 0.6s both',
+          filter: 'drop-shadow(0 0 20px rgba(168,85,247,0.6)) drop-shadow(0 0 40px rgba(110,231,183,0.4)) drop-shadow(0 2px 6px rgba(0,0,0,1))',
         }}>
           The Void King Awaits
         </div>
