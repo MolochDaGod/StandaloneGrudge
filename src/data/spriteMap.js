@@ -1322,7 +1322,8 @@ export const namedHeroes = {
     cardBg: '/ui/admin_avatar.png',
     avatar: '/ui/admin_avatar.png',
     abilityOverrides: {
-      evasive_maneuver: { name: 'Call Airship', icon: 'battle', description: 'Signal the airship for an evasive bombardment run, increasing evasion by 50% for 2 turns' }
+      evasive_maneuver: { name: 'Call Airship', icon: 'battle', description: 'Signal the airship for an evasive bombardment run, increasing evasion by 50% for 2 turns' },
+      aimed_shot: { name: 'Airship Barrage', icon: 'battle', description: 'Call in an airship bombing run — a devastating precision strike from above that always crits' }
     },
   },
   scourgefaith: {
@@ -2193,6 +2194,7 @@ export const abilityEffectMap = {
     'Poison Arrow': { effect: 'healingregen', beam: 'green', anim: 'attack2', effectFilter: 'hue-rotate(90deg) saturate(2)', followUp: [{ effect: 'smokeVfx1', delay: 150, filter: 'hue-rotate(90deg)' }, { effect: 'impactGreenB', delay: 320 }, { effect: 'impactTealA', delay: 500 }] },
     'Evasive Roll': { effect: 'windBreath', beam: null, anim: 'roll', fallbackAnim: 'block', followUp: [{ effect: 'impactWhiteA', delay: 250 }, { effect: 'windHit', delay: 450 }, { effect: 'smokeVfx1', delay: 620 }] },
     'Call Airship': { effect: 'beamHoly', beam: null, anim: 'special', fallbackAnim: 'cast', followUp: [{ effect: 'smokeVfx2', delay: 150 }, { effect: 'fireExplosion', delay: 350 }, { effect: 'impactFireA', delay: 520 }, { effect: 'impactOrangeA', delay: 700 }] },
+    'Airship Barrage': { effect: 'fireExplosion', beam: 'red', anim: 'sneer', fallbackAnim: 'attack2', followUp: [{ effect: 'smokeVfx2', delay: 100 }, { effect: 'fireExplosion2', delay: 250 }, { effect: 'impactFireA', delay: 400 }, { effect: 'impactFireB', delay: 550 }, { effect: 'impactOrangeA', delay: 700 }, { effect: 'smokeVfx1', delay: 850 }] },
     'Arrow Volley': { effect: 'critSlash', beam: 'green', anim: 'attack2', isAoE: true, comboAnims: ['attack1', 'attack2', 'attack1'], followUp: [{ effect: 'smearH2', delay: 100, filter: 'hue-rotate(90deg)' }, { effect: 'impactGreenA', delay: 260 }, { effect: 'impactGreenB', delay: 430 }, { effect: 'smokeVfx1', delay: 600, filter: 'hue-rotate(90deg)' }] },
     'Focus': { effect: 'beamHoly', beam: null, anim: 'block', followUp: [{ effect: 'impactYellowA', delay: 200 }, { effect: 'impactWhiteA', delay: 400 }] },
     'Venom Arrow': { effect: 'windHit', beam: 'green', anim: 'attack1', followUp: [{ effect: 'smokeVfx1', delay: 120, filter: 'hue-rotate(90deg)' }, { effect: 'impactGreenA', delay: 280 }, { effect: 'impactTealA', delay: 450 }] },
