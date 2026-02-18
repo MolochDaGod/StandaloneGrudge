@@ -22,6 +22,8 @@ import { CHAT_BUBBLES } from '../constants/layers';
 import { locationPositions, pathConnections, locationIcons, terrainRegions, portalLocations } from '../data/worldMapData';
 import MapOverlay from './MapOverlay';
 import GrudaLeaderboard from './GrudaLeaderboard';
+import ZoneCutscene from './ZoneCutscene';
+import { needsCutscene } from '../data/zoneCutscenes';
 import { RankBadgeInline } from './RankBadge';
 
 const bossMapSprites = {
@@ -449,6 +451,8 @@ export default function WorldMap() {
   const [chatInput, setChatInput] = useState('');
   const chatLogRef = useRef(null);
   const [bossWalkUp, setBossWalkUp] = useState(null);
+  const [cutsceneZone, setCutsceneZone] = useState(null);
+  const [pendingBattleZone, setPendingBattleZone] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
   const [movePath, setMovePath] = useState(null);
@@ -1135,10 +1139,26 @@ export default function WorldMap() {
   }, [level, heroPos, getNodePos, devUnlocked, isPathing, currentZone]);
 
   const handleBattle = (locId) => {
+    if (needsCutscene(locId)) {
+      setCutsceneZone(locId);
+      setPendingBattleZone(locId);
+      setSelectedLocation(null);
+      return;
+    }
     useGameStore.setState({ currentLocation: locId });
     startBattle(locId);
     setSelectedLocation(null);
   };
+
+  const handleCutsceneComplete = useCallback(() => {
+    const zoneId = pendingBattleZone;
+    setCutsceneZone(null);
+    setPendingBattleZone(null);
+    if (zoneId) {
+      useGameStore.setState({ currentLocation: zoneId });
+      startBattle(zoneId);
+    }
+  }, [pendingBattleZone, startBattle]);
 
   const handleBoss = (locId, bossId) => {
     const loc = locations.find(l => l.id === locId);
@@ -3689,6 +3709,11 @@ export default function WorldMap() {
             100% { opacity: 0; }
           }
         `}</style>
+
+      {cutsceneZone && createPortal(
+        <ZoneCutscene zoneId={cutsceneZone} onComplete={handleCutsceneComplete} />,
+        document.body
+      )}
 
       {bossWalkUp && (
         <div style={{
