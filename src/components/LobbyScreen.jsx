@@ -1268,7 +1268,7 @@ function HeroSlideshow() {
       addTimer(() => {
         setAnim(chosenAttack);
         addTimer(() => {
-          setShowVfx(true);
+          if (!isWorge) setShowVfx(true);
           setDummyAnim('hurt');
           setDummyShake(1);
           addTimer(() => setDummyShake(0), 300);
@@ -1346,7 +1346,7 @@ function HeroSlideshow() {
   return (
     <div style={{
       marginTop: 16, position: 'relative', overflow: 'hidden',
-      borderRadius: 12, height: 420,
+      borderRadius: 12, height: 520,
       border: '1px solid rgba(255,255,255,0.08)',
       willChange: 'contents',
       contain: 'layout paint',
