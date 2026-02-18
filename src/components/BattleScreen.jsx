@@ -6,7 +6,7 @@ import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
 import { playSwordHit, playBowShot, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
 import AbilityIcon from './AbilityIcon';

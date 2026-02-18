@@ -1,3 +1,5 @@
+import { CLASS_TIERS } from './classes';
+
 export const TOTAL_POINTS_AT_LEVEL = (level) => 20 + (level * 7);
 export const MAX_LEVEL = 20;
 export const POINTS_PER_LEVEL = 7;
@@ -222,14 +224,6 @@ export function calculateCombatPower(stats) {
   const utility = (stats.cooldownReduction * 2) + (stats.manaRegen * 10) + (stats.movementSpeed * 2);
   return Math.floor((ehp * 0.4) + (dps * 2.5) + (utility * 5));
 }
-
-const CLASS_TIERS = [
-  { minRank: 1, maxRank: 10, name: 'Legendary', color: '#89f7fe', desc: 'Mythical power achieved through perfect synergy.' },
-  { minRank: 11, maxRank: 50, name: 'Warlord', color: '#f97316', desc: 'A dominant force on the battlefield.' },
-  { minRank: 51, maxRank: 100, name: 'Epic', color: '#a855f7', desc: 'A hero of renown and great skill.' },
-  { minRank: 101, maxRank: 200, name: 'Hero', color: '#3b82f6', desc: 'A capable adventurer with potential.' },
-  { minRank: 201, maxRank: 300, name: 'Normal', color: '#9ca3af', desc: 'A standard combatant.' },
-];
 
 const CLASS_NAMES = (() => {
   const n = [];

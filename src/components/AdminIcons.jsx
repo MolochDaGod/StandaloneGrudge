@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ICON_REGISTRY, UI_ICONS, getIconSrc } from '../data/uiSprites.jsx';
+import { ICON_REGISTRY, UI_ICONS, getIconSrc } from '../data/uiSprites';
 import { OrnatePanel } from './OrnatePanel';
 
 export function getIconOverride(key) {

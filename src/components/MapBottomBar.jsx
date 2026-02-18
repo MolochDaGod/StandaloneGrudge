@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
-import { InlineIcon } from '../data/uiSprites.jsx';
+import { InlineIcon } from '../data/uiSprites';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';

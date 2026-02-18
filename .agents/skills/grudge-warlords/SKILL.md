@@ -130,10 +130,10 @@ Events: `login`, `logout`, `sync`, `error` via `.on()` / `.off()`
 
 ## Arena & Leaderboard System
 
-### Data Model (In-Memory Maps)
-- `arenaTeams` Map — key: teamId, value: team object
-- `arenaBattles` array — battle history
-- `challengeNonces` Map — CSRF protection for battle results
+### Data Model (PostgreSQL)
+- `arena_teams` table — team snapshots with ranked/unranked status
+- `arena_battles` table — battle history with results
+- `challengeNonces` Map — in-memory CSRF protection for battle results
 
 ### Team Lifecycle
 1. **Submit:** Player submits 1-3 hero snapshots → team gets `ranked` status
@@ -151,6 +151,34 @@ Primary: wins DESC → losses ASC → winRate DESC
 
 ### Discord Webhooks
 Auto-broadcasts: new challengers, relegations, 5-win streaks with rank badge info
+
+## Attribute & Stat System
+
+### 8 Grudge Attributes (defined in `src/data/attributes.js`)
+| Attribute | Abbr | Color | Primary Gains |
+|---|---|---|---|
+| Strength | STR | #ef4444 | Physical damage, defense, health, lifesteal |
+| Vitality | VIT | #22c55e | Max health, health regen, damage reduction |
+| Endurance | END | #6b7280 | Stamina, physical defense, block effectiveness, armor |
+| Dexterity | DEX | #f59e0b | Crit chance, attack speed, accuracy, evasion |
+| Agility | AGI | #06b6d4 | Movement speed, evasion, dodge, crit evasion |
+| Intellect | INT | #3b82f6 | Mana, magic damage, cooldown reduction, spell accuracy |
+| Wisdom | WIS | #a855f7 | Magic resistance, mana, spell block, status reduction |
+| Tactics | TAC | #64748b | Armor penetration, block penetration, % bonus to all stats |
+
+### Points & Progression
+- Starting points: 20, +7 per level, max level 20 (160 total points)
+- Diminishing returns: Full value 0-25, 50% for 26-50, 25% for 51+
+- Tactics provides scaling % bonus to all other derived stats
+
+### Derived Stats (35+)
+health, mana, stamina, physicalDamage, magicDamage, defense, block, blockEffect, evasion, accuracy, criticalChance, criticalDamage, attackSpeed, movementSpeed, resistance, drainHealth, manaRegen, healthRegen, cooldownReduction, armor, damageReduction, armorPenetration, blockPenetration, etc.
+
+### Build Classification (CLASS_TIERS from `src/data/classes.js`)
+Legendary (rank 1-10) → Warlord (11-50) → Epic (51-100) → Hero (101-200) → Normal (201-300)
+
+### Important: Never use non-Grudge stat names
+Do NOT use: luck, speed, charisma, or any other stat names. Always use the 8 Grudge attributes above.
 
 ## Sprite System — Complete Reference
 
@@ -385,6 +413,7 @@ Tabbed dashboard with 7 editors + info tabs:
 |---|---|---|
 | `/discordauth` | `public/discordauth.html` | Discord OAuth login page |
 | `/compendium.html` | `public/compendium.html` | Game compendium (8 tabs) |
+| `/hero-codex.html` | `public/hero-codex.html` | Visual hero reference (26 heroes) |
 | `/grudge-studio-sdk.js` | `public/grudge-studio-sdk.js` | Embeddable SDK |
 
 ### Production Static Serving
@@ -412,7 +441,7 @@ app.get('/{*splat}', (req, res) => res.sendFile('dist/index.html'));
 | Sprite overflows admin panel | Use fixed viewport pattern (position: relative + overflow: hidden) |
 | Login fails | Check `DISCORD_CLIENT_ID`/`SECRET` secrets, verify redirect URI matches Discord app settings |
 | Session expired | Sessions last 7 days, stored in-memory `activeSessions` Map (lost on restart) |
-| Arena data lost | In-memory Maps — all arena data is ephemeral, lost on server restart |
+| Arena data lost | Arena uses PostgreSQL (`arena_teams`/`arena_battles` tables) — data persists across restarts |
 | Leaderboard empty | Need at least 1 battle (`totalBattles > 0`) to appear |
 | Webhook not sending | Check `DISCORD_GRUDGE_WEBHOOK` secret is set |
 | CORS on external site | Server uses `cors()` middleware, SDK uses `mode: 'cors'` |

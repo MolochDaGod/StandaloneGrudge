@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
-import { InlineIcon } from '../data/uiSprites.jsx';
+import { InlineIcon } from '../data/uiSprites';
 import { TIERS, EQUIPMENT_SLOTS, getEquipmentStatBonuses, canClassEquip } from '../data/equipment';
 import SpriteAnimation from './SpriteAnimation';
 import { getPlayerSprite } from '../data/spriteMap';

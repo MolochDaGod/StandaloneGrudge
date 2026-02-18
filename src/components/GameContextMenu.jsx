@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import useGameStore from '../stores/gameStore';
-import { InlineIcon } from '../data/uiSprites.jsx';
+import { InlineIcon } from '../data/uiSprites';
 import { CONTEXT_MENU } from '../constants/layers';
 
 const MENU_ITEMS = {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RankBadge, { RankBadgeInline, getRankForWins } from './RankBadge';
-import { InlineIcon } from '../data/uiSprites.jsx';
+import { InlineIcon } from '../data/uiSprites';
 import { classDefinitions } from '../data/classes';
 
 export default function GrudaLeaderboard({ onClose }) {

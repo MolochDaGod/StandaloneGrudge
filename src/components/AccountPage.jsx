@@ -9,7 +9,7 @@ import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELME
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
 import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
-import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites';
 import RadarChart from './RadarChart';
 import AbilityIcon from './AbilityIcon';
 import { useTooltip, showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
