@@ -198,6 +198,7 @@ export default function LobbyScreen() {
 
         <div style={{
           flex: 1, overflow: 'auto', padding: 24,
+          display: 'flex', flexDirection: 'column',
           animation: 'warRoomFadeUp 0.7s ease 1.1s both',
         }}>
           {activeTab === 'main' && (
@@ -374,18 +375,19 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
   };
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <h2 className="font-cinzel" style={{
         fontSize: '1.4rem', marginBottom: 16,
         background: 'linear-gradient(90deg, var(--accent), #ffd700, var(--accent))',
         backgroundSize: '200% auto',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         animation: 'titleShimmer 6s linear infinite',
+        flexShrink: 0,
       }}>
         War Room
       </h2>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, flex: 1, flexWrap: 'wrap' }}>
         <WarRoomCard
           onClick={onNewGame}
           borderColor="rgba(250,172,71,0.3)"
