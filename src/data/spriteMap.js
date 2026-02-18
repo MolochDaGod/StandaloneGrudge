@@ -1073,7 +1073,7 @@ export const worgTransformSprite = {
   elf: { ...spriteSheets.werebear, transformScaleMult: 1.1 },
   undead: { ...spriteSheets.werewolf, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)', transformScaleMult: 1.0 },
   barbarian: { ...spriteSheets.werebear, transformScaleMult: 1.1 },
-  dwarf: { ...spriteSheets['dwarf-worge'], transformScaleMult: 1.0 },
+  dwarf: { ...spriteSheets.werebear, transformScaleMult: 1.1 },
 };
 
 export const worgBearTransformSprite = {
@@ -1082,7 +1082,7 @@ export const worgBearTransformSprite = {
   elf: spriteSheets.werebear,
   undead: { ...spriteSheets.werebear, filter: 'hue-rotate(180deg) saturate(0.6) brightness(0.7)' },
   barbarian: spriteSheets.werebear,
-  dwarf: spriteSheets['shardsoul-slayer'],
+  dwarf: spriteSheets.werebear,
 };
 
 export const freeKnightSprite = spriteSheets['free-knight'];
