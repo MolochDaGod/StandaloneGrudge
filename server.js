@@ -1259,16 +1259,22 @@ if (!isProd) {
 }
 
 if (isProd) {
-  app.use('/assets', express.static(path.join(__dirname_server, 'dist', 'assets'), {
-    setHeaders: (res) => {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    },
+  const distPath = path.join(__dirname_server, 'dist');
+  const assetsPath = path.join(distPath, 'assets');
+
+  app.use('/assets', express.static(assetsPath, {
+    maxAge: '1y',
+    immutable: true,
+    fallthrough: true,
   }));
 
-  app.use(express.static(path.join(__dirname_server, 'dist'), {
-    setHeaders: (res) => {
-      res.setHeader('Cache-Control', 'no-cache');
+  app.use(express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
     },
+    fallthrough: true,
   }));
 }
 
