@@ -17,7 +17,6 @@ function HeroPortrait({ hero, size = 50, selected, onClick, assigned }) {
   const fh = spriteData?.frameHeight || 100;
   const scale = (size / Math.max(fw, fh)) * 2.2;
   const cls = classDefinitions[hero.classId];
-  const race = raceDefinitions[hero.raceId];
 
   return (
     <div
