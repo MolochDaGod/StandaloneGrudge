@@ -238,6 +238,17 @@ function GameApp() {
     opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
   };
 
+  const sessionUsername = (() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+      return s.puterUsername || s.username || (s.type === 'guest' ? 'Guest' : null);
+    } catch { return null; }
+  })();
+  const showUserBadge = sessionUsername && screen !== 'title' && screen !== 'loading';
+  const sessionType = (() => {
+    try { return JSON.parse(localStorage.getItem('grudge-session') || '{}').type || 'guest'; } catch { return 'guest'; }
+  })();
+
   return (
     <div className={`game-frame${showFrame ? '' : ' hide-frame'}`}>
       <div style={{
@@ -247,6 +258,36 @@ function GameApp() {
         <div style={contentStyle}>
           {renderScreen()}
         </div>
+        {showUserBadge && (
+          <div style={{
+            position: 'absolute', top: 8, left: 10, zIndex: 10510,
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(0,0,0,0.55)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 6, padding: '4px 10px 4px 6px',
+            pointerEvents: 'none',
+            animation: 'fadeIn 0.5s ease 0.3s both',
+          }}>
+            <div style={{
+              width: 16, height: 16, borderRadius: 3,
+              background: sessionType === 'puter'
+                ? 'linear-gradient(135deg, #DB6331, #FAAC47)'
+                : sessionType === 'discord'
+                  ? '#5865F2'
+                  : 'rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.5rem', fontWeight: 800, color: '#fff',
+            }}>
+              {sessionType === 'puter' ? 'G' : sessionType === 'discord' ? 'D' : '\u2022'}
+            </div>
+            <span style={{
+              color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: 500,
+              fontFamily: "'Jost', sans-serif", letterSpacing: 0.5,
+            }}>
+              {sessionUsername}
+            </span>
+          </div>
+        )}
         <div id="game-ui-portal" style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
           pointerEvents: 'none', zIndex: 10600,
