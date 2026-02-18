@@ -69,10 +69,8 @@ const CLASS_ICON_MAP = {
 };
 
 const STAT_COLORS = {
-  Strength: '#ef4444', Vitality: '#f59e0b', Endurance: '#6b7280', Dexterity: '#22c55e',
-  Agility: '#3b82f6', Intellect: '#8b5cf6', Wisdom: '#22d3ee', Tactics: '#ec4899',
-  strength: '#ef4444', agility: '#22c55e', intellect: '#8b5cf6', vitality: '#f59e0b',
-  luck: '#fbbf24', defense: '#6b7280', speed: '#3b82f6', charisma: '#ec4899',
+  Strength: '#ef4444', Vitality: '#22c55e', Endurance: '#6b7280', Dexterity: '#f59e0b',
+  Agility: '#06b6d4', Intellect: '#3b82f6', Wisdom: '#a855f7', Tactics: '#64748b',
 };
 const STAT_ABBR = {
   Strength: 'STR', Vitality: 'VIT', Endurance: 'END', Dexterity: 'DEX',
@@ -332,19 +330,22 @@ function HeroCard({ hero, expanded, onToggle }) {
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 4,
           }}>
-            {['strength', 'agility', 'intellect', 'vitality', 'luck', 'defense', 'speed', 'charisma'].map(k => (
-              <div key={k} style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontSize: '0.5rem', color: STAT_COLORS[k], textTransform: 'uppercase',
-                  fontWeight: 700, letterSpacing: '0.05em', opacity: 0.8,
-                }}>{k.slice(0, 3)}</div>
-                <div style={{
-                  fontSize: '1rem', color: '#e2e8f0', fontWeight: 800,
-                  fontFamily: "'Cinzel', serif",
-                  textShadow: `0 0 8px ${STAT_COLORS[k]}40`,
-                }}>{stats[k] || 0}</div>
-              </div>
-            ))}
+            {ALL_STAT_KEYS.map(k => {
+              const val = (hero.attributePoints || {})[k] || 0;
+              return (
+                <div key={k} style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '0.5rem', color: STAT_COLORS[k], textTransform: 'uppercase',
+                    fontWeight: 700, letterSpacing: '0.05em', opacity: 0.8,
+                  }}>{STAT_ABBR[k]}</div>
+                  <div style={{
+                    fontSize: '1rem', color: '#e2e8f0', fontWeight: 800,
+                    fontFamily: "'Cinzel', serif",
+                    textShadow: `0 0 8px ${STAT_COLORS[k]}40`,
+                  }}>{val}</div>
+                </div>
+              );
+            })}
           </div>
 
           {expanded && (
@@ -374,6 +375,23 @@ function HeroCard({ hero, expanded, onToggle }) {
               <div style={{
                 display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
                 fontSize: '0.7rem', marginTop: 10,
+              }}>
+                {[
+                  { label: 'Phys DMG', val: Math.floor(stats.physicalDamage || 0), color: '#ef4444' },
+                  { label: 'Mag DMG', val: Math.floor(stats.magicDamage || 0), color: '#8b5cf6' },
+                  { label: 'Defense', val: Math.floor(stats.defense || 0), color: '#6b7280' },
+                  { label: 'Crit %', val: (stats.criticalChance || 0).toFixed(1), color: '#f59e0b' },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>{s.label}</div>
+                    <div style={{ color: s.color, fontWeight: 700 }}>{s.val}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+                fontSize: '0.7rem', marginTop: 8,
               }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '0.45rem', color: '#8a7d65', textTransform: 'uppercase', fontWeight: 600 }}>Boss Kills</div>
