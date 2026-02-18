@@ -1234,6 +1234,7 @@ export const racalvinSprite = {
 
 export const racalvinWorgSprite = {
   ...nightborneSprite,
+  facesLeft: false,
   filter: 'brightness(0.7) saturate(1.6) hue-rotate(200deg) contrast(1.2)',
   scale: 1.2,
 };
