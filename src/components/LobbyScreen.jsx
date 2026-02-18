@@ -98,6 +98,20 @@ export default function LobbyScreen() {
         position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0,
         animation: 'fadeIn 1.2s ease 0.3s both',
       }} />
+      <img src="/images/grudge_rpg_logo.png" alt="Grudge RPG" style={{
+        position: 'absolute',
+        top: 100,
+        left: 105,
+        transform: 'translateX(-50%)',
+        height: 100,
+        width: 100,
+        objectFit: 'contain',
+        imageRendering: 'auto',
+        zIndex: 20,
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))',
+        pointerEvents: 'none',
+        animation: 'warRoomSlideRight 0.6s ease 0.8s both',
+      }} />
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '20px 24px',
@@ -107,11 +121,7 @@ export default function LobbyScreen() {
         minHeight: 80,
         animation: 'warRoomSlideDown 0.6s ease 0.5s both',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/images/grudge_rpg_logo.png" alt="Grudge RPG" style={{
-            height: 48, width: 'auto', objectFit: 'contain', imageRendering: 'auto',
-          }} />
-        </div>
+        <div style={{ width: 48 }} />
         <div style={{
           position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
           pointerEvents: 'none', whiteSpace: 'nowrap',
