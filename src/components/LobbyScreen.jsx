@@ -532,19 +532,29 @@ const ALL_COMBOS = Object.keys(raceDefinitions).flatMap(raceId =>
 const ATTACK_ANIMS = ['attack1', 'attack2', 'attack3', 'runAttack', 'charge', 'shot1', 'shot2'];
 const ENTER_ANIMS = ['walk', 'run', 'roll', 'slide', 'charge'];
 
+const BB = '/backgrounds/Battlebackgrounds';
 const BATTLE_BGS = [
-  '/backgrounds/dark_forest.png',
-  '/backgrounds/blood_canyon.png',
-  '/backgrounds/crystal_caves.png',
-  '/backgrounds/storm_ruins.png',
-  '/backgrounds/volcanic_field.png',
-  '/backgrounds/shadow_citadel.png',
-  '/backgrounds/infernal_arena.png',
-  '/backgrounds/dragon_peaks.png',
-  '/backgrounds/corrupted_spire.png',
-  '/backgrounds/haunted_marsh.png',
-  '/backgrounds/mystic_grove.png',
-  '/backgrounds/void_throne.png',
+  `${BB}/arena.png`,
+  `${BB}/battle_arena_default.png`,
+  `${BB}/castle_arena.jpg`,
+  `${BB}/castle_corridor.jpg`,
+  `${BB}/castle_hall.jpg`,
+  `${BB}/castle_tower.jpg`,
+  `${BB}/cave_arena.jpg`,
+  `${BB}/colosseum_arena.jpg`,
+  `${BB}/crystal_cave.jpg`,
+  `${BB}/dead_forest.jpg`,
+  `${BB}/enchanted_stones.jpg`,
+  `${BB}/empty_cave.jpg`,
+  `${BB}/forest_hut.jpg`,
+  `${BB}/lava_cave.jpg`,
+  `${BB}/magic_forest.jpg`,
+  `${BB}/magic_portal.jpg`,
+  `${BB}/prison_arena.jpg`,
+  `${BB}/spider_cave.jpg`,
+  `${BB}/terrace.jpg`,
+  `${BB}/throne_room.jpg`,
+  `${BB}/winter_arena.png`,
 ];
 
 const CLASS_EFFECTS = {
