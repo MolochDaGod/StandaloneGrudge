@@ -1350,6 +1350,8 @@ function BattleScreenInner() {
   const actionProcessed = useRef(null);
   const introStarted = useRef(false);
   const aiProcessing = useRef(false);
+  const battleContainerRef = useRef(null);
+  const containerHeightRef = useRef(600);
 
   const [adminMode, setAdminMode] = useState(false);
   const [adminPaused, setAdminPaused] = useState(false);
@@ -1409,6 +1411,22 @@ function BattleScreenInner() {
       adminConfig.saveEffectPositions(adminOverrides);
     }
   }, [adminOverrides, adminMode]);
+
+  React.useLayoutEffect(() => {
+    const el = battleContainerRef.current;
+    if (el) containerHeightRef.current = el.clientHeight || 600;
+  });
+  useEffect(() => {
+    const el = battleContainerRef.current;
+    if (!el) return;
+    const update = () => { containerHeightRef.current = el.clientHeight || 600; };
+    update();
+    if (typeof ResizeObserver !== 'undefined') {
+      const obs = new ResizeObserver(update);
+      obs.observe(el);
+      return () => obs.disconnect();
+    }
+  }, []);
 
   useEffect(() => {
     if (adminMode) {
@@ -1509,9 +1527,16 @@ function BattleScreenInner() {
     const isBossUnit = unit.team === 'enemy' && unit.isBoss;
     const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
     const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
-    const scale = bossScaleVal * comboScale;
-    const offset = 18 * scale;
-    return unit.position.y - Math.min(offset, 35);
+    const spriteData = getUnitSprite(unit);
+    const adminScale = spriteData?.scale || 1;
+    const isWorgeBear = unit.classId === 'worge' && unit.bearForm;
+    const bearScale = isWorgeBear ? 1.2 : 1;
+    const targetSize = 200;
+    const spriteHeight = targetSize * bossScaleVal * comboScale * adminScale * bearScale;
+    const bodyOffsetPx = spriteHeight * 0.38;
+    const containerH = containerHeightRef.current || 600;
+    const offsetPercent = (bodyOffsetPx / containerH) * 100;
+    return unit.position.y - offsetPercent;
   }, []);
 
   const addParticle = useCallback((type, x, y, color) => {
@@ -2405,7 +2430,7 @@ function BattleScreenInner() {
   const isMissionRoundComplete = phase === 'missionRoundComplete';
 
   return (
-    <div style={{
+    <div ref={battleContainerRef} style={{
       width: '100%', height: '100%',
       background: 'var(--bg)', position: 'relative', overflow: 'hidden',
     }}>
