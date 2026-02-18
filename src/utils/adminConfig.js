@@ -10,6 +10,7 @@ const KEYS = {
   pvpPlacements: 'grudge-admin-pvp-placements',
   spriteOverrides: 'adminSpriteOverrides',
   bearFormOverride: 'adminBearFormOverride',
+  dummyPosition: 'adminDummyPosition',
 };
 
 const DEFAULTS = {
@@ -209,6 +210,16 @@ export const adminConfig = {
   },
   resetBearFormOverride() {
     remove('bearFormOverride');
+  },
+
+  getDummyPosition() {
+    return load('dummyPosition') || { x: 0, y: 0, scale: 5 };
+  },
+  saveDummyPosition(data) {
+    save('dummyPosition', data);
+  },
+  resetDummyPosition() {
+    remove('dummyPosition');
   },
 
   resetAll() {

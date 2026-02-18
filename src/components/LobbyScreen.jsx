@@ -905,6 +905,7 @@ function HeroSlideshow() {
   const [editorY, setEditorY] = useState(0);
   const [editorScale, setEditorScale] = useState(1);
   const [editorSaved, setEditorSaved] = useState(false);
+  const [editorTarget, setEditorTarget] = useState('hero');
   const draggingRef = useRef(false);
   const dragStartRef = useRef({ mx: 0, my: 0, sx: 0, sy: 0 });
   const containerRef = useRef(null);
@@ -915,6 +916,15 @@ function HeroSlideshow() {
   const editorXRef = useRef(0);
   const editorYRef = useRef(0);
   const editorScaleRef = useRef(1);
+  const editorTargetRef = useRef('hero');
+
+  const [dummyPos, setDummyPos] = useState(() => adminConfig.getDummyPosition());
+  const [dummyEditorX, setDummyEditorX] = useState(0);
+  const [dummyEditorY, setDummyEditorY] = useState(0);
+  const [dummyEditorScale, setDummyEditorScale] = useState(1);
+  const dummyEditorXRef = useRef(0);
+  const dummyEditorYRef = useRef(0);
+  const dummyEditorScaleRef = useRef(1);
 
   const getSavedPositions = () => {
     try {
@@ -974,41 +984,70 @@ function HeroSlideshow() {
     if (!editorMode) return;
     const handleKey = (e) => {
       const step = e.shiftKey ? 10 : 1;
+      const tgt = editorTargetRef.current;
       const updateEditorX = (fn) => { setEditorX(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorXRef.current = v; return v; }); };
       const updateEditorY = (fn) => { setEditorY(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorYRef.current = v; return v; }); };
       const updateEditorScale = (fn) => { setEditorScale(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; editorScaleRef.current = v; return v; }); };
+      const updateDummyX = (fn) => { setDummyEditorX(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorXRef.current = v; return v; }); };
+      const updateDummyY = (fn) => { setDummyEditorY(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorYRef.current = v; return v; }); };
+      const updateDummyScale = (fn) => { setDummyEditorScale(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorScaleRef.current = v; return v; }); };
       const resetEditor = () => { updateEditorX(0); updateEditorY(0); updateEditorScale(1); };
+      const resetDummyEditor = () => { updateDummyX(0); updateDummyY(0); updateDummyScale(1); };
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const next = tgt === 'hero' ? 'dummy' : 'hero';
+        editorTargetRef.current = next;
+        setEditorTarget(next);
+        return;
+      }
+
+      const setX = tgt === 'dummy' ? updateDummyX : updateEditorX;
+      const setY = tgt === 'dummy' ? updateDummyY : updateEditorY;
+      const setSc = tgt === 'dummy' ? updateDummyScale : updateEditorScale;
 
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
         e.preventDefault();
-        updateEditorScale(s => Math.round((s + 0.05) * 100) / 100);
+        setSc(s => Math.round((s + 0.05) * 100) / 100);
       } else if (e.key === '-' || e.code === 'NumpadSubtract') {
         e.preventDefault();
-        updateEditorScale(s => Math.max(0.1, Math.round((s - 0.05) * 100) / 100));
+        setSc(s => Math.max(0.1, Math.round((s - 0.05) * 100) / 100));
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        updateEditorX(x => x - step);
+        setX(x => x - step);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        updateEditorX(x => x + step);
+        setX(x => x + step);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        updateEditorY(y => y + step);
+        setY(y => y + step);
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        updateEditorY(y => y - step);
+        setY(y => y - step);
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
-        const ck = `${ALL_COMBOS[indexRef.current].raceId}_${ALL_COMBOS[indexRef.current].classId}`;
-        const curSaved = getSavedPositions();
-        const curX = curSaved[ck] != null ? (curSaved[ck].x ?? 0) : (SPRITE_X_OFFSETS[ck] ?? 0);
-        const curY = curSaved[ck] != null ? (curSaved[ck].y ?? 0) : (SPRITE_Y_OFFSETS[ck] ?? 0);
-        const curScaleOv = curSaved[ck] != null ? (curSaved[ck].scale ?? 1) : (SPRITE_SCALE_OVERRIDES[ck] ?? 1);
-        const finalX = curX + editorXRef.current;
-        const finalY = curY + editorYRef.current;
-        const finalScale = Math.round(curScaleOv * editorScaleRef.current * 100) / 100;
-        saveSpritePosition(ck, finalX, finalY, finalScale);
-        resetEditor();
+        if (tgt === 'dummy') {
+          const cur = adminConfig.getDummyPosition();
+          const newPos = {
+            x: cur.x + dummyEditorXRef.current,
+            y: cur.y + dummyEditorYRef.current,
+            scale: Math.round(cur.scale * dummyEditorScaleRef.current * 100) / 100,
+          };
+          adminConfig.saveDummyPosition(newPos);
+          setDummyPos(newPos);
+          resetDummyEditor();
+        } else {
+          const ck = `${ALL_COMBOS[indexRef.current].raceId}_${ALL_COMBOS[indexRef.current].classId}`;
+          const curSaved = getSavedPositions();
+          const curX = curSaved[ck] != null ? (curSaved[ck].x ?? 0) : (SPRITE_X_OFFSETS[ck] ?? 0);
+          const curY = curSaved[ck] != null ? (curSaved[ck].y ?? 0) : (SPRITE_Y_OFFSETS[ck] ?? 0);
+          const curScaleOv = curSaved[ck] != null ? (curSaved[ck].scale ?? 1) : (SPRITE_SCALE_OVERRIDES[ck] ?? 1);
+          const finalX = curX + editorXRef.current;
+          const finalY = curY + editorYRef.current;
+          const finalScale = Math.round(curScaleOv * editorScaleRef.current * 100) / 100;
+          saveSpritePosition(ck, finalX, finalY, finalScale);
+          resetEditor();
+        }
         setEditorSaved(true);
         setTimeout(() => setEditorSaved(false), 1500);
       } else if (e.key === 'Escape') {
@@ -1019,17 +1058,33 @@ function HeroSlideshow() {
       } else if (e.key === '<' || e.key === ',') {
         setIndex(prev => (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length);
         resetEditor();
+      } else if (e.key === 'r' || e.key === 'R') {
+        if (tgt === 'dummy') {
+          e.preventDefault();
+          adminConfig.resetDummyPosition();
+          setDummyPos({ x: 0, y: 0, scale: 5 });
+          resetDummyEditor();
+          setEditorSaved(true);
+          setTimeout(() => setEditorSaved(false), 1500);
+        }
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [editorMode]);
 
-  const handleEditorMouseDown = (e) => {
+  const handleEditorMouseDown = (e, target = 'hero') => {
     if (!editorMode) return;
     e.preventDefault();
+    e.stopPropagation();
     draggingRef.current = true;
-    dragStartRef.current = { mx: e.clientX, my: e.clientY, sx: editorX, sy: editorY };
+    editorTargetRef.current = target;
+    setEditorTarget(target);
+    if (target === 'dummy') {
+      dragStartRef.current = { mx: e.clientX, my: e.clientY, sx: dummyEditorX, sy: dummyEditorY, target: 'dummy' };
+    } else {
+      dragStartRef.current = { mx: e.clientX, my: e.clientY, sx: editorX, sy: editorY, target: 'hero' };
+    }
   };
   const handleEditorMouseMove = useCallback((e) => {
     if (!draggingRef.current) return;
@@ -1037,10 +1092,17 @@ function HeroSlideshow() {
     const dy = e.clientY - dragStartRef.current.my;
     const newX = dragStartRef.current.sx + dx;
     const newY = dragStartRef.current.sy - dy;
-    editorXRef.current = newX;
-    editorYRef.current = newY;
-    setEditorX(newX);
-    setEditorY(newY);
+    if (dragStartRef.current.target === 'dummy') {
+      dummyEditorXRef.current = newX;
+      dummyEditorYRef.current = newY;
+      setDummyEditorX(newX);
+      setDummyEditorY(newY);
+    } else {
+      editorXRef.current = newX;
+      editorYRef.current = newY;
+      setEditorX(newX);
+      setEditorY(newY);
+    }
   }, []);
   const handleEditorMouseUp = useCallback(() => { draggingRef.current = false; }, []);
 
@@ -1547,19 +1609,26 @@ function HeroSlideshow() {
             <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx} />
 
             {dummyVisible && (
-              <div style={{
-                position: 'absolute',
-                right: 'calc(8% + 200px)',
-                bottom: 60,
-                transform: 'scaleX(-1)',
-                transformOrigin: 'bottom center',
-                zIndex: 6,
-                animation: dummyShake ? 'ssDummyShake 0.1s linear 3' : 'none',
-              }}>
+              <div
+                onMouseDown={editorMode ? (e) => handleEditorMouseDown(e, 'dummy') : undefined}
+                style={{
+                  position: 'absolute',
+                  right: `calc(8% + 200px + ${-(dummyPos.x + (editorMode ? dummyEditorX : 0))}px)`,
+                  bottom: 60 + dummyPos.y + (editorMode ? dummyEditorY : 0),
+                  transform: 'scaleX(-1)',
+                  transformOrigin: 'bottom center',
+                  zIndex: editorMode && editorTarget === 'dummy' ? 25 : 6,
+                  animation: dummyShake ? 'ssDummyShake 0.1s linear 3' : 'none',
+                  cursor: editorMode ? 'grab' : undefined,
+                  outline: editorMode && editorTarget === 'dummy' ? '2px solid #c084fc' : 'none',
+                  outlineOffset: 2,
+                  borderRadius: 4,
+                }}
+              >
                 <SpriteAnimation
                   spriteData={spriteSheets['training-dummy']}
                   animation={dummyAnim}
-                  scale={5}
+                  scale={(dummyPos.scale || 5) * (editorMode ? dummyEditorScale : 1)}
                   loop={dummyAnim === 'idle'}
                   speed={dummyAnim === 'idle' ? 200 : 120}
                   onAnimationEnd={dummyAnim !== 'idle' ? () => setDummyAnim('idle') : null}
@@ -1679,6 +1748,12 @@ function HeroSlideshow() {
             setEditorX(0);
             setEditorY(0);
             setEditorScale(1);
+            setDummyEditorX(0);
+            setDummyEditorY(0);
+            setDummyEditorScale(1);
+            setEditorTarget('hero');
+            editorTargetRef.current = 'hero';
+            setDummyPos(adminConfig.getDummyPosition());
           }
         }}
         style={{
@@ -1696,37 +1771,72 @@ function HeroSlideshow() {
       {editorMode && (
         <div style={{
           position: 'absolute', bottom: 8, left: 8, zIndex: 20,
-          background: 'rgba(0,0,0,0.85)', border: '1px solid #FAAC47',
+          background: 'rgba(0,0,0,0.85)', border: `1px solid ${editorTarget === 'dummy' ? '#c084fc' : '#FAAC47'}`,
           borderRadius: 6, padding: '8px 12px',
           fontFamily: 'monospace', fontSize: '0.7rem', color: '#fff',
           lineHeight: 1.6, pointerEvents: 'none', userSelect: 'none',
         }}>
-          <div style={{ color: '#FAAC47', fontWeight: 700, marginBottom: 4, fontSize: '0.75rem' }}>
-            Sprite Editor — {combo.raceId}_{combo.classId}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+            <span style={{
+              color: editorTarget === 'hero' ? '#FAAC47' : '#888',
+              fontWeight: editorTarget === 'hero' ? 700 : 400,
+              fontSize: '0.75rem',
+              textDecoration: editorTarget === 'hero' ? 'underline' : 'none',
+            }}>
+              HERO
+            </span>
+            <span style={{ color: '#555' }}>|</span>
+            <span style={{
+              color: editorTarget === 'dummy' ? '#c084fc' : '#888',
+              fontWeight: editorTarget === 'dummy' ? 700 : 400,
+              fontSize: '0.75rem',
+              textDecoration: editorTarget === 'dummy' ? 'underline' : 'none',
+            }}>
+              DUMMY
+            </span>
+            <span style={{ color: '#666', fontSize: '0.6rem', marginLeft: 4 }}>(Tab to switch)</span>
           </div>
-          <div>X: <span style={{ color: '#6f6' }}>{editorX}</span> | Y: <span style={{ color: '#6f6' }}>{editorY}</span> | Scale: <span style={{ color: '#6f6' }}>{editorScale.toFixed(2)}</span></div>
+          {editorTarget === 'hero' ? (
+            <>
+              <div style={{ color: '#FAAC47', fontWeight: 700, fontSize: '0.7rem' }}>
+                {combo.raceId}_{combo.classId}
+              </div>
+              <div>X: <span style={{ color: '#6f6' }}>{editorX}</span> | Y: <span style={{ color: '#6f6' }}>{editorY}</span> | Scale: <span style={{ color: '#6f6' }}>{editorScale.toFixed(2)}</span></div>
+              <div style={{ color: '#FAAC47', marginTop: 2, fontSize: '0.65rem' }}>
+                Final → X: {spriteXOffset + editorX} | Y: {spriteYOffset + editorY} | Scale: {((scaleOverride || 1) * editorScale).toFixed(2)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ color: '#c084fc', fontWeight: 700, fontSize: '0.7rem' }}>
+                Training Dummy (global)
+              </div>
+              <div>X: <span style={{ color: '#6f6' }}>{dummyEditorX}</span> | Y: <span style={{ color: '#6f6' }}>{dummyEditorY}</span> | Scale: <span style={{ color: '#6f6' }}>{dummyEditorScale.toFixed(2)}</span></div>
+              <div style={{ color: '#c084fc', marginTop: 2, fontSize: '0.65rem' }}>
+                Final → X: {dummyPos.x + dummyEditorX} | Y: {dummyPos.y + dummyEditorY} | Scale: {((dummyPos.scale || 5) * dummyEditorScale).toFixed(2)}
+              </div>
+            </>
+          )}
           <div style={{ color: '#aaa', marginTop: 4 }}>
-            Drag to move | +/- scale | Arrows to nudge (Shift=10x)
+            {editorTarget === 'dummy' ? 'Click dummy to drag | ' : 'Click hero to drag | '}+/- scale | Arrows nudge (Shift=10x)
           </div>
           <div style={{ color: '#aaa' }}>
-            {'< > to cycle heroes | S to save | Esc to exit'}
+            {'< > cycle heroes | S save | Esc exit'}
+            {editorTarget === 'dummy' && ' | R reset dummy'}
           </div>
           {editorSaved && (
             <div style={{
               color: '#22c55e', fontWeight: 700, marginTop: 4, fontSize: '0.8rem',
               animation: 'ssFadeIn 0.3s ease',
             }}>
-              SAVED {comboKey}
+              SAVED {editorTarget === 'dummy' ? 'DUMMY' : comboKey}
             </div>
           )}
-          {savedPos && !editorSaved && (
+          {editorTarget === 'hero' && savedPos && !editorSaved && (
             <div style={{ color: '#22d3ee', marginTop: 4, fontSize: '0.65rem' }}>
               Has saved position
             </div>
           )}
-          <div style={{ color: '#FAAC47', marginTop: 4 }}>
-            X: {spriteXOffset + editorX} | Y: {spriteYOffset + editorY} | Scale: {((scaleOverride || 1) * editorScale).toFixed(2)}
-          </div>
         </div>
       )}
     </div>
