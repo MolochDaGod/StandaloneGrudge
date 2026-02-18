@@ -1630,7 +1630,44 @@ export const enemySpriteMap = {
   twig_blight: monsterSprites['twig-blight'],
   mimic_chest: monsterSprites['mimic-chest'],
   fire_elemental: monsterSprites['fire-elemental'],
+  red_dragon: {
+    folder: 'dragon-red',
+    frameWidth: 256, frameHeight: 256, facesLeft: false, scale: 1.2,
+    idle: { src: '/sprites/dragon-red/Idle.png', frames: 7 },
+    walk: { src: '/sprites/dragon-red/Walk.png', frames: 12 },
+    run: { src: '/sprites/dragon-red/Walk.png', frames: 12 },
+    attack1: { src: '/sprites/dragon-red/Attack_1.png', frames: 4 },
+    attack2: { src: '/sprites/dragon-red/Attack_2.png', frames: 10 },
+    cast: { src: '/sprites/dragon-red/Special.png', frames: 12 },
+    hurt: { src: '/sprites/dragon-red/Hurt.png', frames: 4 },
+    death: { src: '/sprites/dragon-red/Dead.png', frames: 3 },
+    flight: { src: '/sprites/dragon-red/Flight.png', frames: 12 },
+    landing: { src: '/sprites/dragon-red/Landing.png', frames: 5 },
+    rise: { src: '/sprites/dragon-red/Rise.png', frames: 7 },
+    heal: { src: '/sprites/dragon-red/Special.png', frames: 12 },
+    block: { src: '/sprites/dragon-red/Idle.png', frames: 7 },
+  },
+  white_dragon: {
+    folder: 'dragon-white',
+    frameWidth: 256, frameHeight: 256, facesLeft: false, scale: 1.4,
+    idle: { src: '/sprites/dragon-white/Idle.png', frames: 7 },
+    walk: { src: '/sprites/dragon-white/Walk.png', frames: 12 },
+    run: { src: '/sprites/dragon-white/Walk.png', frames: 12 },
+    attack1: { src: '/sprites/dragon-white/Attack_1.png', frames: 4 },
+    attack2: { src: '/sprites/dragon-white/Attack_2.png', frames: 10 },
+    cast: { src: '/sprites/dragon-white/Special.png', frames: 13 },
+    hurt: { src: '/sprites/dragon-white/Hurt.png', frames: 4 },
+    death: { src: '/sprites/dragon-white/Dead.png', frames: 3 },
+    flight: { src: '/sprites/dragon-white/Flight.png', frames: 12 },
+    landing: { src: '/sprites/dragon-white/Landing.png', frames: 5 },
+    rise: { src: '/sprites/dragon-white/Rise.png', frames: 7 },
+    heal: { src: '/sprites/dragon-white/Special.png', frames: 13 },
+    block: { src: '/sprites/dragon-white/Idle.png', frames: 7 },
+  },
 };
+
+enemySpriteMap.red_dragon_2 = enemySpriteMap.red_dragon;
+enemySpriteMap.white_dragon_mother = enemySpriteMap.white_dragon;
 
 export const effectSprites = {
   magicSpell: { src: '/effects/pixel/1_magicspell_spritesheet.png', size: 900, frames: 81 },

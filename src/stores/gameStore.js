@@ -384,6 +384,11 @@ const useGameStore = create(persist((set, get) => ({
   heroStandingZone: null,
   zoneStats: {},
   completedQuests: {},
+  roamingDragons: [
+    { id: 'dragon_ignaroth', templateId: 'red_dragon', name: 'Ignaroth', nodeId: 'molten_core', alive: true, lastMove: 0 },
+    { id: 'dragon_vyraxes', templateId: 'red_dragon_2', name: 'Vyraxes', nodeId: 'infernal_forge', alive: true, lastMove: 0 },
+  ],
+  pendingDragonFight: null,
   inventory: [],
   shopInventory: [],
   shopLastRefresh: 0,
@@ -2143,6 +2148,18 @@ const useGameStore = create(persist((set, get) => ({
       }
     }
 
+    if (state.battleState?.isDragonWorldBoss && state.pendingDragonFight) {
+      const dragonId = state.pendingDragonFight;
+      const dragon = state.roamingDragons.find(d => d.id === dragonId);
+      const updatedDragons = state.roamingDragons.map(d =>
+        d.id === dragonId ? { ...d, alive: false } : d
+      );
+      if (dragon && !bossesDefeated.includes(dragon.templateId)) {
+        bossesDefeated.push(dragon.templateId);
+      }
+      set({ roamingDragons: updatedDragons, pendingDragonFight: null });
+    }
+
     while (newXp >= newXpToNext && newLevel < 20) {
       newXp -= newXpToNext;
       newLevel++;
@@ -2408,6 +2425,133 @@ const useGameStore = create(persist((set, get) => ({
   },
 
   clearMessage: () => set({ gameMessage: null }),
+
+  tickDragonMovement: () => {
+    const state = get();
+    const now = Date.now();
+    const MOVE_INTERVAL = 30000;
+    const DRAGON_ADJACENCY = {
+      molten_core: ['obsidian_wastes', 'ashen_battlefield', 'blood_canyon'],
+      obsidian_wastes: ['molten_core', 'demon_gate'],
+      infernal_forge: ['demon_gate', 'dreadmaw_canyon'],
+      dreadmaw_canyon: ['demon_gate', 'infernal_forge', 'dragon_peaks'],
+      demon_gate: ['obsidian_wastes', 'infernal_forge', 'dreadmaw_canyon'],
+      ashen_battlefield: ['blood_canyon', 'molten_core'],
+      blood_canyon: ['ashen_battlefield', 'molten_core', 'dragon_peaks'],
+      dragon_peaks: ['blood_canyon', 'dreadmaw_canyon'],
+    };
+
+    let moved = false;
+    const updatedDragons = state.roamingDragons.map(d => {
+      if (!d.alive) return d;
+      if (now - d.lastMove < MOVE_INTERVAL) return d;
+      const neighbors = DRAGON_ADJACENCY[d.nodeId] || [];
+      if (neighbors.length === 0) return d;
+      const newNode = neighbors[Math.floor(Math.random() * neighbors.length)];
+      moved = true;
+      return { ...d, nodeId: newNode, lastMove: now };
+    });
+
+    if (!moved) return null;
+
+    set({ roamingDragons: updatedDragons });
+
+    const heroZone = state.heroStandingZone || state.currentLocation;
+    const landedDragon = updatedDragons.find(d => d.alive && d.nodeId === heroZone);
+    if (landedDragon && state.screen === 'world') {
+      return landedDragon;
+    }
+    return null;
+  },
+
+  getDragonAtNode: (nodeId) => {
+    const state = get();
+    return state.roamingDragons.find(d => d.alive && d.nodeId === nodeId) || null;
+  },
+
+  startDragonBattle: (dragonId) => {
+    const state = get();
+    const dragon = state.roamingDragons.find(d => d.id === dragonId && d.alive);
+    if (!dragon) return;
+
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
+    }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+    if (playerTeam.length === 0) return;
+
+    const boss = createEnemy(dragon.templateId, Math.max(state.level + 2, 15));
+    boss.maxHealth = Math.floor(boss.maxHealth * 1.5);
+    boss.health = boss.maxHealth;
+    boss.physicalDamage = Math.floor(boss.physicalDamage * 1.2);
+    boss.magicDamage = Math.floor(boss.magicDamage * 1.2);
+    boss.defense = Math.floor(boss.defense * 1.2);
+    boss.speed += 3;
+
+    const enemyUnits = [boss];
+    const allUnits = [...playerTeam, ...enemyUnits];
+    assignRowsAndPositions(playerTeam, enemyUnits);
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
+    set({
+      screen: 'battle',
+      currentLocation: dragon.nodeId,
+      pendingDragonFight: dragonId,
+      battleState: { phase: 'intro', turnCount: 0, isBoss: true, isDragonWorldBoss: true },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: boss.id,
+      lastAction: null,
+      battleLog: [`WORLD BOSS: ${boss.name} descends from the sky!`],
+      playerHealth: mainUnit.health, playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana, playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina, playerMaxStamina: mainUnit.maxStamina,
+      cooldowns: {}, floatingTexts: [],
+    });
+  },
+
+  handleDragonVictory: () => {
+    const state = get();
+    const dragonId = state.pendingDragonFight;
+    if (!dragonId) return;
+
+    const dragon = state.roamingDragons.find(d => d.id === dragonId);
+    const updatedDragons = state.roamingDragons.map(d =>
+      d.id === dragonId ? { ...d, alive: false } : d
+    );
+    const updatedBossesDefeated = [...state.bossesDefeated];
+    if (dragon && !updatedBossesDefeated.includes(dragon.templateId)) {
+      updatedBossesDefeated.push(dragon.templateId);
+    }
+
+    const bothDead = updatedDragons.filter(d => d.templateId.startsWith('red_dragon')).every(d => !d.alive);
+
+    set({
+      roamingDragons: updatedDragons,
+      bossesDefeated: updatedBossesDefeated,
+      pendingDragonFight: null,
+    });
+
+    if (bothDead) {
+      return 'mothers_den_unlocked';
+    }
+    return 'dragon_slain';
+  },
 
   getUnlockedLocations: () => {
     const state = get();
@@ -3104,6 +3248,11 @@ const useGameStore = create(persist((set, get) => ({
       zoneConquer: {},
       zoneStats: {},
       completedQuests: {},
+      roamingDragons: [
+        { id: 'dragon_ignaroth', templateId: 'red_dragon', name: 'Ignaroth', nodeId: 'molten_core', alive: true, lastMove: 0 },
+        { id: 'dragon_vyraxes', templateId: 'red_dragon_2', name: 'Vyraxes', nodeId: 'infernal_forge', alive: true, lastMove: 0 },
+      ],
+      pendingDragonFight: null,
       inventory: [],
       shopInventory: [],
       shopLastRefresh: 0,
@@ -3228,6 +3377,7 @@ const useGameStore = create(persist((set, get) => ({
     lastEventSpawn: state.lastEventSpawn,
     trainingPhase: state.trainingPhase,
     dungeonProgress: state.dungeonProgress,
+    roamingDragons: state.roamingDragons,
   }),
 }));
 

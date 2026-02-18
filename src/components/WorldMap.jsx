@@ -411,6 +411,7 @@ export default function WorldMap() {
     shopInventory, inventory, buyItem, sellItem, refreshShop,
     randomEvents, addRandomEvent, cleanExpiredEvents, startEventBattle, lastEventSpawn,
     enterScene,
+    roamingDragons, tickDragonMovement, getDragonAtNode, startDragonBattle,
   } = useGameStore();
 
   const enterLocation = useGameStore(s => s.enterLocation);
@@ -792,6 +793,10 @@ export default function WorldMap() {
         heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
           setHeroWalking(prev => { const next = { ...prev }; delete next[hero.id]; return next; });
         });
+        const dragonHere = getDragonAtNode ? getDragonAtNode(dest) : null;
+        if (dragonHere) {
+          setTimeout(() => setDragonEncounter(dragonHere), 500);
+        }
       }
       return;
     }
@@ -1011,6 +1016,18 @@ export default function WorldMap() {
     }, spawnDelay);
     return () => clearTimeout(timeout);
   }, [randomEvents, level, addRandomEvent, getUnlockedLocations]);
+
+  const [dragonEncounter, setDragonEncounter] = useState(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tickDragonMovement) {
+        const landed = tickDragonMovement();
+        if (landed) setDragonEncounter(landed);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [tickDragonMovement]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1885,6 +1902,64 @@ export default function WorldMap() {
           );
         })}
 
+
+        {(roamingDragons || []).filter(d => d.alive).map(dragon => {
+          const pos = getNodePos(dragon.nodeId);
+          if (!pos) return null;
+          const ds = calcNodeScale(camZoom, 0.5);
+          const isRed = dragon.templateId.startsWith('red_dragon');
+          const spriteSheet = isRed ? '/sprites/dragon-red/Idle.png' : '/sprites/dragon-white/Idle.png';
+          const frameW = 256;
+          const frameH = 256;
+          const idleFrames = 7;
+          const displaySize = 140;
+          return (
+            <div key={dragon.id}
+              onClick={() => {
+                if (level >= 10) {
+                  setDragonEncounter(dragon);
+                }
+              }}
+              style={{
+                position: 'absolute',
+                left: `${pos.x}%`, top: `${pos.y - 3}%`,
+                transform: `translate(-50%, -100%) scale(${ds})`,
+                zIndex: MAP_LAYERS.HERO + 2,
+                cursor: level >= 10 ? 'pointer' : 'not-allowed',
+                transition: 'left 2s ease-in-out, top 2s ease-in-out',
+                filter: `drop-shadow(0 8px 20px rgba(${isRed ? '255,80,0' : '180,220,255'},0.6))`,
+              }}
+            >
+              <div style={{
+                width: displaySize, height: displaySize,
+                overflow: 'hidden',
+                backgroundImage: `url(${spriteSheet})`,
+                backgroundSize: `${idleFrames * displaySize}px ${displaySize}px`,
+                backgroundRepeat: 'no-repeat',
+                animation: `dragonFloat 3s ease-in-out infinite, dragonSpriteIdle7 ${idleFrames * 0.15}s steps(${idleFrames}) infinite`,
+              }} />
+              <div style={{
+                position: 'absolute', bottom: -18, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.7rem', fontFamily: 'Cinzel, serif', fontWeight: 700,
+                color: isRed ? '#ff6633' : '#aaddff',
+                textShadow: `0 0 8px rgba(${isRed ? '255,60,0' : '120,180,255'},0.8), 0 2px 4px rgba(0,0,0,0.9)`,
+                whiteSpace: 'nowrap',
+              }}>
+                ★ {dragon.name}
+              </div>
+              <div style={{
+                position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
+                fontSize: '0.55rem', fontFamily: 'Jost, sans-serif', fontWeight: 600,
+                color: '#ffcc44',
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                whiteSpace: 'nowrap',
+                letterSpacing: 1,
+              }}>
+                WORLD BOSS
+              </div>
+            </div>
+          );
+        })}
 
         {cities.map((city) => {
           const pos = getNodePos(city.id);
@@ -3082,6 +3157,71 @@ export default function WorldMap() {
               <span style={{ fontSize: '0.85rem', color: 'rgba(150,150,170,0.4)' }}>
                 Click anywhere to close
               </span>
+            </div>
+          </div>,
+          outerRef.current
+        )}
+
+        {dragonEncounter && outerRef.current && createPortal(
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: MAP_LAYERS.POPUPS + 10,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeIn 0.3s ease-out',
+          }}
+          onClick={() => setDragonEncounter(null)}
+          >
+            <div onClick={e => e.stopPropagation()} style={{
+              background: 'linear-gradient(135deg, rgba(30,10,10,0.98), rgba(50,15,15,0.98))',
+              border: `2px solid ${dragonEncounter.templateId?.startsWith('red_dragon') ? '#ff4400' : '#88ccff'}`,
+              borderRadius: 16, padding: 0, minWidth: 300, maxWidth: 400,
+              boxShadow: `0 0 60px ${dragonEncounter.templateId?.startsWith('red_dragon') ? 'rgba(255,60,0,0.4)' : 'rgba(100,180,255,0.4)'}`,
+              animation: 'slideInLeft 0.3s ease-out',
+            }}>
+              <div style={{
+                padding: '20px 24px 16px', textAlign: 'center',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                background: `linear-gradient(135deg, ${dragonEncounter.templateId?.startsWith('red_dragon') ? 'rgba(255,60,0,0.15)' : 'rgba(100,180,255,0.15)'}, transparent)`,
+              }}>
+                <div style={{
+                  fontSize: '0.7rem', fontFamily: 'Jost, sans-serif', fontWeight: 600,
+                  color: '#ffcc44', letterSpacing: 2, marginBottom: 8,
+                  textTransform: 'uppercase',
+                }}>
+                  World Boss Encounter
+                </div>
+                <div style={{
+                  fontFamily: 'Cinzel, serif', fontSize: '1.4rem', fontWeight: 700,
+                  color: dragonEncounter.templateId?.startsWith('red_dragon') ? '#ff6633' : '#aaddff',
+                  textShadow: `0 0 12px ${dragonEncounter.templateId?.startsWith('red_dragon') ? 'rgba(255,60,0,0.6)' : 'rgba(100,180,255,0.6)'}`,
+                  marginBottom: 6,
+                }}>
+                  ★ {dragonEncounter.name}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  {dragonEncounter.name === 'Ignaroth'
+                    ? 'The Flamebringer circles overhead, its scales radiating molten heat. Ancient and wrathful, it guards the volcanic peaks.'
+                    : dragonEncounter.name === 'Vyraxes'
+                    ? 'The Infernal Wyrm emerges from the forge depths, trailing smoke and cinders. Its eyes burn with eternal fury.'
+                    : 'The Mother of Dragons descends with glacial fury. Her white scales shimmer with divine protection.'}
+                </div>
+              </div>
+              <div style={{ padding: '12px 24px 20px', display: 'flex', gap: 10 }}>
+                <MenuButton
+                  icon="battle" label="Fight" sublabel="Challenge the World Boss"
+                  color={dragonEncounter.templateId?.startsWith('red_dragon') ? '#ff4400' : '#4488ff'}
+                  onClick={() => {
+                    startDragonBattle(dragonEncounter.id);
+                    setDragonEncounter(null);
+                  }}
+                  glow
+                />
+                <MenuButton
+                  icon="travel" label="Flee" sublabel="Live to fight another day"
+                  color="#666"
+                  onClick={() => setDragonEncounter(null)}
+                />
+              </div>
             </div>
           </div>,
           outerRef.current

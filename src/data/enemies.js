@@ -105,6 +105,54 @@ export const enemyTemplates = {
       { id: 'curse_weakness', name: 'Curse of Weakness', icon: 'skull', type: 'magical', damage: 0.5, cooldown: 4, description: 'Curses a hero, reducing their damage', effect: { type: 'dot', damage: 0.10, duration: 4 } },
     ]
   },
+  red_dragon: {
+    name: 'Ignaroth, Flame Terror', icon: 'fire', color: '#dc2626',
+    baseHealth: 1100, baseDamage: 58, baseDefense: 38, baseMana: 300,
+    xpReward: 400, goldReward: 300, speed: 16,
+    isBoss: true,
+    isWorldBoss: true,
+    abilities: [
+      { id: 'dragon_claw', name: 'Dragon Claw', icon: 'sword', type: 'physical', damage: 1.8, description: 'Rakes with massive burning claws' },
+      { id: 'inferno_breath', name: 'Inferno Breath', icon: 'fire', type: 'magical', damage: 3.0, cooldown: 3, description: 'Unleashes a torrent of dragonfire', isAoE: true },
+      { id: 'wing_buffet', name: 'Wing Buffet', icon: 'energy', type: 'physical', damage: 2.2, cooldown: 4, description: 'Batters all heroes with massive wings', isAoE: true },
+      { id: 'molten_armor', name: 'Molten Armor', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Coats scales in molten rock', effect: { stat: 'defense', flat: 50, duration: 3 } },
+      { id: 'tail_slam', name: 'Tail Slam', icon: 'sword', type: 'physical', damage: 2.5, cooldown: 3, description: 'Crushes a hero with a devastating tail strike', effect: { type: 'stun', duration: 1 } },
+      { id: 'dragon_roar', name: 'Terrifying Roar', icon: 'fire', type: 'buff', damage: 0, cooldown: 6, description: 'A roar that shakes the very earth', effect: { stat: 'damage', multiplier: 1.8, duration: 3 } },
+    ]
+  },
+  red_dragon_2: {
+    name: 'Vyraxes, Ember Wyrm', icon: 'fire', color: '#ef4444',
+    baseHealth: 1000, baseDamage: 62, baseDefense: 35, baseMana: 280,
+    xpReward: 400, goldReward: 300, speed: 18,
+    isBoss: true,
+    isWorldBoss: true,
+    abilities: [
+      { id: 'rend', name: 'Rending Bite', icon: 'sword', type: 'physical', damage: 2.0, description: 'Bites through armor with superheated fangs' },
+      { id: 'fire_storm', name: 'Fire Storm', icon: 'fire', type: 'magical', damage: 2.8, cooldown: 3, description: 'Engulfs the battlefield in flames', isAoE: true },
+      { id: 'dive_attack', name: 'Dive Attack', icon: 'sword', type: 'physical', damage: 3.5, cooldown: 5, description: 'Dives from the sky with devastating force' },
+      { id: 'flame_shield', name: 'Flame Shield', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Wraps in protective fire', effect: { stat: 'defense', flat: 45, duration: 3 } },
+      { id: 'scorched_earth', name: 'Scorched Earth', icon: 'fire', type: 'magical', damage: 1.5, cooldown: 4, description: 'Burns the ground beneath all heroes', isAoE: true, effect: { type: 'dot', damage: 0.12, duration: 3 } },
+      { id: 'berserk_fury', name: 'Draconic Fury', icon: 'fire', type: 'buff', damage: 0, cooldown: 7, description: 'Enters a primal draconic rage', effect: { stat: 'damage', multiplier: 2.0, duration: 3 } },
+    ]
+  },
+  white_dragon_mother: {
+    name: 'Zephyria, The Dragon Mother', icon: 'fire', color: '#e2e8f0',
+    baseHealth: 2200, baseDamage: 80, baseDefense: 50, baseMana: 500,
+    xpReward: 600, goldReward: 500, speed: 17,
+    isBoss: true,
+    isWorldBoss: true,
+    abilities: [
+      { id: 'frost_claw', name: 'Ancient Claw', icon: 'sword', type: 'physical', damage: 2.2, description: 'Strikes with primordial fury' },
+      { id: 'divine_breath', name: 'Divine Breath', icon: 'ice', type: 'magical', damage: 3.5, cooldown: 3, description: 'A breath of pure elemental energy scorches all', isAoE: true },
+      { id: 'mothers_wrath', name: "Mother's Wrath", icon: 'fire', type: 'magical', damage: 5.0, cooldown: 6, description: 'Unleashes devastating fury for her fallen children', isAoE: true },
+      { id: 'ancient_scales', name: 'Ancient Scales', icon: 'shield', type: 'buff', damage: 0, cooldown: 5, description: 'Scales harden to impenetrable diamond', effect: { stat: 'defense', flat: 80, duration: 3 } },
+      { id: 'dragon_heal', name: 'Primordial Restoration', icon: 'heart', type: 'heal', damage: 0, cooldown: 5, description: 'Draws on ancient power to heal wounds', healPercent: 0.12 },
+      { id: 'tail_sweep', name: 'Tail Sweep', icon: 'sword', type: 'physical', damage: 2.8, cooldown: 3, description: 'Sweeps all heroes with massive tail', isAoE: true },
+      { id: 'sky_fury', name: 'Sky Fury', icon: 'energy', type: 'magical', damage: 4.2, cooldown: 5, description: 'Calls down pillars of elemental fury' },
+      { id: 'terrify', name: 'Ancient Terror', icon: 'skull', type: 'magical', damage: 1.0, cooldown: 5, description: 'Paralyzes with primordial dread', effect: { type: 'stun', duration: 2 } },
+      { id: 'enrage', name: 'Vengeance Incarnate', icon: 'fire', type: 'buff', damage: 0, cooldown: 8, description: 'Power surges with motherly vengeance', effect: { stat: 'damage', multiplier: 2.5, duration: 3 } },
+    ]
+  },
   fire_worm: {
     name: 'Fire Worm', icon: 'fire', color: '#f97316',
     baseHealth: 180, baseDamage: 32, baseDefense: 18, baseMana: 60,
@@ -1200,6 +1248,27 @@ export const locations = [
       { raceId: 'dwarf', classId: 'warrior', levelRange: [19, 20] },
       { raceId: 'elf', classId: 'ranger', levelRange: [20, 20] },
     ],
+  },
+  {
+    id: 'mothers_den',
+    name: "Mother's Den",
+    description: "The ancient lair of Zephyria, the Dragon Mother. The bones of a thousand heroes litter the entrance. She mourns her fallen children — and will make you pay.",
+    levelRange: [18, 20],
+    enemies: ['dragon_whelp', 'fire_worm', 'fire_elemental'],
+    bgGradient: 'linear-gradient(135deg, #1a0000 0%, #4a0808 50%, #2d0000 100%)',
+    icon: 'fire',
+    unlocked: false,
+    unlockLevel: 15,
+    unlockRequiredBosses: ['red_dragon', 'red_dragon_2'],
+    boss: 'white_dragon_mother',
+    isWorldBoss: true,
+    enemyCount: [2, 3],
+    allyCount: 3,
+    raceClassEnemies: [
+      { raceId: 'orc', classId: 'warrior', levelRange: [17, 19] },
+      { raceId: 'barbarian', classId: 'worge', levelRange: [18, 20] },
+      { raceId: 'undead', classId: 'mage', levelRange: [18, 20] },
+    ],
   }
 ];
 
@@ -1215,6 +1284,7 @@ const ZONE_TERRAIN_MAP = {
   infernal_forge: 'red', dragon_peaks: 'red',
   silver_citadel: 'gold', blight_hollow: 'green',
   hall_of_odin: 'gold', maw_of_madra: 'red', sanctum_of_omni: 'purple',
+  mothers_den: 'red',
 };
 
 export function getZoneTerrain(locationId) {

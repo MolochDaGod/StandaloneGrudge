@@ -351,6 +351,18 @@ export const ZONE_CUTSCENES = {
       'Those who earn the Omni\'s favor gain insight that transcends ordinary power. Those who fail are erased.'
     ],
   },
+  mothers_den: {
+    bg: '/backgrounds/dragon_peaks.png',
+    title: "The Mother's Den",
+    subtitle: 'Where Dragons Were Born',
+    lines: [
+      'The heat hits you first — a furnace wind that carries the stench of sulfur and ancient bones.',
+      'You stand at the threshold of a cavern older than civilization itself. Dragon bones the size of towers line the walls.',
+      'Zephyria, the Dragon Mother, lost both her children to your blade. Her grief has turned to cold, calculated rage.',
+      'The ground trembles. From the deepest darkness, two pale eyes open — and the air itself freezes.',
+      'There is no retreat from the Mother\'s Den. Only victory... or oblivion.'
+    ],
+  },
 };
 
 export const CUTSCENE_STORAGE_KEY = 'grudge-zone-cutscenes-seen';

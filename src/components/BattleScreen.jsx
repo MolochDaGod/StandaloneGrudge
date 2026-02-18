@@ -109,6 +109,7 @@ const BASE_LOCATION_BACKGROUNDS = {
   hall_of_odin: `${BB}/throne_room.jpg`,
   maw_of_madra: `${BB}/dead_forest.jpg`,
   sanctum_of_omni: `${BB}/cave_arena.jpg`,
+  mothers_den: `${BB}/lava_cave.jpg`,
 };
 
 function getLocationBackgrounds() {

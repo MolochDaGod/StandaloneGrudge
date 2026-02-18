@@ -31,6 +31,7 @@ export const locationPositions = {
   hall_of_odin:       { x: 65, y: 10 },
   maw_of_madra:       { x: 88, y: 10 },
   sanctum_of_omni:    { x: 76, y: 6 },
+  mothers_den:        { x: 90, y: 78 },
 };
 
 export const pathConnections = [
@@ -74,6 +75,8 @@ export const pathConnections = [
   ['void_throne', 'hall_of_odin'],
   ['void_throne', 'maw_of_madra'],
   ['void_throne', 'sanctum_of_omni'],
+  ['obsidian_wastes', 'mothers_den'],
+  ['infernal_forge', 'mothers_den'],
 ];
 
 export const locationIcons = {
@@ -109,6 +112,7 @@ export const locationIcons = {
   hall_of_odin:       { color: '#fbbf24', glow: 'rgba(251,191,36,0.6)', img: '/map_nodes/void_throne.png' },
   maw_of_madra:       { color: '#dc2626', glow: 'rgba(220,38,38,0.6)', img: '/map_nodes/void_throne.png' },
   sanctum_of_omni:    { color: '#a78bfa', glow: 'rgba(167,139,250,0.6)', img: '/map_nodes/void_throne.png' },
+  mothers_den:        { color: '#fbbf24', glow: 'rgba(251,191,36,0.6)', img: '/map_nodes/dragon_peaks.png' },
 };
 
 export const terrainRegions = [
@@ -186,4 +190,5 @@ export const zoneLabelMap = {
   hall_of_odin: 'Hall of Odin',
   maw_of_madra: 'Maw of Madra',
   sanctum_of_omni: 'Sanctum of Omni',
+  mothers_den: "Mother's Den",
 };
