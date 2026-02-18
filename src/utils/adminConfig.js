@@ -9,6 +9,7 @@ const KEYS = {
   spriteEditorLayout: 'adminSpriteLayout',
   pvpPlacements: 'grudge-admin-pvp-placements',
   spriteOverrides: 'adminSpriteOverrides',
+  bearFormOverride: 'adminBearFormOverride',
 };
 
 const DEFAULTS = {
@@ -198,6 +199,16 @@ export const adminConfig = {
   },
   resetAllSpriteOverrides() {
     remove('spriteOverrides');
+  },
+
+  getBearFormOverride() {
+    return load('bearFormOverride') || { offsetX: 0, offsetY: 0, scale: 1.0 };
+  },
+  saveBearFormOverride(data) {
+    save('bearFormOverride', data);
+  },
+  resetBearFormOverride() {
+    remove('bearFormOverride');
   },
 
   resetAll() {

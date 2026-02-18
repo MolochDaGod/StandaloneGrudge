@@ -1345,6 +1345,7 @@ function BattleScreenInner() {
   const [adminOverrides, setAdminOverrides] = useState(() => adminConfig.getEffectPositions());
   const [adminDragging, setAdminDragging] = useState(null);
   const adminDragStart = useRef(null);
+  const [bearFormOverride, setBearFormOverride] = useState(() => adminConfig.getBearFormOverride());
   const spriteLayout = adminConfig.getSpriteLayout();
   const actionBarLayout = adminConfig.getActionBar();
 
@@ -1397,6 +1398,12 @@ function BattleScreenInner() {
       adminConfig.saveEffectPositions(adminOverrides);
     }
   }, [adminOverrides, adminMode]);
+
+  useEffect(() => {
+    if (adminMode) {
+      adminConfig.saveBearFormOverride(bearFormOverride);
+    }
+  }, [bearFormOverride, adminMode]);
 
   const phase = battleState?.phase;
   const spd = autoBattleEnabled ? 1 : 1.25;
@@ -2641,8 +2648,13 @@ function BattleScreenInner() {
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
           const adminScale = spriteData?.scale || 1;
-          const comboOffset = { x: 0, y: 0 };
-          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale;
+          const isWorgeBear = unit.classId === 'worge' && unit.bearForm;
+          const bearScale = isWorgeBear ? (bearFormOverride.scale || 1) : 1;
+          const comboOffset = {
+            x: isWorgeBear ? (bearFormOverride.offsetX || 0) : 0,
+            y: isWorgeBear ? (bearFormOverride.offsetY || 0) : 0,
+          };
+          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale * bearScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const hitW = Math.round(spriteSize * 0.5);
@@ -3208,9 +3220,46 @@ function BattleScreenInner() {
               )}
             </div>
           ))}
+          {battleUnits.some(u => u.classId === 'worge' && u.bearForm && u.alive) && (
+            <div style={{ marginTop: 6, borderTop: '1px solid rgba(168,85,247,0.3)', paddingTop: 6 }}>
+              <div style={{ color: '#c084fc', fontWeight: 800, fontSize: '0.55rem', letterSpacing: '0.08em', marginBottom: 4 }}>BEAR FORM</div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>X</span>
+                <input type="range" min={-60} max={60} value={bearFormOverride.offsetX || 0}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, offsetX: parseInt(e.target.value) }))}
+                  style={{ flex: 1, height: 8, accentColor: '#c084fc' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{bearFormOverride.offsetX || 0}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>Y</span>
+                <input type="range" min={-60} max={60} value={bearFormOverride.offsetY || 0}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, offsetY: parseInt(e.target.value) }))}
+                  style={{ flex: 1, height: 8, accentColor: '#c084fc' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{bearFormOverride.offsetY || 0}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>S</span>
+                <input type="range" min={30} max={250} value={Math.round((bearFormOverride.scale || 1) * 100)}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, scale: parseInt(e.target.value) / 100 }))}
+                  style={{ flex: 1, height: 8, accentColor: '#a855f7' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{Math.round((bearFormOverride.scale || 1) * 100)}%</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                <button onClick={() => { setBearFormOverride({ offsetX: 0, offsetY: 0, scale: 1.0 }); adminConfig.resetBearFormOverride(); }} style={{
+                  flex: 1, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)',
+                  color: '#c084fc', borderRadius: 3, padding: '2px 0', fontSize: '0.45rem', cursor: 'pointer',
+                }}>Reset</button>
+              </div>
+            </div>
+          )}
           <button onClick={() => {
             adminConfig.saveEffectPositions(adminOverrides);
-            const json = JSON.stringify(adminOverrides, null, 2);
+            adminConfig.saveBearFormOverride(bearFormOverride);
+            const allData = { effects: adminOverrides, bearForm: bearFormOverride };
+            const json = JSON.stringify(allData, null, 2);
             navigator.clipboard.writeText(json).then(() => alert('Saved & copied!')).catch(() => alert('Saved!'));
           }} style={{
             width: '100%', background: 'rgba(251,191,36,0.15)', border: '1px solid #f59e0b',
