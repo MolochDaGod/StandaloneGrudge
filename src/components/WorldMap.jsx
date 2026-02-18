@@ -24,6 +24,8 @@ import MapOverlay from './MapOverlay';
 import GrudaLeaderboard from './GrudaLeaderboard';
 import ZoneCutscene from './ZoneCutscene';
 import { needsCutscene } from '../data/zoneCutscenes';
+import RegionWalkCutscene from './RegionWalkCutscene';
+import { needsRegionWalk } from '../data/regionWalkData';
 import { RankBadgeInline } from './RankBadge';
 
 const bossMapSprites = {
@@ -454,6 +456,7 @@ export default function WorldMap() {
   const [bossWalkUp, setBossWalkUp] = useState(null);
   const [cutsceneZone, setCutsceneZone] = useState(null);
   const [pendingBattleZone, setPendingBattleZone] = useState(null);
+  const [regionWalkZone, setRegionWalkZone] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventCountdown, setEventCountdown] = useState(0);
   const [movePath, setMovePath] = useState(null);
@@ -1156,6 +1159,12 @@ export default function WorldMap() {
   }, [level, heroPos, getNodePos, devUnlocked, isPathing, currentZone]);
 
   const handleBattle = (locId) => {
+    if (needsRegionWalk(locId)) {
+      setRegionWalkZone(locId);
+      setPendingBattleZone(locId);
+      setSelectedLocation(null);
+      return;
+    }
     if (needsCutscene(locId)) {
       setCutsceneZone(locId);
       setPendingBattleZone(locId);
@@ -1166,6 +1175,18 @@ export default function WorldMap() {
     startBattle(locId);
     setSelectedLocation(null);
   };
+
+  const handleRegionWalkComplete = useCallback(() => {
+    const zoneId = regionWalkZone || pendingBattleZone;
+    setRegionWalkZone(null);
+    if (zoneId && needsCutscene(zoneId)) {
+      setCutsceneZone(zoneId);
+    } else if (zoneId) {
+      setPendingBattleZone(null);
+      useGameStore.setState({ currentLocation: zoneId });
+      startBattle(zoneId);
+    }
+  }, [regionWalkZone, pendingBattleZone, startBattle]);
 
   const handleCutsceneComplete = useCallback(() => {
     const zoneId = pendingBattleZone;
@@ -3849,6 +3870,11 @@ export default function WorldMap() {
             100% { opacity: 0; }
           }
         `}</style>
+
+      {regionWalkZone && createPortal(
+        <RegionWalkCutscene zoneId={regionWalkZone} onComplete={handleRegionWalkComplete} />,
+        document.body
+      )}
 
       {cutsceneZone && createPortal(
         <ZoneCutscene zoneId={cutsceneZone} onComplete={handleCutsceneComplete} />,
