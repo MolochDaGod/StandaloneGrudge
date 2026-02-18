@@ -1121,7 +1121,7 @@ export const raceClassSpriteMap = {
     warrior: spriteSheets['elite-orc'],
     mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 },
     worge: spriteSheets.orc,
-    ranger: spriteSheets['armored-orc'],
+    ranger: { ...spriteSheets['armored-orc'], filter: 'hue-rotate(60deg) saturate(1.5) brightness(1.05) contrast(1.1)' },
   },
   elf: {
     warrior: { ...spriteSheets['hero-knight'], filter: 'saturate(0.6) brightness(1.15) hue-rotate(10deg)' },
@@ -1160,7 +1160,7 @@ export const raceClassDefaultSpriteKeys = {
 
 export const raceClassDefaultProps = {
   human: { warrior: { filter: 'sepia(0.6) saturate(1.8) brightness(1.15) hue-rotate(15deg)' }, mage: {}, worge: {}, ranger: {} },
-  orc: { warrior: {}, mage: { filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 }, worge: {}, ranger: {} },
+  orc: { warrior: {}, mage: { filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 }, worge: {}, ranger: { filter: 'hue-rotate(60deg) saturate(1.5) brightness(1.05) contrast(1.1)' } },
   elf: { warrior: { filter: 'saturate(0.6) brightness(1.15) hue-rotate(10deg)' }, mage: { filter: 'saturate(0.15) brightness(1.4) hue-rotate(200deg)' }, worge: { filter: 'hue-rotate(80deg) saturate(1.4) brightness(1.0) contrast(1.1)' }, ranger: { filter: 'sepia(0.3) saturate(1.5) hue-rotate(340deg)' } },
   undead: { warrior: { filter: 'brightness(0.75) saturate(0.5) contrast(1.2)' }, mage: {}, worge: { filter: 'sepia(0.3) hue-rotate(270deg) saturate(1.0) brightness(0.85)' }, ranger: {} },
   barbarian: { warrior: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)', scale: 1.35 }, mage: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' }, worge: { filter: 'sepia(0.5) saturate(1.2) brightness(0.85)', scale: 1.35 }, ranger: {} },
