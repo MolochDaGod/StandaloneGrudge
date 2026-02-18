@@ -47,11 +47,6 @@ function TitleParticles() {
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
         ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color}, ${p.opacity * 0.15})`;
-        ctx.fill();
       });
       raf = requestAnimationFrame(animate);
     };
@@ -71,52 +66,71 @@ function TitleParticles() {
   );
 }
 
-function MenuButton({ label, onClick, primary, icon, delay = 0 }) {
+function LoginButton({ label, onClick, variant = 'default', icon, delay = 0, sublabel, disabled, active }) {
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
 
-  const baseStyle = {
-    position: 'relative',
-    overflow: 'hidden',
-    background: primary
-      ? hovered
+  const variants = {
+    grudge: {
+      bg: hovered
         ? 'linear-gradient(135deg, rgba(250,172,71,0.3), rgba(219,99,49,0.15))'
-        : 'linear-gradient(135deg, rgba(250,172,71,0.15), rgba(219,99,49,0.05))'
-      : hovered
-        ? 'rgba(255,255,255,0.08)'
-        : 'rgba(255,255,255,0.03)',
-    border: primary
-      ? '2px solid rgba(250,172,71,0.5)'
-      : '1px solid rgba(255,255,255,0.15)',
-    borderRadius: 8,
-    padding: primary ? '18px 60px' : '14px 50px',
-    color: primary ? 'var(--accent)' : '#ccc',
-    fontSize: primary ? '1.4rem' : '1.2rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-    fontFamily: "'LifeCraft', 'Cinzel', serif",
-    letterSpacing: primary ? 4 : 3,
-    transition: 'all 0.25s ease',
-    width: 340,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.04) translateY(-1px)' : 'scale(1)',
-    boxShadow: hovered && primary
-      ? '0 0 30px rgba(250,172,71,0.35), 0 0 60px rgba(219,99,49,0.15), 0 4px 20px rgba(0,0,0,0.4)'
-      : hovered
-        ? '0 0 20px rgba(255,255,255,0.1), 0 4px 15px rgba(0,0,0,0.3)'
-        : primary
-          ? '0 2px 8px rgba(0,0,0,0.3)'
-          : 'none',
-    animation: primary
-      ? `slideUp 0.5s ease ${delay}s both, ${hovered ? '' : 'borderGlow 3s ease-in-out infinite 2s'}`
-      : `slideUp 0.5s ease ${delay}s both`,
+        : 'linear-gradient(135deg, rgba(250,172,71,0.15), rgba(219,99,49,0.05))',
+      border: active ? '2px solid rgba(110,231,183,0.6)' : '2px solid rgba(250,172,71,0.5)',
+      color: active ? '#6ee7b7' : 'var(--accent)',
+      fontSize: '1.25rem',
+      padding: '16px 40px',
+    },
+    discord: {
+      bg: hovered
+        ? 'rgba(88,101,242,0.2)'
+        : 'rgba(88,101,242,0.08)',
+      border: active ? '1px solid rgba(110,231,183,0.5)' : '1px solid rgba(88,101,242,0.4)',
+      color: active ? '#6ee7b7' : '#93a4f4',
+      fontSize: '1.1rem',
+      padding: '14px 36px',
+    },
+    default: {
+      bg: hovered ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      color: '#888',
+      fontSize: '1rem',
+      padding: '12px 36px',
+    },
   };
+
+  const v = variants[variant] || variants.default;
 
   return (
     <button
-      style={baseStyle}
+      disabled={disabled}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: v.bg,
+        border: v.border,
+        borderRadius: 8,
+        padding: v.padding,
+        color: v.color,
+        fontSize: v.fontSize,
+        fontWeight: 700,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        fontFamily: "'LifeCraft', 'Cinzel', serif",
+        letterSpacing: 3,
+        transition: 'all 0.25s ease',
+        width: 360,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        transform: pressed ? 'scale(0.95)' : hovered ? 'scale(1.03) translateY(-1px)' : 'scale(1)',
+        boxShadow: hovered
+          ? variant === 'grudge'
+            ? '0 0 30px rgba(250,172,71,0.3), 0 4px 20px rgba(0,0,0,0.4)'
+            : '0 0 15px rgba(255,255,255,0.05), 0 4px 15px rgba(0,0,0,0.3)'
+          : 'none',
+        animation: `slideUp 0.5s ease ${delay}s both`,
+        opacity: disabled ? 0.5 : 1,
+      }}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setPressed(false); }}
@@ -125,29 +139,104 @@ function MenuButton({ label, onClick, primary, icon, delay = 0 }) {
     >
       {hovered && <div style={{
         position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
         animation: 'lobbyCardShine 0.6s ease forwards',
         pointerEvents: 'none',
       }} />}
-      {icon}{label}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {icon}
+        <div style={{ textAlign: 'left' }}>
+          <div>{label}</div>
+          {sublabel && (
+            <div style={{ fontSize: '0.6rem', fontWeight: 400, opacity: 0.6, letterSpacing: 1, fontFamily: "'Jost', sans-serif", marginTop: 2 }}>
+              {sublabel}
+            </div>
+          )}
+        </div>
+      </div>
     </button>
   );
 }
 
+const DiscordSvg = ({ size = 20, color = 'currentColor' }) => (
+  <svg width={size} height={Math.round(size * 0.77)} viewBox="0 0 71 55" fill={color}>
+    <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
+  </svg>
+);
+
 export default function TitleScreen() {
   const setScreen = useGameStore(s => s.setScreen);
   const [fadeClass, setFadeClass] = useState(false);
+  const [puterUser, setPuterUser] = useState(null);
+  const [puterLoading, setPuterLoading] = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
+  const [autoChecked, setAutoChecked] = useState(false);
 
   useEffect(() => {
     setBgm('intro');
     const t1 = setTimeout(() => setFadeClass(true), 200);
+
+    if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
+      window.puter.auth.getUser().then(u => {
+        setPuterUser(u);
+        setAutoChecked(true);
+      }).catch(() => setAutoChecked(true));
+    } else {
+      setAutoChecked(true);
+    }
+
     return () => clearTimeout(t1);
   }, []);
 
-  const handleLogin = (method) => {
+  const handleGrudgeLogin = async () => {
+    if (!window.puter) {
+      handleGuest();
+      return;
+    }
+    setPuterLoading(true);
+    try {
+      if (puterUser) {
+        const session = {
+          type: 'puter',
+          puterUsername: puterUser.username,
+          username: puterUser.username,
+          loginTime: Date.now(),
+        };
+        localStorage.setItem('grudge-session', JSON.stringify(session));
+        setScreen('intro');
+        return;
+      }
+      await window.puter.auth.signIn();
+      const user = await window.puter.auth.getUser();
+      setPuterUser(user);
+      const session = {
+        type: 'puter',
+        puterUsername: user.username,
+        username: user.username,
+        loginTime: Date.now(),
+      };
+      localStorage.setItem('grudge-session', JSON.stringify(session));
+      setScreen('intro');
+    } catch {}
+    setPuterLoading(false);
+  };
+
+  const handleDiscordLogin = async () => {
+    setDiscordLoading(true);
+    try {
+      const res = await fetch('/api/discord/login');
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {}
+    setDiscordLoading(false);
+  };
+
+  const handleGuest = () => {
     const session = {
-      type: method,
-      username: method === 'guest' ? 'Adventurer' : null,
+      type: 'guest',
+      username: 'Adventurer',
       loginTime: Date.now(),
     };
     localStorage.setItem('grudge-session', JSON.stringify(session));
@@ -183,8 +272,8 @@ export default function TitleScreen() {
 
       <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
         <div style={{
-          fontSize: '0.9rem', color: 'var(--muted)', letterSpacing: 8,
-          textTransform: 'uppercase', marginBottom: 24, opacity: 0.5,
+          fontSize: '0.85rem', color: 'var(--muted)', letterSpacing: 8,
+          textTransform: 'uppercase', marginBottom: 20, opacity: 0.5,
           animation: 'subtitleReveal 1.8s ease 0.2s both',
         }}>
           Grudge Studio Presents
@@ -197,54 +286,75 @@ export default function TitleScreen() {
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           WebkitTextStroke: '2px #000',
           paintOrder: 'stroke fill',
-          marginBottom: 8, lineHeight: 1.1,
+          marginBottom: 4, lineHeight: 1.1,
           animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
           filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
         }}>
           GRUDGE<br/>WARLORDS
         </h1>
 
-        <div className="font-warcraft" style={{
-          fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
-          background: 'linear-gradient(90deg, #D8B4FE 0%, #E9D5FF 15%, #86EFAC 35%, #BBF7D0 50%, #86EFAC 65%, #E9D5FF 85%, #D8B4FE 100%)',
-          backgroundSize: '200% auto',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          WebkitTextStroke: '1.5px rgba(0,0,0,0.8)',
-          paintOrder: 'stroke fill',
-          letterSpacing: 6, textTransform: 'uppercase', marginBottom: 40, marginTop: 4,
-          animation: 'titleShimmer 5s linear infinite, fadeIn 1s ease 0.6s both',
-          filter: 'drop-shadow(0 0 20px rgba(168,85,247,0.6)) drop-shadow(0 0 40px rgba(110,231,183,0.4)) drop-shadow(0 2px 6px rgba(0,0,0,1))',
+        <div className="font-cinzel" style={{
+          fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)',
+          color: 'rgba(250,172,71,0.7)',
+          letterSpacing: 6, textTransform: 'uppercase', marginBottom: 32, marginTop: 4,
+          animation: 'fadeIn 1s ease 0.5s both',
+          fontWeight: 600,
         }}>
-          The Void King Awaits
+          Warlord Crafting Suite
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-          <MenuButton
-            label="PLAY AS GUEST"
-            onClick={() => handleLogin('guest')}
-            primary
-            icon={<EssentialIcon name="Gamepad" size={20} style={{ marginRight: 8 }} />}
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center',
+        }}>
+          <LoginButton
+            label={puterUser ? `ENTER AS ${puterUser.username.toUpperCase()}` : 'LOGIN WITH GRUDGE'}
+            sublabel={puterUser ? 'Grudge Studio Account' : 'Sign in to save progress'}
+            onClick={handleGrudgeLogin}
+            variant="grudge"
+            active={!!puterUser}
+            disabled={puterLoading}
+            icon={
+              <div style={{
+                width: 24, height: 24, borderRadius: 4,
+                background: puterUser
+                  ? 'linear-gradient(135deg, #10b981, #34d399)'
+                  : 'linear-gradient(135deg, #DB6331, #FAAC47)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.75rem', fontWeight: 800, color: '#fff',
+                fontFamily: "'Jost', sans-serif",
+              }}>
+                {puterUser ? '\u2713' : 'G'}
+              </div>
+            }
             delay={0.3}
           />
 
-          <MenuButton
-            label="CONNECT DISCORD"
-            onClick={() => handleLogin('discord')}
-            icon={
-              <svg width="20" height="16" viewBox="0 0 71 55" fill="currentColor" style={{ marginRight: 8 }}>
-                <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.7 40.7 0 00-1.8 3.7 54 54 0 00-16.2 0A26.4 26.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.8 58.8 0 0017.7 9a.2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.6.2.2 0 01 0-.4c.4-.3.7-.6 1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.6.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1A58.6 58.6 0 0070.3 45.6v-.1c1.4-15.1-2.4-28.2-10.1-39.8a.2.2 0 00-.1-.1zM23.7 37.3c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.2 0c-3.4 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/>
-              </svg>
-            }
+          <LoginButton
+            label="LOGIN WITH DISCORD"
+            sublabel="Sync community & leaderboards"
+            onClick={handleDiscordLogin}
+            variant="discord"
+            disabled={discordLoading}
+            icon={<DiscordSvg size={22} color="#7289da" />}
             delay={0.45}
+          />
+
+          <LoginButton
+            label="PLAY AS GUEST"
+            sublabel="No account needed"
+            onClick={handleGuest}
+            variant="default"
+            icon={<EssentialIcon name="Gamepad" size={18} style={{ opacity: 0.5 }} />}
+            delay={0.55}
           />
         </div>
 
         <div style={{
-          color: 'var(--muted)', fontSize: '0.9rem', marginTop: 40, opacity: 0.4,
+          color: 'var(--muted)', fontSize: '0.85rem', marginTop: 30, opacity: 0.35,
           letterSpacing: 1,
           animation: 'fadeIn 1s ease 0.8s both',
         }}>
-          Turn-Based RPG &bull; 6 Races &bull; 4 Classes &bull; 24 Warlords
+          6 Races &bull; 4 Classes &bull; 24 Warlords
         </div>
       </div>
 
