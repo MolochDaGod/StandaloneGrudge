@@ -39,7 +39,6 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  height: 100dvh;
   overflow: hidden;
 }
 
@@ -52,14 +51,12 @@ body {
 #root {
   width: 100%;
   height: 100%;
-  height: 100dvh;
   overflow: hidden;
 }
 
 .game-frame {
   width: 100%;
   height: 100%;
-  height: 100dvh;
   position: relative;
   overflow: hidden;
   background: var(--bg);
