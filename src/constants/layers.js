@@ -83,25 +83,41 @@ export const SCENE = {
   TOOLTIP: 40,
 };
 
-// ─── LAYER 8: BATTLE INTERNALS (0–500) ─────────────────────
-// Used inside BattleScreen. Relative within battle container.
-export const BATTLE = {
+// ─── LAYER 8: BATTLE GRID LAYERS (0–800) ────────────────────
+// 8-layer compositing system for the battle stage.
+// Each layer is a full-size absolute div; elements within use X/Y%.
+// Layers stack bottom→top: background, effects_back, units_back,
+// units_front, impacts, effects_front, foreground, ui.
+export const BATTLE_LAYERS = {
   BACKGROUND: 0,
-  ARENA: 1,
-  HEADER: 10,
+  EFFECTS_BACK: 100,
+  UNITS_BACK: 200,
+  UNITS_FRONT: 300,
+  IMPACTS: 400,
+  EFFECTS_FRONT: 500,
+  FOREGROUND: 600,
+  UI: 700,
+};
+
+// Legacy BATTLE constants — mapped onto the new layer ranges.
+// Sub-indices are relative within each layer's range.
+export const BATTLE = {
+  BACKGROUND: BATTLE_LAYERS.BACKGROUND,
+  ARENA: BATTLE_LAYERS.BACKGROUND + 1,
+  HEADER: BATTLE_LAYERS.UI + 10,
   UNIT_BASE: 0,
   UNIT_EFFECTS: 15,
   UNIT_BARS: 20,
   UNIT_STATUS: 25,
-  PARTICLES: 50,
-  DAMAGE_NUMBERS: 100,
-  VFX_LAYER: 150,
-  ACTION_BAR: 200,
-  EFFECT_BEAMS: 210,
-  EFFECT_SPRITES: 250,
-  EFFECT_FLASH: 260,
-  RESULT_OVERLAY: 300,
-  ADMIN_CONTROLS: 500,
+  PARTICLES: BATTLE_LAYERS.EFFECTS_BACK + 50,
+  DAMAGE_NUMBERS: BATTLE_LAYERS.EFFECTS_FRONT + 50,
+  VFX_LAYER: BATTLE_LAYERS.EFFECTS_FRONT + 10,
+  ACTION_BAR: BATTLE_LAYERS.UI + 5,
+  EFFECT_BEAMS: BATTLE_LAYERS.EFFECTS_FRONT + 20,
+  EFFECT_SPRITES: BATTLE_LAYERS.EFFECTS_FRONT + 30,
+  EFFECT_FLASH: BATTLE_LAYERS.IMPACTS + 60,
+  RESULT_OVERLAY: BATTLE_LAYERS.FOREGROUND + 50,
+  ADMIN_CONTROLS: BATTLE_LAYERS.UI + 99,
 };
 
 // ─── LAYER 9: BOSS WALKUP SCENE (5–30) ────────────────────

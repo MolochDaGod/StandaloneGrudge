@@ -12,10 +12,19 @@ import { playSwordHit, playBowShot, playMagicCast, playHeal, playBuff, playHurt,
 import AbilityIcon from './AbilityIcon';
 import { ActionTimerBar } from './PixelBar';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
-import { BATTLE } from '../constants/layers';
+import { BATTLE, BATTLE_LAYERS } from '../constants/layers';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
 import { adminConfig } from '../utils/adminConfig';
 import { BATTLE_BACKGROUNDS, STORAGE_KEY as BG_STORAGE_KEY } from './AdminBackgrounds';
+
+const LAYER_STYLE = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' };
+function BattleLayer({ z, children, interactive }) {
+  return (
+    <div style={{ ...LAYER_STYLE, zIndex: z, pointerEvents: interactive ? 'auto' : 'none' }}>
+      {children}
+    </div>
+  );
+}
 
 const DMG_NUM_SRC = '/effects/damage_numbers.png';
 let _lastProcessedAction = null;
@@ -2400,96 +2409,54 @@ function BattleScreenInner() {
       width: '100%', height: '100%',
       background: 'var(--bg)', position: 'relative', overflow: 'hidden',
     }}>
-      {bgImage && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: '120%', backgroundPosition: 'center 75%',
-          opacity: 0.7, zIndex: 0,
-        }} />
-      )}
-      {!bgImage && bgGradient && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          background: bgGradient,
-          zIndex: 0,
-        }}>
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%',
-            background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)',
-          }} />
-          <div style={{
-            position: 'absolute', top: '60%', left: 0, right: 0, height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 80%, transparent 100%)',
-          }} />
+      {/* ═══ LAYER 1: BACKGROUND ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.BACKGROUND}>
+        {bgImage && (
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%)',
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: '120%', backgroundPosition: 'center 75%',
+            opacity: 0.7,
           }} />
-        </div>
-      )}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'linear-gradient(180deg, rgba(11,16,32,0.3) 0%, rgba(11,16,32,0.15) 40%, rgba(11,16,32,0.4) 100%)',
-        zIndex: 0,
-      }} />
-
-      {/* ARPG Top Bar - minimal transparent overlay */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        zIndex: BATTLE.HEADER, pointerEvents: 'none',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        padding: '8px 12px',
-      }}>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="font-cinzel" style={{
-            color: isBoss ? 'var(--gold)' : battleState?.isMission ? '#c084fc' : battleState?.isArena ? '#f97316' : 'rgba(250,172,71,0.7)',
-            fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em',
-            textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)',
+        )}
+        {!bgImage && bgGradient && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: bgGradient,
           }}>
-            {isBoss ? 'BOSS' : battleState?.isMission ? `MISSION ${battleState.missionRound}/${battleState.missionTotalRounds}` : battleState?.isArena ? 'ARENA' : 'BATTLE'}
-          </span>
-          <span style={{ color: 'rgba(200,190,170,0.5)', fontSize: '0.65rem', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>T{battleState?.turnCount || 1}</span>
-        </div>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          {currentUnit && !isVictory && !isDefeat && (
-            <div className="font-cinzel" style={{
-              color: currentUnit.team === 'player' ? '#6ee7b7' : '#fca5a5',
-              fontSize: '0.7rem', fontWeight: 700,
-              padding: '2px 10px',
-              background: currentUnit.team === 'player' ? 'rgba(110,231,183,0.12)' : 'rgba(239,68,68,0.12)',
-              borderRadius: 4,
-              border: `1px solid ${currentUnit.team === 'player' ? 'rgba(110,231,183,0.3)' : 'rgba(239,68,68,0.3)'}`,
-              backdropFilter: 'blur(4px)',
-              textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-            }}>
-              {currentUnit.isPlayerControlled ? `${currentUnit.name}'s TURN` : `${currentUnit.name}`}
-            </div>
-          )}
-          {isMissionRoundComplete && (
-            <button onClick={() => useGameStore.getState().advanceMissionRound()} style={{
-              background: 'rgba(192,132,252,0.2)', border: '1px solid rgba(192,132,252,0.4)', borderRadius: 4,
-              padding: '3px 10px', color: '#c084fc', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700,
-              backdropFilter: 'blur(4px)', animation: 'glow 2s infinite',
-            }}>Next Round <span style={{ opacity: 0.5, fontSize: '0.65rem' }}>[Space]</span></button>
-          )}
-          {(isVictory || isDefeat) && (
-            <button onClick={() => {
-              if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
-              else returnToWorld();
-            }} style={{
-              background: 'rgba(70,65,84,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4,
-              padding: '3px 10px', color: 'var(--text)', cursor: 'pointer', fontSize: '0.8rem',
-              backdropFilter: 'blur(4px)',
-            }}>Return <span style={{ opacity: 0.5, fontSize: '0.65rem' }}>[Space]</span></button>
-          )}
-        </div>
-      </div>
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%',
+              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', top: '60%', left: 0, right: 0, height: '2px',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 80%, transparent 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%)',
+            }} />
+          </div>
+        )}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'linear-gradient(180deg, rgba(11,16,32,0.3) 0%, rgba(11,16,32,0.15) 40%, rgba(11,16,32,0.4) 100%)',
+        }} />
+      </BattleLayer>
 
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, overflow: 'hidden',
-      }}>
+      {/* ═══ LAYER 2: EFFECTS_BACK (ambient particles, casting FX behind units) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.EFFECTS_BACK}>
         <AmbientParticles />
+        {activeParticles.filter(p => p.type === 'cast').map(p => (
+          <CastingParticles key={p.id} x={p.x} y={p.y} color={p.color} />
+        ))}
+        {castingFx.map(c => (
+          <CastingSpriteEffect key={c.id} x={c.x} y={c.y} />
+        ))}
+      </BattleLayer>
+
+      {/* ═══ LAYERS 3+4: UNITS (all units, Y-sorted for depth) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.UNITS_BACK} interactive>
 
         {battleUnits.map((unit, idx) => {
           if (!unit.position) return null;
@@ -2868,14 +2835,39 @@ function BattleScreenInner() {
             </div>
           );
         })}
+      </BattleLayer>
 
-        {activeParticles.map(p => {
-          if (p.type === 'cast') return <CastingParticles key={p.id} x={p.x} y={p.y} color={p.color} />;
+      {/* ═══ LAYER 5: IMPACTS (hit effects, slash impacts, dodge flashes, weapon contacts) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.IMPACTS}>
+        {activeParticles.filter(p => p.type === 'hit' || p.type === 'heal').map(p => {
           if (p.type === 'hit') return <HitParticles key={p.id} x={p.x} y={p.y} color={p.color} />;
           if (p.type === 'heal') return <HealParticles key={p.id} x={p.x} y={p.y} />;
           return null;
         })}
 
+        {hitEffects.map(e => (
+          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} size={e.size} />
+        ))}
+
+        {critFx.map(c => (
+          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={c.sprite} filter={c.filter} />
+        ))}
+
+        {slashImpactFx.map(s => (
+          <StackedSlashImpact key={s.id} x={s.x} y={s.y} level={s.level} color={s.color} />
+        ))}
+
+        {dodgeFlashes.map(d => (
+          <DodgeFlashSprite key={d.id} x={d.x} y={d.y} />
+        ))}
+
+        {weaponContactFx.map(w => (
+          <WeaponContactSprite key={w.id} x={w.x} y={w.y} playCount={w.playCount} />
+        ))}
+      </BattleLayer>
+
+      {/* ═══ LAYER 6: EFFECTS_FRONT (beams, projectiles, fireballs, explosions, damage numbers) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.EFFECTS_FRONT}>
         {projectiles.map(p => (
           <div key={p.id} style={{
             position: 'absolute',
@@ -2941,30 +2933,6 @@ function BattleScreenInner() {
               }} />
             )}
           </div>
-        ))}
-
-        {hitEffects.map(e => (
-          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} size={e.size} />
-        ))}
-
-        {critFx.map(c => (
-          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={c.sprite} filter={c.filter} />
-        ))}
-
-        {slashImpactFx.map(s => (
-          <StackedSlashImpact key={s.id} x={s.x} y={s.y} level={s.level} color={s.color} />
-        ))}
-
-        {dodgeFlashes.map(d => (
-          <DodgeFlashSprite key={d.id} x={d.x} y={d.y} />
-        ))}
-
-        {castingFx.map(c => (
-          <CastingSpriteEffect key={c.id} x={c.x} y={c.y} />
-        ))}
-
-        {weaponContactFx.map(w => (
-          <WeaponContactSprite key={w.id} x={w.x} y={w.y} playCount={w.playCount} />
         ))}
 
         {fireballFx.map(fb => (
@@ -3050,7 +3018,10 @@ function BattleScreenInner() {
             </div>
           );
         })}
+      </BattleLayer>
 
+      {/* ═══ LAYER 7: FOREGROUND (victory/defeat overlays, vignettes) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.FOREGROUND} interactive>
         {(isVictory || isDefeat) && (
           <>
             <div style={{
@@ -3139,10 +3110,10 @@ function BattleScreenInner() {
             </div>
           </>
         )}
+      </BattleLayer>
 
-      </div>
-
-
+      {/* ═══ LAYER 8: UI (header, party frames, enemy frames, action bar, admin, log) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.UI} interactive>
       <div style={{
         position: 'absolute', bottom: 160, right: 16, zIndex: 50,
       }}>
@@ -3752,6 +3723,7 @@ function BattleScreenInner() {
           </div>
         )}
       </div>
+      </BattleLayer>
     </div>
   );
 }
