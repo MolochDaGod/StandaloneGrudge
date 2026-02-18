@@ -984,7 +984,7 @@ export const raceClassSpriteMap = {
   },
   orc: {
     warrior: spriteSheets['elite-orc'],
-    mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)' },
+    mage: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 },
     worge: spriteSheets.orc,
     ranger: spriteSheets['armored-orc'],
   },
@@ -1001,14 +1001,14 @@ export const raceClassSpriteMap = {
     ranger: spriteSheets['undead-ranger'],
   },
   barbarian: {
-    warrior: { ...spriteSheets['barbarian-warrior'], filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' },
+    warrior: { ...spriteSheets['barbarian-warrior'], filter: 'brightness(1.1) contrast(1.05) saturate(0.8)', scale: 1.35 },
     mage: { ...spriteSheets['barbarian-mage'], filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' },
-    worge: { ...spriteSheets.soldier, filter: 'sepia(0.5) saturate(1.2) brightness(0.85)' },
+    worge: { ...spriteSheets.soldier, filter: 'sepia(0.5) saturate(1.2) brightness(0.85)', scale: 1.35 },
     ranger: spriteSheets['martial-hero'],
   },
   dwarf: {
     warrior: spriteSheets['crystal-mauler'],
-    mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', dwarfTransform: 'scaleX(1.3) scaleY(0.75)' },
+    mage: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' },
     worge: spriteSheets['dwarf-worge'],
     ranger: spriteSheets['dwarf-ranger'],
   },
@@ -1025,11 +1025,11 @@ export const raceClassDefaultSpriteKeys = {
 
 export const raceClassDefaultProps = {
   human: { warrior: {}, mage: {}, worge: {}, ranger: {} },
-  orc: { warrior: {}, mage: { filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)' }, worge: {}, ranger: {} },
+  orc: { warrior: {}, mage: { filter: 'hue-rotate(90deg) saturate(0.7) brightness(0.7) contrast(1.2)', scale: 0.7 }, worge: {}, ranger: {} },
   elf: { warrior: { filter: 'saturate(0.6) brightness(1.15) hue-rotate(10deg)' }, mage: { filter: 'saturate(0.15) brightness(1.4) hue-rotate(200deg)' }, worge: { filter: 'hue-rotate(80deg) saturate(1.4) brightness(1.0) contrast(1.1)' }, ranger: { filter: 'sepia(0.3) saturate(1.5) hue-rotate(340deg)' } },
   undead: { warrior: { filter: 'brightness(0.75) saturate(0.5) contrast(1.2)' }, mage: {}, worge: { filter: 'sepia(0.3) hue-rotate(270deg) saturate(1.0) brightness(0.85)' }, ranger: {} },
-  barbarian: { warrior: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' }, mage: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' }, worge: { filter: 'sepia(0.5) saturate(1.2) brightness(0.85)' }, ranger: {} },
-  dwarf: { warrior: {}, mage: { filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', dwarfTransform: 'scaleX(1.3) scaleY(0.75)' }, worge: {}, ranger: {} },
+  barbarian: { warrior: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)', scale: 1.35 }, mage: { filter: 'brightness(1.1) contrast(1.05) saturate(0.8)' }, worge: { filter: 'sepia(0.5) saturate(1.2) brightness(0.85)', scale: 1.35 }, ranger: {} },
+  dwarf: { warrior: {}, mage: { filter: 'hue-rotate(30deg) saturate(1.4) brightness(1.05)', scale: 0.7, dwarfTransform: 'scaleX(1.3) scaleY(0.75)' }, worge: {}, ranger: {} },
 };
 
 export const warriorTransformSprite = spriteSheets['demon-sword'];
@@ -1173,10 +1173,10 @@ export const eliteTransformSprites = {
   },
   mage: {
     human: spriteSheets['fire-wizard'],
-    elf: spriteSheets['elf-mage'],
+    elf: { ...spriteSheets['elf-mage'], scale: 0.7 },
     dwarf: spriteSheets['wanderer-magician'],
     barbarian: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(15deg) saturate(1.3) brightness(1.1)' },
-    orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.55) brightness(0.62) contrast(1.35)' },
+    orc: { ...spriteSheets['wizard-pack'], filter: 'hue-rotate(90deg) saturate(0.55) brightness(0.62) contrast(1.35)', scale: 0.7 },
     undead: { ...spriteSheets['lightning-mage'], filter: 'hue-rotate(180deg) saturate(1.4) brightness(0.85)' },
   },
   ranger: {
@@ -2037,25 +2037,6 @@ export const weaponSkillEffectMap = {
   ws_lance_impale: { effect: 'thrust1', beam: 'red', anim: 'attack3', followUp: [{ effect: 'smearV2', delay: 100, filter: 'saturate(2)' }, { effect: 'hitBurst', delay: 260, filter: 'saturate(1.5)' }, { effect: 'impactRedB', delay: 430 }] },
   ws_lance_sweep: { effect: 'smearH1', beam: null, anim: 'attack2', isAoE: true, followUp: [{ effect: 'smearH2', delay: 100 }, { effect: 'arcaneslash', delay: 260 }, { effect: 'impactWhiteA', delay: 430 }, { effect: 'smokeVfx1', delay: 600 }] },
 };
-
-export const RACE_HEIGHT_FT = {
-  dwarf: 5.0,
-  human: 6.0,
-  undead: 6.0,
-  elf: 6.333,
-  orc: 6.333,
-  barbarian: 7.0,
-};
-
-export const BASE_HEIGHT_FT = 6.0;
-export const BASE_DISPLAY_PX = 200;
-export const BEAR_FORM_HEIGHT_FT = 7.0;
-
-export function getRaceHeightScale(raceId, isBearForm = false) {
-  if (isBearForm) return BEAR_FORM_HEIGHT_FT / BASE_HEIGHT_FT;
-  const heightFt = RACE_HEIGHT_FT[raceId] || BASE_HEIGHT_FT;
-  return heightFt / BASE_HEIGHT_FT;
-}
 
 export function getSpriteSheetKeys() {
   return Object.keys(spriteSheets);

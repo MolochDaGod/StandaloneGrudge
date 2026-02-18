@@ -3116,60 +3116,6 @@ const useGameStore = create(persist((set, get) => ({
       trainingPhase: null,
     });
   },
-
-  saveToServer: async () => {
-    const sessionToken = localStorage.getItem('grudge_session_token');
-    if (!sessionToken) return { success: false, reason: 'not_authenticated' };
-    const state = get();
-    const saveData = {
-      playerName: state.playerName, playerRace: state.playerRace, playerClass: state.playerClass,
-      level: state.level, xp: state.xp, xpToNext: state.xpToNext, gold: state.gold,
-      attributePoints: state.attributePoints, baseAttributePoints: state.baseAttributePoints,
-      unspentPoints: state.unspentPoints, skillPoints: state.skillPoints, unlockedSkills: state.unlockedSkills,
-      playerHealth: state.playerHealth, playerMaxHealth: state.playerMaxHealth,
-      playerMana: state.playerMana, playerMaxMana: state.playerMaxMana,
-      playerStamina: state.playerStamina, playerMaxStamina: state.playerMaxStamina,
-      victories: state.victories, losses: state.losses, bossesDefeated: state.bossesDefeated,
-      heroRoster: state.heroRoster, activeHeroIds: state.activeHeroIds, maxHeroSlots: state.maxHeroSlots,
-      locationsCleared: state.locationsCleared, zoneConquer: state.zoneConquer,
-      zoneStats: state.zoneStats, completedQuests: state.completedQuests,
-      inventory: state.inventory, shopInventory: state.shopInventory, shopLastRefresh: state.shopLastRefresh,
-      harvestResources: state.harvestResources, activeHarvests: state.activeHarvests,
-      randomEvents: state.randomEvents, lastEventSpawn: state.lastEventSpawn,
-      trainingPhase: state.trainingPhase, dungeonProgress: state.dungeonProgress,
-      screen: state.screen === 'battle' ? 'world' : state.screen,
-    };
-    try {
-      const res = await fetch('/api/game/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-session-token': sessionToken },
-        body: JSON.stringify({ saveData }),
-      });
-      const data = await res.json();
-      return data;
-    } catch (err) {
-      console.error('[GameStore] Save to server failed:', err);
-      return { success: false, reason: 'network_error' };
-    }
-  },
-
-  loadFromServer: async () => {
-    const sessionToken = localStorage.getItem('grudge_session_token');
-    if (!sessionToken) return { success: false, reason: 'not_authenticated' };
-    try {
-      const res = await fetch('/api/game/load', {
-        headers: { 'x-session-token': sessionToken },
-      });
-      const data = await res.json();
-      if (!data.found) return { success: false, reason: 'no_save' };
-      const saveData = data.saveData;
-      set((s) => ({ ...s, ...saveData }));
-      return { success: true, version: data.version, savedAt: data.savedAt };
-    } catch (err) {
-      console.error('[GameStore] Load from server failed:', err);
-      return { success: false, reason: 'network_error' };
-    }
-  },
 }), {
   name: 'grudge-warlords-save',
   version: 4,

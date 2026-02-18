@@ -56,46 +56,6 @@ function getScreenFromPath(pathname) {
   return null;
 }
 
-function guardScreen(targetScreen, state) {
-  const hasCharacter = state.playerName && state.playerClass && state.playerRace;
-  const hasHeroes = state.heroRoster && state.heroRoster.length > 0;
-  const hasBattle = state.battleUnits && state.battleUnits.length > 0;
-  const hasLocation = !!state.currentLocationId;
-
-  switch (targetScreen) {
-    case 'title':
-    case 'lobby':
-    case 'create':
-      return targetScreen;
-
-    case 'intro':
-      return targetScreen;
-
-    case 'world':
-    case 'account':
-    case 'training':
-    case 'heroCreate':
-    case 'character':
-    case 'skills':
-      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
-      return targetScreen;
-
-    case 'location':
-    case 'scene':
-      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
-      if (!hasLocation) return 'world';
-      return targetScreen;
-
-    case 'battle':
-      if (!hasCharacter) return hasHeroes ? 'lobby' : 'title';
-      if (!hasBattle) return 'world';
-      return targetScreen;
-
-    default:
-      return 'title';
-  }
-}
-
 function GameApp() {
   const screen = useGameStore(s => s.screen);
   const setScreen = useGameStore(s => s.setScreen);
@@ -113,34 +73,14 @@ function GameApp() {
 
   useEffect(() => {
     const path = window.location.pathname;
-    const urlScreen = SLUG_TO_SCREEN[path];
-    const state = useGameStore.getState();
-
-    if (urlScreen) {
-      const guarded = guardScreen(urlScreen, state);
-      if (guarded !== screen) {
-        skipPushRef.current = true;
-        setScreen(guarded);
-      }
-    } else if (path !== '/' && !SLUG_TO_SCREEN[path]) {
-      const guarded = guardScreen(screen, state);
-      if (guarded !== screen) {
-        skipPushRef.current = true;
-        setScreen(guarded);
-      } else {
-        window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
-      }
+    const initialScreen = getScreenFromPath(path);
+    if (initialScreen && initialScreen !== screen) {
+      skipPushRef.current = true;
+      setScreen(initialScreen);
+    } else if (!initialScreen && path !== '/' && !SLUG_TO_SCREEN[path]) {
+      window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
     }
   }, []);
-
-  useEffect(() => {
-    const state = useGameStore.getState();
-    const guarded = guardScreen(screen, state);
-    if (guarded !== screen) {
-      skipPushRef.current = true;
-      setScreen(guarded);
-    }
-  }, [screen]);
 
   const SCREEN_TITLES = {
     title: 'Grudge Warlords',
@@ -173,11 +113,9 @@ function GameApp() {
 
   useEffect(() => {
     const onPopState = (e) => {
-      const raw = e.state?.screen || SLUG_TO_SCREEN[window.location.pathname] || 'title';
-      const state = useGameStore.getState();
-      const guarded = guardScreen(raw, state);
+      const targetScreen = e.state?.screen || getScreenFromPath(window.location.pathname) || 'title';
       skipPushRef.current = true;
-      setScreen(guarded);
+      setScreen(targetScreen);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -251,33 +189,6 @@ function GameApp() {
     return () => window.removeEventListener('game-screen-shake', handleShake);
   }, []);
 
-  const saveTimerRef = useRef(null);
-  const debouncedSave = () => {
-    if (!localStorage.getItem('grudge_session_token')) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      useGameStore.getState().saveToServer().catch(() => {});
-    }, 3000);
-  };
-
-  useEffect(() => {
-    const SAVE_SCREENS = ['lobby', 'world', 'character', 'training', 'location'];
-    if (SAVE_SCREENS.includes(screen)) debouncedSave();
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [screen]);
-
-  const prevSaveKeyRef = useRef('');
-  useEffect(() => {
-    const unsub = useGameStore.subscribe((state) => {
-      const key = `${state.gold}_${state.level}_${state.victories}_${state.heroRoster?.length || 0}`;
-      if (key !== prevSaveKeyRef.current && prevSaveKeyRef.current !== '') {
-        debouncedSave();
-      }
-      prevSaveKeyRef.current = key;
-    });
-    return unsub;
-  }, []);
-
   if (!ready) {
     return (
       <LoadingScreen
@@ -321,7 +232,7 @@ function GameApp() {
   };
 
   const contentStyle = {
-    position: 'absolute', inset: 0, zIndex: 10501,
+    position: 'relative', zIndex: 10501, width: '100%', height: '100%',
     animation: transitioning ? 'none' : getScreenAnimation(),
     opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
   };

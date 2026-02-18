@@ -63,4 +63,4 @@ expertMode = true
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 publicDir = "dist"
-run = ["node", "server.js"]
+run = ["npm", "run", "start"]

@@ -8,7 +8,7 @@ import { skillTrees } from '../data/skillTrees';
 import { TIERS, EQUIPMENT_SLOTS, canClassEquip, WEAPON_TYPES, ARMOR_TYPES, HELMET_TYPES, FEET_TYPES } from '../data/equipment';
 import { getAbilitiesForSlot, getDefaultLoadout, isSlotLocked, getAllAbilityMap } from '../utils/abilityLoadout';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, namedHeroes, getRaceHeightScale } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SLOT_ICON_MAP, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites.jsx';
 import RadarChart from './RadarChart';
 import AbilityIcon from './AbilityIcon';
@@ -89,14 +89,16 @@ function MiniBar({ current, max, color, height = 6, label }) {
   );
 }
 
-function getCardScale(spriteData, raceId) {
+function getCardScale(spriteData) {
   const fw = spriteData?.frameWidth || 100;
   const fh = spriteData?.frameHeight || 100;
   const maxDim = Math.max(fw, fh);
   const targetPx = 160;
   const base = targetPx / maxDim;
-  const raceScale = raceId ? getRaceHeightScale(raceId) : 1;
-  return Math.min(Math.max(base * raceScale, 0.7), 2.6);
+  const folder = spriteData?.folder || '';
+  if (folder === 'human-ranger') return base * 1.25;
+  if (folder === 'necromancer') return base * 0.85;
+  return Math.min(Math.max(base, 0.7), 2.2);
 }
 
 function HeroCard({ hero, isSelected, onClick, isActive }) {
@@ -109,7 +111,7 @@ function HeroCard({ hero, isSelected, onClick, isActive }) {
   const namedHero = hero.namedHeroId ? namedHeroes[hero.namedHeroId] : null;
   const raceBg = namedHero?.cardBg || RACE_BG[hero.raceId] || RACE_BG.human;
   const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
-  const cardScale = getCardScale(spriteData, hero.raceId);
+  const cardScale = getCardScale(spriteData);
 
   return (
     <div onClick={onClick} style={{
@@ -550,7 +552,7 @@ function HeroDetailPanel({ hero, onClose }) {
         padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div style={{ filter: `drop-shadow(0 0 10px ${cls?.color || 'var(--accent)'}50)` }}>
-          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId), hero.raceId) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} containerless={false} />
+          <SpriteAnimation spriteData={getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)} animation="idle" scale={getCardScale(getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId)) * 0.9} speed={150} equipmentOverlays={buildEquipmentOverlays(hero, TIERS)} containerless={false} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>

@@ -5,7 +5,7 @@ import { raceDefinitions } from '../data/races';
 import { attributeDefinitions, STARTING_POINTS, calculateStats } from '../data/attributes';
 import SpriteAnimation from './SpriteAnimation';
 import WorgeMorphPreview from './WorgeMorphPreview';
-import { getPlayerSprite, namedHeroes, getRaceHeightScale } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
 import { HERO_CREATE_MODAL } from '../constants/layers';
 
 const ATTRIBUTES = Object.keys(attributeDefinitions);
@@ -444,7 +444,7 @@ export default function HeroCreate() {
                     </div>
                   ) : null}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <SpriteAnimation spriteData={detectedNamedHero && namedHeroes[detectedNamedHero] ? namedHeroes[detectedNamedHero].sprite : getPlayerSprite(selectedClass, selectedRace)} animation="idle" scale={2.6 * getRaceHeightScale(selectedRace)} speed={150} containerless={false} />
+                    <SpriteAnimation spriteData={detectedNamedHero && namedHeroes[detectedNamedHero] ? namedHeroes[detectedNamedHero].sprite : getPlayerSprite(selectedClass, selectedRace)} animation="idle" scale={2.6} speed={150} containerless={false} />
                     <div>
                       <div style={{ color: 'var(--text)', fontWeight: 700 }}>{name}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>

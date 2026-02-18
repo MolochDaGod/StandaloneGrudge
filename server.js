@@ -51,62 +51,7 @@ const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
 const BETA_CHANNEL_ID = '1381760000946470987';
 
 const pendingStates = new Map();
-
-async function dbSessionSet(token, data) {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    await dbQ(
-      `INSERT INTO discord_sessions (token, discord_id, username, is_extension, created_at, expires_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '7 days')
-       ON CONFLICT (token) DO UPDATE SET
-         discord_id = EXCLUDED.discord_id, username = EXCLUDED.username,
-         is_extension = EXCLUDED.is_extension, expires_at = NOW() + INTERVAL '7 days'`,
-      [token, data.discordId, data.username, data.isExtension || false]
-    );
-  } catch (err) {
-    console.error('[Session] DB set failed:', err.message);
-  }
-}
-
-async function dbSessionGet(token) {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    const result = await dbQ(
-      `SELECT token, discord_id, username, is_extension, created_at, expires_at
-       FROM discord_sessions WHERE token = $1 AND expires_at > NOW()`,
-      [token]
-    );
-    if (!result.rows[0]) return null;
-    const row = result.rows[0];
-    return {
-      discordId: row.discord_id,
-      username: row.username,
-      createdAt: new Date(row.created_at).getTime(),
-      isExtension: row.is_extension,
-    };
-  } catch (err) {
-    console.error('[Session] DB get failed:', err.message);
-    return null;
-  }
-}
-
-async function dbSessionDelete(token) {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    await dbQ('DELETE FROM discord_sessions WHERE token = $1', [token]);
-  } catch (err) {
-    console.error('[Session] DB delete failed:', err.message);
-  }
-}
-
-async function dbSessionCleanup() {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    await dbQ('DELETE FROM discord_sessions WHERE expires_at < NOW()');
-  } catch (err) {
-    console.error('[Session] Cleanup failed:', err.message);
-  }
-}
+const activeSessions = new Map();
 
 function getPublicOrigin(req) {
   const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
@@ -191,10 +136,18 @@ app.post('/api/discord/callback', async (req, res) => {
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
 
-    await dbSessionSet(sessionToken, {
+    activeSessions.set(sessionToken, {
       discordId: user.id,
       username: user.username,
+      createdAt: Date.now(),
     });
+
+    if (activeSessions.size > 5000) {
+      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      for (const [k, v] of activeSessions) {
+        if (v.createdAt < cutoff) activeSessions.delete(k);
+      }
+    }
 
     res.json({
       success: true,
@@ -534,9 +487,10 @@ app.get('/api/external/callback', async (req, res) => {
     } catch (e) {}
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
-    await dbSessionSet(sessionToken, {
+    activeSessions.set(sessionToken, {
       discordId: user.id,
       username: user.username,
+      createdAt: Date.now(),
     });
 
     const returnOrigin = new URL(returnUrl).origin;
@@ -995,11 +949,16 @@ app.get('/api/arena/leaderboard', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify', async (req, res) => {
+app.post('/api/auth/verify', (req, res) => {
   const { sessionToken } = req.body;
   if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
-  const session = await dbSessionGet(sessionToken);
+  const session = activeSessions.get(sessionToken);
   if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(sessionToken);
+    return res.status(401).json({ error: 'Session expired' });
+  }
   res.json({
     valid: true,
     discordId: session.discordId,
@@ -1010,13 +969,19 @@ app.post('/api/auth/verify', async (req, res) => {
 app.post('/api/auth/extension', async (req, res) => {
   const { sessionToken } = req.body;
   if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
-  const session = await dbSessionGet(sessionToken);
-  if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+  const session = activeSessions.get(sessionToken);
+  if (!session) return res.status(401).json({ error: 'Invalid session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(sessionToken);
+    return res.status(401).json({ error: 'Session expired' });
+  }
   const extensionToken = crypto.randomBytes(32).toString('hex');
 
-  await dbSessionSet(extensionToken, {
+  activeSessions.set(extensionToken, {
     discordId: session.discordId,
     username: session.username,
+    createdAt: Date.now(),
     isExtension: true,
   });
 
@@ -1028,58 +993,19 @@ app.post('/api/auth/extension', async (req, res) => {
   });
 });
 
-async function requireSession(req, res, next) {
+function requireSession(req, res, next) {
   const token = req.headers['x-session-token'] || req.body?.sessionToken;
   if (!token) return res.status(401).json({ error: 'Session token required' });
-  const session = await dbSessionGet(token);
-  if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
+  const session = activeSessions.get(token);
+  if (!session) return res.status(401).json({ error: 'Invalid session' });
+  const age = Date.now() - session.createdAt;
+  if (age > 7 * 24 * 60 * 60 * 1000) {
+    activeSessions.delete(token);
+    return res.status(401).json({ error: 'Session expired' });
+  }
   req.session = session;
   next();
 }
-
-app.post('/api/game/save', requireSession, async (req, res) => {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    const { saveData } = req.body;
-    if (!saveData) return res.status(400).json({ error: 'saveData required' });
-
-    await dbQ(
-      `INSERT INTO game_saves (discord_id, save_data, version, updated_at)
-       VALUES ($1, $2, 1, NOW())
-       ON CONFLICT (discord_id) DO UPDATE SET
-         save_data = EXCLUDED.save_data,
-         version = game_saves.version + 1,
-         updated_at = NOW()`,
-      [req.session.discordId, JSON.stringify(saveData)]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error('[GameSave] Error:', err.message);
-    res.status(500).json({ error: 'Save failed' });
-  }
-});
-
-app.get('/api/game/load', requireSession, async (req, res) => {
-  try {
-    const { query: dbQ } = await import('./src/server/db.js');
-    const result = await dbQ(
-      'SELECT save_data, version, updated_at FROM game_saves WHERE discord_id = $1',
-      [req.session.discordId]
-    );
-
-    if (!result.rows[0]) return res.json({ found: false });
-    res.json({
-      found: true,
-      saveData: result.rows[0].save_data,
-      version: result.rows[0].version,
-      savedAt: result.rows[0].updated_at,
-    });
-  } catch (err) {
-    console.error('[GameLoad] Error:', err.message);
-    res.status(500).json({ error: 'Load failed' });
-  }
-});
 
 app.get('/api/public/profile', requireSession, async (req, res) => {
   try {
@@ -1259,22 +1185,16 @@ if (!isProd) {
 }
 
 if (isProd) {
-  const distPath = path.join(__dirname_server, 'dist');
-  const assetsPath = path.join(distPath, 'assets');
-
-  app.use('/assets', express.static(assetsPath, {
-    maxAge: '1y',
-    immutable: true,
-    fallthrough: true,
+  app.use('/assets', express.static(path.join(__dirname_server, 'dist', 'assets'), {
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
   }));
 
-  app.use(express.static(distPath, {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-cache');
-      }
+  app.use(express.static(path.join(__dirname_server, 'dist'), {
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-cache');
     },
-    fallthrough: true,
   }));
 }
 
@@ -1287,36 +1207,24 @@ if (isProd) {
     app.get(`/${page}`, (req, res) => {
       const filePath = path.join(__dirname_server, 'dist', `${page}.html`);
       res.sendFile(filePath, err => {
-        if (err && !res.headersSent) {
-          res.sendFile(path.join(__dirname_server, 'dist', 'index.html'), err2 => {
-            if (err2 && !res.headersSent) res.status(500).send('Server error');
-          });
-        }
+        if (err) res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
       });
     });
   });
 
   app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(__dirname_server, 'dist', 'index.html'), err => {
-      if (err && !res.headersSent) res.status(500).send('Server error');
-    });
+    res.sendFile(path.join(__dirname_server, 'dist', 'index.html'));
   });
 }
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  if (!res.headersSent) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 (async () => {
   const connected = await testConnection();
-  if (connected) {
-    await initDatabase();
-    await dbSessionCleanup();
-    setInterval(() => dbSessionCleanup(), 60 * 60 * 1000);
-  }
+  if (connected) await initDatabase();
   await startBot();
 })();
 

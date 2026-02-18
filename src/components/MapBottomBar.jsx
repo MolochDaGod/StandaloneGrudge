@@ -6,7 +6,7 @@ import { raceDefinitions } from '../data/races';
 import { InlineIcon } from '../data/uiSprites.jsx';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import SpriteAnimation from './SpriteAnimation';
-import { getPlayerSprite, getRaceHeightScale } from '../data/spriteMap';
+import { getPlayerSprite } from '../data/spriteMap';
 import RadarChart from './RadarChart';
 import InventoryModal from './InventoryModal';
 import { setMusicMuted, setSfxMuted, getMusicMuted } from '../utils/audioManager';

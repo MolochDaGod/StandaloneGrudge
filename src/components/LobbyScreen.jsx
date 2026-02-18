@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets, getRaceHeightScale } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import {
@@ -197,8 +197,7 @@ export default function LobbyScreen() {
         </div>
 
         <div style={{
-          flex: 1, overflow: activeTab === 'main' ? 'hidden' : 'auto', padding: 24,
-          display: 'flex', flexDirection: 'column',
+          flex: 1, overflow: 'auto', padding: 24,
           animation: 'warRoomFadeUp 0.7s ease 1.1s both',
         }}>
           {activeTab === 'main' && (
@@ -375,14 +374,13 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+    <div>
       <h2 className="font-cinzel" style={{
         fontSize: '1.4rem', marginBottom: 16,
         background: 'linear-gradient(90deg, var(--accent), #ffd700, var(--accent))',
         backgroundSize: '200% auto',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         animation: 'titleShimmer 6s linear infinite',
-        flexShrink: 0,
       }}>
         War Room
       </h2>
@@ -446,9 +444,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
         />
       </div>
 
-      <div style={{ flex: 1, minHeight: 300, position: 'relative' }}>
-        <HeroSlideshow />
-      </div>
+      <HeroSlideshow />
 
       {showInfo && <GrudgeOnlinePage onClose={() => setShowInfo(false)} />}
 
@@ -965,13 +961,11 @@ function HeroSlideshow() {
   const spriteFrameH = spriteData?.frameHeight || 100;
   const baseFrameSize = spriteFrameH;
   const battleComboScale = BATTLE_SCALE_OVERRIDES[comboKey] || 1;
-  const raceScale = getRaceHeightScale(combo.raceId, false);
   const adminScale = spriteData?.scale || 1;
-  const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale * raceScale * adminScale;
+  const battleScale = (battleTargetSize / baseFrameSize) * battleComboScale * adminScale;
   const spriteScale = scaleOverride ? battleScale * scaleOverride : battleScale;
   const transformFrameH = worgeTransformData?.frameHeight || 100;
-  const bearRaceScale = getRaceHeightScale(combo.raceId, true);
-  const transformScaleBase = (battleTargetSize / transformFrameH) * bearRaceScale;
+  const transformScaleBase = (spriteFrameH * spriteScale) / transformFrameH;
   const transformScale = transformScaleBase * (worgeTransformData?.transformScaleMult || 1);
 
   const intervalRefs = useRef([]);
@@ -1351,8 +1345,8 @@ function HeroSlideshow() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, overflow: 'hidden',
-      borderRadius: 12,
+      marginTop: 16, position: 'relative', overflow: 'hidden',
+      borderRadius: 12, height: 420,
       border: '1px solid rgba(255,255,255,0.08)',
       willChange: 'contents',
       contain: 'layout paint',
