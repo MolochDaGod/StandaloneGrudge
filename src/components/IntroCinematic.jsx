@@ -52,12 +52,16 @@ export default function IntroCinematic() {
           textAlign: 'center', pointerEvents: 'none',
           animation: 'fadeIn 1.5s ease forwards',
         }}>
-          <h1 className="font-cinzel" style={{
-            fontSize: '2.2rem', letterSpacing: 6,
-            background: 'linear-gradient(180deg, #ffd700, #FAAC47, #ffd700)',
+          <h1 className="font-warcraft" style={{
+            fontSize: '2.8rem', letterSpacing: 6,
+            background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
+            backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            WebkitTextStroke: '2px #000',
+            paintOrder: 'stroke fill',
             textShadow: 'none',
-            filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+            animation: 'titleShimmer 6s linear infinite',
+            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
             margin: 0,
           }}>
             GRUDGE WARLORDS

@@ -8,6 +8,7 @@ import { classDefinitions } from '../data/classes';
 import {
   setBgm, getMusicMuted, setMusicMuted, getSfxMuted, setSfxMuted,
 } from '../utils/audioManager';
+import adminConfig from '../utils/adminConfig';
 import GrudgeOnlinePage from './GrudgeOnlinePage';
 import HeroCodexTab from './HeroCodexTab';
 
@@ -115,16 +116,17 @@ export default function LobbyScreen() {
           position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
           pointerEvents: 'none', whiteSpace: 'nowrap',
         }}>
-          <span style={{
+          <span className="font-warcraft" style={{
             fontSize: '3.2rem',
-            fontFamily: "'LifeCraft', 'Cinzel', serif",
             letterSpacing: 6,
             lineHeight: 1,
-            background: 'linear-gradient(90deg, #8b0000 0%, #cc1100 25%, #ffd700 50%, #cc1100 75%, #8b0000 100%)',
+            background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
             backgroundSize: '200% auto',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            animation: 'titleShimmer 8s linear infinite',
-            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8))',
+            WebkitTextStroke: '2px #000',
+            paintOrder: 'stroke fill',
+            animation: 'titleShimmer 6s linear infinite',
+            filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
           }}>
             GRUDGE WARLORDS
           </span>
@@ -198,7 +200,7 @@ export default function LobbyScreen() {
 
         <div style={{
           flex: 1, overflow: 'auto', padding: 24,
-          animation: 'warRoomFadeUp 0.7s ease 1.1s both',
+          animation: 'warRoomSlideLeft 0.6s ease 1.0s both',
         }}>
           {activeTab === 'main' && (
             <MainTab
