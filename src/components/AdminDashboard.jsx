@@ -69,9 +69,147 @@ const CLASS_ICON_MAP = {
 };
 
 const STAT_COLORS = {
+  Strength: '#ef4444', Vitality: '#f59e0b', Endurance: '#6b7280', Dexterity: '#22c55e',
+  Agility: '#3b82f6', Intellect: '#8b5cf6', Wisdom: '#22d3ee', Tactics: '#ec4899',
   strength: '#ef4444', agility: '#22c55e', intellect: '#8b5cf6', vitality: '#f59e0b',
   luck: '#fbbf24', defense: '#6b7280', speed: '#3b82f6', charisma: '#ec4899',
 };
+const STAT_ABBR = {
+  Strength: 'STR', Vitality: 'VIT', Endurance: 'END', Dexterity: 'DEX',
+  Agility: 'AGI', Intellect: 'INT', Wisdom: 'WIS', Tactics: 'TAC',
+};
+const ALL_STAT_KEYS = ['Strength', 'Vitality', 'Endurance', 'Dexterity', 'Agility', 'Intellect', 'Wisdom', 'Tactics'];
+
+function getAvailableAnimations(spriteData) {
+  if (!spriteData) return ['idle'];
+  const anims = [];
+  const order = ['idle', 'walk', 'run', 'attack1', 'attack2', 'cast', 'heal', 'hurt', 'death', 'block', 'jump', 'fall', 'flight', 'landing', 'rise'];
+  order.forEach(a => { if (spriteData[a]) anims.push(a); });
+  Object.keys(spriteData).forEach(k => {
+    if (!order.includes(k) && spriteData[k]?.src && spriteData[k]?.frames) anims.push(k);
+  });
+  return anims.length > 0 ? anims : ['idle'];
+}
+
+function ComboCard({ race, clsId, cls }) {
+  const [selectedAnim, setSelectedAnim] = useState('idle');
+  const faction = FACTION_MAP[race.id] || FACTION_MAP.human;
+  const classIcon = CLASS_ICON_MAP[clsId];
+  const spriteData = getPlayerSprite(clsId, race.id);
+  const classStats = cls.startingAttributes || {};
+  const raceBonuses = race.bonuses || {};
+  const animations = getAvailableAnimations(spriteData);
+
+  return (
+    <div style={{
+      position: 'relative', overflow: 'hidden',
+      borderRadius: 10,
+      border: `1px solid ${faction.color}33`,
+      display: 'flex', flexDirection: 'column',
+      background: 'rgba(10,10,20,0.95)',
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `radial-gradient(ellipse at center, ${faction.color}15 0%, rgba(10,10,20,0.95) 70%)`,
+        pointerEvents: 'none',
+      }} />
+      {classIcon && (
+        <div style={{
+          position: 'absolute', top: 8, right: 8, zIndex: 3,
+          width: 24, height: 24, opacity: 0.4,
+          backgroundImage: `url(${classIcon})`,
+          backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+          filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.8))',
+        }} />
+      )}
+
+      <div style={{ position: 'relative', zIndex: 2, padding: '8px 12px 0' }}>
+        <div style={{
+          fontFamily: "'Cinzel', serif", color: '#ffd700', fontWeight: 700,
+          fontSize: '0.85rem', lineHeight: 1.1,
+          textShadow: `0 0 12px ${faction.color}60, 0 2px 6px rgba(0,0,0,0.8)`,
+        }}>
+          {race.name} {cls.name}
+        </div>
+        <div style={{
+          fontSize: '0.55rem', color: faction.color, opacity: 0.7,
+          marginTop: 2, fontStyle: 'italic',
+        }}>
+          {faction.name}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'relative', zIndex: 1,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        height: 120, overflow: 'hidden',
+      }}>
+        <div style={{ filter: `drop-shadow(0 4px 16px ${faction.color}40)` }}>
+          <SpriteAnimation spriteData={spriteData} animation={selectedAnim} scale={2.2} speed={150} />
+        </div>
+      </div>
+
+      <div style={{
+        position: 'relative', zIndex: 2, padding: '0 10px 6px',
+      }}>
+        <select
+          value={selectedAnim}
+          onChange={e => { e.stopPropagation(); setSelectedAnim(e.target.value); }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            width: '100%', padding: '4px 6px', fontSize: '0.6rem',
+            background: 'rgba(20,15,30,0.8)', color: '#e2e8f0',
+            border: '1px solid rgba(255,215,0,0.2)', borderRadius: 4,
+            cursor: 'pointer', outline: 'none',
+            fontFamily: "'Jost', sans-serif",
+          }}
+        >
+          {animations.map(a => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{
+        position: 'relative', zIndex: 2,
+        background: 'linear-gradient(180deg, transparent 0%, rgba(5,5,15,0.95) 30%)',
+        padding: '10px 10px 8px',
+      }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px 2px',
+        }}>
+          {ALL_STAT_KEYS.map(k => {
+            const total = (classStats[k] || 0) + (raceBonuses[k] || 0);
+            const maxVal = 10;
+            const barPct = Math.min(100, (total / maxVal) * 100);
+            return (
+              <div key={k} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '0.4rem', color: STAT_COLORS[k], textTransform: 'uppercase',
+                  fontWeight: 700, opacity: 0.9, letterSpacing: '0.04em',
+                }}>{STAT_ABBR[k]}</div>
+                <div style={{
+                  height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2,
+                  overflow: 'hidden', margin: '2px 0',
+                }}>
+                  <div style={{
+                    height: '100%', width: `${barPct}%`,
+                    background: STAT_COLORS[k], borderRadius: 2,
+                    transition: 'width 0.3s',
+                  }} />
+                </div>
+                <div style={{
+                  fontSize: '0.65rem', color: '#e2e8f0', fontWeight: 700,
+                  fontFamily: "'Cinzel', serif",
+                }}>{total}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HeroCard({ hero, expanded, onToggle }) {
   const cls = classDefinitions[hero.classId];
@@ -512,88 +650,26 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'heroes' && (
-            <div>
+            <div className="admin-heroes-scroll" style={{
+              maxHeight: 'calc(100vh - 160px)', overflowY: 'auto',
+              paddingRight: 8,
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(255,215,0,0.3) rgba(20,15,30,0.4)',
+            }}>
+              <style>{`
+                .admin-heroes-scroll::-webkit-scrollbar { width: 8px; }
+                .admin-heroes-scroll::-webkit-scrollbar-track { background: rgba(20,15,30,0.4); border-radius: 4px; }
+                .admin-heroes-scroll::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 4px; }
+                .admin-heroes-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
+              `}</style>
               <div style={{ fontSize: '0.65rem', color: '#8a7d65', textTransform: 'uppercase', marginBottom: 12 }}>
                 Choosable Characters — 6 Races × 4 Classes = 24 Warlord Combinations
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                 {Object.values(raceDefinitions).map(race =>
-                  Object.entries(classDefinitions).map(([clsId, cls]) => {
-                    const faction = FACTION_MAP[race.id] || FACTION_MAP.human;
-                    const classIcon = CLASS_ICON_MAP[clsId];
-                    const spriteData = getPlayerSprite(clsId, race.id);
-                    const baseStats = cls.baseStats || {};
-                    return (
-                      <div key={`${race.id}_${clsId}`} style={{
-                        position: 'relative', overflow: 'hidden',
-                        borderRadius: 10, height: 200,
-                        border: `1px solid ${faction.color}33`,
-                        display: 'flex', flexDirection: 'column',
-                      }}>
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          background: `radial-gradient(ellipse at center, ${faction.color}15 0%, rgba(10,10,20,0.95) 70%)`,
-                        }} />
-                        {classIcon && (
-                          <div style={{
-                            position: 'absolute', top: 8, right: 8, zIndex: 3,
-                            width: 28, height: 28, opacity: 0.4,
-                            backgroundImage: `url(${classIcon})`,
-                            backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-                            filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.8))',
-                          }} />
-                        )}
-                        <div style={{
-                          position: 'absolute', left: '50%', top: '30%',
-                          transform: 'translateX(-50%)',
-                          zIndex: 1, opacity: 0.85,
-                          filter: `drop-shadow(0 4px 16px ${faction.color}40)`,
-                        }}>
-                          <SpriteAnimation spriteData={spriteData} animation="idle" scale={3.2} speed={180} />
-                        </div>
-                        <div style={{
-                          position: 'relative', zIndex: 2, padding: '10px 14px 0',
-                        }}>
-                          <div style={{
-                            fontFamily: "'Cinzel', serif", color: '#ffd700', fontWeight: 700,
-                            fontSize: '0.95rem', lineHeight: 1.1,
-                            textShadow: `0 0 12px ${faction.color}60, 0 2px 6px rgba(0,0,0,0.8)`,
-                          }}>
-                            {race.name} {cls.name}
-                          </div>
-                          <div style={{
-                            fontSize: '0.6rem', color: faction.color, opacity: 0.7,
-                            marginTop: 2, fontStyle: 'italic',
-                          }}>
-                            {faction.name}
-                          </div>
-                        </div>
-                        <div style={{ flex: 1 }} />
-                        <div style={{
-                          position: 'relative', zIndex: 2,
-                          background: 'linear-gradient(180deg, transparent 0%, rgba(5,5,15,0.9) 40%)',
-                          padding: '16px 10px 8px',
-                        }}>
-                          <div style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2,
-                          }}>
-                            {['strength', 'agility', 'intellect', 'vitality'].map(k => (
-                              <div key={k} style={{ textAlign: 'center' }}>
-                                <div style={{
-                                  fontSize: '0.4rem', color: STAT_COLORS[k], textTransform: 'uppercase',
-                                  fontWeight: 700, opacity: 0.8,
-                                }}>{k.slice(0, 3)}</div>
-                                <div style={{
-                                  fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 700,
-                                  fontFamily: "'Cinzel', serif",
-                                }}>{baseStats[k] || 0}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
+                  Object.entries(classDefinitions).map(([clsId, cls]) => (
+                    <ComboCard key={`${race.id}_${clsId}`} race={race} clsId={clsId} cls={cls} />
+                  ))
                 )}
               </div>
             </div>
