@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions, raceList } from '../data/races';
 import { attributeDefinitions } from '../data/attributes';
 import SpriteAnimation from './SpriteAnimation';
 import WorgeMorphPreview from './WorgeMorphPreview';
-import { getPlayerSprite } from '../data/spriteMap';
+import { getPlayerSprite, namedHeroes } from '../data/spriteMap';
+import { HERO_CREATE_MODAL } from '../constants/layers';
 
 const stepLabels = ['Name', 'Race', 'Class', 'Attributes'];
 
@@ -29,6 +30,23 @@ export default function CharacterCreate() {
   const [nameInput, setNameInput] = useState('');
   const [selectedRace, setSelectedRace] = useState(null);
   const [selectedFaction, setSelectedFaction] = useState(null);
+  const [detectedNamedHero, setDetectedNamedHero] = useState(null);
+  const [showUnlockCinematic, setShowUnlockCinematic] = useState(false);
+  const [cinematicFading, setCinematicFading] = useState(false);
+  const videoRef = useRef(null);
+  const cinematicFinishing = useRef(false);
+
+  const checkSecretUnlock = (raceId, classId) => {
+    const currentName = playerName || nameInput.trim();
+    if (!currentName || !raceId || !classId) return null;
+    const heroName = currentName.toLowerCase().replace(/\s+/g, ' ');
+    const matched = Object.keys(namedHeroes).find(key => {
+      const nh = namedHeroes[key];
+      const matchName = (nh.unlockName || nh.name).toLowerCase().replace(/\s+/g, ' ');
+      return nh.race === raceId && nh.class === classId && nh.unlocked && heroName === matchName;
+    });
+    return matched || null;
+  };
 
   const handleStep1 = () => {
     if (nameInput.trim()) {
@@ -47,18 +65,35 @@ export default function CharacterCreate() {
   const handleStep3 = () => {
     if (selectedFaction) {
       selectClass(selectedFaction);
+      const matched = checkSecretUnlock(selectedRace, selectedFaction);
+      if (matched) {
+        setDetectedNamedHero(matched);
+        setShowUnlockCinematic(true);
+      }
       setStep(4);
     }
   };
 
+  const finishCinematic = () => {
+    if (cinematicFinishing.current) return;
+    cinematicFinishing.current = true;
+    setCinematicFading(true);
+    setTimeout(() => {
+      setShowUnlockCinematic(false);
+      setCinematicFading(false);
+      cinematicFinishing.current = false;
+    }, 800);
+  };
+
   const handleStart = () => {
-    if (playerClass) startGame();
+    if (playerClass) startGame(detectedNamedHero || null);
   };
 
   const goBack = (toStep) => {
     if (toStep <= 3) {
       setSelectedFaction(null);
       selectClass(null);
+      setDetectedNamedHero(null);
     }
     if (toStep <= 2) {
       setSelectedRace(null);
@@ -69,6 +104,65 @@ export default function CharacterCreate() {
 
   const selectedRaceDef = selectedRace ? raceDefinitions[selectedRace] : null;
   const selectedCls = selectedFaction ? classDefinitions[selectedFaction] : null;
+
+  const nhData = detectedNamedHero ? namedHeroes[detectedNamedHero] : null;
+
+  if (showUnlockCinematic && nhData) {
+    const videoSrc = nhData.unlockVideo || '/videos/hero_creation_cinematic.mp4';
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: HERO_CREATE_MODAL,
+        background: '#000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: cinematicFading ? 0 : 1,
+        transition: 'opacity 0.8s ease-out',
+      }}>
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          autoPlay
+          muted
+          playsInline
+          onEnded={finishCinematic}
+          onError={finishCinematic}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{
+          position: 'absolute', bottom: '15%', left: 0, right: 0,
+          textAlign: 'center', animation: 'fadeIn 1.5s ease forwards',
+          pointerEvents: 'none',
+        }}>
+          <div className="font-lifecraft" style={{
+            fontSize: '2.5rem', color: nhData.color || 'var(--gold)',
+            textShadow: `0 0 30px ${nhData.color || 'var(--gold)'}60, 0 0 60px ${nhData.color || 'var(--gold)'}30, 0 2px 6px rgba(0,0,0,0.9)`,
+            letterSpacing: 4, marginBottom: 8,
+          }}>
+            SECRET HERO UNLOCKED
+          </div>
+          <div className="font-cinzel" style={{
+            fontSize: '1.8rem', color: '#fff',
+            textShadow: '0 0 20px rgba(255,215,0,0.4), 0 2px 4px rgba(0,0,0,0.9)',
+          }}>
+            {nhData.fullName}
+          </div>
+          <div style={{
+            fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', marginTop: 8,
+            textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+          }}>
+            {nhData.passive}
+          </div>
+        </div>
+        <button onClick={finishCinematic} style={{
+          position: 'absolute', bottom: 30, right: 30,
+          background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: 8, padding: '8px 20px', color: '#fff',
+          cursor: 'pointer', fontSize: '0.9rem', backdropFilter: 'blur(4px)',
+        }}>
+          Skip
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -442,12 +536,26 @@ export default function CharacterCreate() {
                 flexShrink: 0,
                 overflow: 'hidden',
               }}>
-                <SpriteAnimation spriteData={getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.1} speed={150} containerless={false} />
+                <SpriteAnimation spriteData={nhData ? nhData.sprite : getPlayerSprite(playerClass, playerRace)} animation="idle" scale={1.1} speed={150} containerless={false} />
               </div>
               <div style={{ flex: 1, minWidth: 180, textAlign: 'center' }}>
-                <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>
-                  {playerName}
+                <h2 className="font-cinzel" style={{ color: nhData ? (nhData.color || 'var(--gold)') : 'var(--gold)', fontSize: '1.2rem', marginBottom: 4 }}>
+                  {nhData ? nhData.fullName : playerName}
                 </h2>
+                {nhData && (
+                  <div style={{
+                    background: `linear-gradient(135deg, ${nhData.color || 'var(--gold)'}15, transparent)`,
+                    border: `1px solid ${nhData.color || 'var(--gold)'}50`,
+                    borderRadius: 8, padding: '6px 14px', marginBottom: 8,
+                    display: 'inline-block',
+                  }}>
+                    <span className="font-cinzel" style={{
+                      fontSize: '0.7rem', color: nhData.color || 'var(--gold)',
+                      fontWeight: 700, letterSpacing: 2,
+                    }}>SECRET HERO</span>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: 2 }}>{nhData.passive}</div>
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
                   {raceDef && (
                     <span style={{

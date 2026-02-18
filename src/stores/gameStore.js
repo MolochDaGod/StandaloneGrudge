@@ -522,7 +522,7 @@ const useGameStore = create(persist((set, get) => ({
     }
   },
 
-  startGame: () => {
+  startGame: (namedHeroId) => {
     const state = get();
     if (!state.playerClass) return;
     const stats = state.getStats();
@@ -533,6 +533,7 @@ const useGameStore = create(persist((set, get) => ({
       raceId: state.playerRace,
       classId: state.playerClass,
       level: state.level,
+      namedHeroId: namedHeroId || null,
       attributePoints: { ...state.attributePoints },
       baseAttributePoints: { ...state.baseAttributePoints },
       currentHealth: Math.floor(stats.health),
