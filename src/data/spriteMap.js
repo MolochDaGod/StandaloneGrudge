@@ -1261,6 +1261,24 @@ export const fireKnightSprite = {
   special: { src: '/sprites/fire-knight/special.png', frames: 18 },
 };
 
+export const steampunkMechSprite = {
+  folder: 'steampunk-mech',
+  frameWidth: 72,
+  frameHeight: 72,
+  facesLeft: false,
+  scale: 2.0,
+  idle: { src: '/sprites/steampunk-mech/idle.png', frames: 4 },
+  walk: { src: '/sprites/steampunk-mech/walk.png', frames: 6 },
+  attack1: { src: '/sprites/steampunk-mech/attack1.png', frames: 6 },
+  attack2: { src: '/sprites/steampunk-mech/attack2.png', frames: 4 },
+  attack3: { src: '/sprites/steampunk-mech/attack3.png', frames: 6 },
+  cast: { src: '/sprites/steampunk-mech/sneer.png', frames: 4 },
+  hurt: { src: '/sprites/steampunk-mech/hurt.png', frames: 2 },
+  death: { src: '/sprites/steampunk-mech/death.png', frames: 6 },
+  special: { src: '/sprites/steampunk-mech/sneer.png', frames: 4 },
+  block: { src: '/sprites/steampunk-mech/idle.png', frames: 4 },
+};
+
 export const namedHeroes = {
   racalvin: {
     id: 'racalvin',
@@ -1290,7 +1308,7 @@ export const namedHeroes = {
     race: 'barbarian',
     class: 'ranger',
     faction: 'pirates',
-    sprite: { ...fireKnightSprite, filter: 'sepia(0.4) saturate(1.2) hue-rotate(-15deg) brightness(0.95)' },
+    sprite: steampunkMechSprite,
     unlockVideo: '/video/racalvin_unlock.mp4',
     lore: 'A battle-hardened captain who forged his reputation on the frontlines of a hundred wars. His fire-tempered blade and unbreakable resolve make him a legend among the Crusade. Where others falter, Captain Wayne charges forward — his war cry echoing across blood-soaked battlefields. They say his armor still glows from the forge fires of the gods themselves.',
     unlocked: true,
