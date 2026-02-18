@@ -167,9 +167,8 @@ export default function TitleScreen() {
         position: 'absolute', inset: 0,
         backgroundImage: 'url(/images/title-bg.png)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center center',
+        backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#0b1020',
         zIndex: 0,
       }} />
 

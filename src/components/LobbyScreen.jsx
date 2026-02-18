@@ -1544,7 +1544,7 @@ function HeroSlideshow() {
               </div>
             </div>
 
-            <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx && !showTransformVfx} />
+            <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx} />
 
             {dummyVisible && (
               <div style={{
