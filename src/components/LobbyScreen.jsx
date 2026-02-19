@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, worgTransformSprite, worgBearTransformSprite, eliteTransformSprites, warriorTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, worgBearTransformSprite, eliteTransformSprites, warriorTransformSprite, mageTransformSprites, effectSprites, spriteSheets } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import {
@@ -981,6 +981,9 @@ function HeroSlideshow() {
     }
     if (combo.classId === 'warrior') {
       forms.push({ id: 'demon_blade', label: 'Demon Blade', spriteData: warriorTransformSprite });
+    }
+    if (combo.classId === 'mage' && mageTransformSprites[combo.raceId]) {
+      forms.push({ id: 'mage_transform', label: 'Dark Priest', spriteData: mageTransformSprites[combo.raceId] });
     }
     const eliteMap = eliteTransformSprites[combo.classId];
     if (eliteMap && eliteMap[combo.raceId]) {

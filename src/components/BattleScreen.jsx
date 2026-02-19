@@ -4,7 +4,7 @@ import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
 import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
 import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
-import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, mageTransformSprites, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
 import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
 import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites';
 import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
@@ -1148,6 +1148,9 @@ function getUnitSprite(unit) {
   if (unit.classId && unit.classId === 'warrior' && unit.demonBlade) {
     return warriorTransformSprite;
   }
+  if (unit.classId === 'mage' && unit.mageTransform && mageTransformSprites[unit.raceId]) {
+    return mageTransformSprites[unit.raceId];
+  }
   if (unit.eliteForm && unit.classId && unit.raceId && unit.team === 'player') {
     const eliteSprite = getEliteTransformSprite(unit.classId, unit.raceId);
     if (eliteSprite) return eliteSprite;
@@ -1401,6 +1404,7 @@ function BattleScreenInner() {
     if (unit.classId === 'worge' && unit.bearForm && unit.eliteForm) formId = 'elite_bear';
     else if (unit.classId === 'worge' && unit.bearForm) formId = 'worge';
     else if (unit.classId === 'warrior' && unit.demonBlade) formId = 'demon_blade';
+    else if (unit.classId === 'mage' && unit.mageTransform) formId = 'mage_transform';
     else if (unit.eliteForm) formId = 'elite';
     return adminConfig.getTransformOverride(unit.raceId, unit.classId, formId);
   }, []);

@@ -436,6 +436,30 @@ export const spriteSheets = {
     hurt: { src: '/sprites/human-mage/hurt.png', frames: 7 },
     death: { src: '/sprites/human-mage/death.png', frames: 16 },
   },
+  'white-priest': {
+    folder: 'white-priest',
+    frameWidth: 128,
+    frameHeight: 128,
+    idle: { src: '/sprites/white-priest/Idle.png', frames: 8 },
+    walk: { src: '/sprites/white-priest/Walk.png', frames: 12 },
+    attack1: { src: '/sprites/white-priest/Attack.png', frames: 14 },
+    cast: { src: '/sprites/white-priest/Special.png', frames: 11 },
+    heal: { src: '/sprites/white-priest/Special.png', frames: 11 },
+    hurt: { src: '/sprites/white-priest/Idle.png', frames: 8 },
+    death: { src: '/sprites/white-priest/Idle.png', frames: 8 },
+  },
+  'black-priest': {
+    folder: 'black-priest',
+    frameWidth: 128,
+    frameHeight: 128,
+    idle: { src: '/sprites/black-priest/Idle.png', frames: 8 },
+    walk: { src: '/sprites/black-priest/Walk.png', frames: 12 },
+    attack1: { src: '/sprites/black-priest/Special.png', frames: 4 },
+    cast: { src: '/sprites/black-priest/Special.png', frames: 4 },
+    heal: { src: '/sprites/black-priest/Special.png', frames: 4 },
+    hurt: { src: '/sprites/black-priest/Idle.png', frames: 8 },
+    death: { src: '/sprites/black-priest/Idle.png', frames: 8 },
+  },
   'fire-wizard': {
     folder: 'fire-wizard',
     frameWidth: 128,
@@ -1170,6 +1194,10 @@ export const raceClassDefaultProps = {
 
 export const warriorTransformSprite = spriteSheets['demon-sword'];
 
+export const mageTransformSprites = {
+  human: spriteSheets['black-priest'],
+};
+
 export const nightborneSprite = {
   folder: 'nightborne',
   frameWidth: 80,
@@ -1357,7 +1385,7 @@ export const eliteTransformSprites = {
     undead: { ...spriteSheets['free-knight'], filter: 'invert(0.85) hue-rotate(180deg) saturate(1.4)' },
   },
   mage: {
-    human: spriteSheets['fire-wizard'],
+    human: spriteSheets['white-priest'],
     elf: { ...spriteSheets['elf-mage'], scale: 0.7 },
     dwarf: spriteSheets['wizard-hero'],
     barbarian: { ...spriteSheets['fire-wizard'], filter: 'hue-rotate(15deg) saturate(1.3) brightness(1.1)' },
