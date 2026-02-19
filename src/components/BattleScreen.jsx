@@ -432,6 +432,42 @@ function ThunderProjectileSprite() {
   );
 }
 
+function SpriteProjectileTrail({ spriteData }) {
+  const [frame, setFrame] = React.useState(0);
+  const { src, frames, frameW, frameH } = spriteData;
+  const displaySize = 100;
+  const scaleRatio = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % frames;
+      setFrame(f);
+    }, 45);
+    return () => clearInterval(interval);
+  }, [frames]);
+
+  return (
+    <div style={{
+      width: displaySize, height: displaySize * (frameH / frameW), overflow: 'hidden',
+      marginTop: -(displaySize * (frameH / frameW) / 2),
+      marginLeft: -(displaySize / 2),
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize * (frameH / frameW),
+        backgroundImage: `url(${src})`,
+        backgroundSize: `${frames * frameW * scaleRatio}px ${displaySize * (frameH / frameW)}px`,
+        backgroundPosition: `-${frame * displaySize}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 8px #f97316) drop-shadow(0 0 16px #ef4444)',
+      }} />
+    </div>
+  );
+}
+
 function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, opacity = 0.85 }) {
   const [frame, setFrame] = React.useState(0);
   const totalFrames = sprite.frames;
@@ -1794,7 +1830,9 @@ function BattleScreenInner() {
         return;
       }
 
-      const ranged = isRangedUnit(attacker) || abilityType === 'magical';
+      const effectMap = getAbilityEffect(attacker.classId, abilityName, abilityId);
+      const hasSpriteProjectile = !!effectMap?.spriteProjectile;
+      const ranged = isRangedUnit(attacker) || abilityType === 'magical' || hasSpriteProjectile;
 
       if (abilityType === 'magical' && attacker.position) {
         addParticle('cast', attacker.position.x, bodyY(attacker), getProjectileColor(attacker, abilityName));
@@ -2017,6 +2055,7 @@ function BattleScreenInner() {
             const projId = Date.now();
             const color = getProjectileColor(attacker, abilityName);
             const beamSrc = getBeamTrail(attacker, abilityName);
+            const spriteProj = effectMap?.spriteProjectile || null;
             const dx = target.position.x - attacker.position.x;
             const dy = bodyY(target) - bodyY(attacker);
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
@@ -2027,7 +2066,8 @@ function BattleScreenInner() {
               endX: target.position.x,
               endY: bodyY(target),
               color,
-              beamSrc,
+              beamSrc: spriteProj ? null : beamSrc,
+              spriteProjectile: spriteProj,
               angle,
               phase: 'start',
               isElectric: isElectricAbility(abilityName),
@@ -2952,6 +2992,8 @@ function BattleScreenInner() {
                   transform: 'rotate(10deg)',
                 }} />
               </div>
+            ) : p.spriteProjectile ? (
+              <SpriteProjectileTrail spriteData={p.spriteProjectile} />
             ) : p.isElectric ? (
               <ThunderProjectileSprite />
             ) : p.beamSrc ? (

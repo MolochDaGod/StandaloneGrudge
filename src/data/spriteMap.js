@@ -2141,7 +2141,7 @@ export const enemyAbilityEffects = {
 
 export const abilityEffectMap = {
   warrior: {
-    'Slash': { effect: 'critSlash', beam: null, anim: 'attack1', followUp: [{ effect: 'smearH1', delay: 100 }, { effect: 'impactWhiteA', delay: 250 }, { effect: 'smokeVfx1', delay: 420 }] },
+    'Slash': { effect: 'critSlash', beam: null, anim: 'attack3', spriteProjectile: { src: '/sprites/knight/attack3_effect.png', frames: 11, frameW: 100, frameH: 100 }, followUp: [{ effect: 'smearH1', delay: 100 }, { effect: 'impactWhiteA', delay: 250 }, { effect: 'smokeVfx1', delay: 420 }] },
     'Power Strike': { effect: 'hitBurst', beam: null, anim: 'attack3', followUp: [{ effect: 'critSlash', delay: 150 }, { effect: 'impactOrangeA', delay: 320 }, { effect: 'earthBump', delay: 500 }] },
     'War Cry': { effect: 'beamHoly', beam: null, anim: 'cast', followUp: [{ effect: 'impactYellowA', delay: 200 }, { effect: 'impactOrangeB', delay: 400 }, { effect: 'smokeVfx2', delay: 600 }] },
     'Shield Bash': { effect: 'hitBurst', beam: null, anim: 'block', followUp: [{ effect: 'thrust1', delay: 120 }, { effect: 'impactWhiteA', delay: 280 }, { effect: 'smokeVfx1', delay: 450 }] },
