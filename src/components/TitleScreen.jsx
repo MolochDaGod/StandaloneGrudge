@@ -322,8 +322,9 @@ export default function TitleScreen() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '0.75rem', fontWeight: 800, color: '#fff',
                 fontFamily: "'Jost', sans-serif",
+                overflow: 'hidden',
               }}>
-                {puterUser ? '\u2713' : 'G'}
+                {puterUser ? '\u2713' : <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 20, height: 20, objectFit: 'contain' }} />}
               </div>
             }
             delay={0.3}

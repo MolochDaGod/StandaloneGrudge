@@ -277,8 +277,9 @@ function GameApp() {
                   : 'rgba(255,255,255,0.15)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.5rem', fontWeight: 800, color: '#fff',
+              overflow: 'hidden',
             }}>
-              {sessionType === 'puter' ? 'G' : sessionType === 'discord' ? 'D' : '\u2022'}
+              {sessionType === 'puter' ? <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 14, height: 14, objectFit: 'contain' }} /> : sessionType === 'discord' ? 'D' : '\u2022'}
             </div>
             <span style={{
               color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: 500,
