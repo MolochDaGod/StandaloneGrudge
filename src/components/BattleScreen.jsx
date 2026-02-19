@@ -1395,6 +1395,15 @@ function BattleScreenInner() {
   const [adminDragging, setAdminDragging] = useState(null);
   const adminDragStart = useRef(null);
   const [bearFormOverride, setBearFormOverride] = useState(() => adminConfig.getBearFormOverride());
+  const getUnitTransformOverride = useCallback((unit) => {
+    if (!unit || !unit.raceId || !unit.classId) return { offsetX: 0, offsetY: 0, scale: 1.0 };
+    let formId = 'base';
+    if (unit.classId === 'worge' && unit.bearForm && unit.eliteForm) formId = 'elite_bear';
+    else if (unit.classId === 'worge' && unit.bearForm) formId = 'worge';
+    else if (unit.classId === 'warrior' && unit.demonBlade) formId = 'demon_blade';
+    else if (unit.eliteForm) formId = 'elite';
+    return adminConfig.getTransformOverride(unit.raceId, unit.classId, formId);
+  }, []);
   const spriteLayout = adminConfig.getSpriteLayout();
   const actionBarLayout = adminConfig.getActionBar();
 
@@ -1565,10 +1574,10 @@ function BattleScreenInner() {
     const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
     const spriteData = getUnitSprite(unit);
     const adminScale = spriteData?.scale || 1;
-    const isWorgeBear = unit.classId === 'worge' && unit.bearForm;
-    const bearScale = isWorgeBear ? 1.2 : 1;
+    const tOvr = getUnitTransformOverride(unit);
+    const tScale = tOvr.scale || 1;
     const targetSize = 200;
-    const spriteHeight = targetSize * bossScaleVal * comboScale * adminScale * bearScale;
+    const spriteHeight = targetSize * bossScaleVal * comboScale * adminScale * tScale;
     const bodyOffsetPx = spriteHeight * 0.38;
     const containerH = containerHeightRef.current || 600;
     const offsetPercent = (bodyOffsetPx / containerH) * 100;
@@ -2117,6 +2126,74 @@ function BattleScreenInner() {
       } else {
         const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
         const isLeap = effectMapping?.moveType === 'leap';
+        const isShadowstep = effectMapping?.moveType === 'shadowstep';
+
+        if (isShadowstep && attacker.position && target.position) {
+          const isPlayer = attacker.team === 'player';
+          const frontX = target.position.x + (isPlayer ? -10 : 10);
+          const behindX = target.position.x + (isPlayer ? 10 : -10);
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : spriteData?.run ? 'run' : 'idle' }));
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: target.position.y } }));
+
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+            playSwordHit();
+            if (target.position) {
+              addParticle('hit', target.position.x - 2, bodyY(target), '#a78bfa');
+              addParticle('hit', target.position.x + 2, bodyY(target), '#c4b5fd');
+            }
+          }, 350 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: behindX, y: target.position.y } }));
+            if (target.position) {
+              addParticle('hit', target.position.x + 3, bodyY(target) - 2, '#a78bfa');
+              addParticle('hit', target.position.x - 1, bodyY(target) + 1, '#818cf8');
+            }
+            playSwordHit();
+          }, 700 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: target.position.y } }));
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+              const hfxSS = getHitEffect(attacker, abilityName, false);
+              if (hfxSS.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxSS.sprite, filter: hfxSS.filter, size: getUnitEffectSize(target) }]);
+                const effectDur = (hfxSS.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxSS.followUp) spawnFollowUpEffects(hfxSS.followUp, target.position.x, bodyY(target), hfxSS.filter, getUnitEffectSize(target));
+              }
+              if (isCrit) {
+                playCrit();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                if (target.position) {
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('melee') }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+              }
+              if (target.position) spawnWeaponContact(target.position.x, bodyY(target), 2);
+            } else {
+              playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+            }
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
+          }, 1050 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          }, 1400 * spd);
+          setTimeout(() => advanceTurn(), 1800 * spd);
+          return;
+        }
 
         if (isLeap && attacker.position && target.position) {
           const frontX = target.position.x + (attacker.team === 'player' ? -8 : 8);
@@ -2693,13 +2770,13 @@ function BattleScreenInner() {
           const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
           const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
           const adminScale = spriteData?.scale || 1;
-          const isWorgeBear = unit.classId === 'worge' && unit.bearForm;
-          const bearScale = isWorgeBear ? (bearFormOverride.scale || 1) : 1;
+          const transformOvr = getUnitTransformOverride(unit);
+          const transformScale = transformOvr.scale || 1;
           const comboOffset = {
-            x: isWorgeBear ? (bearFormOverride.offsetX || 0) : 0,
-            y: isWorgeBear ? (bearFormOverride.offsetY || 0) : 0,
+            x: transformOvr.offsetX || 0,
+            y: transformOvr.offsetY || 0,
           };
-          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale * bearScale;
+          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale * transformScale;
 
           const spriteSize = Math.round(baseFrameSize * spriteScale);
           const hitW = Math.round(spriteSize * 0.5);

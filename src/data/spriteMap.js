@@ -826,6 +826,7 @@ export const spriteSheets = {
     attack2: { src: '/sprites/wind-hashashin/attack2.png', frames: 18 },
     attack3: { src: '/sprites/wind-hashashin/attack3.png', frames: 26 },
     cast: { src: '/sprites/wind-hashashin/special.png', frames: 30 },
+    special: { src: '/sprites/wind-hashashin/special.png', frames: 30 },
     block: { src: '/sprites/wind-hashashin/defend.png', frames: 8 },
     roll: { src: '/sprites/wind-hashashin/roll.png', frames: 6 },
     hurt: { src: '/sprites/wind-hashashin/take_hit.png', frames: 6 },
@@ -2174,7 +2175,7 @@ export const abilityEffectMap = {
     'Arcane Cataclysm': { effect: 'arcanelighting', beam: 'blue', anim: 'charge', fallbackAnim: 'attack2', isAoE: true, followUp: [{ effect: 'impactBlueA', delay: 150 }, { effect: 'impactMagentaA', delay: 300 }, { effect: 'impactCyanA', delay: 450 }, { effect: 'impactPurpleB', delay: 600 }] },
   },
   worge: {
-    'Mace Strike': { effect: 'hitBurst', beam: null, anim: 'attack1', followUp: [{ effect: 'smearH1', delay: 100 }, { effect: 'impactWhiteA', delay: 260 }, { effect: 'smokeVfx1', delay: 430 }] },
+    'Mace Strike': { effect: 'hitBurst', beam: null, anim: 'special', fallbackAnim: 'attack1', moveType: 'shadowstep', followUp: [{ effect: 'smearH1', delay: 100 }, { effect: 'critSlash', delay: 250 }, { effect: 'impactWhiteA', delay: 450 }, { effect: 'smokeVfx1', delay: 650 }] },
     'Lightning Lash': { effect: 'arcanelighting', beam: 'orange', anim: 'attack2', followUp: [{ effect: 'electricSpark', delay: 80 }, { effect: 'thunderHit', delay: 200 }, { effect: 'impactYellowA', delay: 380 }, { effect: 'impactOrangeB', delay: 540 }] },
     "Nature's Grasp": { effect: 'healingwave', beam: 'green', anim: 'heal', postHealEffect: 'healingregen', followUp: [{ effect: 'impactGreenA', delay: 250 }, { effect: 'impactTealA', delay: 450 }] },
     'Dagger Toss': { effect: 'windProjectile', beam: 'green', anim: 'attack2', followUp: [{ effect: 'windHit', delay: 120 }, { effect: 'impactGreenB', delay: 300 }, { effect: 'smokeVfx1', delay: 480, filter: 'hue-rotate(90deg)' }] },
