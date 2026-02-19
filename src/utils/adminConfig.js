@@ -10,6 +10,7 @@ const KEYS = {
   pvpPlacements: 'grudge-admin-pvp-placements',
   spriteOverrides: 'adminSpriteOverrides',
   bearFormOverride: 'adminBearFormOverride',
+  transformOverrides: 'adminTransformOverrides',
   dummyPosition: 'adminDummyPosition',
 };
 
@@ -210,6 +211,27 @@ export const adminConfig = {
   },
   resetBearFormOverride() {
     remove('bearFormOverride');
+  },
+
+  getTransformOverrides() {
+    return load('transformOverrides') || {};
+  },
+  getTransformOverride(raceId, classId, formId) {
+    const all = load('transformOverrides') || {};
+    return all[`${raceId}-${classId}-${formId}`] || { offsetX: 0, offsetY: 0, scale: 1.0 };
+  },
+  saveTransformOverride(raceId, classId, formId, data) {
+    const all = load('transformOverrides') || {};
+    all[`${raceId}-${classId}-${formId}`] = data;
+    save('transformOverrides', all);
+  },
+  resetTransformOverride(raceId, classId, formId) {
+    const all = load('transformOverrides') || {};
+    delete all[`${raceId}-${classId}-${formId}`];
+    save('transformOverrides', all);
+  },
+  resetAllTransformOverrides() {
+    remove('transformOverrides');
   },
 
   getDummyPosition() {

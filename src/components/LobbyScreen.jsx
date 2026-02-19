@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import useGameStore from '../stores/gameStore';
 import { InlineIcon, EssentialIcon } from '../data/uiSprites';
 import SpriteAnimation from './SpriteAnimation';
-import { getRaceClassSprite, worgTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
+import { getRaceClassSprite, worgTransformSprite, worgBearTransformSprite, eliteTransformSprites, warriorTransformSprite, effectSprites, spriteSheets } from '../data/spriteMap';
 import { raceDefinitions } from '../data/races';
 import { classDefinitions } from '../data/classes';
 import {
@@ -914,6 +914,13 @@ function HeroSlideshow() {
   const [editorScale, setEditorScale] = useState(1);
   const [editorSaved, setEditorSaved] = useState(false);
   const [editorTarget, setEditorTarget] = useState('hero');
+  const [activeFormTab, setActiveFormTab] = useState('base');
+  const [transformEditorX, setTransformEditorX] = useState(0);
+  const [transformEditorY, setTransformEditorY] = useState(0);
+  const [transformEditorScale, setTransformEditorScale] = useState(1);
+  const transformEditorXRef = useRef(0);
+  const transformEditorYRef = useRef(0);
+  const transformEditorScaleRef = useRef(1);
   const draggingRef = useRef(false);
   const dragStartRef = useRef({ mx: 0, my: 0, sx: 0, sy: 0 });
   const containerRef = useRef(null);
@@ -925,6 +932,8 @@ function HeroSlideshow() {
   const editorYRef = useRef(0);
   const editorScaleRef = useRef(1);
   const editorTargetRef = useRef('hero');
+  const availableFormsRef = useRef([]);
+  const activeFormTabRef = useRef('base');
 
   const [dummyPos, setDummyPos] = useState(() => adminConfig.getDummyPosition());
   const [dummyEditorX, setDummyEditorX] = useState(0);
@@ -962,6 +971,35 @@ function HeroSlideshow() {
 
   const worgeTransformData = isWorge ? worgTransformSprite[combo.raceId] : null;
 
+  const availableForms = useMemo(() => {
+    const forms = [{ id: 'base', label: 'Base', spriteData: spriteData }];
+    if (combo.classId === 'worge') {
+      const wt = worgTransformSprite[combo.raceId];
+      if (wt) forms.push({ id: 'worge_transform', label: 'Worge', spriteData: wt });
+      const wbt = worgBearTransformSprite[combo.raceId];
+      if (wbt) forms.push({ id: 'worge_bear', label: 'Elite Bear', spriteData: wbt });
+    }
+    if (combo.classId === 'warrior') {
+      forms.push({ id: 'demon_blade', label: 'Demon Blade', spriteData: warriorTransformSprite });
+    }
+    const eliteMap = eliteTransformSprites[combo.classId];
+    if (eliteMap && eliteMap[combo.raceId]) {
+      forms.push({ id: 'elite', label: 'Elite', spriteData: eliteMap[combo.raceId] });
+    }
+    return forms;
+  }, [combo.raceId, combo.classId, spriteData]);
+
+  availableFormsRef.current = availableForms;
+  activeFormTabRef.current = activeFormTab;
+
+  const activeForm = availableForms.find(f => f.id === activeFormTab) || availableForms[0];
+  const isTransformForm = activeFormTab !== 'base';
+  const transformFormSprite = isTransformForm ? activeForm.spriteData : null;
+
+  const savedTransformOverride = isTransformForm
+    ? adminConfig.getTransformOverride(combo.raceId, combo.classId, activeFormTab)
+    : null;
+
   const BATTLE_SCALE_OVERRIDES = {};
   const SPRITE_SCALE_OVERRIDES = {
   };
@@ -986,6 +1024,16 @@ function HeroSlideshow() {
   const transformScaleBase = (spriteFrameH * spriteScale) / transformFrameH;
   const transformScale = transformScaleBase * (worgeTransformData?.transformScaleMult || 1);
 
+  const formBattleScale = useMemo(() => {
+    if (!transformFormSprite) return spriteScale;
+    const tfh = transformFormSprite.frameHeight || transformFormSprite.frameWidth || 100;
+    const tAdmin = transformFormSprite.scale || 1;
+    const tMult = transformFormSprite.transformScaleMult || 1;
+    const base = (battleTargetSize / tfh) * tAdmin * tMult;
+    const overrideScale = savedTransformOverride?.scale || 1;
+    return base * overrideScale;
+  }, [transformFormSprite, spriteScale, battleTargetSize, savedTransformOverride]);
+
   const intervalRefs = useRef([]);
 
   useEffect(() => {
@@ -999,20 +1047,27 @@ function HeroSlideshow() {
       const updateDummyX = (fn) => { setDummyEditorX(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorXRef.current = v; return v; }); };
       const updateDummyY = (fn) => { setDummyEditorY(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorYRef.current = v; return v; }); };
       const updateDummyScale = (fn) => { setDummyEditorScale(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; dummyEditorScaleRef.current = v; return v; }); };
+      const updateTransformX = (fn) => { setTransformEditorX(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; transformEditorXRef.current = v; return v; }); };
+      const updateTransformY = (fn) => { setTransformEditorY(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; transformEditorYRef.current = v; return v; }); };
+      const updateTransformScale = (fn) => { setTransformEditorScale(prev => { const v = typeof fn === 'function' ? fn(prev) : fn; transformEditorScaleRef.current = v; return v; }); };
       const resetEditor = () => { updateEditorX(0); updateEditorY(0); updateEditorScale(1); };
       const resetDummyEditor = () => { updateDummyX(0); updateDummyY(0); updateDummyScale(1); };
+      const resetTransformEditor = () => { updateTransformX(0); updateTransformY(0); updateTransformScale(1); };
 
       if (e.key === 'Tab') {
         e.preventDefault();
-        const next = tgt === 'hero' ? 'dummy' : 'hero';
+        const targets = ['hero', 'transform', 'dummy'];
+        const curIdx = targets.indexOf(tgt);
+        const next = targets[(curIdx + 1) % targets.length];
         editorTargetRef.current = next;
         setEditorTarget(next);
         return;
       }
 
-      const setX = tgt === 'dummy' ? updateDummyX : updateEditorX;
-      const setY = tgt === 'dummy' ? updateDummyY : updateEditorY;
-      const setSc = tgt === 'dummy' ? updateDummyScale : updateEditorScale;
+      const isTransform = tgt === 'transform';
+      const setX = tgt === 'dummy' ? updateDummyX : isTransform ? updateTransformX : updateEditorX;
+      const setY = tgt === 'dummy' ? updateDummyY : isTransform ? updateTransformY : updateEditorY;
+      const setSc = tgt === 'dummy' ? updateDummyScale : isTransform ? updateTransformScale : updateEditorScale;
 
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
         e.preventDefault();
@@ -1044,6 +1099,16 @@ function HeroSlideshow() {
           adminConfig.saveDummyPosition(newPos);
           setDummyPos(newPos);
           resetDummyEditor();
+        } else if (tgt === 'transform') {
+          const c = ALL_COMBOS[indexRef.current];
+          const curOv = adminConfig.getTransformOverride(c.raceId, c.classId, activeFormTabRef.current);
+          const newOv = {
+            offsetX: (curOv.offsetX || 0) + transformEditorXRef.current,
+            offsetY: (curOv.offsetY || 0) + transformEditorYRef.current,
+            scale: Math.round((curOv.scale || 1) * transformEditorScaleRef.current * 100) / 100,
+          };
+          adminConfig.saveTransformOverride(c.raceId, c.classId, activeFormTabRef.current, newOv);
+          resetTransformEditor();
         } else {
           const ck = `${ALL_COMBOS[indexRef.current].raceId}_${ALL_COMBOS[indexRef.current].classId}`;
           const curSaved = getSavedPositions();
@@ -1063,9 +1128,13 @@ function HeroSlideshow() {
       } else if (e.key === '>' || e.key === '.') {
         setIndex(prev => (prev + 1) % ALL_COMBOS.length);
         resetEditor();
+        resetTransformEditor();
+        setActiveFormTab('base');
       } else if (e.key === '<' || e.key === ',') {
         setIndex(prev => (prev - 1 + ALL_COMBOS.length) % ALL_COMBOS.length);
         resetEditor();
+        resetTransformEditor();
+        setActiveFormTab('base');
       } else if (e.key === 'r' || e.key === 'R') {
         if (tgt === 'dummy') {
           e.preventDefault();
@@ -1074,6 +1143,21 @@ function HeroSlideshow() {
           resetDummyEditor();
           setEditorSaved(true);
           setTimeout(() => setEditorSaved(false), 1500);
+        } else if (tgt === 'transform') {
+          e.preventDefault();
+          const c = ALL_COMBOS[indexRef.current];
+          adminConfig.resetTransformOverride(c.raceId, c.classId, activeFormTabRef.current);
+          resetTransformEditor();
+          setEditorSaved(true);
+          setTimeout(() => setEditorSaved(false), 1500);
+        }
+      } else if (e.key >= '1' && e.key <= '9' && tgt === 'transform') {
+        e.preventDefault();
+        const formIdx = parseInt(e.key) - 1;
+        const curForms = availableFormsRef.current;
+        if (formIdx < curForms.length) {
+          setActiveFormTab(curForms[formIdx].id);
+          resetTransformEditor();
         }
       }
     };
@@ -1587,26 +1671,49 @@ function HeroSlideshow() {
                 <div style={{
                   opacity: showTransformVfx ? 0 : 1,
                   transition: showTransformVfx ? 'none' : 'opacity 0.2s ease',
+                  position: 'relative',
+                  marginLeft: (editorMode && isTransformForm) ? ((savedTransformOverride?.offsetX || 0) + (editorTarget === 'transform' ? transformEditorX : 0)) : 0,
+                  marginBottom: (editorMode && isTransformForm) ? ((savedTransformOverride?.offsetY || 0) + (editorTarget === 'transform' ? transformEditorY : 0)) : 0,
                 }}>
                   <SpriteAnimation
-                    spriteData={(isWorge && showTransform && worgeTransformData) ? worgeTransformData : spriteData}
-                    animation={(isWorge && showTransform) ? transformAnim : anim}
-                    scale={(isWorge && showTransform) ? transformScale : spriteScale * (editorMode ? editorScale : 1)}
-                    flip={(isWorge && showTransform) ? false : !!spriteData?.facesLeft}
+                    spriteData={
+                      (editorMode && isTransformForm && transformFormSprite)
+                        ? transformFormSprite
+                        : (isWorge && showTransform && worgeTransformData) ? worgeTransformData : spriteData
+                    }
+                    animation={
+                      (editorMode && isTransformForm) ? 'idle'
+                        : (isWorge && showTransform) ? transformAnim : anim
+                    }
+                    scale={
+                      (editorMode && isTransformForm)
+                        ? formBattleScale * (editorTarget === 'transform' ? transformEditorScale : 1)
+                        : (isWorge && showTransform) ? transformScale : spriteScale * (editorMode ? editorScale : 1)
+                    }
+                    flip={
+                      (editorMode && isTransformForm)
+                        ? false
+                        : (isWorge && showTransform) ? false : !!spriteData?.facesLeft
+                    }
                     loop={
-                      (isWorge && showTransform)
-                        ? transformAnim === 'idle'
-                        : ['idle', 'walk', 'run', 'wallslide'].includes(anim)
+                      (editorMode && isTransformForm)
+                        ? true
+                        : (isWorge && showTransform)
+                          ? transformAnim === 'idle'
+                          : ['idle', 'walk', 'run', 'wallslide'].includes(anim)
                     }
                     speed={
-                      (isWorge && showTransform)
-                        ? (transformAnim === 'idle' ? 140 : 80)
-                        : (anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80)
+                      (editorMode && isTransformForm)
+                        ? 140
+                        : (isWorge && showTransform)
+                          ? (transformAnim === 'idle' ? 140 : 80)
+                          : (anim === 'idle' ? 140 : anim === 'walk' || anim === 'run' ? 100 : 80)
                     }
                     onAnimationEnd={
-                      (isWorge && showTransform)
-                        ? (transformAnim !== 'idle' ? () => setTransformAnim('idle') : null)
-                        : (!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null)
+                      (editorMode && isTransformForm) ? null
+                        : (isWorge && showTransform)
+                          ? (transformAnim !== 'idle' ? () => setTransformAnim('idle') : null)
+                          : (!['idle', 'walk', 'run', 'jump', 'doublejump', 'wallslide', 'roll', 'land'].includes(anim) ? () => setAnim('idle') : null)
                     }
                   />
                 </div>
@@ -1759,8 +1866,12 @@ function HeroSlideshow() {
             setDummyEditorX(0);
             setDummyEditorY(0);
             setDummyEditorScale(1);
+            setTransformEditorX(0);
+            setTransformEditorY(0);
+            setTransformEditorScale(1);
             setEditorTarget('hero');
             editorTargetRef.current = 'hero';
+            setActiveFormTab('base');
             setDummyPos(adminConfig.getDummyPosition());
           }
         }}
@@ -1785,25 +1896,37 @@ function HeroSlideshow() {
           lineHeight: 1.6, pointerEvents: 'none', userSelect: 'none',
         }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-            <span style={{
-              color: editorTarget === 'hero' ? '#FAAC47' : '#888',
-              fontWeight: editorTarget === 'hero' ? 700 : 400,
-              fontSize: '0.75rem',
-              textDecoration: editorTarget === 'hero' ? 'underline' : 'none',
-            }}>
-              HERO
-            </span>
-            <span style={{ color: '#555' }}>|</span>
-            <span style={{
-              color: editorTarget === 'dummy' ? '#c084fc' : '#888',
-              fontWeight: editorTarget === 'dummy' ? 700 : 400,
-              fontSize: '0.75rem',
-              textDecoration: editorTarget === 'dummy' ? 'underline' : 'none',
-            }}>
-              DUMMY
-            </span>
+            {['hero', 'transform', 'dummy'].map(t => (
+              <React.Fragment key={t}>
+                {t !== 'hero' && <span style={{ color: '#555' }}>|</span>}
+                <span style={{
+                  color: editorTarget === t ? (t === 'dummy' ? '#c084fc' : t === 'transform' ? '#4fc3f7' : '#FAAC47') : '#888',
+                  fontWeight: editorTarget === t ? 700 : 400,
+                  fontSize: '0.75rem',
+                  textDecoration: editorTarget === t ? 'underline' : 'none',
+                  cursor: 'pointer', pointerEvents: 'auto',
+                }} onClick={() => { setEditorTarget(t); editorTargetRef.current = t; }}>
+                  {t.toUpperCase()}
+                </span>
+              </React.Fragment>
+            ))}
             <span style={{ color: '#666', fontSize: '0.6rem', marginLeft: 4 }}>(Tab to switch)</span>
           </div>
+          {editorTarget === 'transform' && (
+            <div style={{ display: 'flex', gap: 4, marginBottom: 4, flexWrap: 'wrap', pointerEvents: 'auto' }}>
+              {availableForms.map((f, i) => (
+                <button key={f.id} onClick={() => { setActiveFormTab(f.id); setTransformEditorX(0); setTransformEditorY(0); setTransformEditorScale(1); }}
+                  style={{
+                    background: activeFormTab === f.id ? '#4fc3f7' : 'rgba(255,255,255,0.1)',
+                    color: activeFormTab === f.id ? '#000' : '#aaa',
+                    border: 'none', borderRadius: 3, padding: '2px 8px',
+                    fontSize: '0.6rem', cursor: 'pointer', fontFamily: 'monospace',
+                  }}>
+                  {i + 1}:{f.label}
+                </button>
+              ))}
+            </div>
+          )}
           {editorTarget === 'hero' ? (
             <>
               <div style={{ color: '#FAAC47', fontWeight: 700, fontSize: '0.7rem' }}>
@@ -1812,6 +1935,16 @@ function HeroSlideshow() {
               <div>X: <span style={{ color: '#6f6' }}>{editorX}</span> | Y: <span style={{ color: '#6f6' }}>{editorY}</span> | Scale: <span style={{ color: '#6f6' }}>{editorScale.toFixed(2)}</span></div>
               <div style={{ color: '#FAAC47', marginTop: 2, fontSize: '0.65rem' }}>
                 Final → X: {spriteXOffset + editorX} | Y: {spriteYOffset + editorY} | Scale: {((scaleOverride || 1) * editorScale).toFixed(2)}
+              </div>
+            </>
+          ) : editorTarget === 'transform' ? (
+            <>
+              <div style={{ color: '#4fc3f7', fontWeight: 700, fontSize: '0.7rem' }}>
+                {combo.raceId}_{combo.classId} → {activeForm?.label || 'base'}
+              </div>
+              <div>X: <span style={{ color: '#6f6' }}>{transformEditorX}</span> | Y: <span style={{ color: '#6f6' }}>{transformEditorY}</span> | Scale: <span style={{ color: '#6f6' }}>{transformEditorScale.toFixed(2)}</span></div>
+              <div style={{ color: '#4fc3f7', marginTop: 2, fontSize: '0.65rem' }}>
+                Saved → X: {savedTransformOverride?.offsetX || 0} | Y: {savedTransformOverride?.offsetY || 0} | Scale: {(savedTransformOverride?.scale || 1).toFixed(2)}
               </div>
             </>
           ) : (
@@ -1826,18 +1959,19 @@ function HeroSlideshow() {
             </>
           )}
           <div style={{ color: '#aaa', marginTop: 4 }}>
-            {editorTarget === 'dummy' ? 'Click dummy to drag | ' : 'Click hero to drag | '}+/- scale | Arrows nudge (Shift=10x)
+            {editorTarget === 'dummy' ? 'Click dummy to drag | ' : editorTarget === 'transform' ? 'Transform mode | ' : 'Click hero to drag | '}+/- scale | Arrows nudge (Shift=10x)
           </div>
           <div style={{ color: '#aaa' }}>
             {'< > cycle heroes | S save | Esc exit'}
             {editorTarget === 'dummy' && ' | R reset dummy'}
+            {editorTarget === 'transform' && ' | R reset | 1-9 form'}
           </div>
           {editorSaved && (
             <div style={{
               color: '#22c55e', fontWeight: 700, marginTop: 4, fontSize: '0.8rem',
               animation: 'ssFadeIn 0.3s ease',
             }}>
-              SAVED {editorTarget === 'dummy' ? 'DUMMY' : comboKey}
+              SAVED {editorTarget === 'dummy' ? 'DUMMY' : editorTarget === 'transform' ? `${comboKey} → ${activeForm?.label}` : comboKey}
             </div>
           )}
           {editorTarget === 'hero' && savedPos && !editorSaved && (
