@@ -1316,7 +1316,7 @@ function BattleScreenInner() {
     level, cooldowns, currentLocation,
     useAbility, processAIAction, advanceTurn, setSelectedTarget,
     returnToWorld, startBattle, returnFromTraining,
-    skipTurn, defendTurn, autoAttack, moveRow,
+    skipTurn, defendTurn, autoAttack, moveRow, fleeBattle,
     playerHealth, playerMana, playerStamina,
     playerMaxHealth, playerMaxMana, playerMaxStamina,
     inventory, useConsumable, useGrudge,
@@ -2386,7 +2386,7 @@ function BattleScreenInner() {
           useGameStore.getState().clearPendingLoot();
           return;
         }
-        if (phase === 'victory' || phase === 'defeat') {
+        if (phase === 'victory' || phase === 'defeat' || phase === 'fled') {
           e.preventDefault();
           if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
           else returnToWorld();
@@ -2409,24 +2409,35 @@ function BattleScreenInner() {
         if (e.key === 'Escape') setHealTargetMode(null);
         return;
       }
-      if (!displayedAbilities.length) return;
-      if (num >= 1 && num <= displayedAbilities.length) {
-        const ability = displayedAbilities[num - 1];
-        if (!currentUnit) return;
+      if (!currentUnit) return;
+      const tryAbility = (ability) => {
+        if (!ability) return;
         const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
         const noMana = (ability.manaCost || 0) > currentUnit.mana;
         const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
         if (!onCd && !noMana && !noStamina) handleAbility(ability.id);
-      }
+      };
+      if (e.key === '1') { autoAttack(); return; }
+      if (e.key === '2') { tryAbility(displayedAbilities[0]); return; }
+      if (e.key === '3') { tryAbility(displayedAbilities[1]); return; }
+      if (e.key === '4') { tryAbility(displayedAbilities[2]); return; }
+      if (e.key === '5') { tryAbility(displayedAbilities[3]); return; }
+      if (e.key === '6') { defendTurn(); return; }
+      if (e.key === '7') { skipTurn(); return; }
+      if (e.key === '8') { fleeBattle(); return; }
+      const qwerMap = { q: 4, w: 5, e: 6, r: 7 };
+      const bar2Idx = qwerMap[e.key.toLowerCase()];
+      if (bar2Idx !== undefined) { tryAbility(displayedAbilities[bar2Idx]); return; }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam, battleState, returnToWorld, returnFromTraining]);
+  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam, battleState, returnToWorld, returnFromTraining, autoAttack, defendTurn, skipTurn, fleeBattle]);
 
   if (!battleState || battleUnits.length === 0) return null;
 
   const isVictory = phase === 'victory';
   const isDefeat = phase === 'defeat';
+  const isFled = phase === 'fled';
   const isMissionRoundComplete = phase === 'missionRoundComplete';
 
   return (
@@ -3047,12 +3058,14 @@ function BattleScreenInner() {
 
       {/* ═══ LAYER 7: FOREGROUND (victory/defeat overlays, vignettes) ═══ */}
       <BattleLayer z={BATTLE_LAYERS.FOREGROUND} interactive>
-        {(isVictory || isDefeat) && (
+        {(isVictory || isDefeat || isFled) && (
           <>
             <div style={{
               position: 'absolute', inset: 0, zIndex: BATTLE.DAMAGE_NUMBERS - 1,
               background: isVictory
                 ? 'radial-gradient(ellipse at center, transparent 30%, rgba(255,215,0,0.08) 60%, rgba(0,0,0,0.6) 100%)'
+                : isFled
+                ? 'radial-gradient(ellipse at center, transparent 20%, rgba(180,160,60,0.08) 50%, rgba(0,0,0,0.6) 100%)'
                 : 'radial-gradient(ellipse at center, transparent 20%, rgba(200,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%)',
               animation: 'vignetteFadeIn 0.8s ease forwards',
               pointerEvents: 'none',
@@ -3062,25 +3075,29 @@ function BattleScreenInner() {
               textAlign: 'center',
               animation: isVictory ? 'victoryBanner 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'defeatBanner 0.8s ease forwards',
               zIndex: BATTLE.DAMAGE_NUMBERS,
-              backgroundImage: isDefeat ? 'linear-gradient(135deg, rgba(11,16,32,0.92), rgba(30,0,0,0.88)), url(/backgrounds/wc_gold.png)' : undefined,
-              background: isDefeat ? undefined : 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(20,15,5,0.9))',
+              backgroundImage: (isDefeat && !isFled) ? 'linear-gradient(135deg, rgba(11,16,32,0.92), rgba(30,0,0,0.88)), url(/backgrounds/wc_gold.png)' : undefined,
+              background: (isDefeat && !isFled) ? undefined : isFled ? 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(30,25,5,0.9))' : 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(20,15,5,0.9))',
               backgroundSize: 'cover', backgroundPosition: 'center',
               padding: '28px 48px', borderRadius: 16,
-              border: `2px solid ${isVictory ? 'var(--gold)' : 'var(--danger)'}`,
+              border: `2px solid ${isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)'}`,
               backdropFilter: 'blur(10px)',
               boxShadow: isVictory
                 ? '0 0 40px rgba(255,215,0,0.2), 0 0 80px rgba(255,215,0,0.1), inset 0 0 30px rgba(255,215,0,0.05)'
+                : isFled
+                ? '0 0 40px rgba(251,191,36,0.15), 0 0 80px rgba(0,0,0,0.4)'
                 : '0 0 40px rgba(239,68,68,0.2), 0 0 80px rgba(0,0,0,0.5)',
             }}>
               <div className="font-cinzel" style={{
                 fontSize: '2.2rem',
-                color: isVictory ? 'var(--gold)' : 'var(--danger)',
+                color: isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)',
                 textShadow: isVictory
                   ? '0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2), 0 2px 4px rgba(0,0,0,0.5)'
+                  : isFled
+                  ? '0 0 20px rgba(251,191,36,0.4), 0 2px 4px rgba(0,0,0,0.5)'
                   : '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2), 0 2px 4px rgba(0,0,0,0.5)',
                 letterSpacing: 4,
               }}>
-                {isVictory ? 'VICTORY!' : 'DEFEAT'}
+                {isVictory ? 'VICTORY!' : isFled ? 'ESCAPED!' : 'DEFEAT'}
               </div>
               {isVictory && (
                 <div style={{
@@ -3091,7 +3108,15 @@ function BattleScreenInner() {
                   +{Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)} Gold
                 </div>
               )}
-              {isDefeat && (
+              {isFled && (
+                <div style={{
+                  color: '#fcd34d', marginTop: 10, fontSize: '1.05rem',
+                  animation: 'fadeIn 0.5s ease 0.5s both',
+                }}>
+                  You escaped with your life!
+                </div>
+              )}
+              {isDefeat && !isFled && (
                 <div style={{
                   color: 'var(--muted)', marginTop: 10, fontSize: '1.05rem',
                   animation: 'fadeIn 0.5s ease 0.5s both',
@@ -3118,17 +3143,17 @@ function BattleScreenInner() {
                   if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
                   else returnToWorld();
                 }} style={{
-                  background: isDefeat ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : 'var(--border)',
-                  border: isDefeat ? '2px solid var(--danger)' : 'none',
+                  background: (isDefeat && !isFled) ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : isFled ? 'linear-gradient(135deg, rgba(251,191,36,0.3), rgba(251,191,36,0.1))' : 'var(--border)',
+                  border: (isDefeat && !isFled) ? '2px solid var(--danger)' : isFled ? '2px solid #fbbf24' : 'none',
                   borderRadius: 10, padding: '10px 20px',
-                  color: isDefeat ? 'var(--danger)' : 'var(--text)',
+                  color: (isDefeat && !isFled) ? 'var(--danger)' : isFled ? '#fbbf24' : 'var(--text)',
                   fontWeight: 600, cursor: 'pointer', fontSize: '1.1rem',
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  {battleState?.isTraining ? 'Continue' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
+                  {battleState?.isTraining ? 'Continue' : isFled ? 'Return to Safety' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
                   <span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
                 </button>
               </div>
@@ -3475,17 +3500,17 @@ function BattleScreenInner() {
         )}
 
         {/* Victory/Defeat banner */}
-        {isVictory || isDefeat ? (
+        {isVictory || isDefeat || isFled ? (
           <div className="font-cinzel" style={{
             textAlign: 'center', padding: '8px 24px',
-            color: isVictory ? 'var(--gold)' : 'var(--danger)',
+            color: isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)',
             fontSize: '1.4rem', fontWeight: 800,
             textShadow: isVictory
               ? '0 0 20px rgba(250,172,71,0.4), 0 2px 4px rgba(0,0,0,0.8)'
               : '0 0 20px rgba(239,68,68,0.4), 0 2px 4px rgba(0,0,0,0.8)',
             letterSpacing: '0.1em',
           }}>
-            {isVictory ? 'VICTORY' : 'DEFEATED'}
+            {isVictory ? 'VICTORY' : isFled ? 'ESCAPED' : 'DEFEATED'}
           </div>
         ) : isPlayerTurn && currentUnit ? (
           <div style={{
@@ -3540,7 +3565,7 @@ function BattleScreenInner() {
               );
             })()}
 
-            {/* Skill slots - clean ARPG bar */}
+            {/* ═══ BAR 1: Main Action Bar ═══ */}
             <div style={{
               display: 'flex', alignItems: 'flex-end', gap: 3,
               padding: '4px 10px 2px',
@@ -3550,85 +3575,93 @@ function BattleScreenInner() {
               boxShadow: '0 -2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(197,160,89,0.08)',
               backdropFilter: 'blur(6px)',
             }}>
-              {[
-                { id: 'attack', action: autoAttack, icon: UI_ICONS.actionAttack, label: 'Attack', color: '#ef4444', isSprite: true },
-                { id: 'defend', action: defendTurn, icon: UI_ICONS.actionDefend, label: 'Defend', color: '#60a5fa', isSprite: true },
-                { id: 'skip', action: skipTurn, icon: 'moon', label: 'Skip', color: '#94a3b8' },
-              ].map((btn, idx) => (
-                <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                  <div style={{ position: 'relative', width: 40, height: 40 }}>
-                    <button onClick={btn.action} style={{
-                      background: 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
-                      border: 'none', padding: 0, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s',
-                      position: 'absolute', inset: '13%',
-                      borderRadius: 2, zIndex: 1,
-                      boxShadow: `inset 0 0 6px rgba(0,0,0,0.7), 0 0 3px ${btn.color}25`,
-                    }}
-                      onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
-                      onMouseMove={e => updateTooltipPosition(e)}
-                      onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
-                    >
-                      {btn.isSprite ? <SpriteIcon src={btn.icon} size={14} scale={2} /> : <InlineIcon name={btn.icon} size={16} />}
-                    </button>
-                    <img src="/ui/skill-slot-frame.png" alt="" style={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%',
-                      pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                    }} />
-                    <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 1}</span>
-                  </div>
-                  <span className="font-cinzel" style={{ fontSize: '0.28rem', color: btn.color, fontWeight: 600, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{btn.label}</span>
-                </div>
-              ))}
+              {(() => {
+                const bar1Abilities = displayedAbilities.slice(0, 4);
+                const bar1Slots = [
+                  { id: 'attack', action: autoAttack, icon: UI_ICONS.actionAttack, label: 'Attack', color: '#ef4444', isSprite: true, key: '1' },
+                  ...bar1Abilities.map((ab, i) => ({ id: ab.id, ability: ab, label: ab.name, color: '#d4a96a', isAbility: true, key: String(i + 2) })),
+                  ...(bar1Abilities.length < 4 ? Array.from({ length: 4 - bar1Abilities.length }, (_, i) => ({ id: `empty_${i}`, label: '—', color: '#333', isEmpty: true, key: String(bar1Abilities.length + i + 2) })) : []),
+                  { id: 'defend', action: defendTurn, icon: UI_ICONS.actionDefend, label: 'Defend', color: '#60a5fa', isSprite: true, key: '6' },
+                  { id: 'skip', action: skipTurn, icon: 'moon', label: 'Skip', color: '#94a3b8', key: '7' },
+                  { id: 'flee', action: fleeBattle, icon: UI_ICONS.actionFlee, label: 'Flee', color: '#fbbf24', isSprite: true, key: '8' },
+                ];
 
-              {/* Separator */}
-              <div style={{ width: 1, height: 32, background: 'linear-gradient(180deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 2px', alignSelf: 'center' }} />
+                return bar1Slots.map((btn, idx) => {
+                  if (btn.isEmpty) {
+                    return (
+                      <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40, opacity: 0.3 }}>
+                          <div style={{ position: 'absolute', inset: '13%', background: 'rgba(15,12,8,0.9)', borderRadius: 2 }} />
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'saturate(0.3)' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.3)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3 }}>{btn.key}</span>
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.25rem', color: '#333', fontWeight: 600, lineHeight: 1 }}>—</span>
+                      </div>
+                    );
+                  }
 
-              {/* Abilities */}
-              {displayedAbilities.map((ability, idx) => {
-                const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
-                const noMana = (ability.manaCost || 0) > currentUnit.mana;
-                const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
-                const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
-                const disabled = onCd || noMana || noStamina || alreadyTransformed;
-                return (
-                  <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                    <div style={{ position: 'relative', width: 40, height: 40, opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}>
-                      <button onClick={() => !disabled && handleAbility(ability.id)} style={{
-                        background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
-                        border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s',
-                        position: 'absolute', inset: '13%',
-                        borderRadius: 2, zIndex: 1,
-                        boxShadow: disabled ? 'inset 0 0 5px rgba(0,0,0,0.8)' : 'inset 0 0 6px rgba(0,0,0,0.7), 0 0 4px rgba(212,169,106,0.1)',
-                      }}
-                        onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP: ${ability.staminaCost}` : ''}${onCd ? `\nCD: ${currentUnit.cooldowns[ability.id]}` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
-                        onMouseMove={e => updateTooltipPosition(e)}
-                        onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
-                      >
-                        <AbilityIcon ability={ability} size={18} />
-                      </button>
-                      <img src="/ui/skill-slot-frame.png" alt="" style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%',
-                        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                        filter: disabled ? 'saturate(0.3)' : 'none',
-                      }} />
-                      <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{idx + 4}</span>
-                      {onCd && (
-                        <div style={{
-                          position: 'absolute', top: -2, right: -2, zIndex: 4,
-                          background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515',
-                          width: 11, height: 11, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#e8c8c8',
-                        }}>{currentUnit.cooldowns[ability.id]}</div>
-                      )}
-                    </div>
-                    <span className="font-cinzel" style={{ fontSize: '0.25rem', color: disabled ? '#444' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: 42, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 2px rgba(0,0,0,0.8)' }}>{ability.name}</span>
-                  </div>
-                );
-              })}
+                  if (btn.isAbility) {
+                    const ability = btn.ability;
+                    const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                    const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                    const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+                    const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
+                    const disabled = onCd || noMana || noStamina || alreadyTransformed;
+                    return (
+                      <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40, opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+                          <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                            background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                            border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: disabled ? 'inset 0 0 5px rgba(0,0,0,0.8)' : 'inset 0 0 6px rgba(0,0,0,0.7), 0 0 4px rgba(212,169,106,0.1)',
+                          }}
+                            onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP: ${ability.staminaCost}` : ''}${onCd ? `\nCD: ${currentUnit.cooldowns[ability.id]}` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
+                          >
+                            <AbilityIcon ability={ability} size={18} />
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: disabled ? 'saturate(0.3)' : 'none' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{btn.key}</span>
+                          {onCd && (
+                            <div style={{ position: 'absolute', top: -2, right: -2, zIndex: 4, background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515', width: 11, height: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#e8c8c8' }}>{currentUnit.cooldowns[ability.id]}</div>
+                          )}
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.25rem', color: disabled ? '#444' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: 42, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 2px rgba(0,0,0,0.8)' }}>{ability.name}</span>
+                      </div>
+                    );
+                  }
+
+                  const isSep = idx === 5;
+                  return (
+                    <React.Fragment key={btn.id}>
+                      {isSep && <div style={{ width: 1, height: 32, background: 'linear-gradient(180deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 2px', alignSelf: 'center' }} />}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40 }}>
+                          <button onClick={btn.action} style={{
+                            background: 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                            border: 'none', padding: 0, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: `inset 0 0 6px rgba(0,0,0,0.7), 0 0 3px ${btn.color}25`,
+                          }}
+                            onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                          >
+                            {btn.isSprite ? <SpriteIcon src={btn.icon} size={14} scale={2} /> : <InlineIcon name={btn.icon} size={16} />}
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{btn.key}</span>
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.28rem', color: btn.color, fontWeight: 600, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{btn.label}</span>
+                      </div>
+                    </React.Fragment>
+                  );
+                });
+              })()}
 
               {/* Items button */}
               {(() => {
@@ -3643,9 +3676,7 @@ function BattleScreenInner() {
                           background: showItemsPanel ? 'linear-gradient(145deg, rgba(20,60,30,0.95), rgba(15,40,20,0.98))' : 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
                           border: 'none', padding: 0, cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.15s',
-                          position: 'absolute', inset: '13%',
-                          borderRadius: 2, zIndex: 1,
+                          transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
                           boxShadow: showItemsPanel ? '0 0 6px rgba(74,222,128,0.3), inset 0 0 5px rgba(0,0,0,0.5)' : 'inset 0 0 6px rgba(0,0,0,0.7)',
                         }}
                           onMouseEnter={e => { showTooltip(`Items (${consumables.length})`, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
@@ -3654,10 +3685,7 @@ function BattleScreenInner() {
                         >
                           <SpriteIcon src={UI_ICONS.actionItem} size={14} scale={2} />
                         </button>
-                        <img src="/ui/skill-slot-frame.png" alt="" style={{
-                          position: 'absolute', inset: 0, width: '100%', height: '100%',
-                          pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                        }} />
+                        <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto' }} />
                       </div>
                       <span className="font-cinzel" style={{ fontSize: '0.28rem', color: '#86efac', fontWeight: 600, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>Items</span>
                     </div>
@@ -3675,9 +3703,7 @@ function BattleScreenInner() {
                         background: 'linear-gradient(145deg, rgba(80,15,15,0.95), rgba(50,10,10,0.98))',
                         border: 'none', padding: 0, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.15s',
-                        position: 'absolute', inset: '13%',
-                        borderRadius: 2, zIndex: 1,
+                        transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
                         boxShadow: '0 0 10px rgba(239,68,68,0.4), inset 0 0 5px rgba(0,0,0,0.5)',
                         animation: 'pulse 1s infinite',
                       }}
@@ -3687,17 +3713,79 @@ function BattleScreenInner() {
                       >
                         <InlineIcon name="fire" size={16} />
                       </button>
-                      <img src="/ui/skill-slot-frame.png" alt="" style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%',
-                        pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
-                        filter: 'drop-shadow(0 0 3px rgba(239,68,68,0.4))',
-                      }} />
+                      <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'drop-shadow(0 0 3px rgba(239,68,68,0.4))' }} />
                     </div>
                     <span className="font-cinzel" style={{ fontSize: '0.28rem', color: '#fca5a5', fontWeight: 600, lineHeight: 1, textShadow: '0 0 4px #ef4444' }}>Revenge</span>
                   </div>
                 </>
               )}
             </div>
+
+            {/* ═══ BAR 2: Class Abilities (Q W E R) ═══ */}
+            {(() => {
+              const bar2Abilities = displayedAbilities.slice(4);
+              if (bar2Abilities.length === 0 && displayedAbilities.length <= 4) return null;
+              const keyLabels = ['Q', 'W', 'E', 'R'];
+              return (
+                <div style={{
+                  display: 'flex', alignItems: 'flex-end', gap: 3,
+                  padding: '3px 10px 2px',
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 100%)',
+                  border: '1px solid rgba(138,100,60,0.2)',
+                  borderRadius: 5,
+                  boxShadow: '0 -1px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(138,100,60,0.06)',
+                  backdropFilter: 'blur(6px)',
+                  marginTop: -1,
+                }}>
+                  <span className="font-cinzel" style={{ fontSize: '0.24rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700, alignSelf: 'center', marginRight: 4, textShadow: '0 1px 2px rgba(0,0,0,0.9)', letterSpacing: 1 }}>CLASS</span>
+                  {keyLabels.map((keyLabel, idx) => {
+                    const ability = bar2Abilities[idx];
+                    if (!ability) {
+                      return (
+                        <div key={`bar2_empty_${idx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                          <div style={{ position: 'relative', width: 36, height: 36, opacity: 0.25 }}>
+                            <div style={{ position: 'absolute', inset: '13%', background: 'rgba(15,12,8,0.9)', borderRadius: 2 }} />
+                            <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'saturate(0.3)' }} />
+                            <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.3)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3 }}>{keyLabel}</span>
+                          </div>
+                          <span className="font-cinzel" style={{ fontSize: '0.22rem', color: '#333', fontWeight: 600, lineHeight: 1 }}>—</span>
+                        </div>
+                      );
+                    }
+                    const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                    const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                    const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+                    const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
+                    const disabled = onCd || noMana || noStamina || alreadyTransformed;
+                    return (
+                      <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 36, height: 36, opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+                          <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                            background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(30,24,15,0.95), rgba(18,14,9,0.98))',
+                            border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: disabled ? 'inset 0 0 5px rgba(0,0,0,0.8)' : 'inset 0 0 6px rgba(0,0,0,0.7), 0 0 4px rgba(138,100,60,0.15)',
+                          }}
+                            onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP: ${ability.staminaCost}` : ''}${onCd ? `\nCD: ${currentUnit.cooldowns[ability.id]}` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
+                          >
+                            <AbilityIcon ability={ability} size={16} />
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: disabled ? 'saturate(0.3)' : 'none' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{keyLabel}</span>
+                          {onCd && (
+                            <div style={{ position: 'absolute', top: -2, right: -2, zIndex: 4, background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515', width: 10, height: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700, color: '#e8c8c8' }}>{currentUnit.cooldowns[ability.id]}</div>
+                          )}
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.22rem', color: disabled ? '#444' : '#c8965a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: 38, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 2px rgba(0,0,0,0.8)' }}>{ability.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {/* Target indicator */}
             {!healTargetMode && selectedTargetId && (
@@ -3734,7 +3822,7 @@ function BattleScreenInner() {
               </div>
             )}
           </div>
-        ) : !isVictory && !isDefeat && (
+        ) : !isVictory && !isDefeat && !isFled && (
           <div className="font-cinzel" style={{
             color: currentUnit?.team === 'enemy' ? '#fca5a5' : '#93c5fd',
             fontSize: '0.85rem', fontWeight: 700,

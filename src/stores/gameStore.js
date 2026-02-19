@@ -1315,6 +1315,38 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  fleeBattle: () => {
+    const state = get();
+    const bs = state.battleState;
+    if (!bs || bs.phase !== 'player_turn') return;
+    if (bs.isTraining || bs.isMission || bs.isArena) {
+      set({ battleLog: [...state.battleLog, 'You cannot flee from this battle!'].slice(-12) });
+      return;
+    }
+    const currentUnitId = state.battleTurnOrder[state.battleCurrentTurn];
+    const unit = state.battleUnits.find(u => u.id === currentUnitId);
+    if (!unit) return;
+    const agi = unit.attributePoints?.Agility || 0;
+    const agiBonus = Math.min(agi * 1.5, 30);
+    const fleeChance = 40 + agiBonus;
+    const roll = Math.random() * 100;
+    if (roll < fleeChance) {
+      const log = [...state.battleLog, `${unit.name} flees from battle!`];
+      set({
+        battleLog: log.slice(-12),
+        battleState: { ...bs, phase: 'fled' },
+        lastAction: { attackerId: currentUnitId, type: 'flee' },
+      });
+    } else {
+      const log = [...state.battleLog, `${unit.name} failed to flee!`];
+      set({
+        battleLog: log.slice(-12),
+        battleState: { ...bs, phase: 'animating' },
+        lastAction: { attackerId: currentUnitId, type: 'skip' },
+      });
+    }
+  },
+
   autoBattleEnabled: false,
   toggleAutoBattle: () => set(s => ({ autoBattleEnabled: !s.autoBattleEnabled })),
 
@@ -2326,6 +2358,7 @@ const useGameStore = create(persist((set, get) => ({
     const stats = state.getStats();
     const wasBattle = state.battleState !== null;
     const wasDefeat = state.battleState?.phase === 'defeat';
+    const wasFled = state.battleState?.phase === 'fled';
     const playerUnit = state.battleUnits.find(u => u.id === 'player');
 
     let newHealth = state.playerHealth;
@@ -2337,7 +2370,21 @@ const useGameStore = create(persist((set, get) => ({
     let updatedRoster = state.heroRoster;
 
     if (wasBattle) {
-      if (wasDefeat) {
+      if (wasFled) {
+        if (playerUnit) {
+          newHealth = playerUnit.health;
+          newMana = playerUnit.mana;
+          newStamina = playerUnit.stamina;
+        }
+        msg = 'You fled from battle safely.';
+        updatedRoster = state.heroRoster.map(hero => {
+          const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+          if (battleUnit) {
+            return { ...hero, currentHealth: battleUnit.health, currentMana: battleUnit.mana, currentStamina: battleUnit.stamina };
+          }
+          return hero;
+        });
+      } else if (wasDefeat) {
         newHealth = Math.floor(stats.health * 0.5);
         newMana = Math.floor(stats.mana);
         newStamina = Math.floor(stats.stamina);
