@@ -2121,20 +2121,24 @@ export default function WorldMap() {
           const baseZonePos = getNodePos(currentZone) || locationPositions.verdant_plains;
           const zonePos = isPathing ? heroPos : baseZonePos;
           const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
-          const heroScale = calcNodeScale(camZoom, 0.35);
-          const mapSpriteScale = 1.2;
-          const baseFrame = 100;
-          const spriteW = baseFrame * mapSpriteScale;
-          const spriteH = baseFrame * mapSpriteScale;
+          const fixedScale = 1 / camZoom;
+          const battleTarget = 200;
           const footCrop = 0.82;
-          const visibleH = Math.round(spriteH * footCrop);
-          const heroCount = activeHeroes.length;
-          const containerW = heroCount * (spriteW * 0.4) + spriteW * 0.6;
-          const containerH = visibleH + 20;
-          const hitOffsetX = 0;
-          const hitOffsetY = -10 * mapSpriteScale;
-          const hitAnchorX = containerW / 2 + hitOffsetX;
-          const hitAnchorY = visibleH / 2 + hitOffsetY;
+          const heroSizes = activeHeroes.map(hero => {
+            const sd = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
+            const bf = sd?.frameHeight || sd?.frameWidth || 100;
+            const as = sd?.scale || 1;
+            const bs = (battleTarget / bf) * as;
+            return { w: bf * bs, h: Math.round(bf * bs * footCrop) };
+          });
+          const maxVisH = heroSizes.length > 0 ? Math.max(...heroSizes.map(s => s.h)) : battleTarget * footCrop;
+          const maxW = heroSizes.length > 0 ? Math.max(...heroSizes.map(s => s.w)) : battleTarget;
+          let containerW = 0;
+          heroSizes.forEach((s, i) => { containerW += i === 0 ? s.w : s.w * 0.4; });
+          if (heroSizes.length === 0) containerW = maxW;
+          const containerH = maxVisH + 20;
+          const hitAnchorX = containerW / 2;
+          const hitAnchorY = maxVisH / 2 - 10;
           return (
             <div style={{
               position: 'absolute',
@@ -2142,9 +2146,8 @@ export default function WorldMap() {
               top: `${zonePos.y}%`,
               width: containerW,
               height: containerH,
-              transform: `translate(-${hitAnchorX}px, -${hitAnchorY}px) scale(${heroScale})`,
+              transform: `translate(-${hitAnchorX}px, -${hitAnchorY}px) scale(${fixedScale})`,
               zIndex: MAP_LAYERS.HERO,
-              transition: 'transform 0.3s',
               pointerEvents: 'none',
             }}>
               {activeHeroes.map((hero, idx) => {
@@ -2154,16 +2157,20 @@ export default function WorldMap() {
                 const offset = wanderOffsets[hero.id] || { x: 0, y: 0 };
                 const wanderX = offset.x * 3;
                 const wanderY = offset.y * 2;
-                const baseX = idx * (spriteW * 0.4);
                 const heroSpriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
-                const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale;
-                const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale;
+                const heroBaseFrame = heroSpriteData?.frameHeight || heroSpriteData?.frameWidth || 100;
+                const heroAdminScale = heroSpriteData?.scale || 1;
+                const heroBattleScale = (battleTarget / heroBaseFrame) * heroAdminScale;
+                const heroFrameW = heroBaseFrame * heroBattleScale;
+                const heroFrameH = heroBaseFrame * heroBattleScale;
                 const heroVisH = Math.round(heroFrameH * footCrop);
+                let baseX = 0;
+                for (let j = 0; j < idx; j++) baseX += heroSizes[j].w * 0.4;
                 return (
                   <div key={hero.id} style={{
                     position: 'absolute',
                     left: baseX + wanderX,
-                    top: wanderY + (visibleH - heroVisH),
+                    top: wanderY + (maxVisH - heroVisH),
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
                     transition: isPathing ? 'none' : 'left 1.5s ease-in-out, top 1.5s ease-in-out',
                   }}>
@@ -2174,7 +2181,7 @@ export default function WorldMap() {
                       <div style={{
                         position: 'absolute',
                         bottom: -1, left: '50%', transform: 'translateX(-50%)',
-                        width: 30, height: 5, borderRadius: '50%',
+                        width: 40, height: 6, borderRadius: '50%',
                         background: 'radial-gradient(ellipse, rgba(0,0,0,0.55), transparent)',
                         zIndex: 1,
                       }} />
@@ -2183,7 +2190,7 @@ export default function WorldMap() {
                           spriteData={heroSpriteData}
                           animation={isWalking ? 'walk' : 'idle'}
                           flip={isWalking && flipX}
-                          scale={mapSpriteScale}
+                          scale={heroBattleScale}
                           speed={isWalking ? 100 : (150 + idx * 30)}
                           equipmentOverlays={buildEquipmentOverlays(hero, TIERS)}
                           containerless={false}
@@ -2192,7 +2199,7 @@ export default function WorldMap() {
                     </div>
                     <div style={{
                       textAlign: 'center',
-                      fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
+                      fontSize: '1rem', color: 'var(--accent)', fontWeight: 700, whiteSpace: 'nowrap',
                       textShadow: '0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)', marginTop: -2,
                     }}>{hero.name}</div>
                   </div>
@@ -2209,28 +2216,36 @@ export default function WorldMap() {
           const activeHeroes2 = heroRoster.filter(h => activeHeroIds.includes(h.id));
           const heroSpriteMap = {};
           const speakerPositions = {};
-          const mapSpriteScale2 = 1.2;
-          const heroScale2 = calcNodeScale(camZoom, 0.35);
-          const baseFrame2 = 100;
-          const spriteW2 = baseFrame2 * mapSpriteScale2;
-          const spriteH2 = baseFrame2 * mapSpriteScale2;
+          const fixedScale2 = 1 / camZoom;
+          const battleTarget2 = 200;
           const footCrop2 = 0.82;
-          const visibleH2 = Math.round(spriteH2 * footCrop2);
-          const heroCount2 = activeHeroes2.length;
-          const containerW2 = heroCount2 * (spriteW2 * 0.4) + spriteW2 * 0.6;
-          const hitOffsetX2 = 0;
-          const hitOffsetY2 = -10 * mapSpriteScale2;
-          const hitAnchorX2 = containerW2 / 2 + hitOffsetX2;
-          const hitAnchorY2 = visibleH2 / 2 + hitOffsetY2;
+          const heroSizes2 = activeHeroes2.map(hero => {
+            const sd = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
+            const bf = sd?.frameHeight || sd?.frameWidth || 100;
+            const as = sd?.scale || 1;
+            const bs = (battleTarget2 / bf) * as;
+            return { w: bf * bs, h: Math.round(bf * bs * footCrop2) };
+          });
+          const maxVisH2 = heroSizes2.length > 0 ? Math.max(...heroSizes2.map(s => s.h)) : battleTarget2 * footCrop2;
+          let containerW2 = 0;
+          heroSizes2.forEach((s, i) => { containerW2 += i === 0 ? s.w : s.w * 0.4; });
+          if (heroSizes2.length === 0) containerW2 = battleTarget2;
+          const hitAnchorX2 = containerW2 / 2;
+          const hitAnchorY2 = maxVisH2 / 2 - 10;
 
           activeHeroes2.forEach((h, idx) => {
             heroSpriteMap[h.id] = getPlayerSprite(h.classId, h.raceId, h.namedHeroId);
             const offset = wanderOffsets[h.id] || { x: 0, y: 0 };
             const heroSpriteData = getPlayerSprite(h.classId, h.raceId, h.namedHeroId);
-            const heroFrameW = (heroSpriteData?.frameWidth || 100) * mapSpriteScale2;
-            const heroFrameH = (heroSpriteData?.frameHeight || 100) * mapSpriteScale2;
+            const heroBaseFrame = heroSpriteData?.frameHeight || heroSpriteData?.frameWidth || 100;
+            const heroAdminScale = heroSpriteData?.scale || 1;
+            const heroBattleScale = (battleTarget2 / heroBaseFrame) * heroAdminScale;
+            const heroFrameW = heroBaseFrame * heroBattleScale;
+            const heroFrameH = heroBaseFrame * heroBattleScale;
+            let bx = 0;
+            for (let j = 0; j < idx; j++) bx += heroSizes2[j].w * 0.4;
             speakerPositions[h.id] = {
-              x: idx * (spriteW2 * 0.4) + offset.x * 3 + heroFrameW / 2,
+              x: bx + offset.x * 3 + heroFrameW / 2,
               y: heroFrameH * footCrop2,
             };
           });
@@ -2242,7 +2257,7 @@ export default function WorldMap() {
               top: `${zonePos2.y}%`,
               width: containerW2,
               height: 0,
-              transform: `translate(-${hitAnchorX2}px, -${hitAnchorY2}px) scale(${heroScale2})`,
+              transform: `translate(-${hitAnchorX2}px, -${hitAnchorY2}px) scale(${fixedScale2})`,
               zIndex: CHAT_BUBBLES,
               pointerEvents: 'none',
             }}>
