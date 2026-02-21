@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
-import { setBgm } from '../utils/audioManager';
+import { setBgm, getMusicMuted, setMusicMuted } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
 
 function TitleParticles() {
@@ -171,6 +171,13 @@ export default function TitleScreen() {
   const [puterLoading, setPuterLoading] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
   const [autoChecked, setAutoChecked] = useState(false);
+  const [muted, setMuted] = useState(() => getMusicMuted());
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    setMusicMuted(next);
+  };
 
   useEffect(() => {
     setBgm('intro');
@@ -269,6 +276,28 @@ export default function TitleScreen() {
       }} />
 
       <TitleParticles />
+
+      <button
+        onClick={toggleMute}
+        style={{
+          position: 'absolute', top: 16, right: 16, zIndex: 10,
+          background: 'rgba(0,0,0,0.5)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 8, padding: '8px 12px',
+          color: muted ? '#ef4444' : '#6ee7b7',
+          cursor: 'pointer',
+          fontFamily: "'LifeCraft', 'Cinzel', serif",
+          fontSize: '0.85rem', letterSpacing: 2,
+          display: 'flex', alignItems: 'center', gap: 6,
+          transition: 'all 0.2s ease',
+          animation: 'fadeIn 1s ease 0.6s both',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.5)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+      >
+        <span style={{ fontSize: '1.1rem' }}>{muted ? '🔇' : '🔊'}</span>
+        <span>{muted ? 'MUTED' : 'SOUND'}</span>
+      </button>
 
       <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', maxWidth: 600, padding: '0 20px', marginTop: '-6vh' }}>
         <div style={{
