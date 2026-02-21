@@ -907,6 +907,9 @@ function HeroSlideshow() {
   const [dummyAnim, setDummyAnim] = useState('idle');
   const [dummyVisible, setDummyVisible] = useState(true);
   const [dummyShake, setDummyShake] = useState(0);
+  const [screenShake, setScreenShake] = useState(0);
+  const [impactFlash, setImpactFlash] = useState(0);
+  const [showMeleeVfx, setShowMeleeVfx] = useState(false);
 
   const [editorMode, setEditorMode] = useState(false);
   const [editorX, setEditorX] = useState(0);
@@ -1253,6 +1256,9 @@ function HeroSlideshow() {
     setDummyAnim('idle');
     setDummyVisible(true);
     setDummyShake(0);
+    setScreenShake(0);
+    setImpactFlash(0);
+    setShowMeleeVfx(false);
 
     const IDLE_ENTER_COMBOS = ['undead_ranger'];
     const comboId = `${combo.raceId}_${combo.classId}`;
@@ -1416,33 +1422,91 @@ function HeroSlideshow() {
         addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
       }, attackStart + atkDuration + 3000);
     } else {
+      const restX = 22;
+      const dummyX = 62;
+      const meleeX = dummyX - 8;
+
       addTimer(() => {
         setAnim('idle');
         setTextVisible(true);
         setAuraIntensity(1);
       }, walkDuration);
 
+      const meleeStart = walkDuration + 600;
+      const dashDuration = 350;
+      const dashStep = 16;
+
+      addTimer(() => {
+        setAnim(spriteData?.run ? 'run' : spriteData?.walk ? 'walk' : 'idle');
+        let dElapsed = 0;
+        const dashInterval = setInterval(() => {
+          dElapsed += dashStep;
+          const p = Math.min(dElapsed / dashDuration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          setSpriteX(restX + (meleeX - restX) * eased);
+          if (p >= 1) clearInterval(dashInterval);
+        }, dashStep);
+        intervalRefs.current.push(dashInterval);
+      }, meleeStart);
+
+      const meleeHitTime = meleeStart + dashDuration;
       addTimer(() => {
         setAnim(chosenAttack);
         addTimer(() => {
-          if (!isWorge) setShowVfx(true);
+          setShowMeleeVfx(true);
           setDummyAnim('hurt');
           setDummyShake(1);
-          addTimer(() => setDummyShake(0), 300);
-          addTimer(() => setDummyAnim('idle'), 400);
-        }, 200);
-      }, walkDuration + 800);
+          setScreenShake(1);
+          setImpactFlash(1);
+          addTimer(() => { setScreenShake(0); setImpactFlash(0); }, 200);
+          addTimer(() => setDummyShake(0), 350);
+          addTimer(() => { setDummyAnim('idle'); setShowMeleeVfx(false); }, 500);
+        }, 180);
+      }, meleeHitTime);
 
+      const returnStart = meleeHitTime + attackDuration + 200;
+      const returnDuration = 400;
+      addTimer(() => {
+        setAnim(spriteData?.walk ? 'walk' : 'idle');
+        let rElapsed = 0;
+        const returnInterval = setInterval(() => {
+          rElapsed += dashStep;
+          const p = Math.min(rElapsed / returnDuration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          setSpriteX(meleeX + (restX - meleeX) * eased);
+          if (p >= 1) clearInterval(returnInterval);
+        }, dashStep);
+        intervalRefs.current.push(returnInterval);
+      }, returnStart);
+
+      const rangedStart = returnStart + returnDuration + 300;
+      const castAnim = spriteData?.cast ? 'cast' : spriteData?.attack2 ? 'attack2' : chosenAttack;
+      const castFrames = Math.min(spriteData?.[castAnim]?.frames || 8, maxFrames);
+      const castDuration = castFrames * 80;
+      addTimer(() => {
+        setAnim('idle');
+      }, returnStart + returnDuration);
+
+      addTimer(() => {
+        setAnim(castAnim);
+        addTimer(() => {
+          if (!isWorge) setShowVfx(true);
+        }, 150);
+        addTimer(() => {
+          setDummyAnim('hurt');
+          setDummyShake(1);
+          setScreenShake(1);
+          addTimer(() => setScreenShake(0), 150);
+          addTimer(() => setDummyShake(0), 300);
+          addTimer(() => setDummyAnim('idle'), 450);
+        }, 500);
+      }, rangedStart);
+
+      const afterRanged = rangedStart + castDuration + 300;
       addTimer(() => {
         setAnim('idle');
         setShowVfx(false);
-      }, walkDuration + 800 + attackDuration + 200);
-
-      if (!isWorge) {
-        addTimer(() => {
-          setShowBubble(true);
-        }, walkDuration + 800 + attackDuration + 400);
-      }
+      }, afterRanged);
 
       if (isWorge) {
         const transformAttacks = ATTACK_ANIMS.filter(a => worgeTransformData?.[a]);
@@ -1457,28 +1521,30 @@ function HeroSlideshow() {
           setShowTransformVfx(true);
           setAnim('idle');
           setShowVfx(false);
-        }, walkDuration + 800 + attackDuration + 1400);
+        }, afterRanged + 600);
 
         addTimer(() => {
           setShowTransform(true);
           setTransformAnim('idle');
           setShowTransformVfx(false);
-        }, walkDuration + 800 + attackDuration + 1800);
+        }, afterRanged + 1000);
 
         addTimer(() => {
           setTransformAnim(tAtk);
           addTimer(() => {
             setDummyAnim('hurt');
             setDummyShake(1);
+            setScreenShake(1);
+            addTimer(() => setScreenShake(0), 200);
             addTimer(() => setDummyShake(0), 300);
             addTimer(() => setDummyAnim('idle'), 400);
           }, 200);
-        }, walkDuration + 800 + attackDuration + 2000);
+        }, afterRanged + 1200);
 
         addTimer(() => {
           setTransformAnim('idle');
           setShowBubble(true);
-        }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 200);
+        }, afterRanged + 1200 + tAtkDuration + 200);
 
         addTimer(() => {
           setPhase('exit');
@@ -1487,13 +1553,17 @@ function HeroSlideshow() {
             setIndex(prev => (prev + 1) % ALL_COMBOS.length);
             setShowTransform(false);
           }, 600);
-        }, walkDuration + 800 + attackDuration + 2000 + tAtkDuration + 2000);
+        }, afterRanged + 1200 + tAtkDuration + 2000);
       } else {
+        addTimer(() => {
+          setShowBubble(true);
+        }, afterRanged + 200);
+
         addTimer(() => {
           setPhase('exit');
           setShowBubble(false);
           addTimer(() => setIndex(prev => (prev + 1) % ALL_COMBOS.length), 600);
-        }, walkDuration + 800 + attackDuration + 3000);
+        }, afterRanged + 2500);
       }
     }
 
@@ -1507,7 +1577,15 @@ function HeroSlideshow() {
       border: '1px solid rgba(255,255,255,0.08)',
       willChange: 'contents',
       contain: 'layout paint',
+      animation: screenShake ? 'ssScreenShake 0.15s linear 2' : 'none',
     }}>
+      {impactFlash > 0 && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 50, pointerEvents: 'none',
+          background: 'radial-gradient(circle at 65% 50%, rgba(255,255,255,0.6), transparent 60%)',
+          animation: 'ssFlashFade 0.25s ease-out forwards',
+        }} />
+      )}
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: `url(${BATTLE_BGS[prevBgIndex]})`,
@@ -1726,6 +1804,41 @@ function HeroSlideshow() {
 
             <SlideshowVFX comboKey={`${combo.raceId}_${combo.classId}`} playing={showVfx} />
 
+            {showMeleeVfx && (
+              <div style={{
+                position: 'absolute',
+                left: '58%', top: '40%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 12, pointerEvents: 'none',
+                mixBlendMode: 'screen',
+              }}>
+                <div style={{
+                  width: 200, height: 200,
+                  animation: 'ssMeleeSlash 0.35s ease-out forwards',
+                  background: `radial-gradient(circle, ${auraColor}88, transparent 60%)`,
+                  borderRadius: '50%',
+                }} />
+                <div style={{
+                  position: 'absolute', top: '30%', left: '20%',
+                  width: 120, height: 4,
+                  background: `linear-gradient(90deg, transparent, ${auraColor}, rgba(255,255,255,0.9), ${auraColor}, transparent)`,
+                  '--r': '-30deg',
+                  animation: 'ssSlashLine 0.3s ease-out forwards',
+                  borderRadius: 2,
+                  boxShadow: `0 0 12px ${auraColor}, 0 0 24px ${auraColor}66`,
+                }} />
+                <div style={{
+                  position: 'absolute', top: '50%', left: '15%',
+                  width: 140, height: 3,
+                  background: `linear-gradient(90deg, transparent, ${auraColor}cc, rgba(255,255,255,0.7), ${auraColor}cc, transparent)`,
+                  '--r': '15deg',
+                  animation: 'ssSlashLine 0.3s ease-out 0.05s forwards',
+                  borderRadius: 2,
+                  boxShadow: `0 0 8px ${auraColor}`,
+                }} />
+              </div>
+            )}
+
             {dummyVisible && (
               <div
                 onMouseDown={editorMode ? (e) => handleEditorMouseDown(e, 'dummy') : undefined}
@@ -1852,10 +1965,33 @@ function HeroSlideshow() {
         }
         @keyframes ssDummyShake {
           0% { transform: scaleX(-1) translateX(0); }
-          25% { transform: scaleX(-1) translateX(-6px); }
-          50% { transform: scaleX(-1) translateX(6px); }
-          75% { transform: scaleX(-1) translateX(-4px); }
+          25% { transform: scaleX(-1) translateX(-8px); }
+          50% { transform: scaleX(-1) translateX(8px); }
+          75% { transform: scaleX(-1) translateX(-5px); }
           100% { transform: scaleX(-1) translateX(0); }
+        }
+        @keyframes ssScreenShake {
+          0% { transform: translate(0, 0); }
+          15% { transform: translate(-3px, 2px); }
+          30% { transform: translate(4px, -2px); }
+          45% { transform: translate(-2px, 3px); }
+          60% { transform: translate(3px, -1px); }
+          75% { transform: translate(-1px, 2px); }
+          100% { transform: translate(0, 0); }
+        }
+        @keyframes ssFlashFade {
+          0% { opacity: 0.8; }
+          100% { opacity: 0; }
+        }
+        @keyframes ssMeleeSlash {
+          0% { opacity: 0; transform: scale(0.3); }
+          40% { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 0; transform: scale(1.5); }
+        }
+        @keyframes ssSlashLine {
+          0% { opacity: 0; transform: rotate(var(--r, -30deg)) scaleX(0); }
+          30% { opacity: 1; transform: rotate(var(--r, -30deg)) scaleX(1.2); }
+          100% { opacity: 0; transform: rotate(var(--r, -30deg)) scaleX(0.5); }
         }
       `}</style>
 
