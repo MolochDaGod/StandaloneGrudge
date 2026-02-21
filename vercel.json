@@ -6,7 +6,8 @@
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/discordauth", "destination": "/discordauth.html" },
     { "source": "/compendium", "destination": "/compendium.html" },
-    { "source": "/hero-codex", "destination": "/hero-codex.html" }
+    { "source": "/hero-codex", "destination": "/hero-codex.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
