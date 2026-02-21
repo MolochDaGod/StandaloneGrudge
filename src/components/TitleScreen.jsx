@@ -270,41 +270,10 @@ export default function TitleScreen() {
 
       <TitleParticles />
 
-      <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', maxWidth: 600, padding: '0 20px' }}>
-        <div style={{
-          fontSize: '0.85rem', color: 'var(--muted)', letterSpacing: 8,
-          textTransform: 'uppercase', marginBottom: 20, opacity: 0.5,
-          animation: 'subtitleReveal 1.8s ease 0.2s both',
-        }}>
-          Grudge Studio Presents
-        </div>
-
-        <h1 className="font-warcraft" style={{
-          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-          background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
-          backgroundSize: '200% auto',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          WebkitTextStroke: '2px #000',
-          paintOrder: 'stroke fill',
-          marginBottom: 4, lineHeight: 1.1,
-          animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
-          filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
-        }}>
-          GRUDGE<br/>WARLORDS
-        </h1>
-
-        <div className="font-cinzel" style={{
-          fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)',
-          color: 'rgba(250,172,71,0.7)',
-          letterSpacing: 6, textTransform: 'uppercase', marginBottom: 32, marginTop: 4,
-          animation: 'fadeIn 1s ease 0.5s both',
-          fontWeight: 600,
-        }}>
-          Warlord Crafting Suite
-        </div>
-
+      <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', maxWidth: 600, padding: '0 20px', marginTop: '-6vh' }}>
         <div style={{
           display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center',
+          marginBottom: 24,
         }}>
           <LoginButton
             label={puterUser ? `ENTER AS ${puterUser.username.toUpperCase()}` : 'LOGIN WITH GRUDGE'}
@@ -351,7 +320,39 @@ export default function TitleScreen() {
         </div>
 
         <div style={{
-          color: 'var(--muted)', fontSize: '0.85rem', marginTop: 30, opacity: 0.35,
+          fontSize: '0.85rem', color: 'var(--muted)', letterSpacing: 8,
+          textTransform: 'uppercase', marginBottom: 12, opacity: 0.5,
+          animation: 'subtitleReveal 1.8s ease 0.2s both',
+        }}>
+          Grudge Studio Presents
+        </div>
+
+        <h1 className="font-warcraft" style={{
+          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+          background: 'linear-gradient(90deg, #8B372E 0%, #DB6331 20%, #FAAC47 40%, #FFE0A0 50%, #FAAC47 60%, #DB6331 80%, #8B372E 100%)',
+          backgroundSize: '200% auto',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          WebkitTextStroke: '2px #000',
+          paintOrder: 'stroke fill',
+          marginBottom: 4, lineHeight: 1.1,
+          animation: 'titleShimmer 6s linear infinite, scaleIn 0.8s ease 0.1s both',
+          filter: 'drop-shadow(0 0 20px rgba(250,172,71,0.3)) drop-shadow(0 4px 8px rgba(0,0,0,0.8)) drop-shadow(1px 1px 0 rgba(0,0,0,1)) drop-shadow(-1px -1px 0 rgba(0,0,0,1))',
+        }}>
+          GRUDGE<br/>WARLORDS
+        </h1>
+
+        <div className="font-cinzel" style={{
+          fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)',
+          color: 'rgba(250,172,71,0.7)',
+          letterSpacing: 6, textTransform: 'uppercase', marginBottom: 0, marginTop: 4,
+          animation: 'fadeIn 1s ease 0.5s both',
+          fontWeight: 600,
+        }}>
+          Warlord Crafting Suite
+        </div>
+
+        <div style={{
+          color: 'var(--muted)', fontSize: '0.85rem', marginTop: 20, opacity: 0.35,
           letterSpacing: 1,
           animation: 'fadeIn 1s ease 0.8s both',
         }}>
