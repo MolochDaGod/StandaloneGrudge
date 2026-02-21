@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Build output
 dist/
@@ -12,6 +11,9 @@ dist/
 .cache/
 .config/
 .upm/
+
+# Vercel
+.vercel/
 
 # Uploaded raw assets (not game assets)
 attached_assets/

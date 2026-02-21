@@ -149,9 +149,9 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 (function() {
   'use strict';
 
-  var GAME_ORIGIN = 'https://grudgeplatform.com';
-  var API_ORIGIN = 'https://grudge-rpg.replit.app';
-  var REDIRECT_URI = GAME_ORIGIN + '/discordauth';
+  var GAME_ORIGIN = window.location.origin;
+  var API_ORIGIN = window.location.origin;
+  var REDIRECT_URI = window.location.origin + '/discordauth';
 
   var SESSION_KEY = 'grudge_session_token';
   var USER_KEY = 'discordUser';

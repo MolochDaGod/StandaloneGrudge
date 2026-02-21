@@ -172,6 +172,12 @@ export default function TitleScreen() {
   const [discordLoading, setDiscordLoading] = useState(false);
   const [autoChecked, setAutoChecked] = useState(false);
   const [muted, setMuted] = useState(() => getMusicMuted());
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [formUsername, setFormUsername] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [formError, setFormError] = useState('');
+  const [formLoading, setFormLoading] = useState(false);
 
   const toggleMute = () => {
     const next = !muted;
@@ -197,18 +203,19 @@ export default function TitleScreen() {
 
   const handleGrudgeLogin = async () => {
     if (!window.puter) {
-      handleGuest();
+      setShowLoginForm(true);
       return;
     }
     setPuterLoading(true);
     try {
       if (puterUser) {
-        const session = {
-          type: 'puter',
-          puterUsername: puterUser.username,
-          username: puterUser.username,
-          loginTime: Date.now(),
-        };
+        // Connect Puter user to DB
+        try {
+          const r = await fetch('/api/auth/puter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puterUsername: puterUser.username }) });
+          const data = await r.json();
+          if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
+        } catch {}
+        const session = { type: 'puter', puterUsername: puterUser.username, username: puterUser.username, loginTime: Date.now() };
         localStorage.setItem('grudge-session', JSON.stringify(session));
         setScreen('intro');
         return;
@@ -216,16 +223,33 @@ export default function TitleScreen() {
       await window.puter.auth.signIn();
       const user = await window.puter.auth.getUser();
       setPuterUser(user);
-      const session = {
-        type: 'puter',
-        puterUsername: user.username,
-        username: user.username,
-        loginTime: Date.now(),
-      };
+      try {
+        const r = await fetch('/api/auth/puter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puterUsername: user.username }) });
+        const data = await r.json();
+        if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
+      } catch {}
+      const session = { type: 'puter', puterUsername: user.username, username: user.username, loginTime: Date.now() };
       localStorage.setItem('grudge-session', JSON.stringify(session));
       setScreen('intro');
     } catch {}
     setPuterLoading(false);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e?.preventDefault();
+    if (!formUsername || !formPassword) { setFormError('Enter username and password'); return; }
+    setFormLoading(true); setFormError('');
+    try {
+      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: formUsername, password: formPassword }) });
+      const data = await r.json();
+      if (!r.ok) { setFormError(data.error || 'Failed'); setFormLoading(false); return; }
+      if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
+      const session = { type: 'grudge', username: data.user?.username || formUsername, accountId: data.user?.id, loginTime: Date.now() };
+      localStorage.setItem('grudge-session', JSON.stringify(session));
+      setScreen('intro');
+    } catch { setFormError('Server unreachable'); }
+    setFormLoading(false);
   };
 
   const handleDiscordLogin = async () => {
@@ -304,29 +328,71 @@ export default function TitleScreen() {
           display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center',
           marginBottom: 24,
         }}>
-          <LoginButton
-            label={puterUser ? `ENTER AS ${puterUser.username.toUpperCase()}` : 'LOGIN WITH GRUDGE'}
-            sublabel={puterUser ? 'Grudge Studio Account' : 'Sign in to save progress'}
-            onClick={handleGrudgeLogin}
-            variant="grudge"
-            active={!!puterUser}
-            disabled={puterLoading}
-            icon={
-              <div style={{
-                width: 24, height: 24, borderRadius: 4,
-                background: puterUser
-                  ? 'linear-gradient(135deg, #10b981, #34d399)'
-                  : 'linear-gradient(135deg, #DB6331, #FAAC47)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.75rem', fontWeight: 800, color: '#fff',
-                fontFamily: "'Jost', sans-serif",
-                overflow: 'hidden',
-              }}>
-                {puterUser ? '\u2713' : <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 20, height: 20, objectFit: 'contain' }} />}
+          {!showLoginForm ? (
+            <LoginButton
+              label={puterUser ? `ENTER AS ${puterUser.username.toUpperCase()}` : 'LOGIN WITH GRUDGE'}
+              sublabel={puterUser ? 'Grudge Studio Account' : 'Sign in to save progress'}
+              onClick={handleGrudgeLogin}
+              variant="grudge"
+              active={!!puterUser}
+              disabled={puterLoading}
+              icon={
+                <div style={{
+                  width: 24, height: 24, borderRadius: 4,
+                  background: puterUser
+                    ? 'linear-gradient(135deg, #10b981, #34d399)'
+                    : 'linear-gradient(135deg, #DB6331, #FAAC47)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.75rem', fontWeight: 800, color: '#fff',
+                  fontFamily: "'Jost', sans-serif",
+                  overflow: 'hidden',
+                }}>
+                  {puterUser ? '\u2713' : <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 20, height: 20, objectFit: 'contain' }} />}
+                </div>
+              }
+              delay={0.3}
+            />
+          ) : (
+            <form onSubmit={handleFormSubmit} style={{
+              width: 360, display: 'flex', flexDirection: 'column', gap: 8,
+              background: 'rgba(250,172,71,0.08)', border: '2px solid rgba(250,172,71,0.3)',
+              borderRadius: 8, padding: '16px 20px',
+              animation: 'slideUp 0.3s ease both',
+            }}>
+              <div style={{ fontFamily: "'LifeCraft', 'Cinzel', serif", fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: 2, textAlign: 'center', marginBottom: 4 }}>
+                {isRegister ? 'CREATE GRUDGE ID' : 'GRUDGE LOGIN'}
               </div>
-            }
-            delay={0.3}
-          />
+              <input
+                type="text" placeholder="Username" value={formUsername}
+                onChange={e => setFormUsername(e.target.value)} autoComplete="username"
+                style={{ width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#e8dcc8', fontSize: '0.95rem', fontFamily: "'Jost', sans-serif", outline: 'none' }}
+              />
+              <input
+                type="password" placeholder="Password" value={formPassword}
+                onChange={e => setFormPassword(e.target.value)} autoComplete={isRegister ? 'new-password' : 'current-password'}
+                style={{ width: '100%', padding: '10px 14px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#e8dcc8', fontSize: '0.95rem', fontFamily: "'Jost', sans-serif", outline: 'none' }}
+              />
+              {formError && <div style={{ color: '#ef4444', fontSize: '0.8rem', textAlign: 'center' }}>{formError}</div>}
+              <button type="submit" disabled={formLoading} style={{
+                padding: '10px', background: 'linear-gradient(135deg, #DB6331, #FAAC47)', border: 'none',
+                borderRadius: 6, color: '#0a0a12', fontWeight: 700, fontSize: '0.95rem',
+                fontFamily: "'LifeCraft', 'Cinzel', serif", letterSpacing: 2, cursor: formLoading ? 'wait' : 'pointer',
+                opacity: formLoading ? 0.6 : 1,
+              }}>
+                {formLoading ? 'CONNECTING...' : isRegister ? 'CREATE ACCOUNT' : 'SIGN IN'}
+              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button type="button" onClick={() => { setIsRegister(!isRegister); setFormError(''); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.75rem', cursor: 'pointer', fontFamily: "'Jost', sans-serif", opacity: 0.8 }}>
+                  {isRegister ? 'Already have an account? Sign in' : 'New? Create account'}
+                </button>
+                <button type="button" onClick={() => setShowLoginForm(false)}
+                  style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.75rem', cursor: 'pointer', fontFamily: "'Jost', sans-serif" }}>
+                  Back
+                </button>
+              </div>
+            </form>
+          )}
 
           <LoginButton
             label="LOGIN WITH DISCORD"
