@@ -1202,17 +1202,26 @@ if (!isProd) {
   });
 }
 
+app.get('/favicon.ico', (req, res) => {
+  const ico = path.join(__dirname_server, 'public', 'favicon.ico');
+  res.sendFile(ico, err => {
+    if (err) res.status(204).end();
+  });
+});
+
 if (isProd) {
   app.use('/assets', express.static(path.join(__dirname_server, 'dist', 'assets'), {
     setHeaders: (res) => {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     },
+    fallthrough: true,
   }));
 
   app.use(express.static(path.join(__dirname_server, 'dist'), {
     setHeaders: (res) => {
       res.setHeader('Cache-Control', 'no-cache');
     },
+    fallthrough: true,
   }));
 }
 
