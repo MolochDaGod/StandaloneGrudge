@@ -133,10 +133,22 @@ export default function SpriteAnimation({
 
   if (!anim) return null;
 
-  const frameWidth = anim?.frameWidth || spriteData?.frameWidth || 100;
-  const frameHeight = anim?.frameHeight || spriteData?.frameHeight || 100;
-  const displayWidth = Math.round(frameWidth * scale);
-  const displayHeight = Math.round(frameHeight * scale);
+  // Source frame size from the actual sprite sheet (may vary per animation)
+  const sourceFrameW = anim?.frameWidth || spriteData?.frameWidth || 100;
+  const sourceFrameH = anim?.frameHeight || spriteData?.frameHeight || 100;
+  // Display size always uses the base sprite dimensions for consistent sizing
+  const baseFrameW = spriteData?.frameWidth || 100;
+  const baseFrameH = spriteData?.frameHeight || 100;
+  const frameWidth = baseFrameW;
+  const frameHeight = baseFrameH;
+  const displayWidth = Math.round(baseFrameW * scale);
+  const displayHeight = Math.round(baseFrameH * scale);
+  // Scaled source dimensions for background calculations
+  const srcDisplayW = Math.round(sourceFrameW * scale);
+  const srcDisplayH = Math.round(sourceFrameH * scale);
+  // Centering offset when source frame is wider/taller than display
+  const bgOffsetX = Math.round((srcDisplayW - displayWidth) / 2);
+  const bgOffsetY = Math.round((srcDisplayH - displayHeight) / 2);
 
   const cssFilter = spriteData?.filter || '';
   const tintColor = spriteData?.tint || '';
@@ -164,10 +176,11 @@ export default function SpriteAnimation({
       <div style={{
         width: displayWidth,
         height: displayHeight,
+        overflow: 'hidden',
         backgroundImage: `url(${anim.src})`,
-        backgroundSize: `${Math.round(totalFrames * displayWidth)}px ${displayHeight}px`,
+        backgroundSize: `${Math.round(totalFrames * srcDisplayW)}px ${srcDisplayH}px`,
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: `-${Math.round(frame * displayWidth)}px 0`,
+        backgroundPosition: `-${Math.round(frame * srcDisplayW + bgOffsetX)}px -${bgOffsetY}px`,
         imageRendering: 'pixelated',
         filter: cssFilter || 'none',
         willChange: 'background-position',

@@ -199,7 +199,10 @@ export function applyRowCombatModifiers(attacker, defender, ability, result) {
 
   if (!blocked && !evaded && blockBonus > 0) {
     if (Math.random() * 100 < blockBonus) {
-      totalDmg = Math.floor(totalDmg * 0.4);
+      // Use defender's blockEffect for consistency with main block logic (capped 90%, default 60%)
+      const rowBlockFactor = Math.min(90, defender.blockEffect || 0) / 100;
+      const rowReduction = rowBlockFactor > 0 ? rowBlockFactor : 0.6;
+      totalDmg = Math.floor(totalDmg * (1 - rowReduction));
       blocked = true;
       result.rowBlocked = true;
     }

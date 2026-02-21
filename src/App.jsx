@@ -70,6 +70,7 @@ function GameApp() {
   const [transitioning, setTransitioning] = useState(false);
   const [transitionType, setTransitionType] = useState('fade');
   const [screenShake, setScreenShake] = useState(false);
+  const [shakeIntensity, setShakeIntensity] = useState('medium');
   const skipPushRef = useRef(false);
 
   useEffect(() => {
@@ -178,12 +179,15 @@ function GameApp() {
 
   const shakeKeyRef = useRef(0);
   useEffect(() => {
-    const handleShake = () => {
+    const handleShake = (e) => {
+      const intensity = e.detail?.intensity || 'medium';
       setScreenShake(false);
       requestAnimationFrame(() => {
         shakeKeyRef.current++;
+        setShakeIntensity(intensity);
         setScreenShake(true);
-        setTimeout(() => setScreenShake(false), 300);
+        const dur = intensity === 'heavy' ? 450 : intensity === 'light' ? 200 : 300;
+        setTimeout(() => setScreenShake(false), dur);
       });
     };
     window.addEventListener('game-screen-shake', handleShake);
@@ -253,7 +257,9 @@ function GameApp() {
     <div className={`game-frame${showFrame ? '' : ' hide-frame'}`}>
       <div style={{
         width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
-        animation: screenShake ? `screenShake 0.3s ease-out` : 'none',
+        animation: screenShake
+          ? `${shakeIntensity === 'heavy' ? 'screenShakeHeavy 0.45s' : shakeIntensity === 'light' ? 'screenShakeLight 0.2s' : 'screenShake 0.3s'} ease-out`
+          : 'none',
       }}>
         <div style={contentStyle}>
           {renderScreen()}

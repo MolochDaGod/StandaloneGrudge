@@ -114,3 +114,9 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 - Added region walk-in cutscenes for 5 terrain regions
 - Added 20+ VFX impact effect sprite sheets
 - Completed zone cutscene system for all 32 zones
+- **Combat Polish Overhaul:** Variable-intensity screen shake (light/medium/heavy based on crit + damage), hit flash on damaged units, death dissolve animation on killed units, turn glow ring under active unit (green player / red enemy), animated XP/Gold counters on victory banner
+- **Loot Popup UX:** Staggered item reveal animations, tier-based glow box-shadows (T1–T6), shimmer sweep overlay, title reveal animation
+- **Enhanced BattleParticles:** CastingParticles upgraded to 16 count with spiral ring particles, HitParticles upgraded to 10 count with wider spread, new BuffAuraParticles (orbiting dots), new LevelUpBurst (12-ray radial burst)
+- **WorldMap Zone Arrival Flash:** Radial glow at destination node on path completion
+- **Inventory UI Overhaul:** Scaleable 5×4 grid container with panel background
+- **Human Ranger Sprite Fix:** Consistent display container using base frameWidth with wider animation frames centered/cropped

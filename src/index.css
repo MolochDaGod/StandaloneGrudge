@@ -636,3 +636,105 @@ body {
   from { background-position: 0 0; }
   to { background-position: -980px 0; }
 }
+
+/* ═══ COMBAT POLISH KEYFRAMES ═══ */
+
+@keyframes screenShakeLight {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-2px, 1px); }
+  30% { transform: translate(2px, -1px); }
+  45% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  75% { transform: translate(-1px, 0); }
+  90% { transform: translate(0, -1px); }
+}
+
+@keyframes screenShakeHeavy {
+  0%, 100% { transform: translate(0, 0); }
+  8% { transform: translate(-10px, 5px); }
+  16% { transform: translate(9px, -6px); }
+  24% { transform: translate(-8px, -4px); }
+  32% { transform: translate(7px, 5px); }
+  40% { transform: translate(-5px, 3px); }
+  50% { transform: translate(4px, -3px); }
+  60% { transform: translate(-3px, 2px); }
+  70% { transform: translate(2px, -2px); }
+  80% { transform: translate(-1px, 1px); }
+  90% { transform: translate(1px, 0); }
+}
+
+@keyframes hitFlash {
+  0% { filter: brightness(3) saturate(0.2); }
+  30% { filter: brightness(2) saturate(0.5); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes turnGlow {
+  0%, 100% { box-shadow: 0 0 12px 4px rgba(110,231,183,0.3), 0 0 24px 8px rgba(110,231,183,0.1); }
+  50% { box-shadow: 0 0 20px 8px rgba(110,231,183,0.5), 0 0 40px 16px rgba(110,231,183,0.2); }
+}
+
+@keyframes turnGlowEnemy {
+  0%, 100% { box-shadow: 0 0 12px 4px rgba(239,68,68,0.3), 0 0 24px 8px rgba(239,68,68,0.1); }
+  50% { box-shadow: 0 0 20px 8px rgba(239,68,68,0.5), 0 0 40px 16px rgba(239,68,68,0.2); }
+}
+
+@keyframes deathDissolve {
+  0% { opacity: 1; filter: brightness(1) saturate(1); transform: translate(-50%, 0) scale(1); }
+  30% { opacity: 0.8; filter: brightness(0.6) saturate(0.3) sepia(0.5); transform: translate(-50%, 0) scale(0.98); }
+  70% { opacity: 0.3; filter: brightness(0.3) saturate(0) blur(2px); transform: translate(-50%, 4px) scale(0.94); }
+  100% { opacity: 0; filter: brightness(0) blur(6px); transform: translate(-50%, 8px) scale(0.88); }
+}
+
+/* ═══ LOOT UX KEYFRAMES ═══ */
+
+@keyframes lootItemReveal {
+  0% { opacity: 0; transform: translateY(16px) scale(0.85); }
+  50% { opacity: 1; transform: translateY(-4px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lootShimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+@keyframes lootTitleReveal {
+  0% { opacity: 0; letter-spacing: 8px; filter: blur(3px); }
+  60% { opacity: 1; letter-spacing: 3px; filter: blur(0); }
+  80% { letter-spacing: 2px; }
+  100% { opacity: 1; letter-spacing: 2px; filter: blur(0); }
+}
+
+/* ═══ PARTICLE & EFFECT KEYFRAMES ═══ */
+
+@keyframes levelUpBurst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  40% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.95); }
+  60% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+
+@keyframes zoneArrivalFlash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  25% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+}
+
+@keyframes buffAuraOrbit {
+  from { transform: rotate(0deg) translateX(14px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(14px) rotate(-360deg); }
+}
+
+@keyframes spiralCast {
+  0% { opacity: 0; transform: rotate(0deg) translateX(0px) scale(0.5); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(720deg) translateX(20px) scale(0); }
+}
+
+@keyframes countUp {
+  0% { opacity: 0; transform: translateY(6px); }
+  40% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

@@ -1348,6 +1348,37 @@ function BattleStatBar({ label, current, max, color, bright }) {
   );
 }
 
+function AnimatedCounter({ value, label, color, delay = 0 }) {
+  const [display, setDisplay] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+  useEffect(() => {
+    if (!started) return;
+    const duration = 800;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(eased * value));
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, value]);
+  return (
+    <span style={{
+      color, fontSize: '1.15rem', fontWeight: 800, fontFamily: "'Cinzel', serif",
+      textShadow: `0 0 12px ${color}, 0 2px 4px rgba(0,0,0,0.5)`,
+      opacity: started ? 1 : 0,
+      animation: started ? 'countUp 0.4s ease-out both' : 'none',
+    }}>
+      +{display} {label}
+    </span>
+  );
+}
+
 function BattleScreenInner() {
   const {
     battleState, battleUnits, battleTurnOrder, battleCurrentTurn,
@@ -1369,6 +1400,8 @@ function BattleScreenInner() {
   const [floatingDmg, setFloatingDmg] = useState([]);
   const [introComplete, setIntroComplete] = useState(false);
   const [activeParticles, setActiveParticles] = useState([]);
+  const [unitFlashes, setUnitFlashes] = useState({});
+  const [dyingUnits, setDyingUnits] = useState({});
   const [hitEffects, setHitEffects] = useState([]);
   const [critFx, setCritFx] = useState([]);
   const [slashImpactFx, setSlashImpactFx] = useState([]);
@@ -1570,6 +1603,19 @@ function BattleScreenInner() {
     if (phase === 'victory') playVictory();
     if (phase === 'defeat') playDefeat();
   }, [phase]);
+
+  // Track units transitioning to death for dissolve animation
+  const prevAnimsRef = useRef({});
+  useEffect(() => {
+    const prev = prevAnimsRef.current;
+    Object.entries(unitAnims).forEach(([id, anim]) => {
+      if (anim === 'death' && prev[id] !== 'death') {
+        setDyingUnits(p => ({ ...p, [id]: true }));
+        setTimeout(() => setDyingUnits(p => { const n = { ...p }; delete n[id]; return n; }), 900);
+      }
+    });
+    prevAnimsRef.current = { ...unitAnims };
+  }, [unitAnims]);
 
   const bodyY = useCallback((unit) => {
     if (!unit?.position) return 50;
@@ -2458,7 +2504,12 @@ function BattleScreenInner() {
     setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1800);
 
     if (isCrit || totalDmg > 30) {
-      window.dispatchEvent(new Event('game-screen-shake'));
+      const intensity = isCrit && totalDmg > 60 ? 'heavy' : isCrit ? 'medium' : totalDmg > 50 ? 'medium' : 'light';
+      window.dispatchEvent(new CustomEvent('game-screen-shake', { detail: { intensity } }));
+    }
+    if (!evaded && targetId) {
+      setUnitFlashes(prev => ({ ...prev, [targetId]: true }));
+      setTimeout(() => setUnitFlashes(prev => { const n = { ...prev }; delete n[targetId]; return n; }), 350);
     }
   }, []);
 
@@ -2821,6 +2872,16 @@ function BattleScreenInner() {
               )}
 
 
+              {/* Turn glow ring */}
+              {isCurrentTurnUnit && unit.alive && (
+                <div style={{
+                  position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+                  width: 56, height: 16, borderRadius: '50%',
+                  animation: `${unit.team === 'player' ? 'turnGlow' : 'turnGlowEnemy'} 1.5s ease-in-out infinite`,
+                  pointerEvents: 'none', zIndex: 0,
+                }} />
+              )}
+
               <div style={{
                 position: 'absolute',
                 bottom: 0,
@@ -2835,7 +2896,13 @@ function BattleScreenInner() {
                       ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
                       : 'none',
                 transition: 'filter 0.15s',
-                animation: anim === 'hurt' ? 'hurtBlink 0.15s ease-in-out 3' : 'none',
+                animation: unitFlashes[unit.id]
+                  ? 'hitFlash 0.35s ease-out'
+                  : dyingUnits[unit.id]
+                    ? 'deathDissolve 0.8s ease-out forwards'
+                    : anim === 'hurt'
+                      ? 'hurtBlink 0.15s ease-in-out 3'
+                      : 'none',
               }}>
                 <SpriteAnimation
                   spriteData={spriteData}
@@ -3224,11 +3291,22 @@ function BattleScreenInner() {
               </div>
               {isVictory && (
                 <div style={{
-                  color: 'var(--accent)', marginTop: 10, fontSize: '1.1rem',
+                  marginTop: 10, display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'center',
                   animation: 'fadeIn 0.5s ease 0.4s both',
                 }}>
-                  +{battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)} XP |
-                  +{Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)} Gold
+                  <AnimatedCounter
+                    value={battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)}
+                    label="XP"
+                    color="var(--accent)"
+                    delay={500}
+                  />
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '1.2rem' }}>|</span>
+                  <AnimatedCounter
+                    value={Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)}
+                    label="Gold"
+                    color="var(--gold)"
+                    delay={800}
+                  />
                 </div>
               )}
               {isFled && (

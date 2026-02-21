@@ -463,6 +463,7 @@ export default function WorldMap() {
   const [movePath, setMovePath] = useState(null);
   const [moveStep, setMoveStep] = useState(0);
   const [isPathing, setIsPathing] = useState(false);
+  const [arrivalFlash, setArrivalFlash] = useState(null);
   const [walkPolyline, setWalkPolyline] = useState(null);
   const [walkProgress, setWalkProgress] = useState(0);
   const walkAnimRef = useRef(null);
@@ -793,6 +794,12 @@ export default function WorldMap() {
         setMoveStep(0);
         setWalkPolyline(null);
         setWalkProgress(0);
+        // Zone arrival flash
+        const destPos = locationPositions[dest];
+        if (destPos) {
+          setArrivalFlash({ x: destPos.x, y: destPos.y });
+          setTimeout(() => setArrivalFlash(null), 600);
+        }
         if (walkAnimRef.current) { cancelAnimationFrame(walkAnimRef.current); walkAnimRef.current = null; }
         heroRoster.filter(h => activeHeroIds.includes(h.id)).forEach(hero => {
           setHeroWalking(prev => { const next = { ...prev }; delete next[hero.id]; return next; });
@@ -2280,11 +2287,13 @@ export default function WorldMap() {
             const conquer = (zoneConquer || {})[loc.id] || 0;
             const hasBoss = loc.boss && !bossesDefeated.includes(loc.boss);
             const bossDown = loc.boss && bossesDefeated.includes(loc.boss);
+            const hoverScale = 1 / camZoom;
             return (
               <div style={{
                 position: 'absolute',
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
-                transform: 'translate(-50%, -120%)',
+                transform: `translate(-50%, -120%) scale(${hoverScale})`,
+                transformOrigin: 'bottom center',
                 marginTop: -40,
                 zIndex: MAP_LAYERS.HOVER_INFO, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
@@ -2305,11 +2314,13 @@ export default function WorldMap() {
             );
           }
           if (hoveredNode.type === 'city') {
+            const hoverScaleC = 1 / camZoom;
             return (
               <div style={{
                 position: 'absolute',
                 left: `${hoveredNode.x}%`, top: `${hoveredNode.y}%`,
-                transform: 'translate(-50%, -120%)',
+                transform: `translate(-50%, -120%) scale(${hoverScaleC})`,
+                transformOrigin: 'bottom center',
                 marginTop: -40,
                 zIndex: MAP_LAYERS.HOVER_INFO, pointerEvents: 'none',
                 background: 'rgba(8,12,28,0.95)',
@@ -2688,6 +2699,21 @@ export default function WorldMap() {
             </div>
           </div>,
           outerRef.current
+        )}
+
+        {arrivalFlash && (
+          <div style={{
+            position: 'absolute',
+            left: `${arrivalFlash.x}%`, top: `${arrivalFlash.y}%`,
+            transform: 'translate(-50%, -50%)',
+            width: 120, height: 120,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(110,231,183,0.4) 0%, rgba(110,231,183,0.1) 40%, transparent 70%)',
+            boxShadow: '0 0 40px rgba(110,231,183,0.3), 0 0 80px rgba(110,231,183,0.15)',
+            animation: 'zoneArrivalFlash 0.6s ease-out forwards',
+            pointerEvents: 'none',
+            zIndex: MAP_LAYERS.HERO + 1,
+          }} />
         )}
 
         {portalTransition && (

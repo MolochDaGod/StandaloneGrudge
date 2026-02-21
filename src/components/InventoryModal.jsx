@@ -9,7 +9,7 @@ import { raceDefinitions } from '../data/races';
 import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
 import { getIconPlacement } from '../utils/uiLayoutConfig';
 
-const BOOK_BG = '/sprites/inventory/book_bg.png';
+const PANEL_BG = '/ui/inventory-panel-bg.png';
 
 const SLOT_MAP = [
   { key: 'helmet', label: 'Head', icon: 'helm', gridArea: 'head' },
@@ -21,7 +21,7 @@ const SLOT_MAP = [
   { key: 'relic', label: 'Relic', icon: 'crystal', gridArea: 'acc2' },
 ];
 
-const ITEMS_PER_PAGE = 16;
+const ITEMS_PER_PAGE = 20;
 
 const PARCHMENT = '#e5d6a1';
 const PARCHMENT_DARK = '#cdb677';
@@ -240,15 +240,19 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
   const race = raceDefinitions[hero.raceId];
   const spriteData = getPlayerSprite(hero.classId, hero.raceId, hero.namedHeroId);
 
-  const panelWidth = compact ? 340 : 420;
-  const panelHeight = compact ? 280 : 320;
+  // Scaleable sizing — base unit drives all proportions
+  const BASE = compact ? 0.82 : 1;
+  const panelWidth = Math.round(480 * BASE);
+  const panelHeight = Math.round(310 * BASE);
+  const slotSize = Math.round(44 * BASE);
+  const invSlotSize = Math.round(40 * BASE);
+  const gap = Math.round(3 * BASE);
 
   return (
     <div
       style={{
         width: panelWidth,
         height: panelHeight,
-        background: `linear-gradient(180deg, ${LEATHER} 0%, ${LEATHER_LIGHT} 2%, ${LEATHER} 4%, transparent 4%)`,
         borderRadius: 4,
         overflow: 'hidden',
         display: 'flex',
@@ -256,41 +260,58 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
         imageRendering: 'pixelated',
         boxShadow: '0 4px 20px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(96,56,32,0.8)',
         fontFamily: "'Jost', sans-serif",
+        position: 'relative',
       }}
       onDragOver={(e) => e.preventDefault()}
     >
+      {/* Background image layer */}
+      <img
+        src={PANEL_BG}
+        alt=""
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+          imageRendering: 'pixelated',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Header */}
       <div style={{
-        background: `linear-gradient(180deg, ${TEAL} 0%, ${TEAL_DARK} 100%)`,
-        padding: '4px 8px',
+        position: 'relative', zIndex: 1,
+        padding: `${Math.round(4 * BASE)}px ${Math.round(8 * BASE)}px`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: `2px solid ${LEATHER}`,
-        minHeight: 24,
+        minHeight: Math.round(24 * BASE),
+        background: 'rgba(0,0,0,0.35)',
+        borderBottom: '1px solid rgba(96,56,32,0.5)',
       }}>
         <span style={{
           color: PARCHMENT,
           fontFamily: 'Cinzel, serif',
-          fontSize: compact ? 10 : 12,
+          fontSize: Math.round(11 * BASE),
           fontWeight: 700,
           letterSpacing: '0.12em',
-          textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+          textShadow: '1px 1px 0 rgba(0,0,0,0.7)',
         }}>
-          EQUIPMENT
+          {hero.name} — Lv.{hero.level}
         </span>
         <button
           onClick={onClose}
           style={{
-            background: 'rgba(0,0,0,0.3)',
+            background: 'rgba(0,0,0,0.4)',
             border: `1px solid ${LEATHER}`,
             color: PARCHMENT,
-            width: 18,
-            height: 18,
+            width: Math.round(18 * BASE),
+            height: Math.round(18 * BASE),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            fontSize: 11,
+            fontSize: Math.round(11 * BASE),
             fontWeight: 700,
             borderRadius: 1,
             lineHeight: 1,
@@ -301,58 +322,40 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
         </button>
       </div>
 
+      {/* Main body */}
       <div style={{
         flex: 1,
         display: 'flex',
-        background: `url(${BOOK_BG})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: PARCHMENT,
         position: 'relative',
+        zIndex: 1,
       }}>
+        {/* Left: Equipment + character */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: `linear-gradient(90deg, rgba(96,56,32,0.15) 0%, transparent 3%, transparent 48%, rgba(96,56,32,0.12) 49%, rgba(96,56,32,0.12) 51%, transparent 52%, transparent 97%, rgba(96,56,32,0.15) 100%)`,
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{
-          flex: '0 0 50%',
+          flex: '0 0 46%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: compact ? '6px 4px' : '8px 6px',
-          borderRight: `2px solid rgba(96,56,32,0.2)`,
+          padding: Math.round(6 * BASE),
           position: 'relative',
         }}>
           <div style={{
-            fontSize: 8,
-            color: LEATHER,
-            fontFamily: 'Cinzel, serif',
-            fontWeight: 700,
-            marginBottom: 4,
-            letterSpacing: '0.08em',
-            textShadow: '0 1px 0 rgba(229,214,161,0.5)',
-          }}>
-            {hero.name} — Lv.{hero.level}
-          </div>
-
-          <div style={{
             position: 'relative',
-            width: compact ? 160 : 195,
-            height: compact ? 200 : 235,
+            width: Math.round(190 * BASE),
+            height: Math.round(245 * BASE),
             display: 'grid',
-            gridTemplateColumns: '46px 1fr 46px',
-            gridTemplateRows: '46px 1fr 46px',
-            gap: compact ? 2 : 4,
+            gridTemplateColumns: `${slotSize}px 1fr ${slotSize}px`,
+            gridTemplateRows: `${slotSize}px 1fr ${slotSize}px`,
+            gap: gap,
             alignItems: 'center',
             justifyItems: 'center',
           }}>
+            {/* Row 1: Head top-center */}
             <div style={{ gridColumn: '2', gridRow: '1' }}>
               <EquipSlot slotDef={SLOT_MAP[0]} item={hero.equipment?.helmet} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
 
+            {/* Row 2: Weapon left, Character+Chest center, Shield right */}
             <div style={{ gridColumn: '1', gridRow: '2' }}>
               <EquipSlot slotDef={SLOT_MAP[2]} item={hero.equipment?.weapon} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
@@ -367,11 +370,11 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
               justifyContent: 'center',
             }}>
               <div style={{
-                width: 56, height: 56,
+                width: Math.round(56 * BASE), height: Math.round(56 * BASE),
                 display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 overflow: 'hidden',
               }}>
-                <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85} speed={200} containerless={false} />
+                <SpriteAnimation spriteData={spriteData} animation="idle" scale={0.85 * BASE} speed={200} containerless={false} />
               </div>
               <div style={{
                 position: 'absolute', bottom: 2, right: 2, zIndex: 2,
@@ -384,6 +387,7 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
               <EquipSlot slotDef={SLOT_MAP[3]} item={hero.equipment?.offhand} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
 
+            {/* Row 3: Ring left, Boots center, Relic right */}
             <div style={{ gridColumn: '1', gridRow: '3' }}>
               <EquipSlot slotDef={SLOT_MAP[5]} item={hero.equipment?.ring} onDrop={handleEquip} onUnequip={handleUnequip} heroClassId={hero.classId} dragItem={dragItem} />
             </div>
@@ -396,32 +400,33 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
           </div>
         </div>
 
+        {/* Right: 5×4 Inventory grid */}
         <div style={{
-          flex: '0 0 50%',
+          flex: '0 0 54%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: compact ? '6px 4px' : '8px 6px',
+          padding: Math.round(6 * BASE),
           position: 'relative',
         }}>
           <div style={{
-            fontSize: 8,
-            color: LEATHER,
+            fontSize: Math.round(8 * BASE),
+            color: PARCHMENT,
             fontFamily: 'Cinzel, serif',
             fontWeight: 700,
-            marginBottom: 4,
+            marginBottom: Math.round(4 * BASE),
             letterSpacing: '0.08em',
-            textShadow: '0 1px 0 rgba(229,214,161,0.5)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.7)',
           }}>
             INVENTORY ({equipmentItems.length})
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 42px)',
-            gridTemplateRows: 'repeat(4, 42px)',
-            gap: 3,
+            gridTemplateColumns: `repeat(5, ${invSlotSize}px)`,
+            gridTemplateRows: `repeat(4, ${invSlotSize}px)`,
+            gap: gap,
           }}>
             {padded.map((item, i) => (
               <InventorySlot
@@ -438,23 +443,23 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              marginTop: 6,
+              gap: Math.round(8 * BASE),
+              marginTop: Math.round(6 * BASE),
             }}>
               <button
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
                 style={{
-                  background: page > 0 ? TEAL : 'rgba(0,0,0,0.2)',
+                  background: page > 0 ? 'rgba(80,144,112,0.8)' : 'rgba(0,0,0,0.2)',
                   border: `1px solid ${SLOT_BORDER}`,
                   color: PARCHMENT,
-                  width: 20,
-                  height: 20,
+                  width: Math.round(20 * BASE),
+                  height: Math.round(20 * BASE),
                   cursor: page > 0 ? 'pointer' : 'default',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 12,
+                  fontSize: Math.round(12 * BASE),
                   fontWeight: 700,
                   borderRadius: 1,
                   opacity: page > 0 ? 1 : 0.4,
@@ -464,10 +469,11 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
                 ◀
               </button>
               <span style={{
-                fontSize: 8,
-                color: LEATHER,
+                fontSize: Math.round(8 * BASE),
+                color: PARCHMENT,
                 fontFamily: 'Cinzel, serif',
                 fontWeight: 700,
+                textShadow: '0 1px 2px rgba(0,0,0,0.7)',
               }}>
                 {page + 1}/{totalPages}
               </span>
@@ -475,16 +481,16 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
                 onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
                 style={{
-                  background: page < totalPages - 1 ? TEAL : 'rgba(0,0,0,0.2)',
+                  background: page < totalPages - 1 ? 'rgba(80,144,112,0.8)' : 'rgba(0,0,0,0.2)',
                   border: `1px solid ${SLOT_BORDER}`,
                   color: PARCHMENT,
-                  width: 20,
-                  height: 20,
+                  width: Math.round(20 * BASE),
+                  height: Math.round(20 * BASE),
                   cursor: page < totalPages - 1 ? 'pointer' : 'default',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 12,
+                  fontSize: Math.round(12 * BASE),
                   fontWeight: 700,
                   borderRadius: 1,
                   opacity: page < totalPages - 1 ? 1 : 0.4,
@@ -497,12 +503,6 @@ export default function InventoryModal({ heroId, onClose, compact = false }) {
           )}
         </div>
       </div>
-
-      <div style={{
-        background: `linear-gradient(180deg, ${LEATHER} 0%, ${LEATHER_LIGHT} 50%, ${LEATHER} 100%)`,
-        height: 6,
-        borderTop: `1px solid rgba(96,56,32,0.6)`,
-      }} />
     </div>
   );
 }

@@ -133,34 +133,61 @@ function createHeroBattleUnit(hero) {
   return unit;
 }
 
+// --- COMBAT_DEBUG: set true to log each damage pipeline step to console ---
+const COMBAT_DEBUG = false;
+
 function calculateAttackDamage(attacker, defender, ability) {
+  const dbg = COMBAT_DEBUG ? (label, val) => console.log(`[DMG] ${label}:`, val) : () => {};
+
+  // ── Step 1: Evasion ──────────────────────────────────────────────────
+  // Collect evasion bonuses from defender buffs, then roll vs total evasion.
   let evasionBonus = 0;
   (defender.buffs || []).forEach(b => {
     if (b.stat === 'evasion' && b.flat) evasionBonus += b.flat;
   });
+
+  // ── Step 2: Invincibility ────────────────────────────────────────────
+  // Checked before evasion roll so invincible units show "absorbed" not "evaded".
   const isInvincible = (defender.buffs || []).some(b => b.source === 'Invincible');
   if (isInvincible) {
+    dbg('Invincible', true);
     return { totalDmg: 0, isCrit: false, blocked: false, evaded: false, drained: 0, absorbed: true };
   }
   const totalEvasion = (defender.evasion || 0) + evasionBonus;
   if (Math.random() * 100 < totalEvasion) {
+    dbg('Evaded', { totalEvasion });
     return { totalDmg: 0, isCrit: false, blocked: false, evaded: true, drained: 0 };
   }
 
+  // ── Step 3: Base damage ──────────────────────────────────────────────
+  // Physical or magic stat + flat level scaling (level × 2).
   const isMagic = ability.type === 'magical';
   let baseDmg = isMagic
     ? (attacker.magicDamage || attacker.damage || 0)
     : (attacker.physicalDamage || attacker.damage || 0);
   baseDmg += (attacker.level || 1) * 2;
+  dbg('BaseDmg (stat + level×2)', baseDmg);
 
+  // ── Step 4: Damage buffs ─────────────────────────────────────────────
+  // Multiplicative stacking from attacker buff multipliers + flat bonuses.
   let dmgMult = 1;
+  let dmgFlat = 0;
   (attacker.buffs || []).forEach(b => {
-    if (b.stat === 'damage' && b.multiplier) dmgMult *= b.multiplier;
+    if (b.stat === 'damage') {
+      if (b.multiplier) dmgMult *= b.multiplier;
+      if (b.flat) dmgFlat += b.flat;
+    }
   });
-  baseDmg = Math.floor(baseDmg * dmgMult);
+  baseDmg = Math.floor((baseDmg + dmgFlat) * dmgMult);
+  dbg('After buffs (flat+mult)', { baseDmg, dmgFlat, dmgMult });
 
+  // ── Step 5: Ability multiplier ───────────────────────────────────────
+  // ability.damage defaults to 1.0 (100% of base).
   let totalDmg = Math.floor(baseDmg * (ability.damage || 1));
+  dbg('After ability mult', { abilityMult: ability.damage || 1, totalDmg });
 
+  // ── Step 6: Defense ──────────────────────────────────────────────────
+  // √(defense) as %, capped at 80%. DefenseBreak reduces defense first.
   let defenseVal = defender.defense || 0;
   (defender.buffs || []).forEach(b => {
     if (b.stat === 'defense' && b.flat) defenseVal += b.flat;
@@ -171,14 +198,25 @@ function calculateAttackDamage(attacker, defender, ability) {
   }
   const defReduction = Math.min(80, Math.sqrt(Math.max(0, defenseVal)));
   totalDmg = Math.floor(totalDmg * (100 - defReduction) / 100);
+  dbg('After defense', { defenseVal, defReduction: defReduction.toFixed(1) + '%', totalDmg });
 
-  if (defender.damageReduction > 0) {
-    totalDmg = Math.floor(totalDmg * (1 - defender.damageReduction / 100));
+  // ── Step 7: Damage reduction ─────────────────────────────────────────
+  // Flat % reduction from defender, capped at 80% to prevent invulnerability.
+  const cappedDR = Math.min(80, defender.damageReduction || 0);
+  if (cappedDR > 0) {
+    totalDmg = Math.floor(totalDmg * (1 - cappedDR / 100));
   }
+  dbg('After damageReduction', { cappedDR, totalDmg });
 
+  // ── Step 8: Variance ─────────────────────────────────────────────────
+  // Random multiplier [0.75, 1.25) centered at 1.0.
   const variance = 0.75 + Math.random() * 0.5;
   totalDmg = Math.floor(totalDmg * variance);
+  dbg('After variance', { variance: variance.toFixed(3), totalDmg });
 
+  // ── Step 9: Block ────────────────────────────────────────────────────
+  // If triggered, reduces by blockEffect % (capped 90%, default 60%).
+  // Blocking prevents crit (step 10) and life drain (step 12) by design.
   let blocked = false;
   let isCrit = false;
 
@@ -187,8 +225,12 @@ function calculateAttackDamage(attacker, defender, ability) {
     const reduction = blockFactor > 0 ? blockFactor : 0.6;
     totalDmg = Math.floor(totalDmg * (1 - reduction));
     blocked = true;
+    dbg('Blocked', { blockEffect: reduction, totalDmg });
   }
 
+  // ── Step 10: Crit ────────────────────────────────────────────────────
+  // Only rolls if NOT blocked. critChance - critEvasion + focusStacks×10.
+  // Capped at 100% to prevent overflow from focus stacking.
   if (!blocked) {
     let effectiveCritChance = attacker.critChance || 5;
     const critEvasion = defender.criticalEvasion || 0;
@@ -196,10 +238,12 @@ function calculateAttackDamage(attacker, defender, ability) {
     if (attacker.focusStacks > 0) {
       effectiveCritChance += attacker.focusStacks * 10;
     }
+    effectiveCritChance = Math.min(100, effectiveCritChance);
     isCrit = ability.guaranteedCrit || attacker.guaranteedCrit || Math.random() * 100 < effectiveCritChance;
     if (isCrit) {
       const critFactor = 1 + ((attacker.criticalDamage || 50) / 100);
       totalDmg = Math.floor(totalDmg * critFactor);
+      dbg('Crit', { effectiveCritChance, critFactor, totalDmg });
       if (attacker.focusStacks > 0) {
         attacker.focusStacks = 0;
         attacker.guaranteedCrit = false;
@@ -207,13 +251,20 @@ function calculateAttackDamage(attacker, defender, ability) {
     }
   }
 
+  // ── Step 11: Floor ───────────────────────────────────────────────────
+  // Minimum 1 damage — attacks always deal at least 1.
   totalDmg = Math.max(1, totalDmg);
 
+  // ── Step 12: Life drain ──────────────────────────────────────────────
+  // Attacker heals drainHealth% of final damage. Blocked attacks don't drain.
   let drained = 0;
   if ((attacker.drainHealth || 0) > 0 && totalDmg > 0 && !blocked) {
     drained = Math.floor(totalDmg * (attacker.drainHealth / 100));
   }
+  dbg('Final', { totalDmg, isCrit, blocked, drained });
 
+  // ── Step 13: Row modifiers ───────────────────────────────────────────
+  // Applied last — row evasion/block/damage/accuracy bonuses.
   let result = { totalDmg, isCrit, blocked, evaded: false, drained };
   result = applyRowCombatModifiers(attacker, defender, ability, result);
   return result;
