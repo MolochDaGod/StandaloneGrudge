@@ -209,11 +209,13 @@ async function ensureDB() {
 }
 
 // ── CORS & Middleware ────────────────────────────────────────────────────────
+const CANONICAL_ORIGIN = 'https://grudgewarlords.com';
+const CANONICAL_DISCORD_REDIRECT = `${CANONICAL_ORIGIN}/discordauth`;
+const CANONICAL_EXTERNAL_REDIRECT = `${CANONICAL_ORIGIN}/api/external/callback`;
+
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
-  'https://grudgeplatform.com',
-  'https://www.grudgeplatform.com',
 ];
 
 app.use((req, res, next) => {
@@ -414,25 +416,43 @@ app.post('/api/auth/verify', (req, res) => {
 });
 
 // ── Discord OAuth ───────────────────────────────────────────────────────────
-const pendingStates = new Map();
+// Stateless signed OAuth state — survives serverless cold starts
+function signOAuthState(payload, ttlMs = 10 * 60 * 1000) {
+  const data = { ...payload, iat: Date.now(), exp: Date.now() + ttlMs, r: crypto.randomBytes(8).toString('hex') };
+  const body = Buffer.from(JSON.stringify(data)).toString('base64url');
+  const sig = crypto.createHmac('sha256', JWT_SECRET()).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyOAuthState(state) {
+  if (!state || typeof state !== 'string') return null;
+  const parts = state.split('.');
+  if (parts.length !== 2) return null;
+  const [body, sig] = parts;
+  const expected = crypto.createHmac('sha256', JWT_SECRET()).update(body).digest('base64url');
+  if (sig !== expected) return null;
+  let payload; try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch { return null; }
+  if (!payload || !payload.exp || Date.now() > payload.exp) return null;
+  return payload;
+}
 
 app.get('/api/discord/login', (req, res) => {
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-  const redirectUrl = req.query.redirect_uri || null;
-  const origin = getPublicOrigin(req);
-  const redirectUri = redirectUrl || `${origin}/discordauth`;
+  // Always use canonical redirect URI to avoid mismatch with Discord's registered URIs
+  const redirectUri = CANONICAL_DISCORD_REDIRECT;
   const scope = encodeURIComponent('identify email guilds.join');
-  const state = crypto.randomBytes(16).toString('hex');
-  pendingStates.set(state, { ts: Date.now(), redirectUri });
+  const state = signOAuthState({ redirectUri });
 
-  // Cleanup old states
-  if (pendingStates.size > 500) {
-    const cutoff = Date.now() - 600000;
-    for (const [k, v] of pendingStates) { if (v.ts < cutoff) pendingStates.delete(k); }
-  }
-
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=${state}`;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=${encodeURIComponent(state)}`;
   res.json({ url, state, clientId: DISCORD_CLIENT_ID, scope: 'identify email guilds.join' });
+});
+
+// Support GET for robustness: redirect to /discordauth so the static handler can POST
+app.get('/api/discord/callback', (req, res) => {
+  const { code, state } = req.query;
+  if (!code) return res.status(400).send('Missing code');
+  const qs = `code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`;
+  return res.redirect(`/discordauth?${qs}`);
 });
 
 app.post('/api/discord/callback', async (req, res) => {
@@ -441,14 +461,14 @@ app.post('/api/discord/callback', async (req, res) => {
   const { code, state } = req.body;
   if (!code) return res.status(400).json({ error: 'Missing code' });
 
-  if (!state || !pendingStates.has(state)) {
-    return res.status(403).json({ error: 'Invalid or missing state parameter' });
+  const statePayload = verifyOAuthState(state);
+  if (!statePayload) {
+    return res.status(403).json({ error: 'Invalid or expired state. Please try logging in again.' });
   }
-  const stateEntry = pendingStates.get(state);
-  pendingStates.delete(state);
 
   try {
-    const redirectUri = req.body.redirect_uri || (typeof stateEntry === 'object' ? stateEntry.redirectUri : null) || `${getPublicOrigin(req)}/discordauth`;
+    // Always use canonical redirect URI — must match what was sent to Discord in /login
+    const redirectUri = statePayload.redirectUri || CANONICAL_DISCORD_REDIRECT;
 
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -480,7 +500,7 @@ app.post('/api/discord/callback', async (req, res) => {
     // Auto-join guild
     let guildJoined = false;
     const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-    const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID || '1371299544725704766';
+    const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID || '960983121019437076';
     if (DISCORD_BOT_TOKEN && DISCORD_GUILD_ID) {
       try {
         const joinRes = await fetch(`https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members/${user.id}`, {
@@ -547,12 +567,10 @@ app.get('/api/external/login', (req, res) => {
     const parsed = new URL(returnUrl);
     if (!ALLOWED_RETURN_ORIGINS.includes(parsed.origin)) returnUrl = 'https://grudgewarlords.com/dungeon';
   } catch { returnUrl = 'https://grudgewarlords.com/dungeon'; }
-  const state = crypto.randomBytes(16).toString('hex');
-  pendingStates.set(state, { ts: Date.now(), returnUrl });
-  const origin = getPublicOrigin(req);
-  const redirectUri = `${origin}/api/external/callback`;
+  const state = signOAuthState({ returnUrl });
+  const redirectUri = CANONICAL_EXTERNAL_REDIRECT;
   const scope = 'identify email guilds.join';
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}`;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(state)}`;
   res.redirect(url);
 });
 
@@ -560,16 +578,14 @@ app.get('/api/external/callback', async (req, res) => {
   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
   const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
   const { code, state } = req.query;
-  if (!code || !state || !pendingStates.has(state)) {
+  const stateData = verifyOAuthState(state);
+  if (!code || !stateData) {
     return res.status(403).send('Invalid or expired login attempt. Please try again.');
   }
-  const stateData = pendingStates.get(state);
-  pendingStates.delete(state);
-  const returnUrl = (typeof stateData === 'object' ? stateData.returnUrl : null) || 'https://grudgewarlords.com/dungeon';
+  const returnUrl = stateData.returnUrl || 'https://grudgewarlords.com/dungeon';
 
   try {
-    const origin = getPublicOrigin(req);
-    const redirectUri = `${origin}/api/external/callback`;
+    const redirectUri = CANONICAL_EXTERNAL_REDIRECT;
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -734,7 +750,6 @@ app.get('/api/health', (req, res) => {
 
 // ── Arena ────────────────────────────────────────────────────────────────────
 let arenaSeq = 0;
-const challengeNonces = new Map();
 
 function generateArenaUuid(prefix) {
   const now = new Date();
@@ -802,27 +817,130 @@ app.get('/api/arena/lobby', async (req, res) => {
   } catch (err) { console.error('Arena lobby error:', err); res.status(500).json({ error: 'Failed to load lobby' }); }
 });
 
+// Sign and verify challenge tokens (stateless, avoids serverless memory issues)
+function issueChallengeToken(teamId, ttlMs = 30 * 60 * 1000) {
+  const payload = { t: teamId, iat: Date.now(), exp: Date.now() + ttlMs, r: crypto.randomBytes(8).toString('hex') };
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', JWT_SECRET()).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyChallengeToken(token, expectedTeamId) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [body, sig] = parts;
+  const expSig = crypto.createHmac('sha256', JWT_SECRET()).update(body).digest('base64url');
+  if (sig !== expSig) return null;
+  let payload; try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch { return null; }
+  if (!payload || payload.t !== expectedTeamId) return null;
+  if (!payload.exp || Date.now() > payload.exp) return null;
+  return payload;
+}
+
 app.get('/api/arena/team/:teamId', async (req, res) => {
   try {
     const result = await dbQuery('SELECT * FROM arena_teams WHERE team_id = $1', [req.params.teamId]);
     if (!result.rows[0]) return res.status(404).json({ error: 'Team not found' });
     const team = teamRowToObj(result.rows[0]);
-    const nonce = crypto.randomBytes(16).toString('hex');
-    challengeNonces.set(nonce, { teamId: team.teamId, createdAt: Date.now() });
-    if (challengeNonces.size > 1000) { const cutoff = Date.now() - 30 * 60 * 1000; for (const [k, v] of challengeNonces) { if (v.createdAt < cutoff) challengeNonces.delete(k); } }
-    res.json({ teamId: team.teamId, ownerId: team.ownerId, ownerName: team.ownerName, status: team.status, heroes: team.heroes, snapshotHash: team.snapshotHash, wins: team.wins, losses: team.losses, totalBattles: team.totalBattles, rewards: team.rewards, createdAt: team.createdAt, avgLevel: team.avgLevel, challengeNonce: nonce });
+    const token = issueChallengeToken(team.teamId);
+    res.json({ teamId: team.teamId, ownerName: team.ownerName, status: team.status, heroes: team.heroes, snapshotHash: team.snapshotHash, wins: team.wins, losses: team.losses, totalBattles: team.totalBattles, rewards: team.rewards, createdAt: team.createdAt, avgLevel: team.avgLevel, challengeToken: token, challengeExpireAt: Date.now() + 30 * 60 * 1000 });
   } catch (err) { console.error('Arena team error:', err); res.status(500).json({ error: 'Failed to load team' }); }
+});
+
+// Deterministic lightweight simulator
+function computePower(heroes) {
+  if (!Array.isArray(heroes)) return 0;
+  let levelSum = 0; let attrSum = 0;
+  for (const h of heroes) {
+    levelSum += Math.max(1, parseInt(h.level || h.levels || h.l || 1));
+    const attrs = h.attributePoints || h.attribute_points || {};
+    for (const v of Object.values(attrs)) { const n = parseInt(v || 0); if (!Number.isNaN(n)) attrSum += n; }
+  }
+  return levelSum * 100 + attrSum * 5;
+}
+
+function seededInts(seedHex, count) {
+  const out = []; let hex = seedHex;
+  for (let i = 0; i < count; i++) { const h = crypto.createHash('sha256').update(hex).digest('hex'); out.push(parseInt(h.slice(0, 8), 16)); hex = h; }
+  return out;
+}
+
+app.post('/api/arena/battle/simulate', async (req, res) => {
+  try {
+    const { teamId, challengerName, challengerHeroes, challengeToken } = req.body || {};
+    if (!teamId || !Array.isArray(challengerHeroes) || challengerHeroes.length === 0 || challengerHeroes.length > 3) {
+      return res.status(400).json({ error: 'teamId and 1-3 challengerHeroes required' });
+    }
+    const tok = verifyChallengeToken(challengeToken, teamId);
+    if (!tok) return res.status(403).json({ error: 'Invalid or expired challenge token' });
+
+    const client = await getClient();
+    let team, battleId, rewardData, newWins, newLosses, newStatus, demoted, demoteReason, result;
+    try {
+      await client.query('BEGIN');
+      const teamResult = await client.query('SELECT * FROM arena_teams WHERE team_id = $1 FOR UPDATE', [teamId]);
+      if (!teamResult.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Team not found' }); }
+      team = teamRowToObj(teamResult.rows[0]);
+
+      // Compute deterministic outcome
+      const seed = crypto.createHash('sha256').update(JSON.stringify({ t: team.teamId, tok, ch: challengerHeroes })).digest('hex');
+      const [a, b] = seededInts(seed, 2);
+      const teamPower = computePower(team.heroes) + ((a % 21) - 10); // -10..+10
+      const challengerPower = computePower(challengerHeroes) + ((b % 21) - 10);
+      result = challengerPower > teamPower ? 'team_lost' : 'team_won';
+
+      battleId = generateArenaUuid('BTLE');
+      await client.query(`INSERT INTO arena_battles (battle_id, team_id, challenger_name, result) VALUES ($1,$2,$3,$4)`, [battleId, teamId, challengerName || 'Arena Challenger', result]);
+
+      rewardData = null; newWins = team.wins; newLosses = team.losses; newStatus = team.status; demoteReason = team.demoteReason;
+      let newRewards = { ...team.rewards };
+      if (result === 'team_won') {
+        newWins++;
+        if (team.status === 'ranked') {
+          const goldReward = 50 + team.avgLevel * 10 + newWins * 5;
+          const resourceReward = 10 + team.avgLevel * 2;
+          newRewards.gold = (newRewards.gold || 0) + goldReward;
+          newRewards.resources = (newRewards.resources || 0) + resourceReward;
+          if (newWins % 5 === 0) {
+            const eqTier = Math.min(8, Math.max(1, Math.ceil(team.avgLevel / 3)));
+            const equipReward = { type: 'equipment', tier: eqTier, wonAt: Date.now() };
+            if (!Array.isArray(newRewards.equipment)) newRewards.equipment = [];
+            newRewards.equipment.push(equipReward);
+            rewardData = { gold: goldReward, resources: resourceReward, equipment: equipReward };
+          } else { rewardData = { gold: goldReward, resources: resourceReward }; }
+        }
+      } else {
+        newLosses++;
+        if (team.status === 'ranked' && newLosses >= 3) { newStatus = 'unranked'; demoteReason = 'losses'; }
+      }
+      demoted = newStatus === 'unranked' && demoteReason === 'losses' && newLosses === 3;
+
+      await client.query(`UPDATE arena_teams SET wins=$1, losses=$2, total_battles=total_battles+1, status=$3, rewards=$4, demoted_at=$5, demote_reason=$6, updated_at=NOW() WHERE team_id=$7`,
+        [newWins, newLosses, newStatus, JSON.stringify(newRewards), demoted ? new Date() : team.demotedAt ? new Date(team.demotedAt) : null, demoteReason, teamId]);
+      await client.query('COMMIT');
+    } catch (txErr) { await client.query('ROLLBACK'); throw txErr; } finally { client.release(); }
+
+    res.json({ success: true, battleId, result, teamStatus: newStatus, wins: newWins, losses: newLosses, demoted, rewards: rewardData });
+  } catch (err) { console.error('Arena simulate error:', err); res.status(500).json({ error: 'Failed to simulate battle' }); }
 });
 
 app.post('/api/arena/battle/result', async (req, res) => {
   try {
-    const { teamId, challengerName, result, challengeNonce } = req.body;
-    if (!teamId || !result) return res.status(400).json({ error: 'teamId and result required' });
-    if (!challengeNonce) return res.status(400).json({ error: 'challengeNonce is required' });
-    const nonceData = challengeNonces.get(challengeNonce);
-    if (!nonceData || nonceData.teamId !== teamId) return res.status(403).json({ error: 'Invalid or expired challenge token' });
-    if (Date.now() - nonceData.createdAt > 30 * 60 * 1000) { challengeNonces.delete(challengeNonce); return res.status(403).json({ error: 'Challenge token expired' }); }
-    challengeNonces.delete(challengeNonce);
+    const { teamId, challengerName } = req.body;
+    let { result, challengeNonce, challengeToken, challengerHeroes } = req.body;
+    if (!teamId) return res.status(400).json({ error: 'teamId required' });
+
+    // Prefer secure token; fall back to old nonce for backward compatibility
+    let tokenOk = false;
+    if (challengeToken) {
+      tokenOk = !!verifyChallengeToken(challengeToken, teamId);
+      if (!tokenOk) return res.status(403).json({ error: 'Invalid or expired challenge token' });
+    } else {
+      if (!challengeNonce) return res.status(400).json({ error: 'challengeNonce or challengeToken required' });
+      // Legacy path is unsupported on serverless (nonces not persisted); gently fail
+      return res.status(410).json({ error: 'Legacy nonce flow is no longer supported. Please request a new challengeToken from /api/arena/team/:teamId and retry.' });
+    }
 
     const client = await getClient();
     let team, battleId, rewardData, newWins, newLosses, newStatus, demoted, demoteReason;
@@ -836,6 +954,19 @@ app.post('/api/arena/battle/result', async (req, res) => {
 
       rewardData = null; newWins = team.wins; newLosses = team.losses; newStatus = team.status;
       let newRewards = { ...team.rewards }; demoteReason = team.demoteReason;
+
+      // If result not provided, compute outcome deterministically from provided heroes
+      if (!result) {
+        if (!Array.isArray(challengerHeroes) || challengerHeroes.length === 0 || challengerHeroes.length > 3) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Either provide result or a challengerHeroes array of 1-3 heroes' });
+        }
+        const seed = crypto.createHash('sha256').update(JSON.stringify({ t: team.teamId, ch: challengerHeroes })).digest('hex');
+        const [a, b] = seededInts(seed, 2);
+        const teamPower = computePower(team.heroes) + ((a % 21) - 10);
+        const challengerPower = computePower(challengerHeroes) + ((b % 21) - 10);
+        result = challengerPower > teamPower ? 'team_lost' : 'team_won';
+      }
 
       if (result === 'team_won') {
         newWins++;

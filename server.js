@@ -22,9 +22,6 @@ const replitDevDomains = (process.env.REPLIT_DEV_DOMAIN || '').split(',').map(d 
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
-  'https://grudgeplatform.com',
-  'https://www.grudgeplatform.com',
-  'https://grudge-rpg.replit.app',
   ...replitDomains,
   ...replitDevDomains,
 ];
@@ -33,9 +30,6 @@ const CSP_FRAME_ANCESTORS = [
   "frame-ancestors 'self'",
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
-  'https://grudgeplatform.com',
-  'https://www.grudgeplatform.com',
-  'https://grudge-rpg.replit.app',
   'https://puter.com',
   'https://*.puter.com',
   ...replitDomains,
@@ -66,7 +60,7 @@ app.use(express.json({ limit: '1mb' }));
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
-const BETA_CHANNEL_ID = '1381760000946470987';
+const BETA_CHANNEL_ID = '1394826401311625306';
 
 const pendingStates = new Map();
 const activeSessions = new Map();
@@ -79,7 +73,7 @@ function getPublicOrigin(req) {
     return `${proto}://${host}`;
   }
   const domain = isProd
-    ? process.env.REPLIT_DOMAINS
+    ? (process.env.REPLIT_DOMAINS || 'grudgewarlords.com')
     : (process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS);
   if (domain) return `https://${domain}`;
   return `${proto}://${host || 'localhost:5000'}`;

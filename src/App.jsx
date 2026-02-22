@@ -22,6 +22,7 @@ import IntroCinematic from './components/IntroCinematic';
 import DiscordAuth from './components/DiscordAuth';
 import { InlineIcon } from './data/uiSprites';
 import AdminGizmo from './components/AdminGizmo';
+import ArenaPanel from './components/ArenaPanel';
 import { FrameMaskLayer } from './components/FrameEditor';
 import GameTooltipRenderer from './components/GameTooltip';
 import GameContextMenuRenderer from './components/GameContextMenu';
@@ -253,6 +254,8 @@ function GameApp() {
     try { return JSON.parse(localStorage.getItem('grudge-session') || '{}').type || 'guest'; } catch { return 'guest'; }
   })();
 
+  const [showArena, setShowArena] = useState(false);
+
   return (
     <div className={`game-frame${showFrame ? '' : ' hide-frame'}`}>
       <div style={{
@@ -300,6 +303,18 @@ function GameApp() {
           pointerEvents: 'none', zIndex: 10600,
         }} />
         <FrameMaskLayer />
+        {(screen === 'lobby' || screen === 'account') && (
+          <button onClick={() => setShowArena(true)} style={{
+            position: 'absolute', right: 14, bottom: 14, zIndex: 10520,
+            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            border: 'none', borderRadius: 9999, color: '#fff',
+            padding: '10px 16px', cursor: 'pointer', fontWeight: 800,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.4)', letterSpacing: 1,
+          }}>
+            ARENA
+          </button>
+        )}
+        {showArena && <ArenaPanel onClose={() => setShowArena(false)} />}
         <GameTooltipRenderer />
         <GameContextMenuRenderer />
         <SettingsMenu />

@@ -16,12 +16,7 @@ export default function DiscordAuth() {
       return;
     }
 
-    const savedState = sessionStorage.getItem('discord_oauth_state');
-    if (savedState && returnedState && savedState !== returnedState) {
-      setError('Security check failed. Please try again.');
-      setStatus('error');
-      return;
-    }
+    // State is now verified server-side via HMAC signature — clear stale client state
     sessionStorage.removeItem('discord_oauth_state');
 
     setStatus('exchanging');
@@ -227,7 +222,7 @@ export default function DiscordAuth() {
           borderTop: '1px solid rgba(255,255,255,0.06)',
           fontSize: '0.7rem', color: '#4b5563',
         }}>
-          Grudge Studio &copy; 2025 &mdash; All Rights Reserved
+          Grudge Studio &copy; 2026 &mdash; All Rights Reserved
         </div>
       </div>
     </div>
