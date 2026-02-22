@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-02-22b] — Env Var Sanitization
+
+### Fixed
+- **Discord OAuth broken on Vercel** — `DISCORD_CLIENT_ID` env var had embedded `\r\n` from paste, poisoning all OAuth URLs and token exchanges
+- Added `env()` helper that `.trim()`s all Discord-related env var reads defensively
+- Applied to all 8 `process.env.DISCORD_*` call sites (client ID, secret, bot token, guild ID, webhook URL)
+
 ## [2026-02-22] — Arena UI + Stateless OAuth
 
 ### Added
