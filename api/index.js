@@ -265,6 +265,9 @@ function requireSession(req, res, next) {
 
 const ADMIN_TOKEN = () => process.env.GAME_API_GRUDA;
 
+// Trim env vars defensively — prevents \r\n corruption from Vercel/Windows env injection
+const env = (key) => (process.env[key] || '').trim();
+
 function requireAdmin(req, res, next) {
   const auth = req.headers['x-admin-token'];
   const tok = ADMIN_TOKEN();
@@ -437,7 +440,7 @@ function verifyOAuthState(state) {
 }
 
 app.get('/api/discord/login', (req, res) => {
-  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+  const DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID');
   // Always use canonical redirect URI to avoid mismatch with Discord's registered URIs
   const redirectUri = CANONICAL_DISCORD_REDIRECT;
   const scope = encodeURIComponent('identify email guilds.join');
@@ -456,8 +459,8 @@ app.get('/api/discord/callback', (req, res) => {
 });
 
 app.post('/api/discord/callback', async (req, res) => {
-  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-  const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+  const DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID');
+  const DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET');
   const { code, state } = req.body;
   if (!code) return res.status(400).json({ error: 'Missing code' });
 
@@ -499,8 +502,8 @@ app.post('/api/discord/callback', async (req, res) => {
 
     // Auto-join guild
     let guildJoined = false;
-    const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-    const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID || '960983121019437076';
+    const DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN');
+    const DISCORD_GUILD_ID = env('DISCORD_GUILD_ID') || '960983121019437076';
     if (DISCORD_BOT_TOKEN && DISCORD_GUILD_ID) {
       try {
         const joinRes = await fetch(`https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members/${user.id}`, {
@@ -561,7 +564,7 @@ app.get('/api/discord/webhook/verify', (req, res) => {
 const ALLOWED_RETURN_ORIGINS = [...ALLOWED_ORIGINS];
 
 app.get('/api/external/login', (req, res) => {
-  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+  const DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID');
   let returnUrl = req.query.returnUrl || 'https://grudgewarlords.com/dungeon';
   try {
     const parsed = new URL(returnUrl);
@@ -575,8 +578,8 @@ app.get('/api/external/login', (req, res) => {
 });
 
 app.get('/api/external/callback', async (req, res) => {
-  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-  const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+  const DISCORD_CLIENT_ID = env('DISCORD_CLIENT_ID');
+  const DISCORD_CLIENT_SECRET = env('DISCORD_CLIENT_SECRET');
   const { code, state } = req.query;
   const stateData = verifyOAuthState(state);
   if (!code || !stateData) {
@@ -645,7 +648,7 @@ try {
 const EMBED_COLORS = { update: 0x6ee7b3, patch: 0xa78bfa, challenge: 0xf59e0b, event: 0xef4444, milestone: 0x3b82f6, lore: 0x8b5cf6, tip: 0x10b981 };
 
 async function sendWebhookMessage({ content, embeds, username, avatar_url }) {
-  const DISCORD_WEBHOOK_URL = process.env.DISCORD_GRUDGE_WEBHOOK;
+  const DISCORD_WEBHOOK_URL = env('DISCORD_GRUDGE_WEBHOOK');
   if (!DISCORD_WEBHOOK_URL) throw new Error('Webhook URL not configured');
   const payload = {};
   if (content) payload.content = content;
@@ -1355,7 +1358,7 @@ app.get('/api/wallet/all', requireAdmin, async (req, res) => {
 // ── Discord Invite ───────────────────────────────────────────────────────────
 app.get('/api/discord/invite', async (req, res) => {
   try {
-    const botToken = process.env.DISCORD_BOT_TOKEN || process.env.GAME_API_GRUDA;
+    const botToken = env('DISCORD_BOT_TOKEN') || env('GAME_API_GRUDA');
     const BETA_CHANNEL_ID = '1381760000946470987';
     if (!botToken) throw new Error('Bot token not configured');
     const inviteRes = await fetch(`https://discord.com/api/v10/channels/${BETA_CHANNEL_ID}/invites`, { method: 'POST', headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ max_age: 86400, max_uses: 1, unique: true }) });
