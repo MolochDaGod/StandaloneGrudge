@@ -726,6 +726,8 @@ function HeroDetailPanel({ hero, onClose }) {
 
           const SLOT_LABELS = { weapon: 'Wpn', offhand: 'Off', helmet: 'Helm', armor: 'Body', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
 
+          const SLOT_GHOST_ICONS = { weapon: 'sword', offhand: 'shield', helmet: 'helm', armor: 'armor', feet: 'boots', ring: 'ring', relic: 'crystal' };
+
           const renderEquipSlot = (slot, disabled = false) => {
             const equipped = eq[slot];
             const tierDef = equipped ? TIERS[equipped.tier] || TIERS[1] : null;
@@ -762,27 +764,61 @@ function HeroDetailPanel({ hero, onClose }) {
                 }}
                 style={{
                   width: '100%', height: '100%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative',
                   cursor: canReceive ? 'pointer' : (equipped ? 'pointer' : 'default'),
                   opacity: disabled ? 0.3 : 1,
-                  transition: 'box-shadow 0.15s',
+                  transition: 'box-shadow 0.15s, transform 0.15s',
                   boxShadow: canReceive ? '0 0 6px rgba(34,197,94,0.5)' : 'none',
-                  position: 'relative',
                 }}
               >
-                {equipped ? (() => {
-                  const eqSprite = getItemSpriteIcon(equipped);
-                  return eqSprite ? (
-                    <img src={eqSprite} alt={equipped.name} style={{
-                      width: '75%', height: '75%', objectFit: 'contain',
-                      imageRendering: 'pixelated',
-                      filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))',
-                    }} />
-                  ) : (
-                    <span style={{ fontSize: '1.3rem', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.9))' }}>{equipped.icon}</span>
-                  );
-                })() : null}
-                {tierDef && <div style={{ position: 'absolute', bottom: 1, left: 2, right: 2, height: 2, background: tierDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tierDef.color}` }} />}
+                {/* Inner slot background */}
+                <div style={{
+                  position: 'absolute', inset: '13%',
+                  background: equipped
+                    ? 'linear-gradient(145deg, rgba(50,40,25,0.95), rgba(30,22,12,0.98))'
+                    : 'linear-gradient(145deg, rgba(35,28,18,0.9), rgba(20,15,8,0.95))',
+                  borderRadius: 2,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: equipped && tierDef
+                    ? `inset 0 0 6px rgba(0,0,0,0.6), 0 0 4px ${tierDef.color}25`
+                    : 'inset 0 0 6px rgba(0,0,0,0.6)',
+                  zIndex: 1,
+                }}>
+                  {equipped ? (() => {
+                    const eqSprite = getItemSpriteIcon(equipped);
+                    return eqSprite ? (
+                      <img src={eqSprite} alt={equipped.name} style={{
+                        width: '68%', height: '68%', objectFit: 'contain',
+                        imageRendering: 'pixelated',
+                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.7))',
+                      }} />
+                    ) : (
+                      <InlineIcon name={equipped.icon || SLOT_GHOST_ICONS[slot]} size={Math.round(slotPx * 0.45)} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
+                    );
+                  })() : (
+                    <InlineIcon name={SLOT_GHOST_ICONS[slot]} size={Math.round(slotPx * 0.38)} style={{ opacity: 0.2, filter: 'grayscale(1) drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
+                  )}
+                </div>
+                {/* Slot frame overlay */}
+                <img src="/ui/inventory-slot-frame.png" alt="" style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%',
+                  pointerEvents: 'none', zIndex: 2, imageRendering: 'auto',
+                  filter: equipped && tierDef ? `drop-shadow(0 0 3px ${tierDef.color}40)` : 'none',
+                }} />
+                {/* Tier color indicator */}
+                {tierDef && <div style={{ position: 'absolute', bottom: '12%', left: '16%', right: '16%', height: 2, background: tierDef.color, borderRadius: 1, boxShadow: `0 0 4px ${tierDef.color}`, zIndex: 3 }} />}
+                {/* Slot label for empty slots */}
+                {!equipped && (
+                  <div style={{
+                    position: 'absolute', bottom: -2, left: '50%', transform: 'translateX(-50%)',
+                    fontSize: Math.max(7, slotPx * 0.14), color: '#8b7355',
+                    fontFamily: "'Cinzel', serif", whiteSpace: 'nowrap', textAlign: 'center',
+                    letterSpacing: '0.03em', zIndex: 3,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                  }}>
+                    {SLOT_LABELS[slot]}
+                  </div>
+                )}
               </div>
             );
           };
@@ -864,7 +900,7 @@ function HeroDetailPanel({ hero, onClose }) {
                       imageRendering: 'pixelated',
                       position: 'relative',
                       borderRadius: 4,
-                      overflow: 'hidden',
+                      overflow: 'visible',
                     }}>
                       {Object.entries(slotPositions).map(([slot, pos]) => (
                         <div key={slot} style={{
