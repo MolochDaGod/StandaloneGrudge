@@ -73,6 +73,7 @@ function GameApp() {
   const [screenShake, setScreenShake] = useState(false);
   const [shakeIntensity, setShakeIntensity] = useState('medium');
   const skipPushRef = useRef(false);
+  const [showArena, setShowArena] = useState(false);
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -254,7 +255,6 @@ function GameApp() {
     try { return JSON.parse(localStorage.getItem('grudge-session') || '{}').type || 'guest'; } catch { return 'guest'; }
   })();
 
-  const [showArena, setShowArena] = useState(false);
 
   return (
     <div className={`game-frame${showFrame ? '' : ' hide-frame'}`}>

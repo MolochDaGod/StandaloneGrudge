@@ -495,7 +495,7 @@ app.get('/api/external/callback', async (req, res) => {
     const user = await userRes.json();
 
     try {
-      await addUserToGuild(user.id, tokenData.access_token);
+      await addUserToGuild(tokenData.access_token, user.id);
     } catch (e) {}
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
