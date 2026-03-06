@@ -16,7 +16,7 @@
 (function (global) {
   'use strict';
 
-  var API_BASE = 'https://grudge-warlords-rpg.replit.app';
+  var API_BASE = 'https://grudgewarlords.com';
 
   var SESSION_KEY = 'grudge_studio_session';
   var USER_KEY = 'grudge_studio_user';

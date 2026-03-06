@@ -9,6 +9,12 @@ export const ZONE_CUTSCENES = {
       'Now, roaming warbands clash over territory that belongs to no one. Only the strong survive here.',
       'This is where your legend begins, Warlord. Draw your blade.'
     ],
+    extendedLore: [
+      'The green stretches on forever, but it is not the gentle green of peace. It is the green of things growing over graves. Beneath the tall grass, if you look carefully, you can find rusted helmets and shattered shields. Thousands of them, swallowed by the earth, forgotten by all but the wind.',
+      'The warbands that fight here do not fight for land. They fight because they have forgotten how to do anything else. You can see it in their eye\'s, a hollow rage that has no target, no end. They swing their blade\'s at anything that move\'s, and when nothing move\'s, they swing at the air.',
+      'There is a hill at the center of the plain\'s, barely taller than a man. The locals call it the Grudge Mound. They say that if you press your ear to the dirt, you can hear the sound of clashing steel from the battle that created it. That battle ended three hundred year\'s ago. The sound has not stopped.',
+      'You stand here now, Warlord, where every grudge in this land was born. The wind does not whisper here. It scream\'s. And if you listen long enough, you will hear your own name among the voice\'s. This is not a warning. It is an invitation.',
+    ],
   },
   dark_forest: {
     bg: '/backgrounds/dark_forest.png',
@@ -19,6 +25,12 @@ export const ZONE_CUTSCENES = {
       'The Fabled faction once held council here, beneath the eldest oak. That oak now bleeds black sap.',
       'Creatures born of shadow stalk between the trunks. They were not always monsters — the forest changed them.',
       'Tread carefully. The Dark Forest does not forgive trespassers.'
+    ],
+    extendedLore: [
+      'The trees all bend, they radiate an ancient power. One far older than one could ever imagine. For all you know adventure, they could have been here before the land itself. The root\'s, which surface randomly, creating a small hazard, drink the land\'s poison as if it was a fine wine.',
+      'The fabled faction that once held its beautiful council here, held below the greatest oak among all the trees in these wood\'s, now lies in ruins. The oak that once guarded the council now bleeding a golden sap. It stains the ground, and traps anyone foolish enough to approach.',
+      'Creatures, those of shadow\'s, stalk anyone who approaches, watching and waiting, studying, trying to LEARN you. As for when they have learned enough, they strike. Catching their prey off guard, and murdering them with no remorse, their laughter the last thing many hear.',
+      'Tread carefully, be sure to watch your back, be aware of your surroundings, and take this warning to heart. As you never know what could be watching. These old wood\'s do not forgive trespasser\'s, and it seems as though you decided to ignore the warning.',
     ],
   },
   mystic_grove: {
@@ -31,6 +43,12 @@ export const ZONE_CUTSCENES = {
       'Healing herbs grow wild here, but so do carnivorous vines that hunger for warm blood.',
       'The grove tests all who enter. Prove your worth, and its secrets are yours.'
     ],
+    extendedLore: [
+      'The light here is wrong. Not dim, not bright, but something in between that make\'s your eye\'s ache if you stare too long. It filter\'s through leave\'s that shimmer like they are made of glass, casting pattern\'s on the ground that shift even when there is no wind. The pattern\'s almost look like word\'s.',
+      'The druid\'s did not simply vanish. If you look closely at the oldest tree\'s, you can see face\'s pressed into the bark. Not carving\'s. Face\'s. Mouth\'s open in silent scream\'s, eye\'s wide with terror. The grove did not let them leave. It made them part of itself, and their magic keep\'s it alive to this day.',
+      'The carnivorous vine\'s are patient. They do not lunge like beast\'s. They creep, inch by inch, wrapping around ankle\'s so gently you do not notice until you cannot move. Adventurer\'s have been found standing upright, wrapped root to crown, still alive but unable to scream. The vine\'s feed slowly. Very slowly.',
+      'The grove\'s test is not one of strength. It is one of truth. It show\'s you what you are, stripped of every lie you have ever told yourself. Many who enter strong leave broken, not by wound\'s, but by the weight of what they saw in their own reflection. Those who endure? The grove give\'s them secret\'s that can reshape the world.',
+    ],
   },
   whispering_caverns: {
     bg: '/backgrounds/whispering_caverns.png',
@@ -42,6 +60,12 @@ export const ZONE_CUTSCENES = {
       'Mining expeditions vanish regularly. Those who return speak of shapes moving just beyond torchlight.',
       'The whispers promise power to those brave enough to listen.'
     ],
+    extendedLore: [
+      'The cavern walls, all of which seem to glow in unison, as if a hivemind, whisper things. You can both make out, and not make out what they are saying. You can hear warnings, begging for help, and someone screaming. They all seem like the last words of those before you. You swear you recognize some of the voices.',
+      'Deep beneath the surface, as the light from the sun fade\'s, the light of lanterns and crystals grow. A somewhat sickly, and strangely beautiful, violet glow emerges in these dark places. They seem to draw people in, but upon further inspection, all the crystals are growing on the corpses of other adventure\'s.',
+      'Miner\'s, those who are brave, or FOOLISH enough, still venture deep into these mines to make some form of money. Rarely any return, but those who do? They are scared. Speaking of how "The shadow\'s have eye\'s", and from these a rumor appeared, that if you fail to look, your very own shadow will stab you in the back.',
+      'The voices grow, and they beckon...No. CHALLANG you. Promising power if you are brave enough to enter. You already had it decided you would enter, but an extra reward never hurt anyone, now did it adventure?',
+    ],
   },
   haunted_marsh: {
     bg: '/backgrounds/haunted_marsh.png',
@@ -52,6 +76,12 @@ export const ZONE_CUTSCENES = {
       'An entire Crusade battalion marched into this marsh during the Second War. None emerged.',
       'Their spirits still patrol the mire, attacking anything that moves with rusted blades and hollow screams.',
       'The marsh remembers every soul it has claimed. It is always hungry for more.'
+    ],
+    extendedLore: [
+      'The fog is alive. Not in the way poet\'s say the wind is alive, but truly, actively alive. It curl\'s around your limb\'s with purpose, testing your armor for gap\'s, pressing against your visor like finger\'s searching for your eye\'s. Those who have survived the marsh say the worst part is not the ghost\'s. It is the fog\'s curiosity.',
+      'The Crusade battalion that marched in numbered ten thousand. Their commander, General Aldric, was so confident he ordered the drummer\'s to keep playing as they advanced. The drumming lasted three hour\'s. Then it stopped, all at once, mid-beat. On quiet night\'s, you can still hear a single drum, somewhere deep in the mire, keeping perfect time.',
+      'The spirit\'s do not attack randomly. They form rank\'s, just as they did in life. Shield wall at the front, archer\'s behind, cavalry on the flank\'s. They execute military formation\'s with precision that no living army can match. Death, it seem\'s, perfected their discipline. They fight the same battle over and over, and if you wander into their path, you become the enemy they never defeated.',
+      'There is a place at the marsh\'s heart where the water is perfectly still and perfectly clear. You can see straight to the bottom, fifty feet down. And at the bottom, standing in row\'s, are soldier\'s. Thousand\'s of them, eye\'s open, weapon\'s drawn, waiting. The marsh does not digest what it claim\'s. It collect\'s. And one day, when it has enough, it will march them out.',
     ],
   },
   cursed_ruins: {
@@ -366,11 +396,28 @@ export const ZONE_CUTSCENES = {
 };
 
 export const CUTSCENE_STORAGE_KEY = 'grudge-zone-cutscenes-seen';
+const LORE_STORAGE_KEY = 'grudge-zone-lore-seen';
+
+const LORE_THRESHOLDS = [25, 50, 75, 100];
+
+export function getUnlockedLoreCount(conquerPercent) {
+  let count = 0;
+  for (const t of LORE_THRESHOLDS) {
+    if (conquerPercent >= t) count++;
+  }
+  return count;
+}
 
 export function getSeenCutscenes() {
   try {
     return JSON.parse(localStorage.getItem(CUTSCENE_STORAGE_KEY) || '[]');
   } catch { return []; }
+}
+
+export function getSeenLore() {
+  try {
+    return JSON.parse(localStorage.getItem(LORE_STORAGE_KEY) || '{}');
+  } catch { return {}; }
 }
 
 export function markCutsceneSeen(zoneId) {
@@ -381,10 +428,25 @@ export function markCutsceneSeen(zoneId) {
   }
 }
 
+export function markLoreSeen(zoneId, count) {
+  const seen = getSeenLore();
+  seen[zoneId] = Math.max(seen[zoneId] || 0, count);
+  localStorage.setItem(LORE_STORAGE_KEY, JSON.stringify(seen));
+}
+
 export function hasCutscene(zoneId) {
   return !!ZONE_CUTSCENES[zoneId];
 }
 
 export function needsCutscene(zoneId) {
   return hasCutscene(zoneId) && !getSeenCutscenes().includes(zoneId);
+}
+
+export function needsLoreCutscene(zoneId, conquerPercent) {
+  const cs = ZONE_CUTSCENES[zoneId];
+  if (!cs?.extendedLore) return false;
+  const unlocked = getUnlockedLoreCount(conquerPercent);
+  if (unlocked === 0) return false;
+  const seen = getSeenLore();
+  return unlocked > (seen[zoneId] || 0);
 }

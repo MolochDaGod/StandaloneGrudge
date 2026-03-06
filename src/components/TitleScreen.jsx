@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useGameStore from '../stores/gameStore';
 import { setBgm, getMusicMuted, setMusicMuted } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
+import { pullSave } from '../services/cloudSync';
 
 function TitleParticles() {
   const canvasRef = useRef(null);
@@ -178,6 +179,7 @@ export default function TitleScreen() {
   const [formPassword, setFormPassword] = useState('');
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [cloudRestore, setCloudRestore] = useState(null); // { data, source }
 
   const toggleMute = () => {
     const next = !muted;
@@ -201,6 +203,56 @@ export default function TitleScreen() {
     return () => clearTimeout(t1);
   }, []);
 
+  // Shared helper: authenticate with Puter → store session → try cloud pull
+  const completePuterAuth = async (user) => {
+    let grudgeId = null;
+    try {
+      const r = await fetch('/api/auth/puter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ puterUsername: user.username, puterUuid: user.uuid || null }),
+      });
+      const data = await r.json();
+      if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
+      grudgeId = data.user?.grudgeId || null;
+    } catch {}
+    const session = {
+      type: 'puter', puterUsername: user.username, username: user.username,
+      grudgeId, loginTime: Date.now(),
+    };
+    localStorage.setItem('grudge-session', JSON.stringify(session));
+
+    // Attempt cloud pull
+    try {
+      const pull = await pullSave();
+      if (pull.success && pull.data && pull.data.gameState) {
+        // Cloud save exists — check if local save also exists
+        const localSave = localStorage.getItem('grudge-warlords-storage');
+        if (localSave) {
+          // Both exist — offer choice
+          setCloudRestore({ data: pull.data.gameState, source: pull.source });
+          return; // don't navigate yet
+        } else {
+          // No local save — auto-restore from cloud
+          localStorage.setItem('grudge-warlords-storage', JSON.stringify({ state: pull.data.gameState, version: 4 }));
+        }
+      }
+    } catch {}
+    setScreen('intro');
+  };
+
+  const handleRestoreCloud = () => {
+    if (cloudRestore?.data) {
+      localStorage.setItem('grudge-warlords-storage', JSON.stringify({ state: cloudRestore.data, version: 4 }));
+      window.location.reload(); // reload to hydrate zustand from restored data
+    }
+  };
+
+  const handleKeepLocal = () => {
+    setCloudRestore(null);
+    setScreen('intro');
+  };
+
   const handleGrudgeLogin = async () => {
     if (!window.puter) {
       setShowLoginForm(true);
@@ -209,28 +261,14 @@ export default function TitleScreen() {
     setPuterLoading(true);
     try {
       if (puterUser) {
-        // Connect Puter user to DB
-        try {
-          const r = await fetch('/api/auth/puter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puterUsername: puterUser.username }) });
-          const data = await r.json();
-          if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
-        } catch {}
-        const session = { type: 'puter', puterUsername: puterUser.username, username: puterUser.username, loginTime: Date.now() };
-        localStorage.setItem('grudge-session', JSON.stringify(session));
-        setScreen('intro');
+        await completePuterAuth(puterUser);
+        setPuterLoading(false);
         return;
       }
       await window.puter.auth.signIn();
       const user = await window.puter.auth.getUser();
       setPuterUser(user);
-      try {
-        const r = await fetch('/api/auth/puter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puterUsername: user.username }) });
-        const data = await r.json();
-        if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
-      } catch {}
-      const session = { type: 'puter', puterUsername: user.username, username: user.username, loginTime: Date.now() };
-      localStorage.setItem('grudge-session', JSON.stringify(session));
-      setScreen('intro');
+      await completePuterAuth(user);
     } catch {}
     setPuterLoading(false);
   };
@@ -245,7 +283,7 @@ export default function TitleScreen() {
       const data = await r.json();
       if (!r.ok) { setFormError(data.error || 'Failed'); setFormLoading(false); return; }
       if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
-      const session = { type: 'grudge', username: data.user?.username || formUsername, accountId: data.user?.id, loginTime: Date.now() };
+      const session = { type: 'grudge', username: data.user?.username || formUsername, accountId: data.user?.id, grudgeId: data.user?.grudgeId || null, loginTime: Date.now() };
       localStorage.setItem('grudge-session', JSON.stringify(session));
       setScreen('intro');
     } catch { setFormError('Server unreachable'); }
@@ -474,6 +512,55 @@ export default function TitleScreen() {
         <span>&bull;</span>
         <span>&copy; 2026 Grudge Studio</span>
       </div>
+
+      {cloudRestore && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 50,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'rgba(15,15,25,0.95)', border: '2px solid rgba(250,172,71,0.4)',
+            borderRadius: 12, padding: '28px 32px', maxWidth: 420, width: '90%',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: '50%', margin: '0 auto 16px',
+              background: 'linear-gradient(135deg, rgba(147,197,253,0.2), rgba(59,130,246,0.2))',
+              border: '2px solid rgba(147,197,253,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.4rem',
+            }}>
+              ☁
+            </div>
+            <h3 className="font-cinzel" style={{ color: '#FAAC47', fontSize: '1.1rem', marginBottom: 8 }}>
+              Cloud Save Found
+            </h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: 20 }}>
+              You have save data in the cloud from <span style={{ color: '#93c5fd' }}>{cloudRestore.source || 'Puter KV'}</span>.
+              Would you like to restore it or keep your current local save?
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={handleRestoreCloud} style={{
+                background: 'linear-gradient(135deg, #3b82f6, #60a5fa)',
+                border: 'none', borderRadius: 8, color: '#fff', padding: '10px 24px',
+                cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700,
+                fontFamily: "'Cinzel', serif", letterSpacing: 1,
+              }}>
+                Restore Cloud Save
+              </button>
+              <button onClick={handleKeepLocal} style={{
+                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 8, color: '#94a3b8', padding: '10px 24px',
+                cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                fontFamily: "'Cinzel', serif", letterSpacing: 1,
+              }}>
+                Keep Local
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

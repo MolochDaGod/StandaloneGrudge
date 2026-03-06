@@ -215,7 +215,7 @@ async function registerCommands() {
 }
 
 function getDomain() {
-  return process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || 'grudgewarlords.com';
+  return 'grudgewarlords.com';
 }
 
 async function handleProfile(interaction) {

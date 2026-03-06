@@ -852,7 +852,9 @@ function HeroDetailPanel({ hero, onClose }) {
           const FULL_SLOT_LABELS = { weapon: 'Weapon', offhand: 'Off-Hand', helmet: 'Helmet', armor: 'Chest', feet: 'Feet', ring: 'Ring', relic: 'Relic' };
 
           const panelScale = 2.5;
-          const panelW = 96 * panelScale;
+          const panelImgW = 96;
+          const panelCropR = 8; // right-side bleed pixels to clip from sprite sheet
+          const panelW = (panelImgW - panelCropR) * panelScale;
           const panelH = 128 * panelScale;
           const slotPx = 20 * panelScale;
 
@@ -896,11 +898,12 @@ function HeroDetailPanel({ hero, onClose }) {
                     <div style={{
                       width: panelW, height: panelH,
                       backgroundImage: `url(${UI_PANELS.equipPanelSmall})`,
-                      backgroundSize: `${panelW}px ${panelH}px`,
+                      backgroundSize: `${panelImgW * panelScale}px ${panelH}px`,
+                      backgroundPosition: 'left top',
                       imageRendering: 'pixelated',
                       position: 'relative',
                       borderRadius: 4,
-                      overflow: 'visible',
+                      overflow: 'hidden',
                     }}>
                       {Object.entries(slotPositions).map(([slot, pos]) => (
                         <div key={slot} style={{

@@ -2,6 +2,12 @@ import express from 'express';
 import crypto from 'crypto';
 import pg from 'pg';
 
+// ── Grudge Studio modules ───────────────────────────────────────────────────
+import { DATASETS, fetchDataset, searchAll, getCacheStats, clearCache, puterKvManifest } from './lib/object-store.js';
+import * as UUID from './lib/uuid-service.js';
+import { listAgents, getAgentInfo, queryAgent } from './lib/ai-agents.js';
+import * as Puter from './lib/puter-service.js';
+
 const { Pool } = pg;
 
 const app = express();
@@ -196,6 +202,8 @@ async function ensureDB() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS grudge_username VARCHAR(64);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS password_hash VARCHAR(256);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS auth_type VARCHAR(32) DEFAULT 'discord';
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS grudge_id VARCHAR(32) UNIQUE;
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS puter_uuid VARCHAR(128);
     `);
     // Create unique index on grudge_username where not null
     await dbQuery(`
@@ -205,6 +213,43 @@ async function ensureDB() {
     _dbInitialized = true;
   } catch (err) {
     console.error('[DB] Init error:', err.message);
+  }
+}
+
+// ── Grudge ID Generator ─────────────────────────────────────────────────────
+function generateGrudgeId() {
+  return `GRUDGE-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+}
+
+async function ensureGrudgeId(accountId) {
+  const result = await dbQuery('SELECT grudge_id FROM accounts WHERE id = $1', [accountId]);
+  if (result.rows[0]?.grudge_id) return result.rows[0].grudge_id;
+  const grudgeId = generateGrudgeId();
+  await dbQuery('UPDATE accounts SET grudge_id = $1 WHERE id = $2', [grudgeId, accountId]);
+  return grudgeId;
+}
+
+// ── Auto Wallet Creation (Crossmint) ────────────────────────────────────────
+async function ensureWallet(account) {
+  if (account.wallet_address) return { address: account.wallet_address, chain: account.wallet_chain || 'solana', existing: true };
+  const CROSSMINT_KEY = (process.env.CROSSMINT_SERVER_API_KEY || '').trim();
+  if (!CROSSMINT_KEY) return null; // Crossmint not configured
+  try {
+    const linkedUser = `userId:${account.grudge_id || account.discord_id || account.id}`;
+    const walletRes = await fetch('https://www.crossmint.com/api/v1-alpha2/wallets', {
+      method: 'POST',
+      headers: { 'X-API-KEY': CROSSMINT_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ linkedUser, chain: 'solana' }),
+    });
+    const walletData = await walletRes.json();
+    const address = walletData.address || walletData.publicKey;
+    if (!address) { console.warn('[Wallet] Auto-create returned no address:', walletData); return null; }
+    await dbQuery('UPDATE accounts SET wallet_address=$1, wallet_chain=$2, wallet_created_at=NOW() WHERE id=$3', [address, 'solana', account.id]);
+    console.log(`[Wallet] Auto-created Solana wallet for ${account.username}: ${address}`);
+    return { address, chain: 'solana', existing: false };
+  } catch (err) {
+    console.warn('[Wallet] Auto-create failed:', err.message);
+    return null;
   }
 }
 
@@ -224,13 +269,15 @@ app.use((req, res, next) => {
 
   const origin = req.headers.origin || '';
   const isPuterOrigin = origin.endsWith('.puter.com') || origin === 'https://puter.com';
+  const isVercelOrigin = origin.endsWith('.vercel.app');
+  const isPuterSite = origin.endsWith('.puter.site');
   const isSameOrigin = origin === `https://${req.headers.host}`;
-  const isAllowed = ALLOWED_ORIGINS.includes(origin) || isPuterOrigin || isSameOrigin;
+  const isAllowed = ALLOWED_ORIGINS.includes(origin) || isPuterOrigin || isVercelOrigin || isPuterSite || isSameOrigin;
 
   if (origin && isAllowed) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token, X-Admin-Token, X-Api-Key');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Token, X-Admin-Token, X-Api-Key, X-Puter-Token');
     res.header('Access-Control-Allow-Credentials', 'true');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
   }
@@ -301,8 +348,11 @@ app.post('/api/auth/register', async (req, res) => {
       [username.toLowerCase(), username, hashed]
     );
     const account = result.rows[0];
+    const grudgeId = await ensureGrudgeId(account.id);
+    const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
     const jwt = createJWT({
       accountId: account.id,
+      grudgeId,
       username: account.username,
       grudgeUsername: account.grudge_username,
       authType: 'grudge',
@@ -310,7 +360,8 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({
       success: true,
       sessionToken: jwt,
-      user: { id: account.id, username: account.username, grudgeUsername: account.grudge_username, authType: 'grudge' },
+      user: { id: account.id, grudgeId, username: account.username, grudgeUsername: account.grudge_username, authType: 'grudge' },
+      wallet: wallet || undefined,
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -333,9 +384,12 @@ app.post('/api/auth/login', async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid username or password' });
 
     await dbQuery('UPDATE accounts SET last_login = NOW() WHERE id = $1', [account.id]);
+    const grudgeId = await ensureGrudgeId(account.id);
 
+    const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
     const jwt = createJWT({
       accountId: account.id,
+      grudgeId,
       username: account.username,
       grudgeUsername: account.grudge_username,
       discordId: account.discord_id,
@@ -346,11 +400,13 @@ app.post('/api/auth/login', async (req, res) => {
       sessionToken: jwt,
       user: {
         id: account.id,
+        grudgeId,
         username: account.username,
         grudgeUsername: account.grudge_username,
         discordId: account.discord_id,
         authType: 'grudge',
       },
+      wallet: wallet || undefined,
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -361,25 +417,36 @@ app.post('/api/auth/login', async (req, res) => {
 // ── AUTH: Puter ─────────────────────────────────────────────────────────────
 app.post('/api/auth/puter', async (req, res) => {
   try {
-    const { puterUsername } = req.body;
+    const { puterUsername, puterUuid } = req.body;
     if (!puterUsername) return res.status(400).json({ error: 'puterUsername required' });
 
     const existing = await dbQuery('SELECT * FROM accounts WHERE grudge_username = $1', [puterUsername.toLowerCase()]);
     let account;
     if (existing.rows[0]) {
       account = existing.rows[0];
-      await dbQuery('UPDATE accounts SET last_login = NOW() WHERE id = $1', [account.id]);
+      const updates = ['last_login = NOW()'];
+      const params = [];
+      if (puterUuid && !account.puter_uuid) {
+        params.push(puterUuid);
+        updates.push(`puter_uuid = $${params.length}`);
+      }
+      params.push(account.id);
+      await dbQuery(`UPDATE accounts SET ${updates.join(', ')} WHERE id = $${params.length}`, params);
     } else {
+      const grudgeId = generateGrudgeId();
       const result = await dbQuery(
-        `INSERT INTO accounts (grudge_username, username, auth_type, last_login)
-         VALUES ($1, $2, 'puter', NOW()) RETURNING *`,
-        [puterUsername.toLowerCase(), puterUsername]
+        `INSERT INTO accounts (grudge_username, username, auth_type, grudge_id, puter_uuid, last_login)
+         VALUES ($1, $2, 'puter', $3, $4, NOW()) RETURNING *`,
+        [puterUsername.toLowerCase(), puterUsername, grudgeId, puterUuid || null]
       );
       account = result.rows[0];
     }
 
+    const grudgeId = await ensureGrudgeId(account.id);
+    const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
     const jwt = createJWT({
       accountId: account.id,
+      grudgeId,
       username: account.username,
       grudgeUsername: account.grudge_username,
       discordId: account.discord_id,
@@ -390,11 +457,13 @@ app.post('/api/auth/puter', async (req, res) => {
       sessionToken: jwt,
       user: {
         id: account.id,
+        grudgeId,
         username: account.username,
         grudgeUsername: account.grudge_username,
         discordId: account.discord_id,
         authType: 'puter',
       },
+      wallet: wallet || undefined,
     });
   } catch (err) {
     console.error('Puter auth error:', err);
@@ -411,6 +480,7 @@ app.post('/api/auth/verify', (req, res) => {
   res.json({
     valid: true,
     accountId: payload.accountId,
+    grudgeId: payload.grudgeId,
     discordId: payload.discordId,
     username: payload.username,
     grudgeUsername: payload.grudgeUsername,
@@ -1366,6 +1436,271 @@ app.get('/api/discord/invite', async (req, res) => {
     const invite = await inviteRes.json();
     res.json({ invite: `https://discord.gg/${invite.code}` });
   } catch (err) { res.status(500).json({ error: 'Could not create invite' }); }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── GRUDGE STUDIO PLATFORM  /api/studio/* ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Studio: Platform Status ─────────────────────────────────────────────────
+app.get('/api/studio/status', async (req, res) => {
+  let dbOk = false;
+  try { await dbQuery('SELECT 1'); dbOk = true; } catch { /* no db */ }
+  const puterHealth = await Puter.healthCheck();
+  const osCache = getCacheStats();
+  res.json({
+    platform: 'grudge-studio',
+    version: '1.0.0',
+    timestamp: Date.now(),
+    services: {
+      database: { available: dbOk },
+      objectStore: { available: true, datasets: osCache.totalDatasets, cached: osCache.cachedCount },
+      ai: { agents: listAgents().length, serverSide: !!process.env.PUTER_API_TOKEN },
+      puter: puterHealth,
+      uuid: { entityTypes: Object.keys(UUID.PREFIX_MAP).length },
+    },
+    endpoints: {
+      gameData: '/api/studio/game-data/:resource',
+      search: '/api/studio/game-data/search?q=&type=&limit=',
+      ai: '/api/studio/ai/agents',
+      uuid: '/api/studio/uuid/generate',
+      sync: '/api/studio/sync/push | /api/studio/sync/pull',
+      kv: '/api/studio/kv/get | /api/studio/kv/set',
+    },
+  });
+});
+
+// ── Studio: ObjectStore Game Data ───────────────────────────────────────────
+app.get('/api/studio/game-data/catalog', (req, res) => {
+  res.json({
+    datasets: DATASETS,
+    count: DATASETS.length,
+    source: 'https://molochdagod.github.io/ObjectStore',
+    cache: getCacheStats(),
+    puterKv: puterKvManifest(),
+  });
+});
+
+app.get('/api/studio/game-data/search', async (req, res) => {
+  const { q, type, limit } = req.query;
+  if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+  try {
+    const results = await searchAll(q, { type, limit });
+    res.json({ query: q, type: type || 'all', count: results.length, results });
+  } catch (err) {
+    res.status(500).json({ error: 'Search failed', message: err.message });
+  }
+});
+
+app.get('/api/studio/game-data/:resource', async (req, res) => {
+  const { resource } = req.params;
+  try {
+    const data = await fetchDataset(resource);
+    if (!data) return res.status(404).json({ error: 'Unknown dataset', available: DATASETS });
+    res.json({ dataset: resource, data, puterKvKey: Puter.KV_KEYS.objectStore(resource) });
+  } catch (err) {
+    res.status(502).json({ error: 'ObjectStore fetch failed', message: err.message });
+  }
+});
+
+// ── Studio: AI Agents ───────────────────────────────────────────────────────
+app.get('/api/studio/ai/agents', (req, res) => {
+  res.json({ agents: listAgents(), count: listAgents().length });
+});
+
+app.get('/api/studio/ai/agents/:type', (req, res) => {
+  const info = getAgentInfo(req.params.type);
+  if (!info) return res.status(404).json({ error: 'Unknown agent', available: listAgents().map(a => a.type) });
+  res.json(info);
+});
+
+app.post('/api/studio/ai/query', async (req, res) => {
+  const { agentType, prompt, options } = req.body;
+  if (!agentType || !prompt) return res.status(400).json({ error: 'agentType and prompt required', available: listAgents().map(a => a.type) });
+  try {
+    const result = await queryAgent(agentType, prompt, options || {});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'AI query failed', message: err.message });
+  }
+});
+
+// ── Studio: UUID Service ────────────────────────────────────────────────────
+app.get('/api/studio/uuid/types', (req, res) => {
+  res.json({
+    types: Object.entries(UUID.PREFIX_MAP).map(([type, prefix]) => ({
+      type, prefix, example: UUID.generate(type, 'example'),
+    })),
+  });
+});
+
+app.post('/api/studio/uuid/generate', (req, res) => {
+  const { type = 'item', count = 1, metadata = '' } = req.body;
+  const n = Math.min(parseInt(count) || 1, 100);
+  const uuids = [];
+  for (let i = 0; i < n; i++) uuids.push(UUID.generate(type, metadata));
+  res.json({ type, count: uuids.length, uuids });
+});
+
+app.post('/api/studio/uuid/validate', (req, res) => {
+  const { uuid } = req.body;
+  if (!uuid) return res.status(400).json({ error: 'uuid required' });
+  res.json({ uuid, valid: UUID.isValid(uuid), parsed: UUID.isValid(uuid) ? UUID.parse(uuid) : null });
+});
+
+// ── Studio: Puter KV Store ──────────────────────────────────────────────────
+// Clients pass their Puter auth token via X-Puter-Token header
+
+app.post('/api/studio/kv/set', async (req, res) => {
+  const { key, value } = req.body;
+  if (!key) return res.status(400).json({ error: 'key required' });
+  const result = await Puter.kvSet(key, value, req);
+  res.json(result);
+});
+
+app.post('/api/studio/kv/get', async (req, res) => {
+  const { key } = req.body;
+  if (!key) return res.status(400).json({ error: 'key required' });
+  const result = await Puter.kvGet(key, req);
+  res.json(result);
+});
+
+app.post('/api/studio/kv/del', async (req, res) => {
+  const { key } = req.body;
+  if (!key) return res.status(400).json({ error: 'key required' });
+  const result = await Puter.kvDel(key, req);
+  res.json(result);
+});
+
+app.post('/api/studio/kv/list', async (req, res) => {
+  const { pattern } = req.body;
+  const result = await Puter.kvList(pattern || 'grudge:*', req);
+  res.json(result);
+});
+
+// ── Studio: Sync (DB + Puter KV dual-write) ─────────────────────────────────
+app.post('/api/studio/sync/push', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.accountId || req.session.discordId;
+    const { heroes, island, preferences, gameState } = req.body;
+
+    // 1. Save to PostgreSQL (existing DB system)
+    const account = req.session.accountId
+      ? (await dbQuery('SELECT * FROM accounts WHERE id = $1', [req.session.accountId])).rows[0]
+      : (await dbQuery('SELECT * FROM accounts WHERE discord_id = $1', [req.session.discordId])).rows[0];
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+
+    await dbQuery('UPDATE accounts SET updated_at = NOW() WHERE id = $1', [account.id]);
+
+    // 2. Push to Puter KV (if client provided Puter token)
+    let puterResult = { ok: false, reason: 'no_puter_token' };
+    const puterToken = req.headers['x-puter-token'];
+    if (puterToken) {
+      puterResult = await Puter.syncPush(accountId, {
+        heroes, island, preferences, gameState,
+        accountId: account.id,
+        username: account.username,
+      }, puterToken);
+
+      // Also cache account metadata in Puter KV
+      await Puter.kvSet(Puter.KV_KEYS.account(accountId), {
+        id: account.id,
+        username: account.username,
+        grudgeUsername: account.grudge_username,
+        authType: account.auth_type,
+        lastSync: Date.now(),
+      }, puterToken);
+
+      // Cache preferences separately
+      if (preferences) {
+        await Puter.kvSet(Puter.KV_KEYS.prefs(accountId), preferences, puterToken);
+      }
+    }
+
+    res.json({
+      success: true,
+      accountId: account.id,
+      db: { synced: true },
+      puter: puterResult,
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    console.error('[Studio Sync Push]', err);
+    res.status(500).json({ error: 'Sync push failed', message: err.message });
+  }
+});
+
+app.post('/api/studio/sync/pull', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.accountId || req.session.discordId;
+
+    // Try Puter KV first (fastest, user-local)
+    const puterToken = req.headers['x-puter-token'];
+    if (puterToken) {
+      const puterData = await Puter.syncPull(accountId, puterToken);
+      if (puterData.ok && puterData.value) {
+        return res.json({ source: 'puter-kv', data: puterData.value, timestamp: Date.now() });
+      }
+    }
+
+    // Fallback to PostgreSQL
+    const account = req.session.accountId
+      ? (await dbQuery('SELECT * FROM accounts WHERE id = $1', [req.session.accountId])).rows[0]
+      : (await dbQuery('SELECT * FROM accounts WHERE discord_id = $1', [req.session.discordId])).rows[0];
+    if (!account) return res.json({ source: 'db', found: false });
+
+    const charsResult = await dbQuery('SELECT * FROM characters WHERE account_id = $1 ORDER BY slot_index', [account.id]);
+    const heroes = charsResult.rows.map(c => ({
+      name: c.name, raceId: c.race_id, classId: c.class_id, level: c.level,
+      experience: c.experience, attributePoints: c.attribute_points || {},
+      abilities: c.abilities || [], skillTree: c.skill_tree || {},
+      isActive: c.is_active,
+    }));
+
+    const islandResult = await dbQuery('SELECT * FROM islands WHERE account_id = $1 LIMIT 1', [account.id]);
+    const island = islandResult.rows[0] ? {
+      name: islandResult.rows[0].name,
+      zoneData: islandResult.rows[0].zone_data || {},
+      conquerProgress: islandResult.rows[0].conquer_progress || {},
+    } : null;
+
+    res.json({
+      source: 'db',
+      data: {
+        accountId: account.id, username: account.username,
+        heroes, island,
+        gold: account.gold, resources: account.resources,
+      },
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    console.error('[Studio Sync Pull]', err);
+    res.status(500).json({ error: 'Sync pull failed', message: err.message });
+  }
+});
+
+// ── Studio: Cache ObjectStore → Puter KV ────────────────────────────────────
+app.post('/api/studio/cache/objectstore', async (req, res) => {
+  const { datasets } = req.body; // array of dataset names, or omit for all
+  const targets = Array.isArray(datasets) ? datasets.filter(d => DATASETS.includes(d)) : DATASETS;
+  const puterToken = req.headers['x-puter-token'];
+  if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token header required to cache to Puter KV' });
+
+  const results = {};
+  for (const ds of targets) {
+    try {
+      const data = await fetchDataset(ds);
+      if (data) {
+        const r = await Puter.cacheObjectStoreDataset(ds, data, puterToken);
+        results[ds] = r.ok ? 'cached' : r.error;
+      } else {
+        results[ds] = 'fetch_failed';
+      }
+    } catch (err) {
+      results[ds] = err.message;
+    }
+  }
+  res.json({ cached: Object.values(results).filter(v => v === 'cached').length, total: targets.length, results });
 });
 
 export default app;

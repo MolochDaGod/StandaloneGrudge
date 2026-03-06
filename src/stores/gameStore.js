@@ -13,6 +13,7 @@ import { getDefaultRow, getRowPositions, applyRowCombatModifiers, getAdjacentRow
 import { getSavedBattleRow, getSavedBattleColumn } from '../utils/battlePositionsStorage';
 import { adminConfig } from '../utils/adminConfig';
 import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS, namedHeroes } from '../data/spriteMap';
+import { schedulePush, isLoggedIn as cloudIsLoggedIn } from '../services/cloudSync';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -1167,6 +1168,75 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  /**
+   * Start a REAL visual arena battle against a saved ranked team.
+   * @param {{ teamId, challengeToken, ownerName, heroes: Array<{name,raceId,classId,level}> }} teamData
+   */
+  startArenaChallenge: (teamData) => {
+    const state = get();
+    const { teamId, challengeToken, ownerName, heroes } = teamData;
+    if (!heroes || heroes.length === 0) return;
+
+    const primaryHero = state.heroRoster.find(h => h.id === 'player');
+    if (primaryHero) {
+      primaryHero.currentHealth = state.playerHealth;
+      primaryHero.currentMana = state.playerMana;
+      primaryHero.currentStamina = state.playerStamina;
+      primaryHero.level = state.level;
+      primaryHero.attributePoints = { ...state.attributePoints };
+    }
+
+    const playerTeam = [];
+    for (const heroId of state.activeHeroIds) {
+      const hero = state.heroRoster.find(h => h.id === heroId);
+      if (hero) {
+        const unit = createHeroBattleUnit(hero);
+        if (unit) playerTeam.push(unit);
+      }
+    }
+    if (playerTeam.length === 0) return;
+
+    // Build real enemy units from the saved arena heroes' race/class/level
+    const enemyUnits = heroes.map(h => {
+      const unit = createRaceClassEnemy(
+        h.raceId || 'human',
+        h.classId || 'warrior',
+        h.level || 1,
+        { name: h.name || 'Arena Champion' }
+      );
+      return unit;
+    }).filter(Boolean);
+
+    if (enemyUnits.length === 0) return;
+
+    const allUnits = [...playerTeam, ...enemyUnits];
+    assignRowsAndPositions(playerTeam, enemyUnits);
+
+    const turnOrder = [...allUnits].sort((a, b) => b.speed - a.speed).map(u => u.id);
+    const mainUnit = playerTeam.find(u => u.id === 'player') || playerTeam[0];
+
+    set({
+      screen: 'battle',
+      battleState: {
+        phase: 'intro', turnCount: 0, isBoss: false,
+        isArenaChallenge: true, arenaTeamId: teamId, arenaChallengeToken: challengeToken, arenaOwnerName: ownerName,
+      },
+      battleUnits: allUnits,
+      battleTurnOrder: turnOrder,
+      battleCurrentTurn: 0,
+      selectedTargetId: enemyUnits[0]?.id || null,
+      lastAction: null,
+      battleLog: [
+        `ARENA CHALLENGE: vs ${ownerName || 'Unknown Warlord'}`,
+        `${enemyUnits.length} champion${enemyUnits.length > 1 ? 's' : ''} enter the arena!`,
+      ],
+      playerHealth: mainUnit.health, playerMaxHealth: mainUnit.maxHealth,
+      playerMana: mainUnit.mana, playerMaxMana: mainUnit.maxMana,
+      playerStamina: mainUnit.stamina, playerMaxStamina: mainUnit.maxStamina,
+      cooldowns: {}, floatingTexts: [],
+    });
+  },
+
   setSelectedTarget: (unitId) => set({ selectedTargetId: unitId }),
 
   advanceTurn: () => {
@@ -1370,7 +1440,7 @@ const useGameStore = create(persist((set, get) => ({
     const state = get();
     const bs = state.battleState;
     if (!bs || bs.phase !== 'player_turn') return;
-    if (bs.isTraining || bs.isMission || bs.isArena) {
+    if (bs.isTraining || bs.isMission || bs.isArena || bs.isArenaChallenge) {
       set({ battleLog: [...state.battleLog, 'You cannot flee from this battle!'].slice(-12) });
       return;
     }
@@ -2136,6 +2206,82 @@ const useGameStore = create(persist((set, get) => ({
       return;
     }
 
+    if (state.battleState?.isArenaChallenge) {
+      const enemyUnits = state.battleUnits.filter(u => u.team === 'enemy');
+      const totalXp = enemyUnits.reduce((sum, e) => sum + (e.xpReward || 0), 0);
+      const totalGold = Math.floor(enemyUnits.reduce((sum, e) => sum + (e.goldReward || 0), 0) * 0.1);
+
+      // Fire-and-forget: report result to API (challenger won = defender's team lost)
+      const { arenaTeamId, arenaChallengeToken, arenaOwnerName } = state.battleState;
+      fetch('/api/arena/battle/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: arenaTeamId, challengeToken: arenaChallengeToken, result: 'team_lost', challengerName: state.playerName }),
+      }).catch(() => {});
+
+      let newXp = state.xp + totalXp;
+      let newLevel = state.level;
+      let newXpToNext = state.xpToNext;
+      let newUnspent = state.unspentPoints;
+      let newSkillPoints = state.skillPoints;
+      let log = [...state.battleLog];
+
+      while (newXp >= newXpToNext && newLevel < 20) {
+        newXp -= newXpToNext;
+        newLevel++;
+        newXpToNext = Math.floor(newXpToNext * 1.4);
+        newUnspent += POINTS_PER_LEVEL;
+        newSkillPoints += 1;
+        log.push(`LEVEL UP! You are now level ${newLevel}!`);
+      }
+
+      log.push(`ARENA CHALLENGE WON vs ${arenaOwnerName || 'Unknown'}!`);
+      log.push(`Earned ${totalXp} XP and ${totalGold} Gold.`);
+
+      const levelsGained = newLevel - state.level;
+      const playerUnit = state.battleUnits.find(u => u.id === 'player');
+      const updatedRoster = state.heroRoster.map(hero => {
+        const battleUnit = state.battleUnits.find(u => u.id === hero.id);
+        const updates = {};
+        if (battleUnit) {
+          updates.currentHealth = battleUnit.health;
+          updates.currentMana = battleUnit.mana;
+          updates.currentStamina = battleUnit.stamina;
+          const rec = hero.battleRecord || { wins: 0, losses: 0, kills: 0, bossKills: 0, damageDealt: 0, healingDone: 0 };
+          updates.battleRecord = { ...rec, wins: rec.wins + 1 };
+        }
+        if (hero.id === 'player') {
+          updates.level = newLevel;
+          updates.attributePoints = { ...state.attributePoints };
+          updates.unspentPoints = newUnspent;
+          updates.skillPoints = newSkillPoints;
+        } else if (levelsGained > 0) {
+          const heroNewLevel = Math.min(20, hero.level + levelsGained);
+          const heroLevelsUp = heroNewLevel - hero.level;
+          if (heroLevelsUp > 0) {
+            updates.level = heroNewLevel;
+            updates.unspentPoints = (hero.unspentPoints || 0) + (heroLevelsUp * POINTS_PER_LEVEL);
+            updates.skillPoints = (hero.skillPoints || 0) + heroLevelsUp;
+          }
+        }
+        return { ...hero, ...updates };
+      });
+
+      set({
+        battleState: { ...state.battleState, phase: 'victory' },
+        xp: newXp, level: newLevel, xpToNext: newXpToNext,
+        gold: state.gold + totalGold,
+        unspentPoints: newUnspent, skillPoints: newSkillPoints,
+        victories: state.victories + 1,
+        heroRoster: updatedRoster,
+        battleLog: log.slice(-12),
+        playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
+        playerMana: playerUnit ? playerUnit.mana : state.playerMana,
+        playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
+      });
+      return;
+    }
+
     if (state.battleState?.isArena) {
       const arena = arenaTemplates.find(a => a.id === state.battleState.arenaId);
       const arenaRewards = arena ? arena.rewards : { xp: 0, gold: 0 };
@@ -2388,6 +2534,17 @@ const useGameStore = create(persist((set, get) => ({
 
   handleDefeat: () => {
     const state = get();
+
+    // Report arena challenge loss to API (challenger lost = defender's team won)
+    if (state.battleState?.isArenaChallenge) {
+      const { arenaTeamId, arenaChallengeToken } = state.battleState;
+      fetch('/api/arena/battle/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: arenaTeamId, challengeToken: arenaChallengeToken, result: 'team_won', challengerName: state.playerName }),
+      }).catch(() => {});
+    }
+
     const updatedRoster = state.heroRoster.map(hero => {
       const battleUnit = state.battleUnits.find(u => u.id === hero.id);
       if (battleUnit) {
@@ -3213,7 +3370,7 @@ const useGameStore = create(persist((set, get) => ({
     }
     if (playerTeam.length === 0) return;
 
-    const enemyTemplateId = round === 1 ? 'goblin' : 'skeleton';
+    const enemyTemplateId = 'goblin';
     const enemyCount = round === 1 ? 1 : 2;
     const enemyUnits = [];
     for (let i = 0; i < enemyCount; i++) {
@@ -3247,7 +3404,7 @@ const useGameStore = create(persist((set, get) => ({
       selectedTargetId: enemyUnits[0]?.id || null,
       lastAction: null,
       battleLog: [round === 1
-        ? 'Training Round 1: Defeat the practice dummy! Use abilities 1-5 to attack.'
+        ? 'Training Round 1: Defeat the goblin! Use abilities 1-5 to attack.'
         : 'Training Round 2: Fight alongside your team! Coordinate your heroes.'],
       playerHealth: mainUnit.health,
       playerMaxHealth: mainUnit.maxHealth,
@@ -3566,6 +3723,27 @@ const useGameStore = create(persist((set, get) => ({
     pirateShopLastRefresh: state.pirateShopLastRefresh,
   }),
 }));
+
+// ── Cloud Sync: auto-push on state changes ──────────────────────────────────
+const _partialize = (state) => ({
+  screen: state.screen === 'battle' ? 'world' : state.screen,
+  playerName: state.playerName, playerRace: state.playerRace, playerClass: state.playerClass,
+  level: state.level, xp: state.xp, gold: state.gold,
+  heroRoster: state.heroRoster, activeHeroIds: state.activeHeroIds,
+  inventory: state.inventory, zoneConquer: state.zoneConquer,
+  completedQuests: state.completedQuests, harvestResources: state.harvestResources,
+  victories: state.victories, losses: state.losses, bossesDefeated: state.bossesDefeated,
+});
+
+useGameStore.subscribe((state, prevState) => {
+  // Only push if meaningful game state changed (not transient UI like screen)
+  if (!cloudIsLoggedIn()) return;
+  const keys = ['heroRoster', 'inventory', 'gold', 'level', 'zoneConquer', 'completedQuests', 'harvestResources', 'victories', 'losses', 'bossesDefeated'];
+  const changed = keys.some(k => state[k] !== prevState[k]);
+  if (changed) {
+    schedulePush(() => _partialize(useGameStore.getState()));
+  }
+});
 
 export default useGameStore;
 export { getHeroSkillBonuses, getHeroStatsWithBonuses };

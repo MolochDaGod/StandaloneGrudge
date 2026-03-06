@@ -137,7 +137,7 @@ export function getRowPositions(units, side) {
 
   if (side === 'player') {
     const rowXBase = { protection: 22, battle: 32, back: 18 };
-    const rowYBase = { protection: 88, battle: 88, back: 88 };
+    const rowYBase = { protection: 70, battle: 70, back: 70 };
     rows.forEach(row => {
       const ru = rowUnits[row];
       const xBase = rowXBase[row];
@@ -158,7 +158,7 @@ export function getRowPositions(units, side) {
     });
   } else {
     const rowXBase = { charge: 55, vanguard: 65, formation: 74 };
-    const rowYBase = { charge: 88, vanguard: 88, formation: 88 };
+    const rowYBase = { charge: 70, vanguard: 70, formation: 70 };
     rows.forEach(row => {
       const ru = rowUnits[row];
       const xBase = rowXBase[row];

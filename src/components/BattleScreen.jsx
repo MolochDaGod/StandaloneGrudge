@@ -2982,9 +2982,10 @@ function BattleScreenInner() {
               {isSelected && unit.alive && (
                 <div style={{
                   position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
-                  width: 50, height: 12, borderRadius: '50%',
+                  width: 60, height: 16, borderRadius: '50%',
                   background: 'rgba(239,68,68,0.35)',
                   border: '2px solid var(--danger)',
+                  boxShadow: '0 0 12px rgba(239,68,68,0.4), inset 0 0 6px rgba(239,68,68,0.2)',
                   animation: 'pulse 1s infinite',
                   zIndex: 15,
                 }} />
@@ -2992,8 +2993,8 @@ function BattleScreenInner() {
 
               <div style={{
                 position: 'absolute', bottom: spriteLayout.shadow.offsetY - 2, left: '50%', transform: 'translateX(-50%)',
-                width: spriteLayout.shadow.width, height: spriteLayout.shadow.height, borderRadius: '50%',
-                background: 'radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%)',
+                width: spriteLayout.shadow.width + 8, height: spriteLayout.shadow.height + 2, borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 50%, transparent 75%)',
                 zIndex: 1,
               }} />
 
@@ -3011,7 +3012,7 @@ function BattleScreenInner() {
                 <div style={{
                   fontSize: '0.75rem', fontWeight: 600,
                   color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 65,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90,
                   marginBottom: 1,
                 }}>
                   {unit.name}

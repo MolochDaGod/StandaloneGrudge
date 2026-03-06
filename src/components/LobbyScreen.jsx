@@ -11,6 +11,7 @@ import {
 import adminConfig from '../utils/adminConfig';
 import GrudgeOnlinePage from './GrudgeOnlinePage';
 import HeroCodexTab from './HeroCodexTab';
+import { pullSave, forcePush, getLastSync, isLoggedIn as cloudIsLoggedIn } from '../services/cloudSync';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -326,12 +327,13 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
   const [showWallet, setShowWallet] = useState(false);
 
   useEffect(() => {
+    const sessionToken = localStorage.getItem('grudge_session_token');
     const session = (() => { try { return JSON.parse(localStorage.getItem('grudge-session') || '{}'); } catch { return {}; } })();
-    if (!session.token || session.type !== 'discord') {
+    if (!sessionToken || session.type === 'guest') {
       setWalletState({ loading: false, hasWallet: false, wallet: null, error: null, creating: false });
       return;
     }
-    fetch('/api/wallet/status', { headers: { 'x-session-token': session.token } })
+    fetch('/api/wallet/status', { headers: { 'x-session-token': sessionToken } })
       .then(r => r.json())
       .then(data => {
         setWalletState({ loading: false, hasWallet: data.hasWallet, wallet: data.wallet || null, error: null, creating: false });
@@ -340,13 +342,13 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
   }, []);
 
   const createWallet = async () => {
-    const session = (() => { try { return JSON.parse(localStorage.getItem('grudge-session') || '{}'); } catch { return {}; } })();
-    if (!session.token) return;
+    const sessionToken = localStorage.getItem('grudge_session_token');
+    if (!sessionToken) return;
     setWalletState(s => ({ ...s, creating: true, error: null }));
     try {
       const res = await fetch('/api/wallet/create', {
         method: 'POST',
-        headers: { 'x-session-token': session.token, 'Content-Type': 'application/json' },
+        headers: { 'x-session-token': sessionToken, 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -496,7 +498,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
                   borderRadius: 10, padding: 16, marginBottom: 16, textAlign: 'center',
                 }}>
                   <div style={{ color: '#c4b998', fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 4 }}>
-                    Create a Solana wallet linked to your Discord account. This wallet will hold your GBUX tokens and in-game assets.
+                  Create a Solana wallet linked to your Grudge account. This wallet will hold your GBUX tokens and in-game assets.
                   </div>
                 </div>
                 {walletState.error && (
@@ -514,7 +516,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
                   {walletState.creating ? 'Creating Wallet...' : 'Create Solana Wallet'}
                 </button>
                 <div style={{ color: '#6b7280', fontSize: '0.6rem', textAlign: 'center', marginTop: 10 }}>
-                  Requires Discord login &bull; Powered by Crossmint
+                  Requires login &bull; Powered by Crossmint
                 </div>
               </div>
             )}
@@ -2384,6 +2386,8 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const [puterUser, setPuterUser] = useState(null);
   const [puterLoading, setPuterLoading] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | synced | error
+  const [lastSyncTime, setLastSyncTime] = useState(() => getLastSync()?.timestamp || null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
@@ -2429,13 +2433,53 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
       await window.puter.auth.signIn();
       const user = await window.puter.auth.getUser();
       setPuterUser(user);
+      // Auth with backend to get/create Grudge ID
+      let grudgeId = null;
+      try {
+        const r = await fetch('/api/auth/puter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ puterUsername: user.username, puterUuid: user.uuid || null }),
+        });
+        const data = await r.json();
+        if (data.sessionToken) localStorage.setItem('grudge_session_token', data.sessionToken);
+        grudgeId = data.user?.grudgeId || null;
+      } catch {}
       const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
       s.type = 'puter';
       s.puterUsername = user.username;
+      if (grudgeId) s.grudgeId = grudgeId;
       s.loginTime = Date.now();
       localStorage.setItem('grudge-session', JSON.stringify(s));
     } catch {}
     setPuterLoading(false);
+  };
+
+  const handleSyncNow = async () => {
+    setSyncStatus('syncing');
+    try {
+      const state = useGameStore.getState();
+      const partialState = {
+        playerName: state.playerName, playerRace: state.playerRace, playerClass: state.playerClass,
+        level: state.level, xp: state.xp, gold: state.gold,
+        heroRoster: state.heroRoster, activeHeroIds: state.activeHeroIds,
+        inventory: state.inventory, zoneConquer: state.zoneConquer,
+        completedQuests: state.completedQuests, harvestResources: state.harvestResources,
+        victories: state.victories, losses: state.losses, bossesDefeated: state.bossesDefeated,
+      };
+      const result = await forcePush(() => partialState);
+      if (result.success) {
+        setSyncStatus('synced');
+        setLastSyncTime(result.timestamp || Date.now());
+        setTimeout(() => setSyncStatus('idle'), 3000);
+      } else {
+        setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 4000);
+      }
+    } catch {
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 4000);
+    }
   };
 
   const handlePuterLogout = () => {
@@ -2617,13 +2661,50 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
 
       <div style={{ ...panelStyle }}>
         {sectionTitle('Profile Info')}
+        {session.grudgeId && (
+          <AccountInfoRow icon="CheckCircle" label="Grudge ID" value={session.grudgeId} valueColor="#FAAC47" />
+        )}
         <AccountInfoRow icon="Cloud" label="Login Method" value={isDiscordConnected ? 'Discord' : isPuterConnected ? 'Puter' : 'Guest'} valueColor={isDiscordConnected ? '#5865F2' : isPuterConnected ? '#93c5fd' : '#FAAC47'} />
         <AccountInfoRow icon="CheckCircle" label="Status" value="Active" valueColor="#6ee7b7" />
-        <AccountInfoRow icon="File" label="Save Data" value={hasExistingSave ? 'Local Storage' : 'No save'} valueColor={hasExistingSave ? '#6ee7b7' : '#ef4444'} />
+        <AccountInfoRow icon="File" label="Save Data" value={hasExistingSave ? 'Local + Cloud' : 'No save'} valueColor={hasExistingSave ? '#6ee7b7' : '#ef4444'} />
         {session.loginTime && (
           <AccountInfoRow icon="Clock" label="Session Started" value={new Date(session.loginTime).toLocaleString()} />
         )}
       </div>
+
+      {(isPuterConnected || isDiscordConnected) && (
+        <div style={{ ...panelStyle }}>
+          {sectionTitle('Cloud Save')}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <div style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 600, marginBottom: 4 }}>
+                {syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'synced' ? 'Synced!' : syncStatus === 'error' ? 'Sync Failed' : 'Auto-sync enabled'}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>
+                {lastSyncTime ? `Last synced: ${new Date(lastSyncTime).toLocaleString()}` : 'Not yet synced'}
+              </div>
+            </div>
+            <button
+              onClick={handleSyncNow}
+              disabled={syncStatus === 'syncing'}
+              style={{
+                background: syncStatus === 'synced' ? 'rgba(110,231,183,0.15)' : syncStatus === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(147,197,253,0.1)',
+                border: `1px solid ${syncStatus === 'synced' ? 'rgba(110,231,183,0.3)' : syncStatus === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(147,197,253,0.3)'}`,
+                borderRadius: 8, color: syncStatus === 'synced' ? '#6ee7b7' : syncStatus === 'error' ? '#ef4444' : '#93c5fd',
+                padding: '8px 18px', cursor: syncStatus === 'syncing' ? 'wait' : 'pointer',
+                fontSize: '0.8rem', fontFamily: "'Jost', sans-serif", fontWeight: 600,
+                opacity: syncStatus === 'syncing' ? 0.6 : 1,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'synced' ? 'Synced ✓' : 'Sync Now'}
+            </button>
+          </div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.65rem', opacity: 0.6 }}>
+            Your game state is automatically synced to the cloud every 30 seconds when changes are detected.
+          </div>
+        </div>
+      )}
 
       <div style={{ ...panelStyle }}>
         {sectionTitle('Campaign Stats')}
@@ -3062,7 +3143,7 @@ function CreditsTab({ panelStyle }) {
         {divider}
         {sectionHeader('Technology')}
         <CreditEntry title="Engine" role="React 19, Vite, Zustand, Express" />
-        <CreditEntry title="Online Services" role="Discord.js, Neon PostgreSQL, Replit" />
+        <CreditEntry title="Online Services" role="Discord.js, Neon PostgreSQL, Vercel" />
 
         {divider}
         {sectionHeader('Special Thanks')}

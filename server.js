@@ -16,24 +16,22 @@ const PORT = isProd ? 5000 : 3001;
 
 const app = express();
 
-const replitDomains = (process.env.REPLIT_DOMAINS || '').split(',').map(d => d.trim()).filter(Boolean).map(d => `https://${d}`);
-const replitDevDomains = (process.env.REPLIT_DEV_DOMAIN || '').split(',').map(d => d.trim()).filter(Boolean).map(d => `https://${d}`);
-
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
-  ...replitDomains,
-  ...replitDevDomains,
+  'https://gdevelop-assistant.vercel.app',
+  'https://grudgeplatform.com',
+  'https://www.grudgeplatform.com',
 ];
 
 const CSP_FRAME_ANCESTORS = [
   "frame-ancestors 'self'",
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
+  'https://gdevelop-assistant.vercel.app',
+  'https://grudgeplatform.com',
   'https://puter.com',
   'https://*.puter.com',
-  ...replitDomains,
-  ...replitDevDomains,
 ].join(' ');
 
 app.use((req, res, next) => {
@@ -72,10 +70,8 @@ function getPublicOrigin(req) {
   if (host && !host.includes('localhost')) {
     return `${proto}://${host}`;
   }
-  const domain = isProd
-    ? (process.env.REPLIT_DOMAINS || 'grudgewarlords.com')
-    : (process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS);
-  if (domain) return `https://${domain}`;
+  const domain = 'grudgewarlords.com';
+  if (host) return `${proto}://${host}`;
   return `${proto}://${host || 'localhost:5000'}`;
 }
 

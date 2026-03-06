@@ -1,11 +1,24 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ZONE_CUTSCENES, markCutsceneSeen } from '../data/zoneCutscenes';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { ZONE_CUTSCENES, markCutsceneSeen, markLoreSeen, getUnlockedLoreCount } from '../data/zoneCutscenes';
 
 const CHAR_SPEED = 30;
 const LINE_DELAY = 800;
 
-export default function ZoneCutscene({ zoneId, onComplete }) {
+export default function ZoneCutscene({ zoneId, onComplete, conquerPercent = 0 }) {
   const cutscene = ZONE_CUTSCENES[zoneId];
+  const allLines = useMemo(() => {
+    if (!cutscene) return [];
+    const base = [...cutscene.lines];
+    if (cutscene.extendedLore && conquerPercent > 0) {
+      const count = getUnlockedLoreCount(conquerPercent);
+      for (let i = 0; i < Math.min(count, cutscene.extendedLore.length); i++) {
+        base.push(cutscene.extendedLore[i]);
+      }
+    }
+    return base;
+  }, [cutscene, conquerPercent]);
+  const baseLinesCount = cutscene ? cutscene.lines.length : 0;
+
   const [lineIndex, setLineIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [displayedLines, setDisplayedLines] = useState([]);
@@ -26,12 +39,12 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
 
   useEffect(() => {
     if (!textVisible || !cutscene) return;
-    if (lineIndex >= cutscene.lines.length) {
+    if (lineIndex >= allLines.length) {
       setTyping(false);
       return;
     }
 
-    const currentLine = cutscene.lines[lineIndex];
+    const currentLine = allLines[lineIndex];
     if (charIndex < currentLine.length) {
       const timer = setTimeout(() => setCharIndex(c => c + 1), CHAR_SPEED);
       return () => clearTimeout(timer);
@@ -41,7 +54,7 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
     lineAppendedRef.current = lineIndex;
 
     setDisplayedLines(prev => [...prev, currentLine]);
-    if (lineIndex < cutscene.lines.length - 1) {
+    if (lineIndex < allLines.length - 1) {
       const timer = setTimeout(() => {
         setLineIndex(i => i + 1);
         setCharIndex(0);
@@ -50,14 +63,14 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
     } else {
       setTyping(false);
     }
-  }, [textVisible, lineIndex, charIndex, cutscene]);
+  }, [textVisible, lineIndex, charIndex, cutscene, allLines]);
 
   const handleSkip = useCallback(() => {
     if (!cutscene) return;
     if (typing) {
-      lineAppendedRef.current = cutscene.lines.length;
-      setDisplayedLines([...cutscene.lines]);
-      setLineIndex(cutscene.lines.length);
+      lineAppendedRef.current = allLines.length;
+      setDisplayedLines([...allLines]);
+      setLineIndex(allLines.length);
       setCharIndex(0);
       setTyping(false);
       setTextVisible(true);
@@ -65,9 +78,12 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
       return;
     }
     markCutsceneSeen(zoneId);
+    if (cutscene.extendedLore && conquerPercent > 0) {
+      markLoreSeen(zoneId, getUnlockedLoreCount(conquerPercent));
+    }
     setFadeOut(true);
     setTimeout(() => onComplete(), 600);
-  }, [typing, zoneId, onComplete, cutscene]);
+  }, [typing, zoneId, onComplete, cutscene, allLines, conquerPercent]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -88,7 +104,7 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
 
   if (!cutscene) return null;
 
-  const currentLine = cutscene.lines[lineIndex];
+  const currentLine = allLines[lineIndex];
   const partialText = currentLine ? currentLine.substring(0, charIndex) : '';
 
   return (
@@ -172,26 +188,37 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
             padding: '28px 32px',
             backdropFilter: 'blur(8px)',
           }}>
-            {displayedLines.map((line, i) => (
-              <p key={i} style={{
-                fontFamily: "'Jost', sans-serif",
-                fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
-                color: 'rgba(220,210,190,0.9)',
-                lineHeight: 1.7,
-                margin: '0 0 14px',
-                textShadow: '0 1px 4px rgba(0,0,0,0.6)',
-              }}>
-                {line}
-              </p>
-            ))}
-            {typing && lineIndex < cutscene.lines.length && (
+            {displayedLines.map((line, i) => {
+              const isExtended = i >= baseLinesCount;
+              return (
+                <p key={i} style={{
+                  fontFamily: "'Jost', sans-serif",
+                  fontSize: isExtended ? 'clamp(0.82rem, 1.6vw, 0.95rem)' : 'clamp(0.9rem, 1.8vw, 1.05rem)',
+                  color: isExtended ? 'rgba(200,180,130,0.85)' : 'rgba(220,210,190,0.9)',
+                  lineHeight: 1.7,
+                  margin: '0 0 14px',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                  fontStyle: isExtended ? 'italic' : 'normal',
+                  borderLeft: isExtended ? '2px solid rgba(200,160,80,0.3)' : 'none',
+                  paddingLeft: isExtended ? 12 : 0,
+                }}>
+                  {line}
+                </p>
+              );
+            })}
+            {typing && lineIndex < allLines.length && (() => {
+              const isExt = lineIndex >= baseLinesCount;
+              return (
               <p style={{
                 fontFamily: "'Jost', sans-serif",
-                fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
-                color: 'rgba(220,210,190,0.9)',
+                fontSize: isExt ? 'clamp(0.82rem, 1.6vw, 0.95rem)' : 'clamp(0.9rem, 1.8vw, 1.05rem)',
+                color: isExt ? 'rgba(200,180,130,0.85)' : 'rgba(220,210,190,0.9)',
                 lineHeight: 1.7,
                 margin: 0,
                 textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                fontStyle: isExt ? 'italic' : 'normal',
+                borderLeft: isExt ? '2px solid rgba(200,160,80,0.3)' : 'none',
+                paddingLeft: isExt ? 12 : 0,
               }}>
                 {partialText}
                 <span style={{
@@ -204,7 +231,8 @@ export default function ZoneCutscene({ zoneId, onComplete }) {
                   verticalAlign: 'text-bottom',
                 }} />
               </p>
-            )}
+              );
+            })()}
           </div>
         </div>
 

@@ -23,7 +23,7 @@ import { locationPositions, pathConnections, locationIcons, terrainRegions, port
 import MapOverlay from './MapOverlay';
 import GrudaLeaderboard from './GrudaLeaderboard';
 import ZoneCutscene from './ZoneCutscene';
-import { needsCutscene } from '../data/zoneCutscenes';
+import { needsCutscene, needsLoreCutscene } from '../data/zoneCutscenes';
 import RegionWalkCutscene from './RegionWalkCutscene';
 import { needsRegionWalk } from '../data/regionWalkData';
 import { RankBadgeInline } from './RankBadge';
@@ -1184,7 +1184,7 @@ export default function WorldMap() {
       setSelectedLocation(null);
       return;
     }
-    if (needsCutscene(locId)) {
+    if (needsCutscene(locId) || needsLoreCutscene(locId, zoneConquer[locId] || 0)) {
       setCutsceneZone(locId);
       setPendingBattleZone(locId);
       setSelectedLocation(null);
@@ -1198,14 +1198,14 @@ export default function WorldMap() {
   const handleRegionWalkComplete = useCallback(() => {
     const zoneId = regionWalkZone || pendingBattleZone;
     setRegionWalkZone(null);
-    if (zoneId && needsCutscene(zoneId)) {
+    if (zoneId && (needsCutscene(zoneId) || needsLoreCutscene(zoneId, zoneConquer[zoneId] || 0))) {
       setCutsceneZone(zoneId);
     } else if (zoneId) {
       setPendingBattleZone(null);
       useGameStore.setState({ currentLocation: zoneId });
       startBattle(zoneId);
     }
-  }, [regionWalkZone, pendingBattleZone, startBattle]);
+  }, [regionWalkZone, pendingBattleZone, startBattle, zoneConquer]);
 
   const handleCutsceneComplete = useCallback(() => {
     const zoneId = pendingBattleZone;
@@ -1889,6 +1889,22 @@ export default function WorldMap() {
                     boxShadow: isConquered ? '0 0 8px rgba(255,215,0,0.5)' : 'none',
                   }}>
                     {Math.floor(conquer)}%
+                  </div>
+                )}
+                {isUnlocked && needsLoreCutscene(loc.id, conquer) && (
+                  <div style={{
+                    position: 'absolute', top: -8, left: -8,
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(212,169,106,0.9), rgba(180,130,60,0.7))',
+                    border: '1.5px solid #d4a96a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.55rem',
+                    boxShadow: '0 0 8px rgba(212,169,106,0.6), 0 0 16px rgba(212,169,106,0.3)',
+                    animation: 'lorePulse 2s ease-in-out infinite',
+                    pointerEvents: 'none',
+                    zIndex: 4,
+                  }}>
+                    📜
                   </div>
                 )}
               </div>
@@ -4011,6 +4027,10 @@ export default function WorldMap() {
             0% { opacity: 0; }
             100% { opacity: 1; }
           }
+          @keyframes lorePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(212,169,106,0.6), 0 0 16px rgba(212,169,106,0.3); }
+            50% { transform: scale(1.15); box-shadow: 0 0 12px rgba(212,169,106,0.9), 0 0 24px rgba(212,169,106,0.5); }
+          }
           @keyframes slideInRight {
             0% { opacity: 0; transform: translateY(-50%) translateX(30px); }
             100% { opacity: 1; transform: translateY(-50%) translateX(0); }
@@ -4040,7 +4060,7 @@ export default function WorldMap() {
       )}
 
       {cutsceneZone && createPortal(
-        <ZoneCutscene zoneId={cutsceneZone} onComplete={handleCutsceneComplete} />,
+        <ZoneCutscene zoneId={cutsceneZone} onComplete={handleCutsceneComplete} conquerPercent={zoneConquer[cutsceneZone] || 0} />,
         document.body
       )}
 

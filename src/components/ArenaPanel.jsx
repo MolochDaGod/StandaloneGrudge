@@ -73,14 +73,16 @@ export default function ArenaPanel({ onClose }) {
       const t = await fetchJson(`/api/arena/team/${encodeURIComponent(teamId)}`);
       const token = t.challengeToken;
       if (!token) throw new Error('No challenge token');
-      const chHeroes = (heroRoster.length > 0 ? [heroRoster[0]] : selectedHeroes)[0] ? [toServerHero((heroRoster[0] || selectedHeroes[0]))] : [];
-      const sim = await fetchJson('/api/arena/battle/simulate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId, challengeToken: token, challengerName: 'You', challengerHeroes: chHeroes.length ? chHeroes : [{ name: 'Hero', raceId: 'human', classId: 'warrior', level: 1 }] }),
+      const heroes = t.heroes || [];
+      if (heroes.length === 0) throw new Error('No heroes on team');
+      // Open real visual BattleScreen against the saved arena team
+      useGameStore.getState().startArenaChallenge({
+        teamId,
+        challengeToken: token,
+        ownerName: t.ownerName || 'Unknown',
+        heroes,
       });
-      setChallengeResult({ teamId, ...sim });
-      const lb = await fetchJson('/api/arena/lobby');
-      setLobby(lb.teams || []);
+      onClose();
     } catch (e) { setChallengeResult({ error: e.message || 'Failed to challenge' }); }
     setChallenging(null);
   }
