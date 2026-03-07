@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "${BACKEND_URL}/api/:path*"
+      "destination": "/api/index.js"
     },
     {
       "source": "/((?!api|assets|sprites|backgrounds|images|map_nodes|sounds|fonts).*)",

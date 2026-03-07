@@ -1,106 +1,100 @@
-# Grudge Warlords MMO - StandaloneGrudge
+# Grudge Warlords — grudgewarlords.com
 
-**Deployment and merge of Unity and Gruda - Complete Infrastructure**
+**Browser-based MMO with Vercel serverless API, Puter cloud sync, arena PvP, and cross-platform Grudge Studio integration.**
 
-This repository provides a complete production-ready infrastructure for deploying and managing the Grudge Warlords MMO server, including VPS deployment automation, server build management, AI-powered CLI tools, and containerized deployment options.
+Live at **https://grudgewarlords.com**
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env with your configuration
-
-# 3. Deploy to VPS
-npm run deploy
-
-# Or use the interactive CLI
-npm run cli
+cp .env.example .env   # configure DB, Puter, Discord, Crossmint keys
+npm run dev            # local Vite dev server
 ```
 
-## 📋 Features
+Deployment is handled by Vercel — push to `main` and it auto-deploys.
 
-- ✅ **Automated VPS Deployment** - One-command deployment with backup and rollback
-- ✅ **Server Build Management** - Automated Unity server builds
-- ✅ **AI-Powered CLI** - Interactive management with OpenAI integration
-- ✅ **Docker Support** - Full containerization with Docker Compose
-- ✅ **Production Ready** - Nginx, PM2, logging, monitoring
-- ✅ **Security First** - Environment-based config, firewall, SSL support
-
-## 📚 Documentation
-
-For detailed setup and deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
-
-## 🛠️ Available Commands
-
-```bash
-npm run start      # Start the server
-npm run build      # Build Unity server
-npm run deploy     # Deploy to VPS
-npm run cli        # Interactive CLI management
-npm run docker:up  # Start with Docker
-```
-
-## 🔧 Configuration
-
-All configuration is managed through environment variables. Copy `.env.example` to `.env` and configure:
-
-- VPS connection details
-- Database credentials
-- Unity server settings
-- AI API keys (optional)
-- Security settings
-
-## 📦 What's Included
+## Architecture
 
 ```
-├── scripts/              # Deployment and build scripts
-│   ├── deploy-to-vps.sh # VPS deployment automation
-│   ├── build-server.sh  # Unity server build
-│   └── grudge-cli.js    # AI-powered CLI tool
-├── deployment/          # VPS setup and service management
-│   ├── setup-vps.sh     # Initial VPS configuration
-│   ├── restart-services.sh
-│   └── nginx.conf       # Nginx reverse proxy config
-├── server/              # Node.js server
-├── docker-compose.yml   # Docker orchestration
-├── Dockerfile           # Container definition
-├── ecosystem.config.js  # PM2 process management
-└── .env.example         # Environment template
+src/                   # React client (Vite)
+  components/          # TitleScreen, HUD, Arena, Inventory, Island…
+  services/cloudSync.js  # Puter KV auto-sync (debounced 30s)
+api/
+  index.js             # Vercel serverless Express app (~1700 lines)
+  lib/puter-service.js # Puter KV driver
+vercel.json            # Rewrites /api/* → api/index.js
 ```
 
-## 🤖 AI CLI Assistant
+## API Endpoints
 
-The included CLI tool provides AI-powered assistance for server management:
+All endpoints live in `api/index.js` as a single Vercel serverless function.
 
-```bash
-npm run cli
-> ai how do I optimize server performance?
-> deploy
-> status
-> logs 100
-```
+### Auth
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/puter` | Puter token login |
+| POST | `/api/auth/login` | Username/password login |
+| POST | `/api/auth/register` | Create account |
+| GET  | `/api/auth/verify` | Verify session token |
 
-## 🐳 Docker Deployment
+### Cloud Sync
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/sync/push` | Push game state to Puter KV |
+| GET  | `/api/sync/pull` | Pull saved game state |
 
-Deploy the entire stack with Docker:
+### Public (no auth, CORS-open)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/public/player-summary/:grudgeId` | Portable player data (heroes, arena, gold, wallet) |
+| GET | `/api/public/stats` | Platform-wide stats (players, heroes, battles) |
+| GET | `/api/public/leaderboard` | Arena leaderboard |
+| GET | `/api/health` | Health check |
 
-```bash
-docker-compose up -d
-```
+### Arena, Profile, Island, Wallet
+See `api/index.js` for full CRUD — arena teams/battles, character management, island ownership, Crossmint wallet integration.
 
-Includes: Game server, PostgreSQL, Redis, and Nginx.
+## Cross-Platform Integration
 
-## 📖 Support
+Grudge Warlords exposes public endpoints consumed by the Grudge Studio site (`public-fawn-nine.vercel.app`) and other Grudge apps.
 
-- Full documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
-- Issues: [GitHub Issues](https://github.com/MolochDaGod/StandaloneGrudge/issues)
+**CORS-allowed origins:**
+- `https://grudgewarlords.com`
+- `https://public-fawn-nine.vercel.app`
+- `https://grudgestudio.com` / `https://www.grudgestudio.com`
+- `http://localhost:*` (dev)
 
-## ⚔️ May your grudges be eternal!
+The `/api/public/player-summary/:grudgeId` endpoint returns a portable snapshot of a player's progress (characters, levels, arena record, gold, resources, wallet status) that any Grudge Studio app can display.
+
+## Database
+
+PostgreSQL with tables: `accounts`, `characters`, `inventory_items`, `crafted_items`, `islands`, `arena_teams`, `arena_battles`.
+
+Key columns on `accounts`: `grudge_id` (UUID, primary), `puter_uuid`, `wallet_address`, `discord_id`.
+
+## Environment Variables
+
+| Variable | Purpose |
+|----------|--------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `PUTER_API_KEY` | Puter cloud KV access |
+| `DISCORD_CLIENT_ID/SECRET` | Discord OAuth |
+| `CROSSMINT_API_KEY` | Wallet creation |
+| `JWT_SECRET` | Session token signing |
+
+## Legacy Infrastructure
+
+The repo also contains VPS deployment scripts (`scripts/`, `deployment/`), Docker config, and a PM2 ecosystem file from the original standalone server setup. These are retained for reference but the active deployment target is Vercel.
+
+## Related Projects
+
+- **Grudge Studio** (`public-fawn-nine.vercel.app`) — Marketing/studio site, consumes public API
+- **Auth Gateway** (`auth.grudgestudio.com`) — Shared auth service (Discord, username/password, guest)
+- **PuterGrudge** — GrudgeOS dev environment
+
+See [GRUDGE_BEST_PRACTICES.md](GRUDGE_BEST_PRACTICES.md) for cross-project conventions.
 
 ---
 
-*For detailed deployment instructions, troubleshooting, and advanced configuration, see [DEPLOYMENT.md](DEPLOYMENT.md)*
+*May your grudges be eternal.*

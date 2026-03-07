@@ -263,6 +263,9 @@ const ALLOWED_ORIGINS = [
   'https://www.grudgewarlords.com',
   'https://molochdagod.github.io',
   'https://warlord-crafting-suite.vercel.app',
+  'https://public-fawn-nine.vercel.app',
+  'https://grudgestudio.com',
+  'https://www.grudgestudio.com',
 ];
 
 app.use((req, res, next) => {
@@ -1125,6 +1128,60 @@ app.get('/api/public/leaderboard', async (req, res) => {
     const result = await dbQuery(`SELECT owner_name, wins, losses, hero_count FROM arena_teams WHERE total_battles > 0 ORDER BY wins DESC LIMIT 50`);
     res.json({ leaderboard: result.rows.map((row, i) => ({ ownerName: row.owner_name, rank: i + 1, wins: row.wins || 0, losses: row.losses || 0, heroCount: row.hero_count || 0 })) });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Public Player Summary (cross-origin, by grudgeId) ───────────────────────
+app.get('/api/public/player-summary/:grudgeId', async (req, res) => {
+  try {
+    const { grudgeId } = req.params;
+    if (!grudgeId) return res.status(400).json({ error: 'grudgeId required' });
+
+    const accountResult = await dbQuery('SELECT * FROM accounts WHERE grudge_id = $1', [grudgeId]);
+    if (!accountResult.rows[0]) return res.json({ found: false });
+    const account = accountResult.rows[0];
+
+    const charsResult = await dbQuery('SELECT name, race_id, class_id, level, experience, is_active FROM characters WHERE account_id = $1 ORDER BY level DESC', [account.id]);
+    const arenaResult = await dbQuery('SELECT team_id, status, wins, losses, total_battles, hero_count, avg_level FROM arena_teams WHERE owner_id = $1 ORDER BY wins DESC LIMIT 5', [String(account.id)]);
+    const islandResult = await dbQuery('SELECT name FROM islands WHERE account_id = $1 LIMIT 1', [account.id]);
+
+    res.json({
+      found: true,
+      grudgeId: account.grudge_id,
+      username: account.username,
+      authType: account.auth_type,
+      premium: account.premium || false,
+      gold: account.gold || 0,
+      resources: account.resources || 0,
+      hasWallet: !!account.wallet_address,
+      createdAt: account.created_at,
+      lastLogin: account.last_login,
+      characters: charsResult.rows.map(c => ({
+        name: c.name,
+        raceId: c.race_id,
+        classId: c.class_id,
+        level: c.level,
+        experience: c.experience,
+        isActive: c.is_active,
+      })),
+      characterCount: charsResult.rows.length,
+      highestLevel: charsResult.rows[0]?.level || 0,
+      arenaTeams: arenaResult.rows.map(t => ({
+        teamId: t.team_id,
+        status: t.status,
+        wins: t.wins,
+        losses: t.losses,
+        totalBattles: t.total_battles,
+        heroCount: t.hero_count,
+        avgLevel: t.avg_level,
+      })),
+      totalArenaWins: arenaResult.rows.reduce((sum, t) => sum + (t.wins || 0), 0),
+      totalArenaLosses: arenaResult.rows.reduce((sum, t) => sum + (t.losses || 0), 0),
+      island: islandResult.rows[0]?.name || null,
+    });
+  } catch (err) {
+    console.error('Player summary error:', err);
+    res.status(500).json({ error: 'Failed to load player summary' });
+  }
 });
 
 app.get('/api/public/stats', async (req, res) => {
