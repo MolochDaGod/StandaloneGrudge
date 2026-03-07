@@ -215,7 +215,17 @@ async function registerCommands() {
 }
 
 function getDomain() {
-  return 'grudgewarlords.com';
+  // Check for configured public URL first
+  if (process.env.PUBLIC_URL) {
+    return process.env.PUBLIC_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  }
+  // Check platform-specific env vars
+  return process.env.VERCEL_URL 
+    || process.env.RAILWAY_PUBLIC_DOMAIN 
+    || process.env.RENDER_EXTERNAL_URL
+    || process.env.REPLIT_DOMAINS 
+    || process.env.REPLIT_DEV_DOMAIN 
+    || 'grudgewarlords.com';
 }
 
 async function handleProfile(interaction) {
@@ -399,50 +409,41 @@ async function handleHero(interaction) {
   }
 }
 
-async function handleLeaderboard(interaction) {
+async function handleLeaderboard(interaction, arenaTeams) {
   const limit = interaction.options.getInteger('limit') || 10;
 
-  try {
-    const result = await query(
-      'SELECT owner_name, wins, losses, total_battles FROM arena_teams WHERE total_battles > 0 ORDER BY wins DESC, losses ASC LIMIT $1',
-      [limit]
-    );
+  const all = Array.from(arenaTeams.values());
+  const ranked = all
+    .filter(t => t.totalBattles > 0)
+    .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
+    .slice(0, limit);
 
-    if (result.rows.length === 0) {
-      return interaction.reply({ content: 'No arena entries yet. Be the first to submit a team!', ephemeral: true });
-    }
-
-    const totalResult = await query('SELECT COUNT(*) as count FROM arena_teams');
-
-    const lines = result.rows.map((t, i) => {
-      const rank = getRank(t.wins);
-      const pos = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `**${i + 1}.**`;
-      const winRate = t.total_battles > 0 ? Math.round((t.wins / t.total_battles) * 100) : 0;
-      return `${pos} ${rank.emoji} **${t.owner_name}** — ${t.wins}W/${t.losses}L (${winRate}%)`;
-    }).join('\n');
-
-    const embed = new EmbedBuilder()
-      .setTitle('🏟️ GRUDA Arena Leaderboard')
-      .setColor(COLORS.info)
-      .setDescription(lines)
-      .setFooter({ text: `${totalResult.rows[0].count} total teams • Grudge Warlords` })
-      .setTimestamp();
-
-    return interaction.reply({ embeds: [embed] });
-  } catch (err) {
-    console.error('[Bot] Leaderboard error:', err.message);
-    return interaction.reply({ content: 'Could not load leaderboard. Try again later.', ephemeral: true });
+  if (ranked.length === 0) {
+    return interaction.reply({ content: 'No arena entries yet. Be the first to submit a team!', ephemeral: true });
   }
+
+  const lines = ranked.map((t, i) => {
+    const rank = getRank(t.wins);
+    const pos = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `**${i + 1}.**`;
+    const winRate = t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0;
+    return `${pos} ${rank.emoji} **${t.ownerName}** — ${t.wins}W/${t.losses}L (${winRate}%)`;
+  }).join('\n');
+
+  const embed = new EmbedBuilder()
+    .setTitle('🏟️ GRUDA Arena Leaderboard')
+    .setColor(COLORS.info)
+    .setDescription(lines)
+    .setFooter({ text: `${all.length} total teams • Grudge Warlords` })
+    .setTimestamp();
+
+  return interaction.reply({ embeds: [embed] });
 }
 
-async function handleStats(interaction) {
+async function handleStats(interaction, arenaTeams, arenaBattles) {
   try {
     const accountCount = await query('SELECT COUNT(*) as count FROM accounts');
     const charCount = await query('SELECT COUNT(*) as count FROM characters');
-    const teamStats = await query(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE status = 'ranked') as ranked, COUNT(*) FILTER (WHERE status = 'unranked') as unranked FROM arena_teams`);
-    const battleCount = await query('SELECT COUNT(*) as count FROM arena_battles');
-
-    const ts = teamStats.rows[0];
+    const all = Array.from(arenaTeams.values());
 
     const embed = new EmbedBuilder()
       .setTitle('📊 Grudge Warlords Stats')
@@ -450,10 +451,10 @@ async function handleStats(interaction) {
       .addFields(
         { name: '👤 Accounts', value: `${accountCount.rows[0].count}`, inline: true },
         { name: '🗡️ Heroes Created', value: `${charCount.rows[0].count}`, inline: true },
-        { name: '🏟️ Arena Teams', value: `${ts.total}`, inline: true },
-        { name: '⚔️ Arena Battles', value: `${battleCount.rows[0].count}`, inline: true },
-        { name: '🏆 Ranked Teams', value: `${ts.ranked}`, inline: true },
-        { name: '📉 Unranked Teams', value: `${ts.unranked}`, inline: true },
+        { name: '🏟️ Arena Teams', value: `${all.length}`, inline: true },
+        { name: '⚔️ Arena Battles', value: `${arenaBattles.length}`, inline: true },
+        { name: '🏆 Ranked Teams', value: `${all.filter(t => t.status === 'ranked').length}`, inline: true },
+        { name: '📉 Unranked Teams', value: `${all.filter(t => t.status === 'unranked').length}`, inline: true },
       )
       .setFooter({ text: 'Grudge Warlords' })
       .setTimestamp();
@@ -731,7 +732,7 @@ function handleHelp(interaction) {
   return interaction.reply({ embeds: [embed], ephemeral: true });
 }
 
-export async function startBot() {
+export async function startBot(arenaTeams, arenaBattles) {
   if (!DISCORD_BOT_TOKEN) {
     console.warn('[Bot] DISCORD_BOT_TOKEN not set, bot will not start');
     return null;
@@ -769,10 +770,10 @@ export async function startBot() {
           await handleHero(interaction);
           break;
         case 'leaderboard':
-          await handleLeaderboard(interaction);
+          await handleLeaderboard(interaction, arenaTeams);
           break;
         case 'stats':
-          await handleStats(interaction);
+          await handleStats(interaction, arenaTeams, arenaBattles);
           break;
         case 'play':
           await handlePlay(interaction);

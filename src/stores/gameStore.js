@@ -463,6 +463,7 @@ const useGameStore = create(persist((set, get) => ({
     { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', baseRate: 1, unlockLevel: 8 },
   ],
   activeHarvests: {},
+  heroExpeditions: {},
   harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
   lastHarvestTick: Date.now(),
   shockSweepers: [],
@@ -480,6 +481,22 @@ const useGameStore = create(persist((set, get) => ({
   currentScene: null,
   sceneReturnTo: null,
   dungeonProgress: null,
+
+  // ── Warlord-Crafting-Suite Integration State ──
+  suiteLinked: false,
+  suiteAccountId: null,
+  suiteGrudgeId: null,
+  suiteGold: 0,
+  suiteGbux: 0,
+  suiteAccountXp: 0,
+  suiteResources: [],      // { resourceType, tier, quantity }
+  suiteInventory: [],      // { itemId, quantity, tier, quality, metadata }
+  suiteRecipes: [],        // all available recipes from suite DB
+  suiteUnlockedRecipes: [],// recipes this account has unlocked
+  suiteCraftingJobs: [],   // active crafting jobs { id, recipeId, completesAt, status, isReady }
+  suiteProfessions: {},    // { characterId: { Miner: {level,xp}, Forester: ... } }
+  suiteCharacters: [],     // characters from suite DB
+  suiteSyncError: null,
 
   setScreen: (screen) => set({ screen }),
 
@@ -3272,6 +3289,120 @@ const useGameStore = create(persist((set, get) => ({
     set({ heroStandingZone: zoneId });
   },
 
+  sendOnExpedition: (heroId, zoneId) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero) return;
+    if (state.activeHeroIds.includes(heroId)) return;
+    if (Object.values(state.activeHarvests).includes(heroId)) return;
+    if (state.heroExpeditions[heroId]) return;
+    const loc = locations.find(l => l.id === zoneId);
+    if (!loc) return;
+    const avgLevel = loc.levelRange ? (loc.levelRange[0] + loc.levelRange[1]) / 2 : 3;
+    const durationMs = Math.min(30 * 60000, (5 + avgLevel * 1.5) * 60000);
+    set({
+      heroExpeditions: {
+        ...state.heroExpeditions,
+        [heroId]: {
+          zoneId,
+          zoneName: loc.name,
+          startedAt: Date.now(),
+          duration: durationMs,
+          heroLevel: hero.level,
+          zoneAvgLevel: avgLevel,
+        },
+      },
+    });
+  },
+
+  cancelExpedition: (heroId) => {
+    const state = get();
+    const exps = { ...state.heroExpeditions };
+    delete exps[heroId];
+    set({ heroExpeditions: exps });
+  },
+
+  collectExpedition: (heroId) => {
+    const state = get();
+    const exp = state.heroExpeditions[heroId];
+    if (!exp) return null;
+    const now = Date.now();
+    const elapsed = now - exp.startedAt;
+    if (elapsed < exp.duration) return null;
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero) return null;
+    const zoneLevel = exp.zoneAvgLevel || 3;
+    const heroLevel = hero.level;
+    const durationMin = exp.duration / 60000;
+    const xpGain = Math.floor((zoneLevel * 5 + heroLevel * 3) * durationMin * 0.15);
+    const goldGain = Math.floor((zoneLevel * 3 + 5) * durationMin * 0.1);
+    const resourceTypes = ['herbs', 'wood', 'ore', 'crystals'];
+    const resType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
+    const resAmount = floorTo2(Math.max(1, zoneLevel * 0.5 * durationMin * 0.12));
+    const lootDrops = Math.random() < 0.15 ? generateLoot(null, heroLevel, false) : [];
+
+    let newLevel = hero.level;
+    let heroXp = (hero.xp || 0) + xpGain;
+    let heroUnspent = hero.unspentPoints || 0;
+    let heroSkillPoints = hero.skillPoints || 0;
+    if (hero.id === 'player') {
+      let pXp = state.xp + xpGain;
+      let pLevel = state.level;
+      let pXpToNext = state.xpToNext;
+      let pUnspent = state.unspentPoints;
+      let pSkillPts = state.skillPoints;
+      while (pXp >= pXpToNext && pLevel < 20) {
+        pXp -= pXpToNext;
+        pLevel++;
+        pXpToNext = Math.floor(pXpToNext * 1.4);
+        pUnspent += POINTS_PER_LEVEL;
+        pSkillPts += 1;
+      }
+      newLevel = pLevel;
+      const updatedRoster = state.heroRoster.map(h =>
+        h.id === heroId ? { ...h, level: pLevel, unspentPoints: pUnspent, skillPoints: pSkillPts } : h
+      );
+      const exps = { ...state.heroExpeditions };
+      delete exps[heroId];
+      const newRes = { ...state.harvestResources, [resType]: floorTo2((state.harvestResources[resType] || 0) + resAmount) };
+      const updates = {
+        heroExpeditions: exps,
+        gold: state.gold + goldGain,
+        xp: pXp,
+        level: pLevel,
+        xpToNext: pXpToNext,
+        unspentPoints: pUnspent,
+        skillPoints: pSkillPts,
+        heroRoster: updatedRoster,
+        harvestResources: newRes,
+      };
+      if (lootDrops.length > 0) updates.inventory = [...state.inventory, ...lootDrops];
+      set(updates);
+    } else {
+      while (heroXp >= 50 * Math.pow(1.4, newLevel - 1) && newLevel < 20) {
+        heroXp -= Math.floor(50 * Math.pow(1.4, newLevel - 1));
+        newLevel++;
+        heroUnspent += POINTS_PER_LEVEL;
+        heroSkillPoints += 1;
+      }
+      const updatedRoster = state.heroRoster.map(h =>
+        h.id === heroId ? { ...h, level: newLevel, xp: heroXp, unspentPoints: heroUnspent, skillPoints: heroSkillPoints } : h
+      );
+      const exps = { ...state.heroExpeditions };
+      delete exps[heroId];
+      const newRes = { ...state.harvestResources, [resType]: floorTo2((state.harvestResources[resType] || 0) + resAmount) };
+      const updates = {
+        heroExpeditions: exps,
+        gold: state.gold + goldGain,
+        heroRoster: updatedRoster,
+        harvestResources: newRes,
+      };
+      if (lootDrops.length > 0) updates.inventory = [...state.inventory, ...lootDrops];
+      set(updates);
+    }
+    return { xp: xpGain, gold: goldGain, resource: resType, resourceAmount: resAmount, loot: lootDrops, leveledUp: newLevel > hero.level };
+  },
+
   enterScene: (sceneType, returnTo) => {
     set({ currentScene: sceneType, sceneReturnTo: returnTo || 'world', screen: 'scene' });
   },
@@ -3539,6 +3670,87 @@ const useGameStore = create(persist((set, get) => ({
     });
   },
 
+  // ── Warlord-Crafting-Suite Integration Actions ──
+
+  linkSuiteAccount: (linkData) => {
+    set({
+      suiteLinked: true,
+      suiteAccountId: linkData.accountId,
+      suiteGrudgeId: linkData.grudgeId,
+      suiteGold: linkData.gold || 0,
+      suiteGbux: linkData.gbux || 0,
+      suiteAccountXp: linkData.accountXp || 0,
+      suiteSyncError: null,
+    });
+  },
+
+  unlinkSuiteAccount: () => {
+    set({
+      suiteLinked: false,
+      suiteAccountId: null,
+      suiteGrudgeId: null,
+      suiteGold: 0,
+      suiteGbux: 0,
+      suiteAccountXp: 0,
+      suiteResources: [],
+      suiteInventory: [],
+      suiteRecipes: [],
+      suiteUnlockedRecipes: [],
+      suiteCraftingJobs: [],
+      suiteProfessions: {},
+      suiteCharacters: [],
+      suiteSyncError: null,
+    });
+  },
+
+  setSuiteInventory: (data) => {
+    set({
+      suiteInventory: data.inventory || [],
+      suiteResources: data.resources || [],
+      suiteGold: data.currency?.gold ?? get().suiteGold,
+      suiteGbux: data.currency?.gbux ?? get().suiteGbux,
+      suiteAccountXp: data.currency?.accountXp ?? get().suiteAccountXp,
+      suiteCharacters: data.characters || [],
+      suiteSyncError: null,
+    });
+  },
+
+  setSuiteRecipes: (recipes) => set({ suiteRecipes: recipes }),
+
+  setSuiteUnlockedRecipes: (recipes) => set({ suiteUnlockedRecipes: recipes }),
+
+  setSuiteCraftingJobs: (jobs) => set({ suiteCraftingJobs: jobs }),
+
+  setSuiteProfessions: (profData) => {
+    const profMap = {};
+    (profData.characters || []).forEach(c => {
+      profMap[c.id] = c.professions;
+    });
+    set({ suiteProfessions: profMap });
+  },
+
+  updateSuiteResource: (resourceType, tier, quantityDelta) => {
+    const state = get();
+    const resources = [...state.suiteResources];
+    const idx = resources.findIndex(r => r.resourceType === resourceType && r.tier === tier);
+    if (idx >= 0) {
+      resources[idx] = { ...resources[idx], quantity: resources[idx].quantity + quantityDelta };
+    } else if (quantityDelta > 0) {
+      resources.push({ resourceType, tier, quantity: quantityDelta });
+    }
+    set({ suiteResources: resources });
+  },
+
+  addSuiteCraftingJob: (job) => {
+    set({ suiteCraftingJobs: [...get().suiteCraftingJobs, job] });
+  },
+
+  removeSuiteCraftingJob: (jobId) => {
+    set({ suiteCraftingJobs: get().suiteCraftingJobs.filter(j => j.id !== jobId) });
+  },
+
+  setSuiteSyncError: (error) => set({ suiteSyncError: error }),
+
   resetGame: () => {
     localStorage.removeItem('grudge-warlords-save');
     const zero = { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 };
@@ -3598,11 +3810,27 @@ const useGameStore = create(persist((set, get) => ({
       shopLastRefresh: 0,
       pendingLoot: [],
       activeHarvests: {},
+      heroExpeditions: {},
       harvestResources: { gold: 0, herbs: 0, wood: 0, ore: 0, crystals: 0 },
       lastHarvestTick: Date.now(),
       randomEvents: [],
       lastEventSpawn: Date.now(),
       trainingPhase: null,
+      // Reset suite state
+      suiteLinked: false,
+      suiteAccountId: null,
+      suiteGrudgeId: null,
+      suiteGold: 0,
+      suiteGbux: 0,
+      suiteAccountXp: 0,
+      suiteResources: [],
+      suiteInventory: [],
+      suiteRecipes: [],
+      suiteUnlockedRecipes: [],
+      suiteCraftingJobs: [],
+      suiteProfessions: {},
+      suiteCharacters: [],
+      suiteSyncError: null,
     });
   },
 }), {
@@ -3713,6 +3941,7 @@ const useGameStore = create(persist((set, get) => ({
     shopLastRefresh: state.shopLastRefresh,
     harvestResources: state.harvestResources,
     activeHarvests: state.activeHarvests,
+    heroExpeditions: state.heroExpeditions,
     randomEvents: state.randomEvents,
     lastEventSpawn: state.lastEventSpawn,
     trainingPhase: state.trainingPhase,
@@ -3721,6 +3950,19 @@ const useGameStore = create(persist((set, get) => ({
     roamingAirship: state.roamingAirship,
     pirateShopInventory: state.pirateShopInventory,
     pirateShopLastRefresh: state.pirateShopLastRefresh,
+    // Suite integration
+    suiteLinked: state.suiteLinked,
+    suiteAccountId: state.suiteAccountId,
+    suiteGrudgeId: state.suiteGrudgeId,
+    suiteGold: state.suiteGold,
+    suiteGbux: state.suiteGbux,
+    suiteAccountXp: state.suiteAccountXp,
+    suiteResources: state.suiteResources,
+    suiteInventory: state.suiteInventory,
+    suiteUnlockedRecipes: state.suiteUnlockedRecipes,
+    suiteCraftingJobs: state.suiteCraftingJobs,
+    suiteProfessions: state.suiteProfessions,
+    suiteCharacters: state.suiteCharacters,
   }),
 }));
 

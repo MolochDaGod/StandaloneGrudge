@@ -1,4 +1,5 @@
 import { query, getClient } from './db.js';
+import { suiteQuery, isConnected as isSuiteConnected } from './suiteDb.js';
 
 export function registerDbRoutes(app) {
   const ADMIN_TOKEN = process.env.GAME_API_GRUDA;
@@ -413,7 +414,30 @@ export function registerDbRoutes(app) {
       }
 
       await client.query('COMMIT');
-      res.json({ success: true, account_id: account.id });
+
+      // ── Best-effort sync to Warlord-Crafting-Suite DB ──
+      let suiteSynced = false;
+      if (isSuiteConnected()) {
+        try {
+          // Find matching account in suite DB by discord_id
+          const suiteAcct = await suiteQuery(
+            `SELECT id, grudge_id FROM accounts WHERE discord_id = $1`, [discord_id]
+          );
+          if (suiteAcct.rows[0]) {
+            const suiteId = suiteAcct.rows[0].id;
+            // Sync gold, account_xp, and last_login
+            await suiteQuery(
+              `UPDATE accounts SET gold = $1, updated_at = NOW() WHERE id = $2`,
+              [gold || 0, suiteId]
+            );
+            suiteSynced = true;
+          }
+        } catch (suiteErr) {
+          console.warn('[SaveGame] Suite DB sync failed (non-fatal):', suiteErr.message);
+        }
+      }
+
+      res.json({ success: true, account_id: account.id, suiteSynced });
     } catch (err) {
       await client.query('ROLLBACK');
       res.status(500).json({ error: err.message });
@@ -514,6 +538,37 @@ export function registerDbRoutes(app) {
 
       const islandResult = await query('SELECT * FROM islands WHERE account_id = $1 LIMIT 1', [account.id]);
 
+      // ── Best-effort fetch from Warlord-Crafting-Suite DB ──
+      let suiteData = null;
+      if (isSuiteConnected()) {
+        try {
+          const suiteAcct = await suiteQuery(
+            `SELECT id, grudge_id, gold, gbux, account_xp FROM accounts WHERE discord_id = $1`, [discord_id]
+          );
+          if (suiteAcct.rows[0]) {
+            const sa = suiteAcct.rows[0];
+            const suiteRes = await suiteQuery(
+              `SELECT resource_type, tier, quantity FROM account_resources WHERE account_id = $1`, [sa.id]
+            );
+            const suiteInv = await suiteQuery(
+              `SELECT item_id, quantity, tier, quality, metadata FROM account_inventory WHERE account_id = $1`, [sa.id]
+            );
+            suiteData = {
+              linked: true,
+              accountId: sa.id,
+              grudgeId: sa.grudge_id,
+              gold: sa.gold,
+              gbux: sa.gbux,
+              accountXp: sa.account_xp,
+              resources: suiteRes.rows.map(r => ({ resourceType: r.resource_type, tier: r.tier, quantity: r.quantity })),
+              inventory: suiteInv.rows.map(r => ({ itemId: r.item_id, quantity: r.quantity, tier: r.tier, quality: r.quality, metadata: r.metadata })),
+            };
+          }
+        } catch (suiteErr) {
+          console.warn('[LoadGame] Suite DB fetch failed (non-fatal):', suiteErr.message);
+        }
+      }
+
       res.json({
         found: true,
         account: {
@@ -529,6 +584,7 @@ export function registerDbRoutes(app) {
         },
         heroes,
         island: toCamelIsland(islandResult.rows[0]),
+        suite: suiteData,
       });
     } catch (err) {
       res.status(500).json({ error: err.message });

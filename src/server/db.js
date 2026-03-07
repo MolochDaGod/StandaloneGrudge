@@ -27,6 +27,7 @@ export async function initDatabase() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS accounts (
         id SERIAL PRIMARY KEY,
+        grudge_id VARCHAR(64) UNIQUE,
         discord_id VARCHAR(64) UNIQUE,
         username VARCHAR(128) NOT NULL,
         email VARCHAR(256),
@@ -101,6 +102,7 @@ export async function initDatabase() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_address VARCHAR(128);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_chain VARCHAR(32);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS wallet_created_at TIMESTAMPTZ;
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS grudge_id VARCHAR(64) UNIQUE;
 
       CREATE TABLE IF NOT EXISTS arena_teams (
         team_id TEXT PRIMARY KEY,

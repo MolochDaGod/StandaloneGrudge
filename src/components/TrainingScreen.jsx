@@ -68,7 +68,7 @@ export default function TrainingScreen() {
     return (
       <div style={{ ...bgStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={panelStyle}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>&#9876;</div>
+          <div style={{ marginBottom: 10 }}><InlineIcon name="crossed_swords" size={48} /></div>
           <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.6rem', marginBottom: 15 }}>
             Training Grounds
           </h2>
@@ -463,7 +463,7 @@ export default function TrainingScreen() {
     return (
       <div style={{ ...bgStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={panelStyle}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>&#9876;&#9876;</div>
+          <div style={{ marginBottom: 10, display: 'flex', gap: 8, justifyContent: 'center' }}><InlineIcon name="crossed_swords" size={48} /><InlineIcon name="crossed_swords" size={48} /></div>
           <h2 className="font-cinzel" style={{ color: 'var(--gold)', fontSize: '1.6rem', marginBottom: 15 }}>
             Training Round 2
           </h2>

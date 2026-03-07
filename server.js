@@ -6,13 +6,15 @@ import { fileURLToPath } from 'url';
 import { initDatabase, testConnection } from './src/server/db.js';
 import { registerDbRoutes } from './src/server/dbRoutes.js';
 import { registerWalletRoutes } from './src/server/walletRoutes.js';
+import { registerCraftingRoutes } from './src/server/craftingRoutes.js';
+import { testSuiteConnection } from './src/server/suiteDb.js';
 import { startBot, addUserToGuild } from './src/server/discordBot.js';
 
 const __filename_server = fileURLToPath(import.meta.url);
 const __dirname_server = path.dirname(__filename_server);
 
 const isProd = process.env.NODE_ENV === 'production';
-const PORT = isProd ? 5000 : 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : (isProd ? 5000 : 3001);
 
 const app = express();
 
@@ -64,15 +66,32 @@ const pendingStates = new Map();
 const activeSessions = new Map();
 
 function getPublicOrigin(req) {
+  // Check for configured public URL first
+  if (process.env.PUBLIC_URL) {
+    return process.env.PUBLIC_URL.replace(/\/$/, '');
+  }
+  
   const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'];
-  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const proto = req.headers['x-forwarded-proto'] || (isProd ? 'https' : 'http');
   const host = forwardedHost?.split(',')[0]?.trim();
+  
   if (host && !host.includes('localhost')) {
     return `${proto}://${host}`;
   }
-  const domain = 'grudgewarlords.com';
-  if (host) return `${proto}://${host}`;
-  return `${proto}://${host || 'localhost:5000'}`;
+
+  // Fallback: check platform-specific env vars
+  const domain = process.env.VERCEL_URL 
+    || process.env.RAILWAY_PUBLIC_DOMAIN 
+    || process.env.RENDER_EXTERNAL_URL
+    || process.env.REPLIT_DOMAINS 
+    || process.env.REPLIT_DEV_DOMAIN;
+
+  if (domain) {
+    const cleanDomain = domain.replace(/^https?:\/\//, '');
+    return `https://${cleanDomain}`;
+  }
+
+  return `${proto}://${host || `localhost:${PORT}`}`;
 }
 
 app.get('/api/discord/login', (req, res) => {
@@ -1217,6 +1236,8 @@ if (isProd) {
 
 registerDbRoutes(app);
 registerWalletRoutes(app, requireSession);
+registerCraftingRoutes(app);
+console.log('[Server] Crafting routes registered');
 
 if (isProd) {
   const htmlPages = ['compendium', 'arena', 'discordauth', 'hero-codex'];
@@ -1242,7 +1263,13 @@ app.use((err, req, res, next) => {
 (async () => {
   const connected = await testConnection();
   if (connected) await initDatabase();
+<<<<<<< HEAD
   await startBot();
+=======
+  // Test suite DB connection (crafting/inventory integration)
+  await testSuiteConnection();
+  await startBot(arenaTeams, arenaBattles);
+>>>>>>> f3c986c (feat: Warlord-Crafting-Suite DB integration — crafting, inventory, resources, professions)
 })();
 
 const server = app.listen(PORT, '0.0.0.0', () => {

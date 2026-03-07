@@ -90,6 +90,7 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 - **Express** — Backend server
 - **discord.js v14** — Discord API client
 - **pg** — PostgreSQL client (Neon DB via `GRUDGE_ACCOUNT_DB`)
+- **Warlord-Crafting-Suite DB** — Optional second Neon PostgreSQL database (via `DATABASE_URL`) for shared crafting, inventory, resources, and profession systems
 - **Google Fonts** — Cinzel and Jost
 - **CDNFonts CDN** — LifeCraft font
 - **Web Audio API** — Sound effects and music
@@ -103,6 +104,27 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 - **CSS Classes:** `.game-screen` (absolute fill), `.game-layer` (absolute fill, no pointer events), `.game-panel` (absolute positioned, interactive)
 - **Container Queries:** `.game-viewport` has `container-type: size` for future `@container` usage
 - `uiLayoutConfig.js` now imports REF_W/REF_H from viewport.js (single source of truth)
+
+## Warlord-Crafting-Suite Integration
+GRUDA-Wars connects to the Warlord-Crafting-Suite Neon PostgreSQL database to share crafting, inventory, resources, and profession systems across the platform.
+
+**Architecture:**
+- `src/server/suiteDb.js` — Second pg Pool connecting to `DATABASE_URL` env var. Gracefully disabled if not set.
+- `src/server/craftingRoutes.js` — Express routes under `/api/crafting/*` for account linking, recipes, materials, inventory, crafting jobs, harvesting, and professions. All authenticated via `GAME_API_GRUDA` token.
+- `src/services/craftingApi.js` — Client-side fetch wrapper for all crafting endpoints.
+- `src/components/CraftingPanel.jsx` — Full UI overlay with 5 tabs: Recipes (search/filter/craft), Inventory, Resources, Jobs (claim), Professions (XP bars). Includes Discord account linking flow and suite DB status indicator.
+- `src/stores/gameStore.js` — Suite state (`suiteLinked`, `suiteGrudgeId`, `suiteGold`, `suiteResources`, `suiteInventory`, `suiteRecipes`, `suiteCraftingJobs`, `suiteProfessions`, etc.) with 12 actions. Persisted via zustand partialize.
+- `src/server/dbRoutes.js` — Save-game syncs gold to suite DB; load-game fetches suite inventory/resources. Both are best-effort and non-blocking.
+
+**Key endpoints:**
+- `POST /api/crafting/link-account` — Bridge discord_id → suite grudge_id
+- `GET /api/crafting/recipes` — All recipes with optional profession/category/tier filters
+- `GET /api/crafting/inventory/:grudgeId` — Account inventory + resources + currency
+- `POST /api/crafting/craft` — Submit crafting job (transactional with ingredient deduction)
+- `POST /api/crafting/craft/claim` — Claim completed crafting job
+- `POST /api/crafting/harvest` — Harvest resources with profession XP
+- `GET /api/crafting/professions/:grudgeId` — Profession levels per character
+- `GET /api/crafting/status` — Suite DB connection health check
 
 ## Recent Changes (February 2026)
 - Added viewport/container management system (GameContainer, viewport.js, CSS variables)
@@ -120,3 +142,4 @@ The application is a React 19 frontend developed with Vite, with a unified Expre
 - **WorldMap Zone Arrival Flash:** Radial glow at destination node on path completion
 - **Inventory UI Overhaul:** Scaleable 5×4 grid container with panel background
 - **Human Ranger Sprite Fix:** Consistent display container using base frameWidth with wider animation frames centered/cropped
+- **Warlord-Crafting-Suite Integration:** Full crafting/inventory/resources/professions system connecting to suite Neon DB

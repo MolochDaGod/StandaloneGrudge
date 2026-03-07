@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import useGameStore, { getHeroStatsWithBonuses } from '../stores/gameStore';
 import { classDefinitions } from '../data/classes';
 import { raceDefinitions } from '../data/races';
+import PlatformSync from './PlatformSync';
 import { attributeDefinitions, calculateCombatPower, getBuildClassification, getRadarData } from '../data/attributes';
 import { getZoneTerrain } from '../data/enemies';
 import { skillTrees } from '../data/skillTrees';
@@ -1706,6 +1707,7 @@ const TERRAIN_BG = {
 export default function AccountPage() {
   const { setScreen, heroRoster, activeHeroIds, maxHeroSlots, level, currentLocation } = useGameStore();
   const [selectedHeroId, setSelectedHeroId] = useState(heroRoster[0]?.id || null);
+  const [showPlatformSync, setShowPlatformSync] = useState(false);
 
   const selectedHero = heroRoster.find(h => h.id === selectedHeroId);
   const canRecruit = heroRoster.length < maxHeroSlots;
@@ -1733,6 +1735,14 @@ export default function AccountPage() {
           War Council
         </h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={() => setShowPlatformSync(true)} style={{
+            background: 'linear-gradient(135deg, rgba(110,231,183,0.2), rgba(59,130,246,0.2))',
+            border: '1px solid var(--accent)', borderRadius: 8,
+            padding: '6px 12px', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.7rem',
+            fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span style={{ fontSize: '1rem' }}>🔗</span> Sync
+          </button>
           <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>
             Party: {activeHeroIds.length}/3
           </span>
@@ -1741,6 +1751,10 @@ export default function AccountPage() {
           </span>
         </div>
       </header>
+
+      {showPlatformSync && (
+        <PlatformSync onClose={() => setShowPlatformSync(false)} />
+      )}
 
       <div style={{
         flex: 1, display: 'flex', gap: 16, padding: 16, overflow: 'hidden', minHeight: 0,

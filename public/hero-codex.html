@@ -3,7 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grudge Warlords - Hero Codex</title>
+
+<!-- Primary Meta Tags -->
+<title>Hero Codex | Grudge Warlords by Grudge Studio</title>
+<meta name="title" content="Hero Codex | Grudge Warlords by Grudge Studio" />
+<meta name="description" content="Complete visual reference for all 25 playable heroes in Grudge Warlords. Browse stats, abilities, lore, and learn how the hero system works. Discover secret heroes and faction allegiances." />
+<meta name="keywords" content="Grudge Warlords heroes, hero codex, character guide, hero stats, abilities, Grudge Studio, RPG characters" />
+<meta name="author" content="Grudge Studio" />
+<meta name="robots" content="index, follow" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://grudgewarlords.com/hero-codex.html" />
+<meta property="og:title" content="Hero Codex | Grudge Warlords" />
+<meta property="og:description" content="Complete visual reference for all 25 playable heroes. Stats, abilities, lore, and secret unlocks." />
+<meta property="og:image" content="/images/og-hero-codex.png" />
+<meta property="og:site_name" content="Grudge Warlords" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://grudgewarlords.com/hero-codex.html" />
+<meta property="twitter:title" content="Hero Codex | Grudge Warlords" />
+<meta property="twitter:description" content="Complete visual reference for all 25 playable heroes. Stats, abilities, lore, and secret unlocks." />
+<meta property="twitter:image" content="/images/og-hero-codex.png" />
+
+<!-- Additional Meta -->
+<meta name="theme-color" content="#0a0a0f" />
+<link rel="icon" type="image/png" href="/images/grudge_rpg_logo.png" />
+<link rel="canonical" href="https://grudgewarlords.com/hero-codex.html" />
+
+<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
 <style>
@@ -141,33 +170,11 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
 .hero-quote{padding:0 20px 16px;font-style:italic;color:var(--text-dim);font-size:0.85rem;border-top:1px solid var(--border);padding-top:12px;}
 
-.hero-card{cursor:pointer;}
 .hero-card.secret-hero{background:linear-gradient(135deg,rgba(26,26,46,1),rgba(40,20,50,1));border-color:var(--gold-dim);}
 .hero-card.secret-hero::before{content:'SECRET';position:absolute;top:12px;right:12px;padding:3px 10px;background:linear-gradient(135deg,#ffd700,#f59e0b);color:#000;font-size:0.7rem;font-weight:700;border-radius:4px;letter-spacing:1px;z-index:2;}
 
 @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .hero-card{animation:fadeInUp 0.4s ease both;}
-
-.hero-modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
-.hero-modal-overlay.active{display:flex;}
-.hero-modal{background:linear-gradient(180deg,#141a2b 0%,#0e0e18 100%);border:2px solid var(--gold-dim);border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;animation:modalIn 0.3s ease;}
-@keyframes modalIn{from{opacity:0;transform:scale(0.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.hero-modal-close{position:absolute;top:14px;right:14px;z-index:10;width:36px;height:36px;background:rgba(0,0,0,0.6);border:1px solid var(--border);border-radius:50%;color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
-.hero-modal-close:hover{background:rgba(255,215,0,0.2);border-color:var(--gold);color:var(--gold);}
-.hero-modal-portrait{width:100%;height:240px;overflow:hidden;position:relative;border-radius:14px 14px 0 0;}
-.hero-modal-portrait img{width:100%;height:100%;object-fit:cover;object-position:center 20%;}
-.hero-modal-portrait::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,#141a2b 100%);}
-.hero-modal-body{padding:24px;}
-.hero-modal-name{font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold);margin-bottom:2px;}
-.hero-modal-title{color:var(--text-dim);font-style:italic;font-size:0.95rem;margin-bottom:14px;}
-.hero-modal-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-.hero-modal-lore{color:var(--text-dim);font-size:0.9rem;line-height:1.7;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;}
-.hero-modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
-.hero-modal-stats .stat-item .s-label{font-size:0.85rem;min-width:36px;}
-.hero-modal-stats .stat-item .s-bar{height:7px;border-radius:4px;}
-.hero-modal-stats .stat-item .s-val{font-size:0.9rem;}
-.hero-modal-quote{font-style:italic;color:var(--gold-dim);font-size:1rem;text-align:center;padding-top:14px;border-top:1px solid var(--border);line-height:1.6;}
-.hero-modal-secret{display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#ffd700,#f59e0b);color:#000;font-size:0.75rem;font-weight:700;border-radius:6px;letter-spacing:1px;margin-bottom:14px;}
 
 @media(max-width:500px){
   .heroes-grid{grid-template-columns:1fr;}
@@ -175,21 +182,18 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   .faction-row{grid-template-columns:1fr;}
   .hero-banner{height:280px;}
   .filter-inner{flex-direction:column;align-items:stretch;}
-  .hero-modal{max-width:100%;border-radius:12px;}
-  .hero-modal-stats{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <a href="https://grudgeplatform.com"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
   <div class="site-nav-links">
-    <a href="https://grudgeplatform.com/compendium" class="site-nav-link">Compendium</a>
-    <a href="https://grudge-heros.puter.site/" class="site-nav-link active">Hero Codex</a>
-    <a href="https://grudgeplatform.com/arena" class="site-nav-link">Arena</a>
-    <a href="https://grudgewarlords.com" class="site-nav-link">Play Game</a>
-    <a href="https://discord.gg/KmAC5aXs84" class="site-nav-link" target="_blank" rel="noopener">Discord</a>
+    <a href="/compendium.html" class="site-nav-link">Compendium</a>
+    <a href="/hero-codex.html" class="site-nav-link active">Hero Codex</a>
+    <a href="/arena.html" class="site-nav-link">Arena</a>
+    <a href="/" class="site-nav-link">Play Game</a>
   </div>
 </nav>
 
@@ -197,7 +201,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
   <img src="/images/hero_codex_bg.png" alt="Hero Codex">
   <div class="hero-banner-content">
     <h1>GRUDGE WARLORDS &mdash; HERO CODEX</h1>
-    <p>Complete visual reference for all 26 playable heroes. Browse stats, abilities, lore, and learn how the hero system works.</p>
+    <p>Complete visual reference for all 25 playable heroes. Browse stats, abilities, lore, and learn how the hero system works.</p>
   </div>
 </div>
 
@@ -208,7 +212,7 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
     <div class="info-grid">
       <div class="info-card">
         <h3>Hero Creation</h3>
-        <p>When starting the game, you choose a <strong style="color:var(--text)">Race</strong> and <strong style="color:var(--text)">Class</strong>. Each combination produces a unique hero with different stats, abilities, and racial traits. There are 6 races and 4 classes, giving 24 standard heroes plus 2 secret unlocks.</p>
+        <p>When starting the game, you choose a <strong style="color:var(--text)">Race</strong> and <strong style="color:var(--text)">Class</strong>. Each combination produces a unique hero with different stats, abilities, and racial traits. There are 6 races and 4 classes, giving 24 standard heroes plus 1 secret unlock.</p>
       </div>
       <div class="info-card">
         <h3>Stats System</h3>
@@ -273,9 +277,8 @@ h1,h2,h3,h4,h5{font-family:'Cinzel',serif;letter-spacing:0.5px;}
 
   <div class="info-section">
     <div class="secret-box">
-      <h3>Secret Heroes</h3>
-      <p>Creating a <strong style="color:var(--text)">Barbarian Worg</strong> named exactly <strong style="color:var(--gold)">"Racalvin the Pirate"</strong> unlocks a secret Legendary hero with boosted stats (+30 HP, +5 ATK, +5 SPD) and a unique ultimate ability: <strong style="color:var(--gold)">Storm of Arrows</strong>.</p>
-      <p style="margin-top:12px;">Creating a <strong style="color:var(--text)">Human Warrior</strong> named exactly <strong style="color:var(--gold)">"Cpt John Wayne"</strong> unlocks Racalvin's first captain &mdash; a Legendary hero and the first man to pilot a flying machine. Enhanced stats (+20 HP, +5 ATK, +3 DEF) and the unique ability: <strong style="color:var(--gold)">Skyfire Barrage</strong>.</p>
+      <h3>Secret Hero</h3>
+      <p>Creating a <strong style="color:var(--text)">Barbarian Ranger</strong> named exactly <strong style="color:var(--gold)">"Racalvin the Pirate King"</strong> unlocks a secret Legendary hero with boosted stats (+30 HP, +5 ATK, +5 SPD) and a unique ultimate ability: <strong style="color:var(--gold)">Storm of Arrows</strong>.</p>
     </div>
   </div>
 </div>
@@ -486,16 +489,6 @@ const HEROES = [
     quote: "The sea does not bow. Neither do I.",
     raceIcon: "/images/races/barbarian.png",
     isSecret: true
-  },
-  {
-    name: "Cpt. John Wayne", title: "The Sky Captain",
-    race: "Human", heroClass: "Warrior", faction: "Pirates", rarity: "Legendary",
-    hp: 240, atk: 30, def: 18, spd: 60, rng: 2.5, mp: 90,
-    quote: "The ground is for those who've given up dreaming.",
-    raceIcon: "/images/races/human.png",
-    portrait: "/images/heroes/cpt_john_wayne.png",
-    isSecret: true,
-    lore: "The first captain of Racalvin's pirate crew and the first man in history to pilot a flying machine. A hardened soldier turned sky-pirate, John Wayne traded his medals for a compass and never looked back. His ironclad nerve and unshakeable loyalty earned him command of The Grudge — Racalvin's legendary warship. They say he once flew through a god-storm and came out the other side laughing."
   }
 ];
 
@@ -583,39 +576,32 @@ function renderHeroes(raceFilter, classFilter, search) {
     const factionLow = h.faction.toLowerCase();
     const secretClass = h.isSecret ? ' secret-hero' : '';
 
-    const portraitHtml = h.portrait ? `<div class="hero-portrait" style="position:absolute;inset:0;overflow:hidden;z-index:0;"><img src="${h.portrait}" alt="${h.name}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;filter:brightness(0.5);"><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,rgba(26,26,46,0.8) 60%,rgba(26,26,46,0.98) 85%);"></div></div>` : '';
-    const loreHtml = h.lore ? `<div style="padding:0 20px 14px;color:var(--text-dim);font-size:0.82rem;line-height:1.5;">${h.lore}</div>` : '';
-
     return `
-    <div class="hero-card rarity-${rarityLow}${secretClass}" style="animation-delay:${i * 0.05}s" data-race="${h.race}" data-class="${h.heroClass}" onclick="openHeroModal('${h.name.replace(/'/g,"\\'")}')">
-      ${portraitHtml}
-      <div style="position:relative;z-index:1;">
-        <div class="hero-header">
-          <div class="hero-icon" style="background:linear-gradient(135deg,${RACE_COLORS[h.race]}22,${CLASS_COLORS[h.heroClass]}22);border-color:${RACE_COLORS[h.race]}44;">
-            <img src="${h.raceIcon}" alt="${h.race}">
-          </div>
-          <div class="hero-info">
-            <div class="hero-name">${h.name}</div>
-            <div class="hero-title">${h.title}</div>
-            <div class="hero-tags">
-              <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
-              <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
-              <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
-              <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
-            </div>
+    <div class="hero-card rarity-${rarityLow}${secretClass}" style="animation-delay:${i * 0.05}s" data-race="${h.race}" data-class="${h.heroClass}">
+      <div class="hero-header">
+        <div class="hero-icon" style="background:linear-gradient(135deg,${RACE_COLORS[h.race]}22,${CLASS_COLORS[h.heroClass]}22);border-color:${RACE_COLORS[h.race]}44;">
+          <img src="${h.raceIcon}" alt="${h.race}">
+        </div>
+        <div class="hero-info">
+          <div class="hero-name">${h.name}</div>
+          <div class="hero-title">${h.title}</div>
+          <div class="hero-tags">
+            <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
+            <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
+            <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
+            <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
           </div>
         </div>
-        ${loreHtml}
-        <div class="hero-stats">
-          ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
-          ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
-          ${renderStat('DEF', h.def, STAT_MAX.def, STAT_COLORS.def)}
-          ${renderStat('SPD', h.spd, STAT_MAX.spd, STAT_COLORS.spd)}
-          ${renderStat('RNG', h.rng, STAT_MAX.rng, STAT_COLORS.rng)}
-          ${renderStat('MP', h.mp, STAT_MAX.mp, STAT_COLORS.mp)}
-        </div>
-        <div class="hero-quote">"${h.quote}"</div>
       </div>
+      <div class="hero-stats">
+        ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
+        ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
+        ${renderStat('DEF', h.def, STAT_MAX.def, STAT_COLORS.def)}
+        ${renderStat('SPD', h.spd, STAT_MAX.spd, STAT_COLORS.spd)}
+        ${renderStat('RNG', h.rng, STAT_MAX.rng, STAT_COLORS.rng)}
+        ${renderStat('MP', h.mp, STAT_MAX.mp, STAT_COLORS.mp)}
+      </div>
+      <div class="hero-quote">"${h.quote}"</div>
     </div>`;
   }).join('');
 }
@@ -655,103 +641,40 @@ document.getElementById('heroSearch').addEventListener('input', e => {
   renderHeroes(activeRace, activeClass, e.target.value);
 });
 
-function openHeroModal(heroName) {
-  const h = HEROES.find(x => x.name === heroName);
-  if (!h) return;
-  const overlay = document.getElementById('heroModal');
-  const inner = document.getElementById('heroModalInner');
-  const rarityLow = h.rarity.toLowerCase();
-  const classLow = h.heroClass.toLowerCase();
-  const factionLow = h.faction.toLowerCase();
-  const raceColor = RACE_COLORS[h.race] || '#94a3b8';
-  const classColor = CLASS_COLORS[h.heroClass] || '#ef4444';
-
-  const portraitHtml = h.portrait
-    ? `<div class="hero-modal-portrait"><img src="${h.portrait}" alt="${h.name}"></div>`
-    : `<div style="height:80px;background:linear-gradient(135deg,${raceColor}15,${classColor}15);border-radius:14px 14px 0 0;"></div>`;
-
-  const secretHtml = h.isSecret ? `<div class="hero-modal-secret">SECRET CHARACTER</div>` : '';
-
-  const loreHtml = h.lore
-    ? `<div class="hero-modal-lore">${h.lore}</div>`
-    : '';
-
-  const tagsHtml = `
-    <div class="hero-modal-tags">
-      <span class="htag htag-race"><img src="${h.raceIcon}" alt="">${h.race}</span>
-      <span class="htag htag-class-${classLow}">${CLASS_ICONS[h.heroClass] ? `<img src="${CLASS_ICONS[h.heroClass]}" alt="">` : ''}${h.heroClass}</span>
-      <span class="htag htag-faction-${factionLow}">${FACTION_ICONS[h.faction] ? `<img src="${FACTION_ICONS[h.faction]}" alt="">` : ''}${h.faction}</span>
-      <span class="htag htag-rarity-${rarityLow}">${h.rarity}</span>
-    </div>`;
-
-  const statsHtml = `
-    <div class="hero-modal-stats">
-      ${renderStat('HP', h.hp, STAT_MAX.hp, STAT_COLORS.hp)}
-      ${renderStat('ATK', h.atk, STAT_MAX.atk, STAT_COLORS.atk)}
-      ${renderStat('DEF', h.def, STAT_MAX.def, STAT_COLORS.def)}
-      ${renderStat('SPD', h.spd, STAT_MAX.spd, STAT_COLORS.spd)}
-      ${renderStat('RNG', h.rng, STAT_MAX.rng, STAT_COLORS.rng)}
-      ${renderStat('MP', h.mp, STAT_MAX.mp, STAT_COLORS.mp)}
-    </div>`;
-
-  inner.innerHTML = `
-    ${portraitHtml}
-    <div class="hero-modal-body">
-      ${secretHtml}
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px;">
-        <div class="hero-icon" style="background:linear-gradient(135deg,${raceColor}22,${classColor}22);border-color:${raceColor}44;">
-          <img src="${h.raceIcon}" alt="${h.race}">
-        </div>
-        <div>
-          <div class="hero-modal-name">${h.name}</div>
-          <div class="hero-modal-title">${h.title}</div>
-        </div>
-      </div>
-      ${tagsHtml}
-      ${loreHtml}
-      ${statsHtml}
-      <div class="hero-modal-quote">"${h.quote}"</div>
-    </div>`;
-
-  overlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeHeroModal() {
-  document.getElementById('heroModal').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-document.getElementById('heroModal').addEventListener('click', function(e) {
-  if (e.target === this) closeHeroModal();
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeHeroModal();
-});
-
 document.addEventListener('DOMContentLoaded', () => {
   renderRaceMods();
   renderHeroes('all', 'all', '');
 });
 </script>
 
-<div class="hero-modal-overlay" id="heroModal">
-  <div class="hero-modal" id="heroModalContent">
-    <button class="hero-modal-close" onclick="closeHeroModal()">&times;</button>
-    <div id="heroModalInner"></div>
+<footer style="text-align:center;padding:40px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;background:linear-gradient(180deg,transparent,rgba(10,10,15,0.8));">
+  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:40px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+  
+  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+    <a href="/compendium.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="/hero-codex.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="/arena.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
   </div>
-</div>
-
-<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
-  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
-  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;">
-    <a href="https://grudgeplatform.com/compendium" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
-    <a href="https://grudge-heros.puter.site/" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
-    <a href="https://grudgeplatform.com/arena" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
-    <a href="https://grudgewarlords.com" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
-    <a href="https://discord.gg/KmAC5aXs84" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;" target="_blank" rel="noopener">Discord</a>
+  
+  <div style="max-width:600px;margin:0 auto 16px;padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+    <div style="color:#ffd700;font-family:'Cinzel',serif;font-size:1rem;margin-bottom:6px;">Developed by Grudge Studio</div>
+    <div style="color:#666;font-size:0.8rem;line-height:1.5;">Grudge Warlords is part of the Warlord Crafting Suite &mdash; a collection of interconnected dark fantasy games and tools. Built with passion for tactical RPG enthusiasts.</div>
   </div>
-  &copy; 2026 Grudge Warlords. All rights reserved.
+  
+  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+    <a href="https://discord.gg/KmAC5aXs84" target="_blank" style="color:#5865F2;text-decoration:none;font-size:0.85rem;display:flex;align-items:center;gap:6px;">
+      <svg width="16" height="12" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.4.2a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.4 37.4 0 0 0 25.4.3a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 5a.2.2 0 0 0-.1.1C1.5 18.7-.9 32 .3 45.1v.1a58.8 58.8 0 0 0 17.9 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.8 38.8 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42 42 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3 36.4 36.4 0 0 1-5.5 2.7.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.8.2.2 0 0 0 .3.1A58.6 58.6 0 0 0 71 45.2v-.1C72.4 30.1 68.4 17 60.2 5a.2.2 0 0 0-.1 0z"/></svg>
+      Discord Community
+    </a>
+    <a href="https://github.com/grudge-studio" target="_blank" style="color:#888;text-decoration:none;font-size:0.85rem;">GitHub</a>
+    <a href="/discordauth.html" style="color:#888;text-decoration:none;font-size:0.85rem;">Sign In</a>
+  </div>
+  
+  <div style="color:#555;font-size:0.75rem;">
+    &copy; 2026 Grudge Studio. All rights reserved.<br>
+    <span style="color:#444;">GRUDA Wars v1.0 | Part of the Warlord Crafting Suite</span>
+  </div>
 </footer>
 
 </body>

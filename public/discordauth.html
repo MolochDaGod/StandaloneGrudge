@@ -3,78 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login | Grudge Warlords</title>
-<meta name="description" content="Sign in with Discord to play Grudge Warlords — a dark fantasy turn-based RPG.">
-<meta property="og:title" content="Grudge Warlords — Discord Login">
-<meta property="og:description" content="Connect your Discord account to join the battle.">
-<meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Primary Meta Tags -->
+<title>Login with Discord | Grudge Warlords by Grudge Studio</title>
+<meta name="title" content="Login with Discord | Grudge Warlords" />
+<meta name="description" content="Sign in to Grudge Warlords with your Discord account. Access your heroes, arena teams, and game progress. Auto-join the Grudge Warlords Discord community." />
+<meta name="keywords" content="Grudge Warlords login, Discord authentication, game login, Grudge Studio" />
+<meta name="author" content="Grudge Studio" />
+<meta name="robots" content="noindex, nofollow" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://grudgewarlords.com/discordauth.html" />
+<meta property="og:title" content="Login | Grudge Warlords" />
+<meta property="og:description" content="Sign in with Discord to access your Grudge Warlords account." />
+<meta property="og:image" content="/images/og-banner.png" />
+<meta property="og:site_name" content="Grudge Warlords" />
+
+<!-- Additional Meta -->
+<meta name="theme-color" content="#0a0a12" />
+<link rel="icon" type="image/png" href="/images/grudge_rpg_logo.png" />
+
+<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0a0a12;--bg2:#12121f;--bg3:#1a1a2e;
-  --gold:#d4a017;--gold-dim:#a07c12;--red:#e94560;--discord:#5865F2;
+  --red:#e94560;--discord:#5865F2;
   --text:#e0e0e0;--dim:#888;--border:#2a2a3e;
 }
-body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background-image:radial-gradient(ellipse at 50% 0%,rgba(233,69,96,0.06) 0%,transparent 60%)}
-h1,h2,h3,h4{font-family:'Cinzel',serif}
+body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+h1,h2,h3{font-family:'Cinzel',serif}
 
-.login-container{width:100%;max-width:460px;padding:20px}
+.login-container{width:100%;max-width:440px;padding:20px}
 
-.login-card{background:linear-gradient(180deg,var(--bg2) 0%,rgba(15,15,28,0.98) 100%);border:1px solid var(--border);border-radius:14px;padding:44px 36px;text-align:center;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
-.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--red),var(--gold),var(--red))}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:40px 32px;text-align:center}
+.login-card .logo{font-size:36px;color:var(--red);font-family:'Cinzel',serif;font-weight:900;letter-spacing:2px;margin-bottom:4px;text-shadow:0 0 20px rgba(233,69,96,0.3)}
+.login-card .logo-sub{font-size:14px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px}
 
-.logo{font-size:40px;color:var(--red);font-family:'Cinzel',serif;font-weight:900;letter-spacing:3px;margin-bottom:2px;text-shadow:0 0 24px rgba(233,69,96,0.35)}
-.logo-sub{font-size:13px;color:var(--gold-dim);letter-spacing:5px;text-transform:uppercase;margin-bottom:28px;font-weight:600}
+.scope-info{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:24px;text-align:left}
+.scope-info h4{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-family:'Cinzel',serif}
+.scope-item{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:var(--text)}
+.scope-item .check{color:#4caf50;font-size:16px;min-width:20px}
+.scope-item .scope-label{color:var(--dim);font-size:11px;margin-left:auto;background:var(--bg);padding:2px 6px;border-radius:3px}
 
-.scope-info{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:28px;text-align:left}
-.scope-info h4{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
-.scope-item{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text)}
-.scope-item .check{color:#4caf50;font-size:16px;min-width:20px;text-align:center}
-.scope-item .label{color:var(--dim);font-size:10px;margin-left:auto;background:var(--bg);padding:2px 8px;border-radius:3px;font-family:monospace;letter-spacing:0.5px}
-
-.discord-btn{width:100%;padding:15px 24px;background:var(--discord);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:'Jost',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 4px 16px rgba(88,101,242,0.35)}
-.discord-btn:hover{background:#4752c4;transform:translateY(-2px);box-shadow:0 6px 20px rgba(88,101,242,0.45)}
+.discord-btn{width:100%;padding:14px 24px;background:var(--discord);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Jost',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;transition:background 0.2s,transform 0.1s}
+.discord-btn:hover{background:#4752c4;transform:translateY(-1px)}
 .discord-btn:active{transform:translateY(0)}
-.discord-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+.discord-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
 .discord-btn svg{flex-shrink:0}
 
-.status-msg{margin-top:18px;padding:14px;border-radius:8px;font-size:13px;display:none}
-.status-msg.loading{display:block;background:var(--bg3);color:var(--text);border:1px solid var(--border)}
-.status-msg.success{display:block;background:rgba(76,175,80,0.12);color:#66bb6a;border:1px solid rgba(76,175,80,0.25)}
-.status-msg.error{display:block;background:rgba(233,69,96,0.12);color:var(--red);border:1px solid rgba(233,69,96,0.25)}
+.status-msg{margin-top:16px;padding:12px;border-radius:6px;font-size:13px;display:none}
+.status-msg.loading{display:block;background:var(--bg3);color:var(--text)}
+.status-msg.success{display:block;background:rgba(76,175,80,0.15);color:#4caf50;border:1px solid rgba(76,175,80,0.3)}
+.status-msg.error{display:block;background:rgba(233,69,96,0.15);color:var(--red);border:1px solid rgba(233,69,96,0.3)}
 
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--discord);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.user-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:24px;margin-top:24px;display:none;text-align:left}
+.user-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;margin-top:20px;display:none;text-align:left}
 .user-card.show{display:block}
-.user-card .user-header{display:flex;align-items:center;gap:16px;margin-bottom:14px}
-.user-card .avatar{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold);background:var(--bg);object-fit:cover}
-.user-card .user-name{font-size:18px;font-weight:700;font-family:'Cinzel',serif;color:var(--gold)}
-.user-card .user-id{font-size:11px;color:var(--dim);margin-top:3px}
-.user-card .session-info{font-size:12px;color:var(--dim);padding:10px 0;border-top:1px solid var(--border);margin-top:10px}
-.user-card .session-token{font-family:monospace;font-size:10px;color:var(--dim);word-break:break-all;background:var(--bg);padding:8px 10px;border-radius:6px;margin-top:6px;border:1px solid var(--border)}
+.user-card .user-header{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.user-card .avatar{width:48px;height:48px;border-radius:50%;border:2px solid var(--red);background:var(--bg)}
+.user-card .user-name{font-size:18px;font-weight:700;font-family:'Cinzel',serif}
+.user-card .user-id{font-size:11px;color:var(--dim);margin-top:2px}
+.user-card .session-info{font-size:12px;color:var(--dim);padding:8px 0;border-top:1px solid var(--border);margin-top:8px}
+.user-card .session-token{font-family:monospace;font-size:10px;color:var(--dim);word-break:break-all;background:var(--bg);padding:6px 8px;border-radius:4px;margin-top:6px}
 
-.guild-status{margin-top:12px;font-size:12px;padding:8px 12px;border-radius:6px;display:none}
-.guild-status.joined{display:block;background:rgba(76,175,80,0.12);color:#66bb6a;border:1px solid rgba(76,175,80,0.2)}
-.guild-status.failed{display:block;background:rgba(233,69,96,0.08);color:var(--dim);border:1px solid var(--border)}
+.nav-links{margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.nav-links a{color:var(--dim);text-decoration:none;font-size:13px;padding:6px 14px;border:1px solid var(--border);border-radius:4px;transition:all 0.2s}
+.nav-links a:hover{color:var(--red);border-color:var(--red)}
 
-.btn-row{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
-.play-btn{flex:1;padding:12px 20px;background:linear-gradient(135deg,var(--gold),var(--gold-dim));color:#0a0a12;border:none;border-radius:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;font-weight:700;text-decoration:none;text-align:center;transition:all 0.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.play-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
-.logout-btn{padding:12px 20px;background:transparent;color:var(--red);border:1px solid rgba(233,69,96,0.4);border-radius:8px;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s}
-.logout-btn:hover{background:rgba(233,69,96,0.15);border-color:var(--red)}
+.logout-btn{margin-top:12px;padding:8px 20px;background:transparent;color:var(--red);border:1px solid var(--red);border-radius:6px;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;transition:all 0.2s}
+.logout-btn:hover{background:var(--red);color:#fff}
 
-.divider{height:1px;background:var(--border);margin:24px 0}
+.divider{height:1px;background:var(--border);margin:20px 0}
 
-.nav-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.nav-links a{color:var(--dim);text-decoration:none;font-size:12px;padding:7px 16px;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;letter-spacing:0.5px}
-.nav-links a:hover{color:var(--gold);border-color:var(--gold)}
-
-.footer{margin-top:24px;font-size:11px;color:#444;text-align:center;letter-spacing:0.5px}
+.guild-status{margin-top:10px;font-size:12px;padding:6px 10px;border-radius:4px;display:none}
+.guild-status.joined{display:block;background:rgba(76,175,80,0.15);color:#4caf50}
+.guild-status.failed{display:block;background:rgba(233,69,96,0.1);color:var(--dim)}
 </style>
 </head>
 <body>
@@ -86,21 +94,21 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 
     <div id="login-section">
       <div class="scope-info">
-        <h4>Discord Permissions</h4>
+        <h4>Discord Permissions Requested</h4>
         <div class="scope-item">
           <span class="check">&#10003;</span>
           Read your username &amp; avatar
-          <span class="label">identify</span>
+          <span class="scope-label">identify</span>
         </div>
         <div class="scope-item">
           <span class="check">&#10003;</span>
           Read your email address
-          <span class="label">email</span>
+          <span class="scope-label">email</span>
         </div>
         <div class="scope-item">
           <span class="check">&#10003;</span>
           Auto-join Grudge Warlords server
-          <span class="label">guilds.join</span>
+          <span class="scope-label">guilds.join</span>
         </div>
       </div>
 
@@ -122,26 +130,26 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
       </div>
       <div id="guild-status" class="guild-status"></div>
       <div class="session-info">
-        Session Token:
+        Session Token (for API access):
         <div id="session-token-display" class="session-token"></div>
       </div>
-      <div class="btn-row">
-        <a href="https://grudgewarlords.com" class="play-btn">&#9876; Play Game</a>
-        <button class="logout-btn" onclick="doLogout()">Sign Out</button>
-      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
     </div>
 
     <div class="divider"></div>
 
     <div class="nav-links">
-      <a href="https://grudgewarlords.com/compendium">Compendium</a>
-      <a href="https://grudge-heros.puter.site/">Hero Codex</a>
-      <a href="https://grudgewarlords.com/arena">Arena</a>
-      <a href="https://grudgewarlords.com">Play Game</a>
-      <a href="https://discord.gg/KmAC5aXs84" target="_blank" rel="noopener">Discord</a>
+      <a href="/">Play Game</a>
+      <a href="/arena.html">Arena</a>
+      <a href="/compendium.html">Compendium</a>
+      <a href="/hero-codex.html">Hero Codex</a>
+      <a href="https://discord.gg/KmAC5aXs84" target="_blank">Discord</a>
     </div>
-
-    <div class="footer">Grudge Studio &copy; 2026 &mdash; All Rights Reserved</div>
+    
+    <div style="margin-top:16px;font-size:0.75rem;color:#555;">
+      Developed by <span style="color:#ffd700;">Grudge Studio</span><br>
+      <span style="color:#444;">Part of the Warlord Crafting Suite</span>
+    </div>
   </div>
 </div>
 
@@ -149,12 +157,16 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 (function() {
   'use strict';
 
-  var GAME_ORIGIN = window.location.origin;
-  var API_ORIGIN = window.location.origin;
-  var REDIRECT_URI = window.location.origin + '/discordauth';
+  // ╔═══════════════════════════════════════════════════════════════════════════╗
+  // ║ GRUDGE STUDIO API CONFIGURATION                                           ║
+  // ║ Replace with your production API URL when deploying to grudgewarlords.com║
+  // ╚═══════════════════════════════════════════════════════════════════════════╝
+  var API = 'https://f36fb95c-926d-4e1b-9411-9de769d82a4b-00-9efd742oijgh.kirk.replit.dev';
+  // Production: var API = 'https://api.grudgewarlords.com';
 
-  var SESSION_KEY = 'grudge_session_token';
-  var USER_KEY = 'discordUser';
+  var REDIRECT_URI = window.location.origin + '/discordauth';
+  var SESSION_KEY = 'grudge_studio_session';
+  var USER_KEY = 'grudge_studio_user';
 
   function setStatus(type, msg) {
     var el = document.getElementById('status');
@@ -162,30 +174,24 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
     el.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
   }
 
-  function getAvatarUrl(user) {
-    if (user.avatar) {
-      return 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.png?size=128';
-    }
-    var index = user.discriminator && user.discriminator !== '0'
-      ? parseInt(user.discriminator) % 5
-      : (parseInt(user.id) >> 22) % 6;
-    return 'https://cdn.discordapp.com/embed/avatars/' + index + '.png';
-  }
-
   function showUser(user, token, guildJoined) {
     document.getElementById('login-section').style.display = 'none';
     var card = document.getElementById('user-card');
     card.classList.add('show');
 
-    document.getElementById('user-avatar').src = getAvatarUrl(user);
-    document.getElementById('user-name').textContent = user.globalName || user.username;
-    document.getElementById('user-discord-id').textContent = '@' + user.username + (user.email ? ' \u2022 ' + user.email : '');
-    document.getElementById('session-token-display').textContent = token.slice(0, 12) + '\u2026' + token.slice(-8);
+    var avatarUrl = user.avatar
+      ? 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.png?size=96'
+      : 'https://cdn.discordapp.com/embed/avatars/' + ((parseInt(user.id) >> 22) % 6) + '.png';
+
+    document.getElementById('user-avatar').src = avatarUrl;
+    document.getElementById('user-name').textContent = user.username;
+    document.getElementById('user-discord-id').textContent = 'ID: ' + user.id + (user.email ? ' | ' + user.email : '');
+    document.getElementById('session-token-display').textContent = token.slice(0, 12) + '...' + token.slice(-8);
 
     var guildEl = document.getElementById('guild-status');
-    if (guildJoined === true) {
+    if (guildJoined) {
       guildEl.className = 'guild-status joined';
-      guildEl.innerHTML = '&#10003; Joined Grudge Warlords Discord server';
+      guildEl.textContent = '&#10003; Auto-joined Grudge Warlords Discord server';
     } else if (guildJoined === false) {
       guildEl.className = 'guild-status failed';
       guildEl.textContent = 'Could not auto-join server (you may already be a member)';
@@ -198,11 +204,19 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
     if (token && userRaw) {
       try {
         var user = JSON.parse(userRaw);
-        showUser(user, token, null);
-      } catch(e) {
-        localStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem(USER_KEY);
-      }
+        fetch(API + '/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionToken: token })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (data.valid) {
+            showUser(user, token, null);
+          } else {
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem(USER_KEY);
+          }
+        }).catch(function() {});
+      } catch(e) {}
     }
   }
 
@@ -213,28 +227,24 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
 
     if (!code) return false;
 
-    // State is now verified server-side via HMAC signature — clear stale client state
-    localStorage.removeItem('grudge_oauth_state');
-
-    setStatus('loading', 'Authenticating with Discord\u2026');
+    setStatus('loading', 'Authenticating with Discord...');
     document.getElementById('login-btn').disabled = true;
 
-    fetch(API_ORIGIN + '/api/discord/callback', {
+    fetch(API + '/api/discord/callback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: code, state: state, redirect_uri: REDIRECT_URI })
     })
     .then(function(r) {
-      if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Authentication failed'); });
+      if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || 'Auth failed'); });
       return r.json();
     })
     .then(function(data) {
       if (data.sessionToken && data.user) {
         localStorage.setItem(SESSION_KEY, data.sessionToken);
         localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        localStorage.removeItem('grudge_oauth_state');
 
-        setStatus('success', 'Welcome, ' + (data.user.globalName || data.user.username) + '!');
+        setStatus('success', 'Logged in as ' + data.user.username + '!');
         showUser(data.user, data.sessionToken, data.guildJoined || false);
 
         window.history.replaceState({}, '', window.location.pathname);
@@ -252,17 +262,17 @@ h1,h2,h3,h4{font-family:'Cinzel',serif}
   }
 
   window.startLogin = function() {
-    setStatus('loading', 'Connecting to Discord\u2026');
+    setStatus('loading', 'Connecting to Discord...');
     document.getElementById('login-btn').disabled = true;
 
-    fetch(API_ORIGIN + '/api/discord/login?redirect_uri=' + encodeURIComponent(REDIRECT_URI))
+    fetch(API + '/api/discord/login?redirect_uri=' + encodeURIComponent(REDIRECT_URI))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.url) {
         localStorage.setItem('grudge_oauth_state', data.state);
         window.location.href = data.url;
       } else {
-        setStatus('error', 'Could not start login flow.');
+        setStatus('error', 'Could not start login.');
         document.getElementById('login-btn').disabled = false;
       }
     })

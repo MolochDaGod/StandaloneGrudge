@@ -291,6 +291,11 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
   const dispW = frameW * uniformScale;
   const dispH = frameH * uniformScale;
 
+  const useNormalBlend = sprite.blendMode === 'normal';
+  const blendStyle = useNormalBlend
+    ? { WebkitMaskImage: EFFECT_MASK, maskImage: EFFECT_MASK }
+    : EFFECT_BLEND;
+
   React.useEffect(() => {
     let f = 0;
     const interval = setInterval(() => {
@@ -307,6 +312,10 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
   const col = frame % cols;
   const row = Math.floor(frame / cols);
 
+  const earthFilter = useNormalBlend && !filterProp
+    ? 'brightness(1.6) saturate(1.4) drop-shadow(0 0 6px rgba(139,69,19,0.7)) drop-shadow(0 0 12px rgba(160,82,45,0.4))'
+    : filterProp || 'none';
+
   return (
     <div style={{
       position: 'absolute',
@@ -316,7 +325,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
       overflow: 'hidden',
       zIndex: BATTLE.EFFECT_SPRITES,
       pointerEvents: 'none',
-      ...EFFECT_BLEND,
+      ...blendStyle,
     }}>
       <div style={{
         width: dispW,
@@ -326,7 +335,7 @@ function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
         backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
-        filter: filterProp || 'none',
+        filter: earthFilter,
       }} />
     </div>
   );

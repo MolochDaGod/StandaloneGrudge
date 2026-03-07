@@ -328,6 +328,10 @@ const pathGrassPositions = generatePathGrass();
 
 const MAP_GRID = { cols: 100, rows: 100 };
 
+// Unified sprite scale for all map decorations (resources, grass, water, effects)
+const getMapSpriteScale = (camZoom, baseScale = 0.12, minScale = 0.06) =>
+  Math.max(minScale, baseScale / camZoom);
+
 const samplePointsAlongPath = (points, spacing = 2.5) => {
   if (!points || points.length < 2) return [];
   const norm = points.map(p => Array.isArray(p) ? { x: p[0], y: p[1] } : p);
@@ -381,8 +385,11 @@ const buildAdjacency = () => {
 };
 const adjacencyMap = buildAdjacency();
 
+const pathCache = {};
 const findPath = (start, end) => {
   if (start === end) return [];
+  const cacheKey = `${start}|${end}`;
+  if (pathCache[cacheKey]) return pathCache[cacheKey];
   const queue = [[start]];
   const visited = new Set([start]);
   while (queue.length > 0) {
@@ -390,7 +397,11 @@ const findPath = (start, end) => {
     const node = path[path.length - 1];
     const neighbors = adjacencyMap[node] || [];
     for (const next of neighbors) {
-      if (next === end) return [...path, next];
+      if (next === end) {
+        const result = [...path, next];
+        pathCache[cacheKey] = result;
+        return result;
+      }
       if (!visited.has(next)) {
         visited.add(next);
         queue.push([...path, next]);
@@ -408,6 +419,7 @@ export default function WorldMap() {
     victories, unspentPoints, skillPoints, heroRoster, activeHeroIds, maxHeroSlots,
     setActiveHeroes, locationsCleared, bossesDefeated, zoneConquer,
     harvestNodes, activeHarvests, harvestResources, assignHarvest, recallHarvest, tickHarvests, setHeroStandingZone,
+    heroExpeditions, sendOnExpedition, cancelExpedition, collectExpedition,
     startMissionBattle, startArenaBattle, completedMissions,
     upgradeEquipment,
     shopInventory, inventory, buyItem, sellItem, refreshShop,
@@ -430,6 +442,8 @@ export default function WorldMap() {
   const [citySubmenu, setCitySubmenu] = useState(null);
   const [showWarParty, setShowWarParty] = useState(false);
   const [showGruda, setShowGruda] = useState(false);
+  const [expeditionPicker, setExpeditionPicker] = useState(null);
+  const [expeditionResult, setExpeditionResult] = useState(null);
   const [grudaCopied, setGrudaCopied] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [upgradeHeroId, setUpgradeHeroId] = useState(null);
@@ -528,13 +542,15 @@ export default function WorldMap() {
   });
   const [draggingLabel, setDraggingLabel] = useState(null);
   const dragLabelStart = useRef(null);
+  const touchRef = useRef({ id: null, startX: 0, startY: 0, lastX: 0, lastY: 0, moved: false });
+  const pinchRef = useRef({ active: false, startDist: 0, startZoom: 3 });
 
   useEffect(() => {
     if (camInitRef.current) return;
     const pos = locationPositions[currentZone] || locationPositions.verdant_plains;
     if (pos) {
       const initPos = { x: -(pos.x - 50), y: -(pos.y - 50) };
-      const maxPan = Math.max(0, 50 - 50 / 3);
+      const maxPan = Math.max(0, 55 - 50 / 3);
       setCamPos({
         x: Math.max(-maxPan, Math.min(maxPan, initPos.x)),
         y: Math.max(-maxPan, Math.min(maxPan, initPos.y)),
@@ -544,7 +560,8 @@ export default function WorldMap() {
   }, [currentZone]);
 
   const clampCam = useCallback((pos, zoom) => {
-    const maxPan = Math.max(0, 50 - 50 / zoom);
+    // Extended bounds (55 instead of 50) so edge nodes like infernal_forge (85%) and maw_of_madra (88%) are fully reachable
+    const maxPan = Math.max(0, 55 - 50 / zoom);
     return {
       x: Math.max(-maxPan, Math.min(maxPan, pos.x)),
       y: Math.max(-maxPan, Math.min(maxPan, pos.y)),
@@ -661,6 +678,58 @@ export default function WorldMap() {
     setIsDragging(false);
   }, [roadWidth]);
 
+  // --- Touch handlers for mobile ---
+  const getTouchDist = (t1, t2) => Math.sqrt((t1.clientX - t2.clientX) ** 2 + (t1.clientY - t2.clientY) ** 2);
+
+  const handleTouchStart = useCallback((e) => {
+    if (e.touches.length === 2) {
+      // Pinch start
+      pinchRef.current = { active: true, startDist: getTouchDist(e.touches[0], e.touches[1]), startZoom: camZoom };
+      return;
+    }
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      touchRef.current = { id: t.identifier, startX: t.clientX, startY: t.clientY, lastX: t.clientX, lastY: t.clientY, moved: false };
+      setIsDragging(true);
+      setDragStart({ x: t.clientX, y: t.clientY });
+    }
+  }, [camZoom]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (pinchRef.current.active && e.touches.length === 2) {
+      e.preventDefault();
+      const newDist = getTouchDist(e.touches[0], e.touches[1]);
+      const scale = newDist / pinchRef.current.startDist;
+      const newZ = Math.max(1, Math.min(5, pinchRef.current.startZoom * scale));
+      setCamZoom(newZ);
+      setCamPos(p => clampCam(p, newZ));
+      return;
+    }
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = Math.abs(t.clientX - touchRef.current.startX);
+      const dy = Math.abs(t.clientY - touchRef.current.startY);
+      if (dx > 5 || dy > 5) touchRef.current.moved = true;
+
+      if (touchRef.current.moved) {
+        e.preventDefault();
+        const el = mapRef.current;
+        const mapW = el ? el.offsetWidth : 1000;
+        const mapH = el ? el.offsetHeight : 700;
+        const moveDx = (t.clientX - touchRef.current.lastX) / (mapW * camZoom) * 100;
+        const moveDy = (t.clientY - touchRef.current.lastY) / (mapH * camZoom) * 100;
+        setCamPos(p => clampCam({ x: p.x + moveDx, y: p.y + moveDy }, camZoom));
+        touchRef.current.lastX = t.clientX;
+        touchRef.current.lastY = t.clientY;
+      }
+    }
+  }, [camZoom, clampCam]);
+
+  const handleTouchEnd = useCallback((e) => {
+    pinchRef.current.active = false;
+    setIsDragging(false);
+  }, []);
+
   useEffect(() => {
     const el = mapRef.current?.parentElement;
     if (!el) return;
@@ -669,7 +738,7 @@ export default function WorldMap() {
       setCamZoom(z => {
         const newZ = Math.max(1, Math.min(5, z + (e.deltaY > 0 ? -0.25 : 0.25)));
         setCamPos(p => {
-          const maxPan = Math.max(0, 50 - 50 / newZ);
+          const maxPan = Math.max(0, 55 - 50 / newZ);
           return { x: Math.max(-maxPan, Math.min(maxPan, p.x)), y: Math.max(-maxPan, Math.min(maxPan, p.y)) };
         });
         return newZ;
@@ -875,7 +944,7 @@ export default function WorldMap() {
       });
 
       const camTarget = { x: -(pos.x - 50), y: -(pos.y - 50) };
-      const maxPan = Math.max(0, 50 - 50 / camZoom);
+      const maxPan = Math.max(0, 55 - 50 / camZoom);
       setCamPos({
         x: Math.max(-maxPan, Math.min(maxPan, camTarget.x)),
         y: Math.max(-maxPan, Math.min(maxPan, camTarget.y)),
@@ -927,10 +996,11 @@ export default function WorldMap() {
 
   useEffect(() => {
     const hasActive = Object.keys(activeHarvests).length > 0;
-    if (!hasActive) return;
+    const hasExpeditions = heroExpeditions && Object.keys(heroExpeditions).length > 0;
+    if (!hasActive && !hasExpeditions) return;
     const interval = setInterval(() => setHarvestTick(t => t + 1), 2000);
     return () => clearInterval(interval);
-  }, [activeHarvests]);
+  }, [activeHarvests, heroExpeditions]);
 
   useEffect(() => {
     if (chatLogRef.current) {
@@ -1332,7 +1402,11 @@ export default function WorldMap() {
       onMouseMove={handleMapMouseMove}
       onMouseUp={handleMapMouseUp}
       onMouseLeave={handleMapMouseUp}
-      style={{ width: '100%', height: 'calc(100% - 10px)', overflow: 'hidden', position: 'relative', background: '#0b1020', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), marginBottom: 10 }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      style={{ width: '100%', height: 'calc(100% - 10px)', overflow: 'hidden', position: 'relative', background: 'radial-gradient(ellipse at 40% 60%, #0a1628 0%, #071020 40%, #030810 100%)', cursor: drawingRoute ? 'crosshair' : (isDragging ? 'grabbing' : 'grab'), marginBottom: 10, touchAction: 'none' }}
     >
       <div ref={mapRef} style={{
         width: '100%', height: '100%', position: 'relative',
@@ -1343,6 +1417,23 @@ export default function WorldMap() {
         transition: isDragging ? 'none' : 'transform 0.3s ease-out',
         boxShadow: 'none',
       }}>
+        {/* Ocean border banners on all 4 edges */}
+        <div style={{ position: 'absolute', top: '-4%', left: 0, right: 0, height: '6%', zIndex: MAP_LAYERS.TERRAIN_FILL, pointerEvents: 'none',
+          background: 'linear-gradient(to bottom, rgba(8,20,50,0.95) 0%, rgba(15,35,80,0.6) 50%, transparent 100%)',
+          borderBottom: '1px solid rgba(56,189,248,0.08)',
+        }} />
+        <div style={{ position: 'absolute', bottom: '-4%', left: 0, right: 0, height: '6%', zIndex: MAP_LAYERS.TERRAIN_FILL, pointerEvents: 'none',
+          background: 'linear-gradient(to top, rgba(8,20,50,0.95) 0%, rgba(15,35,80,0.6) 50%, transparent 100%)',
+          borderTop: '1px solid rgba(56,189,248,0.08)',
+        }} />
+        <div style={{ position: 'absolute', left: '-4%', top: 0, bottom: 0, width: '6%', zIndex: MAP_LAYERS.TERRAIN_FILL, pointerEvents: 'none',
+          background: 'linear-gradient(to right, rgba(8,20,50,0.95) 0%, rgba(15,35,80,0.6) 50%, transparent 100%)',
+          borderRight: '1px solid rgba(56,189,248,0.08)',
+        }} />
+        <div style={{ position: 'absolute', right: '-4%', top: 0, bottom: 0, width: '6%', zIndex: MAP_LAYERS.TERRAIN_FILL, pointerEvents: 'none',
+          background: 'linear-gradient(to left, rgba(8,20,50,0.95) 0%, rgba(15,35,80,0.6) 50%, transparent 100%)',
+          borderLeft: '1px solid rgba(56,189,248,0.08)',
+        }} />
         <div style={fullCoverStyle(MAP_LAYERS.TERRAIN_FILL, {
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
         })} />
@@ -1486,7 +1577,7 @@ export default function WorldMap() {
         {[...mapLandmarks.filter(l => l.type === 'river'), ...editLandmarks.filter(l => l.type === 'river')].map((river, rIdx) => {
           const pts = river.points || [];
           const sampled = samplePointsAlongPath(pts, 2.0);
-          const spriteScale = Math.max(0.06, 0.1 / camZoom);
+          const spriteScale = getMapSpriteScale(camZoom, 0.1);
           return sampled.map((sp, si) => {
             const delay = ((rIdx * 7 + si * 3) % 16) * 0.12;
             return (
@@ -1503,6 +1594,7 @@ export default function WorldMap() {
                 backgroundRepeat: 'no-repeat',
                 imageRendering: 'pixelated',
                 opacity: 0.7,
+                willChange: 'transform',
                 filter: 'drop-shadow(0 0 3px rgba(100,200,255,0.4))',
                 animation: `waterSpriteAnim 1.6s steps(16) infinite ${delay}s`,
               }} />
@@ -1513,7 +1605,7 @@ export default function WorldMap() {
         {/* Path grass decorations */}
         {pathGrassPositions.map((gp, gi) => {
           const wheatInfo = SPRITE_INFO.wheat;
-          const grassScale = Math.max(0.06, 0.12 * gp.scale / camZoom);
+          const grassScale = getMapSpriteScale(camZoom, 0.12 * gp.scale);
           const bgX = -(gp.frame * wheatInfo.frameW);
           return (
             <div key={`grass_${gi}`} style={{
@@ -1541,7 +1633,7 @@ export default function WorldMap() {
           if (!spriteInfo || resPositions.length === 0) return null;
           const harvestId = resourceToHarvestId[zoneRes.resource];
           const isBeingHarvested = Object.entries(activeHarvests).some(([nId]) => nId === harvestId);
-          const resScale = Math.max(0.08, 0.14 / camZoom);
+          const resScale = getMapSpriteScale(camZoom, 0.14, 0.08);
           return resPositions.map((rp, ri) => {
             let frameCol;
             if (isBeingHarvested) {
@@ -3520,8 +3612,9 @@ export default function WorldMap() {
 
         {showWarParty && (() => {
           const harvestingHeroIds = Object.values(activeHarvests);
+          const expeditionHeroIds = Object.keys(heroExpeditions || {});
           const idleHeroes = heroRoster.filter(h =>
-            !activeHeroIds.includes(h.id) && !harvestingHeroIds.includes(h.id)
+            !activeHeroIds.includes(h.id) && !harvestingHeroIds.includes(h.id) && !expeditionHeroIds.includes(h.id)
           );
           const unlockedNodes = (harvestNodes || []).filter(n => level >= n.unlockLevel);
           const getHeroRole = (hero) => {
@@ -3531,6 +3624,7 @@ export default function WorldMap() {
               const node = (harvestNodes || []).find(n => n.id === harvestEntry[0]);
               return node ? `harvesting:${node.name}:${node.icon}` : 'harvesting';
             }
+            if (heroExpeditions && heroExpeditions[hero.id]) return 'expedition';
             return 'idle';
           };
           return (
@@ -3567,6 +3661,9 @@ export default function WorldMap() {
               <span style={{ fontSize: '0.8rem', color: 'var(--gold)', background: 'rgba(251,191,36,0.1)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(251,191,36,0.2)' }}>
                 <InlineIcon name="pickaxe" size={12} /> {harvestingHeroIds.length} Harvesting
               </span>
+              <span style={{ fontSize: '0.8rem', color: '#38bdf8', background: 'rgba(56,189,248,0.08)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(56,189,248,0.2)' }}>
+                <InlineIcon name="sparkle" size={12} /> {expeditionHeroIds.length} Expeditions
+              </span>
               <span style={{ fontSize: '0.8rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}>
                 <InlineIcon name="moon" size={12} /> {idleHeroes.length} Idle
               </span>
@@ -3582,12 +3679,15 @@ export default function WorldMap() {
                 const isHarvesting = role.startsWith('harvesting');
                 const harvestInfo = isHarvesting ? role.split(':') : null;
 
-                const borderColor = isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--border)';
+                const isOnExpedition = role === 'expedition';
+                const borderColor = isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : isOnExpedition ? '#38bdf8' : 'var(--border)';
                 const bgColor = isActive
                   ? 'linear-gradient(135deg, rgba(110,231,183,0.15), rgba(110,231,183,0.05))'
                   : isHarvesting
                     ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))'
-                    : 'rgba(42,49,80,0.3)';
+                    : isOnExpedition
+                      ? 'linear-gradient(135deg, rgba(56,189,248,0.12), rgba(56,189,248,0.04))'
+                      : 'rgba(42,49,80,0.3)';
 
                 return (
                   <div key={hero.id} style={{
@@ -3595,11 +3695,17 @@ export default function WorldMap() {
                     border: `2px solid ${borderColor}`,
                     borderRadius: 8, padding: '6px 8px', cursor: 'pointer',
                     transition: 'all 0.2s', minWidth: 90, textAlign: 'center',
-                    opacity: isActive || isHarvesting ? 1 : 0.6,
+                    opacity: isActive || isHarvesting || isOnExpedition ? 1 : 0.6,
                     position: 'relative',
                   }}
                     onClick={() => {
-                      if (isHarvesting) {
+                      if (isOnExpedition) {
+                        const exp = heroExpeditions[hero.id];
+                        if (exp && Date.now() >= exp.startedAt + exp.duration) {
+                          const result = collectExpedition(hero.id);
+                          if (result) { setExpeditionResult({ heroName: hero.name, ...result }); setTimeout(() => setExpeditionResult(null), 4000); }
+                        }
+                      } else if (isHarvesting) {
                         const entry = Object.entries(activeHarvests).find(([, hId]) => hId === hero.id);
                         if (entry) recallHarvest(entry[0]);
                       } else {
@@ -3623,12 +3729,27 @@ export default function WorldMap() {
                     )}
                     <div style={{
                       fontSize: '0.7rem', marginTop: 2, fontWeight: 600,
-                      color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : 'var(--muted)',
+                      color: isActive ? 'var(--accent)' : isHarvesting ? 'var(--gold)' : isOnExpedition ? '#38bdf8' : 'var(--muted)',
                     }}>
-                      {isActive ? <><InlineIcon name="battle" size={12} /> ACTIVE</> : isHarvesting ? <>{harvestInfo?.[2] ? <InlineIcon name="pickaxe" size={12} /> : <InlineIcon name="pickaxe" size={12} />} {harvestInfo?.[1] || 'Harvesting'}</> : <><InlineIcon name="moon" size={12} /> IDLE</>}
+                      {isActive ? <><InlineIcon name="battle" size={12} /> ACTIVE</>
+                        : isHarvesting ? <>{harvestInfo?.[2] ? <InlineIcon name="pickaxe" size={12} /> : <InlineIcon name="pickaxe" size={12} />} {harvestInfo?.[1] || 'Harvesting'}</>
+                        : isOnExpedition ? (() => {
+                          const exp = heroExpeditions[hero.id];
+                          const remaining = exp ? Math.max(0, (exp.startedAt + exp.duration) - Date.now()) : 0;
+                          const done = remaining <= 0;
+                          if (done) return <span style={{ color: '#4ade80' }}><InlineIcon name="trophy" size={12} /> COLLECT</span>;
+                          const mins = Math.floor(remaining / 60000);
+                          const secs = Math.floor((remaining % 60000) / 1000);
+                          return <><InlineIcon name="sparkle" size={12} /> {mins}:{secs.toString().padStart(2, '0')}</>;
+                        })()
+                        : <><InlineIcon name="moon" size={12} /> IDLE</>}
                     </div>
-                    {isHarvesting && (
-                      <div style={{
+                    {(isHarvesting || isOnExpedition) && (
+                      <div onClick={(e) => {
+                        e.stopPropagation();
+                        if (isOnExpedition) cancelExpedition(hero.id);
+                        else { const entry = Object.entries(activeHarvests).find(([, hId]) => hId === hero.id); if (entry) recallHarvest(entry[0]); }
+                      }} style={{
                         position: 'absolute', top: 2, right: 2,
                         fontSize: '0.6rem', color: '#ef4444', cursor: 'pointer',
                         background: 'rgba(239,68,68,0.15)', borderRadius: 3, padding: '1px 3px',
@@ -3728,6 +3849,88 @@ export default function WorldMap() {
                 </div>
               </>
             )}
+
+            {(() => {
+              const expUnlocked = (getUnlockedLocations() || []).filter(l => l.levelRange);
+              if (expUnlocked.length === 0) return null;
+              return (
+                <>
+                  <div style={{
+                    height: 1, background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.3), transparent)',
+                    marginTop: 10, marginBottom: 10,
+                  }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div className="font-cinzel" style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: 700 }}>
+                      <InlineIcon name="sparkle" size={12} /> Expeditions
+                    </div>
+                  </div>
+
+                  {expeditionResult && (
+                    <div style={{
+                      background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                      borderRadius: 6, padding: '6px 10px', marginBottom: 8, fontSize: '0.8rem', color: '#4ade80',
+                      animation: 'fadeIn 0.2s ease-out',
+                    }}>
+                      <strong>{expeditionResult.heroName}</strong> returned!
+                      +{expeditionResult.xp} XP, +{expeditionResult.gold} Gold, +{Math.floor(expeditionResult.resourceAmount)} {expeditionResult.resource}
+                      {expeditionResult.loot?.length > 0 && ` + ${expeditionResult.loot.length} item${expeditionResult.loot.length > 1 ? 's' : ''}!`}
+                      {expeditionResult.leveledUp && ' LEVEL UP!'}
+                    </div>
+                  )}
+
+                  {expeditionPicker && (
+                    <div style={{
+                      background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(56,189,248,0.25)',
+                      borderRadius: 6, padding: '6px 10px', marginBottom: 8,
+                    }}>
+                      <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600, marginBottom: 4 }}>
+                        Send {heroRoster.find(h => h.id === expeditionPicker)?.name} on expedition:
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {expUnlocked.map(loc => {
+                          const avgLv = (loc.levelRange[0] + loc.levelRange[1]) / 2;
+                          const durMin = Math.min(30, Math.floor(5 + avgLv * 1.5));
+                          return (
+                            <button key={loc.id} onClick={() => {
+                              sendOnExpedition(expeditionPicker, loc.id);
+                              setExpeditionPicker(null);
+                            }} style={{
+                              background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)',
+                              borderRadius: 4, padding: '2px 6px', color: 'var(--text)',
+                              cursor: 'pointer', fontSize: '0.75rem',
+                            }}>
+                              {loc.name} <span style={{ color: 'var(--muted)' }}>({durMin}m)</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button onClick={() => setExpeditionPicker(null)} style={{
+                        background: 'none', border: 'none', color: 'var(--muted)',
+                        cursor: 'pointer', fontSize: '0.75rem', marginTop: 4,
+                      }}>Cancel</button>
+                    </div>
+                  )}
+
+                  {idleHeroes.length > 0 && !expeditionPicker && (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+                      {idleHeroes.map(h => (
+                        <button key={h.id} onClick={() => setExpeditionPicker(h.id)} style={{
+                          background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.15)',
+                          borderRadius: 4, padding: '2px 8px', color: '#38bdf8',
+                          cursor: 'pointer', fontSize: '0.8rem',
+                        }}>
+                          {h.name} (Lv.{h.level})
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ color: 'var(--muted)', fontSize: '0.7rem', fontStyle: 'italic', textAlign: 'center' }}>
+                    Send idle heroes to explore unlocked zones. They return with XP, gold, resources, and a chance at loot.
+                  </div>
+                </>
+              );
+            })()}
           </div>
           );
         })()}
