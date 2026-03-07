@@ -261,6 +261,8 @@ const CANONICAL_EXTERNAL_REDIRECT = `${CANONICAL_ORIGIN}/api/external/callback`;
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
+  'https://molochdagod.github.io',
+  'https://warlord-crafting-suite.vercel.app',
 ];
 
 app.use((req, res, next) => {

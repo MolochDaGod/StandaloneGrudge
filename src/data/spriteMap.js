@@ -991,6 +991,15 @@ export const raceClassSpriteMap = {
 
 export const warriorTransformSprite = spriteSheets['demon-sword'];
 
+export const mageTransformSprites = {
+  human: { ...spriteSheets.necromancer, filter: 'hue-rotate(260deg) saturate(1.6) brightness(0.85)' },
+  orc: { ...spriteSheets.necromancer, filter: 'hue-rotate(90deg) saturate(1.4) brightness(0.75)' },
+  elf: { ...spriteSheets.necromancer, filter: 'hue-rotate(180deg) saturate(1.5) brightness(0.9)' },
+  undead: spriteSheets.necromancer,
+  barbarian: { ...spriteSheets.necromancer, filter: 'hue-rotate(30deg) saturate(1.3) brightness(0.8) contrast(1.2)' },
+  dwarf: { ...spriteSheets.necromancer, filter: 'hue-rotate(200deg) saturate(1.4) brightness(0.85)' },
+};
+
 export const nightborneSprite = {
   folder: 'nightborne',
   frameWidth: 80,
@@ -1010,6 +1019,7 @@ export const nightborneSprite = {
 
 export const leafRangerSprite = spriteSheets['leaf-ranger'];
 export const crystalMaulerSprite = spriteSheets['crystal-mauler'];
+export const fireKnightSprite = spriteSheets['fire-knight'];
 
 export const worgTransformSprite = {
   human: spriteSheets.werewolf,
@@ -2240,3 +2250,54 @@ export function getAbilityEffect(classId, abilityName, abilityId) {
   if (enemyAbilityEffects[abilityName]) return enemyAbilityEffects[abilityName];
   return { effect: 'weaponHit', beam: null };
 }
+
+/** Return all sprite-sheet keys (for admin tools). */
+export function getSpriteSheetKeys() {
+  return Object.keys(spriteSheets);
+}
+
+/** Look up a sprite sheet by its key string. */
+export function getSpriteSheetByKey(key) {
+  return spriteSheets[key] || null;
+}
+
+// Build a reverse-lookup: spriteSheet object → key string
+const _sheetToKey = new Map();
+Object.entries(spriteSheets).forEach(([key, sheet]) => {
+  if (!_sheetToKey.has(sheet)) _sheetToKey.set(sheet, key);
+});
+
+function _resolveKey(sheet) {
+  if (_sheetToKey.has(sheet)) return _sheetToKey.get(sheet);
+  // Spread copies won't match by reference — try folder fallback
+  for (const [key, ref] of Object.entries(spriteSheets)) {
+    if (sheet.folder && sheet.folder === ref.folder) return key;
+  }
+  return '';
+}
+
+/** Default sprite-sheet KEY per race/class (for admin sprite mapper). */
+export const raceClassDefaultSpriteKeys = Object.fromEntries(
+  Object.entries(raceClassSpriteMap).map(([race, classMap]) => [
+    race,
+    Object.fromEntries(
+      Object.entries(classMap).map(([cls, sheet]) => [cls, _resolveKey(sheet)])
+    ),
+  ])
+);
+
+/** Default extra props (scale, filter) per race/class. */
+export const raceClassDefaultProps = Object.fromEntries(
+  Object.entries(raceClassSpriteMap).map(([race, classMap]) => [
+    race,
+    Object.fromEntries(
+      Object.entries(classMap).map(([cls, sheet]) => [
+        cls,
+        {
+          ...(sheet.scale != null ? { scale: sheet.scale } : {}),
+          ...(sheet.filter ? { filter: sheet.filter } : {}),
+        },
+      ])
+    ),
+  ])
+);

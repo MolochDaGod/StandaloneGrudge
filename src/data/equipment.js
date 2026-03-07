@@ -1,3 +1,5 @@
+import { getWeaponIcon, getArmorIcon, OBJECTSTORE_BASE } from './objectStoreIcons.js';
+
 export const EQUIPMENT_SLOTS = ['weapon', 'offhand', 'helmet', 'armor', 'feet', 'ring', 'relic'];
 
 export const TIERS = {
@@ -66,21 +68,21 @@ export function scaleItemStats(templateStats, tier) {
 export const UPGRADE_COSTS = { 1: 100, 2: 250, 3: 500, 4: 1000, 5: 2500, 6: 5000, 7: 10000 };
 
 export const WEAPON_TYPES = {
-  sword: { name: 'Sword', icon: 'sword', hand: '1h' },
-  axe: { name: 'Axe', icon: 'axe', hand: '1h' },
-  greatsword: { name: 'Greatsword', icon: 'crossed_swords', hand: '2h' },
-  greataxe: { name: 'Greataxe', icon: 'axe', hand: '2h' },
-  hammer2h: { name: 'Warhammer', icon: 'hammer', hand: '2h' },
-  hammer1h: { name: 'Hammer', icon: 'hammer', hand: '1h' },
-  shield: { name: 'Shield', icon: 'shield', hand: '1h' },
-  staff: { name: 'Staff', icon: 'wand', hand: '2h' },
-  dagger: { name: 'Dagger', icon: 'sword', hand: '1h' },
-  bow: { name: 'Bow', icon: 'bow', hand: '2h' },
-  crossbow: { name: 'Crossbow', icon: 'bow', hand: '2h' },
-  gun: { name: 'Gun', icon: 'star', hand: '2h' },
-  lance: { name: 'Lance', icon: 'lance', hand: '2h' },
-  tome: { name: 'Tome', icon: 'book', hand: '1h' },
-  relic: { name: 'Relic', icon: 'crystal', hand: '1h' },
+  sword:      { name: 'Sword',      icon: 'sword',          iconUrl: getWeaponIcon('sword'),      hand: '1h' },
+  axe:        { name: 'Axe',        icon: 'axe',            iconUrl: getWeaponIcon('axe'),        hand: '1h' },
+  greatsword: { name: 'Greatsword', icon: 'crossed_swords', iconUrl: getWeaponIcon('greatsword'), hand: '2h' },
+  greataxe:   { name: 'Greataxe',   icon: 'axe',            iconUrl: getWeaponIcon('greataxe'),   hand: '2h' },
+  hammer2h:   { name: 'Warhammer',  icon: 'hammer',         iconUrl: getWeaponIcon('hammer2h'),   hand: '2h' },
+  hammer1h:   { name: 'Hammer',     icon: 'hammer',         iconUrl: getWeaponIcon('hammer1h'),   hand: '1h' },
+  shield:     { name: 'Shield',     icon: 'shield',         iconUrl: getWeaponIcon('shield'),     hand: '1h' },
+  staff:      { name: 'Staff',      icon: 'wand',           iconUrl: getWeaponIcon('staff'),      hand: '2h' },
+  dagger:     { name: 'Dagger',     icon: 'sword',          iconUrl: getWeaponIcon('dagger'),     hand: '1h' },
+  bow:        { name: 'Bow',        icon: 'bow',            iconUrl: getWeaponIcon('bow'),        hand: '2h' },
+  crossbow:   { name: 'Crossbow',   icon: 'bow',            iconUrl: getWeaponIcon('crossbow'),   hand: '2h' },
+  gun:        { name: 'Gun',        icon: 'star',           iconUrl: getWeaponIcon('gun'),        hand: '2h' },
+  lance:      { name: 'Lance',      icon: 'lance',          iconUrl: getWeaponIcon('lance'),      hand: '2h' },
+  tome:       { name: 'Tome',       icon: 'book',           iconUrl: getWeaponIcon('tome'),       hand: '1h' },
+  relic:      { name: 'Relic',      icon: 'crystal',        iconUrl: getWeaponIcon('relic'),      hand: '1h' },
 };
 
 export const WEAPON_SKILLS = {

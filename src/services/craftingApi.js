@@ -1,21 +1,59 @@
 /**
  * Crafting API Client
  * Client-side fetch wrapper for all /api/crafting/* endpoints.
- * Handles auth token injection and error normalization.
+ * Handles auth token injection (Discord, Grudge Sync JWT, API key)
+ * and error normalization.
  */
 
 const API_BASE = '/api/crafting';
 
-function getApiKey() {
-  // Prefer session-based key stored during Discord auth
-  return localStorage.getItem('grudge-api-key') || '';
+// ── Auth helpers ──
+
+/** Return the best available auth headers in priority order. */
+function getAuthHeaders() {
+  const headers = {};
+
+  // 1. Grudge Sync JWT (popup platform auth)
+  const syncToken = localStorage.getItem('grudge_sync_token');
+  if (syncToken) {
+    headers['Authorization'] = `Bearer ${syncToken}`;
+    return headers;
+  }
+
+  // 2. Discord / Puter session (grudge-session blob)
+  try {
+    const session = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+    if (session.token) {
+      headers['Authorization'] = `Bearer ${session.token}`;
+      return headers;
+    }
+    if (session.discordId) {
+      headers['x-discord-id'] = session.discordId;
+    }
+  } catch { /* malformed session – fall through */ }
+
+  // 3. Raw API key fallback
+  const apiKey = localStorage.getItem('grudge-api-key');
+  if (apiKey) {
+    headers['x-api-key'] = apiKey;
+  }
+
+  return headers;
+}
+
+/** Resolve the Grudge ID of the current user (used by inventory/craft calls). */
+export function getCurrentGrudgeId() {
+  try {
+    const session = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+    return session.grudgeId || session.discordId || null;
+  } catch { return null; }
 }
 
 async function craftFetch(path, options = {}) {
-  const apiKey = getApiKey();
+  const authHeaders = getAuthHeaders();
   const headers = {
     'Content-Type': 'application/json',
-    ...(apiKey ? { 'x-api-key': apiKey } : {}),
+    ...authHeaders,
     ...options.headers,
   };
 
@@ -28,6 +66,10 @@ async function craftFetch(path, options = {}) {
     const data = await res.json();
 
     if (!res.ok) {
+      // Auto-clear stale sync token on 401
+      if (res.status === 401) {
+        localStorage.removeItem('grudge_sync_token');
+      }
       return { success: false, error: data.error || `HTTP ${res.status}`, status: res.status };
     }
 
@@ -121,6 +163,14 @@ export async function addProfessionXp(characterId, { grudgeId, profession, xpAmo
 
 // ── Status ──
 
+/** Quick check: is the crafting suite reachable? Returns { connected, latencyMs }. */
 export async function fetchSuiteStatus() {
-  return craftFetch('/status');
+  const t0 = performance.now();
+  const result = await craftFetch('/status');
+  return { ...result, connected: result.success, latencyMs: Math.round(performance.now() - t0) };
+}
+
+/** True when ANY auth credential is present (does not validate it server-side). */
+export function hasCraftingAuth() {
+  return Object.keys(getAuthHeaders()).length > 0;
 }

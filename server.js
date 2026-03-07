@@ -24,6 +24,8 @@ const ALLOWED_ORIGINS = [
   'https://gdevelop-assistant.vercel.app',
   'https://grudgeplatform.com',
   'https://www.grudgeplatform.com',
+  'https://molochdagod.github.io',
+  'https://warlord-crafting-suite.vercel.app',
 ];
 
 const CSP_FRAME_ANCESTORS = [

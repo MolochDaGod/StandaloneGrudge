@@ -53,5 +53,9 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
-  ]
+  ],
+  "env": {
+    "OBJECTSTORE_BASE": "https://molochdagod.github.io/ObjectStore",
+    "CRAFTING_SUITE_URL": "https://warlord-crafting-suite.vercel.app"
+  }
 }
