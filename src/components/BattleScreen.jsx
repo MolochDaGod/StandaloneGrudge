@@ -1,0 +1,4061 @@
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import useGameStore from '../stores/gameStore';
+import { classDefinitions } from '../data/classes';
+import { raceDefinitions } from '../data/races';
+import { PLAYER_ROWS, getAdjacentRows } from '../data/battleRows';
+import SpriteAnimation, { buildEquipmentOverlays } from './SpriteAnimation';
+import { getPlayerSprite, getEnemySprite, getWorgTransformSprite, getWorgBearTransformSprite, warriorTransformSprite, mageTransformSprites, getEliteTransformSprite, getAbilityEffect, beamTrails, effectSprites, totemSpriteMap, TOTEM_DEFINITIONS, companionSpriteMap, COMPANION_DEFINITIONS } from '../data/spriteMap';
+import AmbientParticles, { CastingParticles, HitParticles, HealParticles } from './BattleParticles';
+import { UI_PANELS, UI_SLOTS, UI_ICONS, SpriteIcon, getItemSpriteIcon, InlineIcon } from '../data/uiSprites';
+import { TIERS, EQUIPMENT_SLOTS } from '../data/equipment';
+import { playSwordHit, playBowShot, playMagicCast, playHeal, playBuff, playHurt, playCrit, playDodge, playVictory, playDefeat, setBgm } from '../utils/audioManager';
+import AbilityIcon from './AbilityIcon';
+import { ActionTimerBar } from './PixelBar';
+import { showTooltip, hideTooltip, updateTooltipPosition } from './GameTooltip';
+import { BATTLE, BATTLE_LAYERS } from '../constants/layers';
+import { getIconPlacement } from '../utils/uiLayoutConfig';
+import { adminConfig } from '../utils/adminConfig';
+import { BATTLE_BACKGROUNDS, STORAGE_KEY as BG_STORAGE_KEY } from './AdminBackgrounds';
+
+const LAYER_STYLE = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' };
+function BattleLayer({ z, children, interactive }) {
+  return (
+    <div style={{ ...LAYER_STYLE, zIndex: z, pointerEvents: interactive ? 'auto' : 'none' }}>
+      {children}
+    </div>
+  );
+}
+
+const DMG_NUM_SRC = '/effects/damage_numbers.png';
+let _lastProcessedAction = null;
+const DMG_CELL_W = 16, DMG_CELL_H = 20, DMG_COLS = 10, DMG_ROWS_PER_COLOR = 10;
+const DMG_COLOR_OFFSETS = { red: 0, orange: 1, yellow: 2, green: 3 };
+function SpriteNumber({ value, color = 'red', scale = 3 }) {
+  const num = Math.abs(Math.round(value));
+  const digits = String(num).split('').map(Number);
+  const colorRow = DMG_COLOR_OFFSETS[color] || 0;
+  const yBase = colorRow * DMG_ROWS_PER_COLOR * DMG_CELL_H;
+  const w = DMG_CELL_W * scale;
+  const h = DMG_CELL_H * scale;
+  return (
+    <div style={{ display: 'flex', gap: Math.round(scale * 0.5) }}>
+      {digits.map((d, i) => {
+        const sx = d * DMG_CELL_W;
+        const sy = yBase;
+        return (
+          <div key={i} style={{
+            width: w, height: h, overflow: 'hidden',
+            backgroundImage: `url(${DMG_NUM_SRC})`,
+            backgroundSize: `${DMG_COLS * DMG_CELL_W * scale}px ${DMG_ROWS_PER_COLOR * 4 * DMG_CELL_H * scale}px`,
+            backgroundPosition: `-${sx * scale}px -${sy * scale}px`,
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'pixelated',
+          }} />
+        );
+      })}
+    </div>
+  );
+}
+
+const BUFF_LABELS = {
+  lower_attack: { text: '-ATK', color: '#ef4444' },
+  confuse: { text: 'CONFUSE', color: '#c084fc' },
+  stun: { text: 'STUN', color: '#fbbf24' },
+  dot: { text: 'BLEED', color: '#f87171' },
+  strength: { text: '+ATK', color: '#f97316' },
+  haste: { text: '+SPD', color: '#38bdf8' },
+  rage: { text: '+ATK', color: '#ef4444' },
+  bless: { text: '+DEF', color: '#fcd34d' },
+  mana_shield: { text: 'SHIELD', color: '#a78bfa' },
+  thorns: { text: 'THORNS', color: '#4ade80' },
+  lifesteal: { text: 'DRAIN', color: '#dc2626' },
+  slow: { text: '-SPD', color: '#6b7280' },
+  poison: { text: 'POISON', color: '#4ade80' },
+  burn: { text: 'BURN', color: '#f97316' },
+  freeze: { text: 'FREEZE', color: '#7dd3fc' },
+  curse: { text: 'CURSE', color: '#a855f7' },
+  heal_over_time: { text: '+HEAL', color: '#22c55e' },
+  regen: { text: 'REGEN', color: '#22c55e' },
+  defense_up: { text: '+DEF', color: '#f59e0b' },
+  defense_down: { text: '-DEF', color: '#ef4444' },
+  attack_up: { text: '+ATK', color: '#f97316' },
+  speed_up: { text: '+SPD', color: '#38bdf8' },
+  speed_down: { text: '-SPD', color: '#6b7280' },
+};
+
+const BB = '/backgrounds/Battlebackgrounds';
+const BASE_LOCATION_BACKGROUNDS = {
+  verdant_plains: `${BB}/terrace.jpg`,
+  dark_forest: `${BB}/magic_forest.jpg`,
+  cursed_ruins: `${BB}/enchanted_stones.jpg`,
+  blood_canyon: `${BB}/empty_cave.jpg`,
+  dragon_peaks: `${BB}/castle_tower.jpg`,
+  shadow_citadel: `${BB}/throne_room.jpg`,
+  demon_gate: `${BB}/prison_arena.jpg`,
+  void_throne: `${BB}/throne_room.jpg`,
+  molten_core: `${BB}/lava_cave.jpg`,
+  obsidian_wastes: `${BB}/lava_cave.jpg`,
+  ruins_of_ashenmoor: `${BB}/colosseum_arena.jpg`,
+  infernal_forge: `${BB}/lava_cave.jpg`,
+  dreadmaw_canyon: `${BB}/empty_cave.jpg`,
+  mystic_grove: `${BB}/forest_hut.jpg`,
+  whispering_caverns: `${BB}/cave_arena.jpg`,
+  haunted_marsh: `${BB}/dead_forest.jpg`,
+  crystal_caves: `${BB}/crystal_cave.jpg`,
+  thornwood_pass: `${BB}/enchanted_stones.jpg`,
+  sunken_temple: `${BB}/castle_corridor.jpg`,
+  iron_peaks: `${BB}/castle_tower.jpg`,
+  shadow_forest: `${BB}/magic_forest.jpg`,
+  frozen_tundra: `${BB}/winter_arena.png`,
+  blight_hollow: `${BB}/spider_cave.jpg`,
+  stormspire_peak: `${BB}/terrace.jpg`,
+  corrupted_spire: `${BB}/empty_cave.jpg`,
+  abyssal_depths: `${BB}/crystal_cave.jpg`,
+  ashen_battlefield: `${BB}/prison_arena.jpg`,
+  windswept_ridge: `${BB}/terrace.jpg`,
+  void_threshold: `${BB}/magic_portal.jpg`,
+  crystal_lake: `${BB}/winter_arena.png`,
+  hall_of_odin: `${BB}/throne_room.jpg`,
+  maw_of_madra: `${BB}/dead_forest.jpg`,
+  sanctum_of_omni: `${BB}/cave_arena.jpg`,
+  mothers_den: `${BB}/lava_cave.jpg`,
+};
+
+function getLocationBackgrounds() {
+  try {
+    const raw = localStorage.getItem(BG_STORAGE_KEY);
+    if (!raw) return BASE_LOCATION_BACKGROUNDS;
+    const settings = JSON.parse(raw);
+    if (!settings.removed || settings.removed.length === 0) return BASE_LOCATION_BACKGROUNDS;
+    const removedPaths = new Set(settings.removed.flatMap(id => [
+      `/backgrounds/${id}.png`, `/backgrounds/${id}.jpg`
+    ]));
+    const filtered = {};
+    for (const [zone, path] of Object.entries(BASE_LOCATION_BACKGROUNDS)) {
+      if (!removedPaths.has(path)) {
+        filtered[zone] = path;
+      }
+    }
+    return filtered;
+  } catch (e) {
+    return BASE_LOCATION_BACKGROUNDS;
+  }
+}
+
+const locationBackgrounds = getLocationBackgrounds();
+
+const zoneGradients = {
+  camp: 'linear-gradient(180deg, #1a2a1a 0%, #0d1a0d 30%, #0a140a 60%, #060e06 100%)',
+  verdant_plains: 'linear-gradient(180deg, #1a2e1a 0%, #142614 30%, #0f1e0f 60%, #0a1a0a 100%)',
+  whispering_woods: 'linear-gradient(180deg, #1a2818 0%, #0e1e0d 40%, #091409 70%, #050e05 100%)',
+  ironhold: 'linear-gradient(180deg, #2a2020 0%, #1e1616 40%, #140e0e 70%, #0e0808 100%)',
+  crystal_lake: 'linear-gradient(180deg, #1a2030 0%, #0e1620 40%, #0a1018 70%, #060a10 100%)',
+  thornvale: 'linear-gradient(180deg, #2a1a2a 0%, #1e0e1e 40%, #140814 70%, #0e040e 100%)',
+  shadow_marsh: 'linear-gradient(180deg, #1a1a2e 0%, #10102a 40%, #0a0a20 70%, #060618 100%)',
+  dark_forest: 'linear-gradient(180deg, #0e1a0e 0%, #0a120a 40%, #060e06 70%, #040a04 100%)',
+  cursed_ruins: 'linear-gradient(180deg, #201520 0%, #180e18 40%, #100810 70%, #0a040a 100%)',
+  blood_canyon: 'linear-gradient(180deg, #2e1010 0%, #200a0a 40%, #180606 70%, #100404 100%)',
+  dragon_peaks: 'linear-gradient(180deg, #1e1e28 0%, #141420 40%, #0e0e18 70%, #080810 100%)',
+  shadow_citadel: 'linear-gradient(180deg, #18102e 0%, #100a22 40%, #0a0618 70%, #06040e 100%)',
+  demon_gate: 'linear-gradient(180deg, #2e0a10 0%, #200610 40%, #180408 70%, #100206 100%)',
+  void_throne: 'linear-gradient(180deg, #0a0a2e 0%, #060620 40%, #040418 70%, #020210 100%)',
+  molten_core: 'linear-gradient(180deg, #2e1a08 0%, #201206 40%, #180e04 70%, #100a02 100%)',
+  obsidian_wastes: 'linear-gradient(180deg, #1e1410 0%, #160e0a 40%, #100a06 70%, #0a0604 100%)',
+  volcanic_field: 'linear-gradient(180deg, #2a1208 0%, #1e0e06 40%, #160a04 70%, #0e0604 100%)',
+  infernal_forge: 'linear-gradient(180deg, #301008 0%, #220a06 40%, #1a0604 70%, #120402 100%)',
+  dreadmaw_canyon: 'linear-gradient(180deg, #281410 0%, #1e100a 40%, #160a06 70%, #0e0604 100%)',
+  frozen_pass: 'linear-gradient(180deg, #1a2030 0%, #141828 40%, #0e1220 70%, #0a0e18 100%)',
+  frost_hollow: 'linear-gradient(180deg, #182838 0%, #101e2e 40%, #0a1624 70%, #06101c 100%)',
+  glacial_tomb: 'linear-gradient(180deg, #142030 0%, #0e1828 40%, #0a1220 70%, #060e18 100%)',
+  icewind_summit: 'linear-gradient(180deg, #1a2838 0%, #121e2e 40%, #0c1626 70%, #08101e 100%)',
+  ruins_of_ashenmoor: 'linear-gradient(180deg, #201818 0%, #181010 40%, #100a0a 70%, #0a0606 100%)',
+  ashenmoor_gate: 'linear-gradient(180deg, #1e1416 0%, #160e10 40%, #10080a 70%, #0a0406 100%)',
+  citadel_of_ash: 'linear-gradient(180deg, #2a1a18 0%, #201210 40%, #180c0a 70%, #100806 100%)',
+  default: 'linear-gradient(180deg, #141828 0%, #0e1220 40%, #0a0e18 70%, #060a10 100%)',
+};
+
+const critEffectPools = {
+  spell: [
+    { key: 'felSpell', filter: 'brightness(1.6) saturate(1.5)' },
+    { key: 'sunburn', filter: 'brightness(1.5) saturate(1.8)' },
+    { key: 'vortex', filter: 'brightness(1.4) hue-rotate(30deg) saturate(1.5)' },
+    { key: 'nebula', filter: 'brightness(1.5) saturate(2)' },
+    { key: 'midnight', filter: 'brightness(1.6) saturate(1.8)' },
+  ],
+  melee: [
+    { key: 'flameLash', filter: 'brightness(1.5) saturate(1.8)' },
+    { key: 'weaponHit', filter: 'brightness(1.6) saturate(1.5)' },
+    { key: 'fireSpin', filter: 'brightness(1.5) saturate(2)' },
+    { key: 'brightFire', filter: 'brightness(1.4) saturate(1.8)' },
+    { key: 'fireExplosion', filter: 'brightness(1.5) saturate(1.5)' },
+  ],
+};
+
+function getRandomCritEffect(type) {
+  const pool = critEffectPools[type] || critEffectPools.melee;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return { sprite: effectSprites[pick.key], filter: pick.filter };
+}
+
+const SLASH_COLORS = {
+  red: { sm: 'slashRedSm', md: 'slashRedMd', lg: 'slashRedLg' },
+  blue: { sm: 'slashBlueSm', md: 'slashBlueMd', lg: 'slashBlueLg' },
+  green: { sm: 'slashGreenSm', md: 'slashGreenMd', lg: 'slashGreenLg' },
+  purple: { sm: 'slashPurpleSm', md: 'slashPurpleMd', lg: 'slashPurpleLg' },
+  orange: { sm: 'slashOrangeSm', md: 'slashOrangeMd', lg: 'slashOrangeLg' },
+};
+
+function getSlashColor(abilityType, abilityName, classId) {
+  const n = (abilityName || '').toLowerCase();
+  if (n.includes('fire') || n.includes('hellfire') || n.includes('ignite') || n.includes('flame')) return 'orange';
+  if (n.includes('ice') || n.includes('frost') || n.includes('arcane') || n.includes('mana')) return 'blue';
+  if (n.includes('lightning') || n.includes('thunder') || n.includes('storm') || n.includes('chain')) return 'blue';
+  if (n.includes('poison') || n.includes('venom') || n.includes('nature') || n.includes('heal') || n.includes('rejuv')) return 'green';
+  if (n.includes('shadow') || n.includes('dark') || n.includes('void') || n.includes('demon') || n.includes('chaos') || n.includes('curse') || n.includes('soul')) return 'purple';
+  if (abilityType === 'magical') {
+    if (classId === 'mage') return 'purple';
+    if (classId === 'worge') return 'green';
+    return 'blue';
+  }
+  if (classId === 'ranger') return 'green';
+  return 'red';
+}
+
+function StackedSlashImpact({ x, y, level, color = 'red' }) {
+  const [frame, setFrame] = React.useState(0);
+  const rotRef = React.useRef(45 + Math.random() * 30);
+  const colorSet = SLASH_COLORS[color] || SLASH_COLORS.red;
+  const layers = level === 'large'
+    ? [{ key: colorSet.lg, size: 140 }, { key: colorSet.md, size: 90 }]
+    : [{ key: colorSet.md, size: 100 }, { key: colorSet.sm, size: 55 }];
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= 8) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)', zIndex: BATTLE.EFFECT_FLASH, pointerEvents: 'none' }}>
+      {layers.map((layer, i) => {
+        const sprite = effectSprites[layer.key];
+        if (!sprite) return null;
+        const sz = layer.size;
+        const scale = sz / sprite.frameW;
+        const sheetW = sprite.cols * sprite.frameW * scale;
+        const sheetH = sprite.frameH * scale;
+        const rot = i === 0 ? 0 : rotRef.current;
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            transform: `translate(-50%, -50%) rotate(${rot}deg)`,
+            width: sz, height: sz,
+            overflow: 'hidden',
+            opacity: i === 0 ? 1 : 0.85,
+            ...EFFECT_BLEND,
+          }}>
+            <div style={{
+              width: sz, height: sz,
+              backgroundImage: `url(${sprite.src})`,
+              backgroundSize: `${sheetW}px ${sheetH}px`,
+              backgroundPosition: `-${frame * sprite.frameW * scale}px 0px`,
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated',
+            }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const EFFECT_MASK = 'radial-gradient(ellipse at center, black 50%, transparent 80%)';
+const EFFECT_BLEND = { WebkitMaskImage: EFFECT_MASK, maskImage: EFFECT_MASK, mixBlendMode: 'screen' };
+
+function EffectSprite({ x, y, sprite, filter: filterProp, size }) {
+  const [frame, setFrame] = React.useState(0);
+  const totalFrames = sprite.frames;
+  const displaySize = size || 120;
+
+  const hasCustomLayout = sprite.cols !== undefined;
+  const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(sprite.frames));
+  const rows = hasCustomLayout ? (sprite.rows || Math.ceil(totalFrames / cols)) : Math.ceil(totalFrames / cols);
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
+
+  const useNormalBlend = sprite.blendMode === 'normal';
+  const blendStyle = useNormalBlend
+    ? { WebkitMaskImage: EFFECT_MASK, maskImage: EFFECT_MASK }
+    : EFFECT_BLEND;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) {
+        clearInterval(interval);
+        return;
+      }
+      setFrame(f);
+    }, 35);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  const earthFilter = useNormalBlend && !filterProp
+    ? 'brightness(1.6) saturate(1.4) drop-shadow(0 0 6px rgba(139,69,19,0.7)) drop-shadow(0 0 12px rgba(160,82,45,0.4))'
+    : filterProp || 'none';
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: dispW, height: dispH,
+      overflow: 'hidden',
+      zIndex: BATTLE.EFFECT_SPRITES,
+      pointerEvents: 'none',
+      ...blendStyle,
+    }}>
+      <div style={{
+        width: dispW,
+        height: dispH,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: earthFilter,
+      }} />
+    </div>
+  );
+}
+
+function GrowingEffectSprite({ x, y, sprite, filter: filterProp, startScale = 0.5, endScale = 1.8 }) {
+  const [frame, setFrame] = React.useState(0);
+  if (!sprite) return null;
+  const totalFrames = sprite.frames;
+  const baseSize = 160;
+
+  const cols = sprite.cols || Math.round(Math.sqrt(sprite.frames));
+  const rows = sprite.rows || Math.ceil(totalFrames / cols);
+  const frameW = sprite.frameW || (sprite.size ? sprite.size / cols : (sprite.width / cols));
+  const frameH = sprite.frameH || (sprite.size ? sprite.size / cols : (sprite.height / rows));
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) {
+        clearInterval(interval);
+        return;
+      }
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const progress = totalFrames > 1 ? frame / (totalFrames - 1) : 1;
+  const currentScale = startScale + (endScale - startScale) * progress;
+  const displaySize = baseSize * currentScale;
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: dispW, height: dispH,
+      overflow: 'hidden',
+      zIndex: BATTLE.EFFECT_FLASH,
+      pointerEvents: 'none',
+      opacity: progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1,
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: dispW,
+        height: dispH,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: filterProp || 'none',
+      }} />
+    </div>
+  );
+}
+
+function ThunderProjectileSprite() {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.lightningBolt || effectSprites.thunderProjectile2;
+  const frameW = sprite.frameW;
+  const frameH = sprite.frameH || frameW;
+  const cols = sprite.cols;
+  const displayW = 80;
+  const displayH = displayW * (frameH / frameW);
+  const scaleX = displayW / frameW;
+  const scaleY = displayH / frameH;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % sprite.frames;
+      setFrame(f);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  return (
+    <div style={{
+      width: displayW, height: displayH, overflow: 'hidden',
+      ...EFFECT_BLEND,
+      marginTop: -(displayH / 2 - 24),
+    }}>
+      <div style={{
+        width: displayW,
+        height: displayH,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${displayH}px`,
+        backgroundPosition: `-${col * displayW}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 6px #93c5fd) drop-shadow(0 0 14px #3b82f6)',
+      }} />
+    </div>
+  );
+}
+
+function SpriteProjectileTrail({ spriteData }) {
+  const [frame, setFrame] = React.useState(0);
+  const { src, frames, frameW, frameH } = spriteData;
+  const displaySize = 100;
+  const scaleRatio = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % frames;
+      setFrame(f);
+    }, 45);
+    return () => clearInterval(interval);
+  }, [frames]);
+
+  return (
+    <div style={{
+      width: displaySize, height: displaySize * (frameH / frameW), overflow: 'hidden',
+      marginTop: -(displaySize * (frameH / frameW) / 2),
+      marginLeft: -(displaySize / 2),
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize * (frameH / frameW),
+        backgroundImage: `url(${src})`,
+        backgroundSize: `${frames * frameW * scaleRatio}px ${displaySize * (frameH / frameW)}px`,
+        backgroundPosition: `-${frame * displaySize}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 8px #f97316) drop-shadow(0 0 16px #ef4444)',
+      }} />
+    </div>
+  );
+}
+
+function LoopingEffectSprite({ sprite, displaySize = 40, filter, offsetY = -30, opacity = 0.85 }) {
+  const [frame, setFrame] = React.useState(0);
+  const totalFrames = sprite.frames;
+  const hasCustomLayout = sprite.cols !== undefined;
+  const cols = hasCustomLayout ? sprite.cols : Math.round(Math.sqrt(totalFrames));
+  const rows = hasCustomLayout ? (sprite.rows || Math.ceil(totalFrames / cols)) : Math.ceil(totalFrames / cols);
+  const frameW = hasCustomLayout ? sprite.frameW : (sprite.size / cols);
+  const frameH = hasCustomLayout ? sprite.frameH : (sprite.size / cols);
+  const uniformScale = displaySize / Math.max(frameW, frameH);
+  const dispW = frameW * uniformScale;
+  const dispH = frameH * uniformScale;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % totalFrames;
+      setFrame(f);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [totalFrames]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', top: offsetY, left: '50%',
+      transform: 'translateX(-50%)', pointerEvents: 'none',
+      width: dispW, height: dispH, overflow: 'hidden', opacity,
+      zIndex: 25,
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: dispW,
+        height: dispH,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * dispW}px ${rows * dispH}px`,
+        backgroundPosition: `-${col * dispW}px -${row * dispH}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: filter || 'none',
+      }} />
+    </div>
+  );
+}
+
+function DodgeFlashSprite({ x, y }) {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.thunderProjectile;
+  const displaySize = 56;
+  const cols = sprite.cols;
+  const frameW = sprite.frameW;
+  const scaleX = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames * 2) { clearInterval(interval); return; }
+      setFrame(f % sprite.frames);
+    }, 35);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS, opacity: 0.9,
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${cols * frameW * scaleX}px ${displaySize}px`,
+        backgroundPosition: `-${col * displaySize}px 0px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'hue-rotate(180deg) brightness(2) drop-shadow(0 0 8px #38bdf8) drop-shadow(0 0 16px #6ee7b7)',
+      }} />
+    </div>
+  );
+}
+
+function CastingSpriteEffect({ x, y }) {
+  const [frame, setFrame] = React.useState(0);
+  const sprite = effectSprites.magicSpell;
+  const displaySize = 80;
+  const cols = Math.round(Math.sqrt(sprite.frames));
+  const frameW = sprite.size / cols;
+  const scaleX = displaySize / frameW;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 30);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: 'translate(-50%, -50%)',
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.8,
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${sprite.size * scaleX}px ${sprite.size * scaleX}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #8b5cf6)',
+      }} />
+    </div>
+  );
+}
+
+function WeaponContactSprite({ x, y, playCount = 1 }) {
+  const [frame, setFrame] = React.useState(0);
+  const [cycle, setCycle] = React.useState(0);
+  const sprite = effectSprites.weaponHit;
+  const displaySize = 50;
+  const cols = Math.round(Math.sqrt(sprite.frames));
+  const frameW = sprite.size / cols;
+  const scaleX = displaySize / frameW;
+  const offsetX = (cycle % 3 - 1) * 8;
+  const offsetY = (cycle % 2) * 6 - 3;
+
+  React.useEffect(() => {
+    let f = 0;
+    let c = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= sprite.frames) {
+        c++;
+        if (c >= playCount) { clearInterval(interval); return; }
+        f = 0;
+        setCycle(c);
+      }
+      setFrame(f);
+    }, 25);
+    return () => clearInterval(interval);
+  }, [playCount]);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  return (
+    <div style={{
+      position: 'absolute', left: `${x}%`, top: `${y}%`,
+      transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
+      width: displaySize, height: displaySize, overflow: 'hidden',
+      pointerEvents: 'none', zIndex: BATTLE.EFFECT_BEAMS - 5, opacity: 0.9,
+      ...EFFECT_BLEND,
+    }}>
+      <div style={{
+        width: displaySize,
+        height: displaySize,
+        backgroundImage: `url(${sprite.src})`,
+        backgroundSize: `${sprite.size * scaleX}px ${sprite.size * scaleX}px`,
+        backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        filter: 'drop-shadow(0 0 4px #fbbf24) drop-shadow(0 0 8px #f59e0b)',
+      }} />
+    </div>
+  );
+}
+
+const FIREBALL_FRAMES = [
+  '/icons/fireball_frame_01.png',
+  '/icons/fireball_frame_02.png',
+  '/icons/fireball_frame_03.png',
+  '/icons/fireball_frame_04.png',
+  '/icons/fireball_frame_05.png',
+  '/icons/fireball_frame_06.png',
+  '/icons/fireball_frame_07.png',
+  '/icons/fireball_frame_08.png',
+];
+
+const WATER_ARROW_FRAMES = [
+  '/icons/water_arrow_frame_01.png',
+  '/icons/water_arrow_frame_02.png',
+  '/icons/water_arrow_frame_03.png',
+  '/icons/water_arrow_frame_04.png',
+  '/icons/water_arrow_frame_05.png',
+  '/icons/water_arrow_frame_06.png',
+  '/icons/water_arrow_frame_07.png',
+  '/icons/water_arrow_frame_08.png',
+];
+
+function FireballProjectile({ startX, startY, endX, endY, phase }) {
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 56;
+  const riseY = startY - 14;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % FIREBALL_FRAMES.length;
+      setFrame(f);
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
+
+  let posX, posY;
+  if (phase === 'rise') {
+    posX = startX;
+    posY = startY;
+  } else if (phase === 'fly') {
+    posX = endX;
+    posY = endY;
+  } else {
+    posX = startX;
+    posY = startY;
+  }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.5s ease-out'
+        : phase === 'fly'
+          ? 'left 0.5s ease-in, top 0.5s ease-in'
+          : 'none',
+      transform: `translate(-50%, -50%) rotate(${phase === 'fly' ? travelAngle : 0}deg)`,
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize,
+      }}>
+        <img
+          src={FIREBALL_FRAMES[frame]}
+          alt=""
+          style={{
+            width: displaySize,
+            height: displaySize,
+            borderRadius: '50%',
+            filter: 'drop-shadow(0 0 12px #f97316) drop-shadow(0 0 24px #ef4444) brightness(1.2)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FireScatterSprite({ x, y, angle, delay }) {
+  const fireSprite = effectSprites.fireSpin || effectSprites.fire || effectSprites.sunburn;
+  const [frame, setFrame] = React.useState(0);
+  const [visible, setVisible] = React.useState(false);
+  const [scattered, setScattered] = React.useState(false);
+  const displaySize = 40;
+  const totalFrames = fireSprite?.frames || 64;
+  const spriteSize = fireSprite?.size || 800;
+  const cols = Math.round(Math.sqrt(totalFrames));
+  const frameW = spriteSize / cols;
+  const scaleX = displaySize / frameW;
+  const dist = 8;
+  const targetX = x + Math.cos(angle * Math.PI / 180) * dist;
+  const targetY = y + Math.sin(angle * Math.PI / 180) * dist;
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      setVisible(true);
+      requestAnimationFrame(() => setScattered(true));
+    }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  React.useEffect(() => {
+    if (!visible) return;
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames) { clearInterval(interval); return; }
+      setFrame(f);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [visible, totalFrames]);
+
+  if (!visible || !fireSprite) return null;
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${scattered ? targetX : x}%`,
+      top: `${scattered ? targetY : y}%`,
+      transform: 'translate(-50%, -50%)',
+      transition: 'left 0.4s ease-out, top 0.4s ease-out, opacity 0.3s',
+      zIndex: BATTLE.EFFECT_BEAMS + 5, pointerEvents: 'none',
+      opacity: frame > totalFrames * 0.7 ? 0 : 1,
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+        ...EFFECT_BLEND,
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${fireSprite.src})`,
+          backgroundSize: `${spriteSize * scaleX}px ${spriteSize * scaleX}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 0 8px #f97316) brightness(1.4)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function FireballExplosion({ x, y, angles }) {
+  return (
+    <>
+      {angles.map((angle, i) => (
+        <FireScatterSprite key={i} x={x} y={y} angle={angle} delay={i * 60} />
+      ))}
+    </>
+  );
+}
+
+function ResurrectEffect({ x, y, onComplete }) {
+  const [frame, setFrame] = React.useState(0);
+  const displayW = 180;
+  const displayH = 120;
+  const totalFrames = 3;
+  const frameW = 1024 / 3;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f++;
+      if (f >= totalFrames * 3) {
+        clearInterval(interval);
+        if (onComplete) onComplete();
+        return;
+      }
+      setFrame(f % totalFrames);
+    }, 120);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x}%`,
+      top: `${y}%`,
+      transform: 'translate(-50%, -70%)',
+      zIndex: BATTLE.EFFECT_BEAMS + 10, pointerEvents: 'none',
+      animation: 'resurrectGlow 1.1s ease-out forwards',
+    }}>
+      <div style={{
+        width: displayW, height: displayH, overflow: 'hidden',
+      }}>
+        <img
+          src="/effects/resurrect_sprite.png"
+          alt=""
+          style={{
+            width: displayW * totalFrames,
+            height: displayH,
+            marginLeft: -frame * displayW,
+            imageRendering: 'auto',
+            filter: 'drop-shadow(0 0 16px #22c55e) drop-shadow(0 0 32px #16a34a) brightness(1.3)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WaterArrowProjectile({ startX, startY, endX, endY, phase }) {
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 64;
+  const riseY = startY - 10;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % WATER_ARROW_FRAMES.length;
+      setFrame(f);
+    }, 70);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  let posX, posY;
+  if (phase === 'rise') { posX = startX; posY = startY; }
+  else if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.4s ease-out'
+        : phase === 'fly'
+          ? 'left 0.45s ease-in, top 0.45s ease-in'
+          : 'none',
+      transform: 'translate(-50%, -50%)',
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize,
+        transform: `rotate(${angle}deg)`,
+      }}>
+        <img
+          src={WATER_ARROW_FRAMES[frame]}
+          alt=""
+          style={{
+            width: displaySize,
+            height: displaySize,
+            filter: 'drop-shadow(0 0 10px #22d3ee) drop-shadow(0 0 20px #0891b2) brightness(1.3)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WaterSplashSprite({ x, y, angle, delay }) {
+  const [visible, setVisible] = React.useState(false);
+  const [scattered, setScattered] = React.useState(false);
+  const [opacity, setOpacity] = React.useState(1);
+  const size = 16 + Math.random() * 12;
+  const dist = 5 + Math.random() * 6;
+  const targetX = x + Math.cos(angle * Math.PI / 180) * dist;
+  const targetY = y + Math.sin(angle * Math.PI / 180) * dist;
+
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      setVisible(true);
+      requestAnimationFrame(() => setScattered(true));
+    }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  React.useEffect(() => {
+    if (!visible) return;
+    const t = setTimeout(() => setOpacity(0), 400);
+    return () => clearTimeout(t);
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${scattered ? targetX : x}%`,
+      top: `${scattered ? targetY : y}%`,
+      transform: 'translate(-50%, -50%)',
+      transition: 'left 0.5s ease-out, top 0.5s ease-out, opacity 0.4s',
+      zIndex: BATTLE.EFFECT_BEAMS + 5, pointerEvents: 'none',
+      opacity,
+    }}>
+      <div style={{
+        width: size, height: size,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, #67e8f9 0%, #06b6d4 50%, #0e7490 100%)',
+        boxShadow: '0 0 8px #22d3ee, 0 0 16px rgba(6,182,212,0.5)',
+      }} />
+    </div>
+  );
+}
+
+function WaterSplashExplosion({ x, y, angles }) {
+  return (
+    <>
+      {angles.map((angle, i) => (
+        <WaterSplashSprite key={i} x={x} y={y} angle={angle} delay={i * 40} />
+      ))}
+    </>
+  );
+}
+
+function IceStormProjectile({ startX, startY, endX, endY, phase }) {
+  const freezingSprite = effectSprites.freezing;
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 48;
+  const cols = Math.round(Math.sqrt(freezingSprite.frames));
+  const frameW = freezingSprite.size / cols;
+  const scaleX = displaySize / frameW;
+  const riseY = startY - 14;
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const travelAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % freezingSprite.frames;
+      setFrame(f);
+    }, 35);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+
+  let posX, posY;
+  if (phase === 'rise') { posX = startX; posY = startY; }
+  else if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${phase === 'rise' ? riseY : posY}%`,
+      transition: phase === 'rise'
+        ? 'top 0.5s ease-out'
+        : phase === 'fly'
+          ? 'left 0.5s ease-in, top 0.5s ease-in'
+          : 'none',
+      transform: `translate(-50%, -50%) rotate(${phase === 'fly' ? travelAngle : 0}deg)`,
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+        animation: 'pulse 0.4s infinite',
+        ...EFFECT_BLEND,
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${freezingSprite.src})`,
+          backgroundSize: `${freezingSprite.size * scaleX}px ${freezingSprite.size * scaleX}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 0 12px #60a5fa) drop-shadow(0 0 24px #3b82f6) brightness(1.4) hue-rotate(-10deg)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function PoisonGustProjectile({ startX, startY, endX, endY, phase }) {
+  const gustSprite = effectSprites.windBreath;
+  const [frame, setFrame] = React.useState(0);
+  const displaySize = 72;
+  const cols = gustSprite.cols || 18;
+  const frameW = gustSprite.frameW || 32;
+  const frameH = gustSprite.frameH || 32;
+  const scaleX = displaySize / frameW;
+  const scaleY = displaySize / frameH;
+
+  React.useEffect(() => {
+    let f = 0;
+    const interval = setInterval(() => {
+      f = (f + 1) % (gustSprite.frames || 18);
+      setFrame(f);
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
+
+  const col = frame % cols;
+  const row = Math.floor(frame / cols);
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+  let posX, posY;
+  if (phase === 'fly') { posX = endX; posY = endY; }
+  else { posX = startX; posY = startY; }
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${posX}%`,
+      top: `${posY}%`,
+      transition: phase === 'fly'
+        ? 'left 0.55s ease-in, top 0.55s ease-in'
+        : 'none',
+      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+      zIndex: BATTLE.EFFECT_BEAMS, pointerEvents: 'none',
+    }}>
+      <div style={{
+        width: displaySize, height: displaySize, overflow: 'hidden',
+        ...EFFECT_BLEND,
+      }}>
+        <div style={{
+          width: displaySize,
+          height: displaySize,
+          backgroundImage: `url(${gustSprite.src})`,
+          backgroundSize: `${cols * frameW * scaleX}px ${(gustSprite.rows || 1) * frameH * scaleY}px`,
+          backgroundPosition: `-${col * displaySize}px -${row * displaySize}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'hue-rotate(90deg) saturate(2.5) drop-shadow(0 0 10px #22c55e) drop-shadow(0 0 20px #16a34a) brightness(1.3)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function MiniBar({ current, max, color, height = 5, width = 60 }) {
+  const pct = Math.max(0, Math.min(100, (current / max) * 100));
+  const isLow = pct < 25;
+  const isCrit = pct < 10 && pct > 0;
+  const barHeight = Math.max(height, 6);
+  const fillColors = {
+    '#22c55e': { top: '#78e08f', mid: '#38b764', bot: '#1e6f3e', glow: 'rgba(34,197,94,0.4)' },
+    '#ef4444': { top: '#ff8a8a', mid: '#ef4444', bot: '#a22', glow: 'rgba(239,68,68,0.5)' },
+    '#3b82f6': { top: '#7db8ff', mid: '#3b82f6', bot: '#1d4ed8', glow: 'rgba(59,130,246,0.4)' },
+    '#f59e0b': { top: '#fcd34d', mid: '#f59e0b', bot: '#b45309', glow: 'rgba(245,158,11,0.4)' },
+    '#dc2626': { top: '#f87171', mid: '#dc2626', bot: '#7f1d1d', glow: 'rgba(220,38,38,0.6)' },
+    '#a855f7': { top: '#c084fc', mid: '#a855f7', bot: '#6b21a8', glow: 'rgba(168,85,247,0.4)' },
+    '#06b6d4': { top: '#67e8f9', mid: '#06b6d4', bot: '#0e7490', glow: 'rgba(6,182,212,0.4)' },
+  };
+  const fc = fillColors[color] || { top: color + '99', mid: color, bot: color + 'aa', glow: color + '44' };
+  return (
+    <div style={{
+      height: barHeight, width, 
+      background: 'linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%)',
+      overflow: 'hidden',
+      border: '1px solid #2a2a3e',
+      boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)',
+      imageRendering: 'pixelated',
+      position: 'relative',
+    }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, bottom: 0,
+        width: `${pct}%`,
+        background: `linear-gradient(180deg, ${fc.top} 0%, ${fc.mid} 40%, ${fc.bot} 100%)`,
+        transition: 'width 0.4s ease',
+        boxShadow: pct > 0 ? `0 0 ${barHeight}px ${fc.glow}` : 'none',
+      }} />
+      {pct > 0 && barHeight >= 5 && (
+        <div style={{
+          position: 'absolute', top: 1, left: 1,
+          width: `calc(${pct}% - 2px)`, height: '40%',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)',
+          transition: 'width 0.4s ease',
+        }} />
+      )}
+      {isCrit && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          animation: 'pulse 0.8s infinite',
+          border: '1px solid rgba(239,68,68,0.6)',
+        }} />
+      )}
+    </div>
+  );
+}
+
+function getUnitSprite(unit) {
+  if (unit.classId && unit.classId === 'worge' && unit.bearForm) {
+    if (unit.eliteForm) {
+      return getWorgBearTransformSprite(unit.raceId, unit.namedHeroId);
+    }
+    return getWorgTransformSprite(unit.raceId, unit.namedHeroId);
+  }
+  if (unit.classId && unit.classId === 'warrior' && unit.demonBlade) {
+    return warriorTransformSprite;
+  }
+  if (unit.classId === 'mage' && unit.mageTransform && mageTransformSprites[unit.raceId]) {
+    return mageTransformSprites[unit.raceId];
+  }
+  if (unit.eliteForm && unit.classId && unit.raceId && unit.team === 'player') {
+    const eliteSprite = getEliteTransformSprite(unit.classId, unit.raceId);
+    if (eliteSprite) return eliteSprite;
+  }
+  if (unit.classId && unit.raceId) {
+    const sprite = getPlayerSprite(unit.classId, unit.raceId, unit.namedHeroId);
+    if (unit.team === 'enemy') {
+      return { ...sprite, filter: sprite.filter ? sprite.filter + ' brightness(0.8)' : 'brightness(0.8)' };
+    }
+    return sprite;
+  }
+  if (unit.templateId) {
+    const sprite = getEnemySprite(unit.templateId);
+    if (unit.isBoss) {
+      const bossFilters = {
+        nature_elemental: 'hue-rotate(80deg) saturate(2.5) brightness(0.7) contrast(1.3)',
+        water_elemental: 'hue-rotate(200deg) saturate(2.0) brightness(0.6) contrast(1.4)',
+        lich: 'hue-rotate(270deg) saturate(2.5) brightness(0.5) contrast(1.5)',
+        demon_lord: 'hue-rotate(340deg) saturate(3.0) brightness(0.5) contrast(1.6)',
+        void_king: 'hue-rotate(280deg) saturate(2.0) brightness(0.4) contrast(1.8)',
+        grand_shaman: 'hue-rotate(120deg) saturate(2.0) brightness(0.65) contrast(1.3)',
+        canyon_warlord: 'hue-rotate(15deg) saturate(2.5) brightness(0.6) contrast(1.4)',
+        frost_wyrm: 'hue-rotate(190deg) saturate(2.2) brightness(0.55) contrast(1.4)',
+        shadow_beast: 'hue-rotate(260deg) saturate(2.0) brightness(0.45) contrast(1.5)',
+        void_sentinel: 'hue-rotate(290deg) saturate(2.5) brightness(0.4) contrast(1.7)',
+        corrupted_grove_keeper: 'hue-rotate(90deg) saturate(2.5) brightness(0.6) contrast(1.4)',
+      };
+      return { ...sprite, filter: bossFilters[unit.templateId] || 'hue-rotate(180deg) saturate(2) brightness(0.5)' };
+    }
+    return sprite;
+  }
+  return getPlayerSprite('warrior');
+}
+
+function isRangedUnit(unit) {
+  if (unit.classId === 'ranger' || unit.classId === 'mage') return true;
+  if (unit.templateId === 'dark_mage' || unit.templateId === 'lich') return true;
+  if (unit.templateId === 'water_elemental' || unit.templateId === 'nature_elemental') return true;
+  if (unit.templateId === 'corrupted_grove_keeper') return true;
+  return false;
+}
+
+function isElectricAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('lightning') || n.includes('thunder') || n.includes('chain light') || n.includes('storm') || n.includes('tempest');
+}
+
+function isFireballAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n === 'fireball';
+}
+
+function isIceStormAbility(abilityName) {
+  if (!abilityName) return false;
+  return abilityName.toLowerCase() === 'ice storm';
+}
+
+function isWaterAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('tidal') || n.includes('torrent') || n.includes('tsunami') || n.includes('water') || n.includes('deluge') || n.includes('aqua') || n.includes('splash');
+}
+
+function isPoisonGustAbility(abilityName) {
+  if (!abilityName) return false;
+  const n = abilityName.toLowerCase();
+  return n.includes('poison arrow') || n.includes('poison spore') || n.includes('toxic spore') || n.includes('envenom');
+}
+
+function getProjectileColor(unit, abilityName) {
+  if (!abilityName) return '#e2e8f0';
+  const n = abilityName.toLowerCase();
+  if (n.includes('fire') || n.includes('hellfire') || n.includes('meteor')) return '#f97316';
+  if (n.includes('shadow') || n.includes('dark') || n.includes('void') || n.includes('death') || n.includes('soul')) return '#7c3aed';
+  if (n.includes('ice') || n.includes('frost')) return '#38bdf8';
+  if (n.includes('drain')) return '#a855f7';
+  if (n.includes('arcane')) return '#8b5cf6';
+  if (n.includes('arrow') || n.includes('shot') || n.includes('poison')) return '#22c55e';
+  if (unit.classId === 'mage') return '#8b5cf6';
+  if (unit.classId === 'ranger') return '#22c55e';
+  return '#e2e8f0';
+}
+
+function getBeamTrail(unit, abilityName) {
+  const classId = unit.classId || '';
+  if (unit.demonBlade && classId === 'warrior') return beamTrails.blue;
+  const fx = getAbilityEffect(classId, abilityName || '');
+  if (fx.beam) return beamTrails[fx.beam];
+  const n = (abilityName || '').toLowerCase();
+  if (n.includes('fire') || n.includes('hellfire')) return beamTrails.orange;
+  if (n.includes('shadow') || n.includes('dark') || n.includes('void')) return beamTrails.purple;
+  if (n.includes('ice') || n.includes('frost')) return beamTrails.purple;
+  if (n.includes('arrow') || n.includes('shot') || n.includes('poison')) return beamTrails.green;
+  if (classId === 'mage') return beamTrails.purple;
+  if (classId === 'ranger') return beamTrails.green;
+  return beamTrails.red;
+}
+
+const BATTLE_SCALE_OVERRIDES = {};
+function getUnitEffectSize(unit) {
+  if (!unit) return 140;
+  const base = 200;
+  const bossScale = (unit.team === 'enemy' && unit.isBoss) ? (unit.bossScale || 1.6) : 1;
+  const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+  const unitWidth = base * bossScale * comboScale;
+  return Math.round(unitWidth * 0.85);
+}
+
+function getHitEffectByColor(color) {
+  if (!color) return effectSprites.hitEffect1;
+  const c = color.toLowerCase();
+  if (c.includes('22c55e') || c === '#22c55e' || c === 'green') return effectSprites.hitEffect3;
+  if (c.includes('38bdf8') || c === '#38bdf8' || c.includes('3b82f6') || c === 'blue') return effectSprites.hitEffect2;
+  return effectSprites.hitEffect1;
+}
+
+function getHitEffect(unit, abilityName, isRanged, abilityId) {
+  const classId = unit.classId || '';
+  const fx = getAbilityEffect(classId, abilityName || '', abilityId);
+  if (unit.demonBlade && classId === 'warrior') {
+    const demonSlashes = ['demonSlash1', 'demonSlash2', 'demonSlash3'];
+    const demonFx = fx.effect && fx.effect.startsWith('demonSlash') ? fx.effect : demonSlashes[Math.floor(Math.random() * demonSlashes.length)];
+    return { sprite: effectSprites[demonFx], filter: null, postHeal: null };
+  }
+  if (fx.effect) return { sprite: effectSprites[fx.effect], filter: fx.effectFilter || null, postHeal: fx.postHealEffect ? effectSprites[fx.postHealEffect] : null, followUp: fx.followUp || null };
+  if (isRanged) {
+    const color = getProjectileColor(unit, abilityName);
+    return { sprite: getHitEffectByColor(color), filter: null, postHeal: null, followUp: null };
+  }
+  return { sprite: effectSprites.hitEffect1, filter: null, postHeal: null, followUp: null };
+}
+
+class BattleErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error('[BattleScreen Crash]', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: '#0a0a0f', color: '#e2e2e2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Jost, sans-serif', padding: 40, zIndex: 99999 }}>
+          <div style={{ fontSize: '1.8rem', color: '#ef4444', fontFamily: 'Cinzel, serif', marginBottom: 16 }}>Battle Crashed</div>
+          <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: 20, textAlign: 'center', maxWidth: 500 }}>
+            Something went wrong during combat. The error details below will help fix the issue.
+          </div>
+          <div style={{ background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, padding: 16, maxWidth: 600, width: '100%', maxHeight: 200, overflow: 'auto', fontSize: '0.75rem', fontFamily: 'monospace', color: '#f87171', marginBottom: 20 }}>
+            {this.state.error?.toString()}
+            {this.state.errorInfo?.componentStack && (
+              <pre style={{ marginTop: 8, color: '#888', whiteSpace: 'pre-wrap', fontSize: '0.65rem' }}>
+                {this.state.errorInfo.componentStack.slice(0, 500)}
+              </pre>
+            )}
+          </div>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null, errorInfo: null }); window.location.hash = '#lobby'; window.location.reload(); }}
+            style={{ padding: '10px 30px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '1rem' }}
+          >
+            Return to Lobby
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function BattleStatBar({ label, current, max, color, bright }) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+      <span style={{ width: 16, fontSize: '0.55rem', fontWeight: 700, color: bright, textAlign: 'right', fontFamily: "'Cinzel', serif", textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{label}</span>
+      <div style={{
+        flex: 1, height: 8, background: 'rgba(0,0,0,0.6)', borderRadius: 4,
+        overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', position: 'relative',
+      }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 0, bottom: 0,
+          width: `${pct}%`, borderRadius: 4,
+          background: `linear-gradient(180deg, ${bright} 0%, ${color} 100%)`,
+          transition: 'width 0.4s ease',
+          boxShadow: pct > 0 ? `0 0 6px ${color}66` : 'none',
+        }} />
+      </div>
+      <span style={{ minWidth: 32, fontSize: '0.5rem', color: 'rgba(226,232,240,0.7)', fontWeight: 600, textAlign: 'right', textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{Math.floor(current)}</span>
+    </div>
+  );
+}
+
+function AnimatedCounter({ value, label, color, delay = 0 }) {
+  const [display, setDisplay] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+  useEffect(() => {
+    if (!started) return;
+    const duration = 800;
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(eased * value));
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, value]);
+  return (
+    <span style={{
+      color, fontSize: '1.15rem', fontWeight: 800, fontFamily: "'Cinzel', serif",
+      textShadow: `0 0 12px ${color}, 0 2px 4px rgba(0,0,0,0.5)`,
+      opacity: started ? 1 : 0,
+      animation: started ? 'countUp 0.4s ease-out both' : 'none',
+    }}>
+      +{display} {label}
+    </span>
+  );
+}
+
+function BattleScreenInner() {
+  const {
+    battleState, battleUnits, battleTurnOrder, battleCurrentTurn,
+    selectedTargetId, lastAction, battleLog, playerClass, playerName,
+    level, cooldowns, currentLocation,
+    useAbility, processAIAction, advanceTurn, setSelectedTarget,
+    returnToWorld, startBattle, returnFromTraining,
+    skipTurn, defendTurn, autoAttack, moveRow, fleeBattle,
+    playerHealth, playerMana, playerStamina,
+    playerMaxHealth, playerMaxMana, playerMaxStamina,
+    inventory, useConsumable, useGrudge,
+    autoBattleEnabled, toggleAutoBattle,
+    heroRoster,
+  } = useGameStore();
+
+  const [unitAnims, setUnitAnims] = useState({});
+  const [dashPositions, setDashPositions] = useState({});
+  const [projectiles, setProjectiles] = useState([]);
+  const [floatingDmg, setFloatingDmg] = useState([]);
+  const [introComplete, setIntroComplete] = useState(false);
+  const [activeParticles, setActiveParticles] = useState([]);
+  const [unitFlashes, setUnitFlashes] = useState({});
+  const [dyingUnits, setDyingUnits] = useState({});
+  const [hitEffects, setHitEffects] = useState([]);
+  const [critFx, setCritFx] = useState([]);
+  const [slashImpactFx, setSlashImpactFx] = useState([]);
+  const [dodgeFlashes, setDodgeFlashes] = useState([]);
+  const [castingFx, setCastingFx] = useState([]);
+  const [weaponContactFx, setWeaponContactFx] = useState([]);
+  const [fireballFx, setFireballFx] = useState([]);
+  const [fireExplosionFx, setFireExplosionFx] = useState([]);
+  const [iceStormFx, setIceStormFx] = useState([]);
+  const [waterArrowFx, setWaterArrowFx] = useState([]);
+  const [waterSplashFx, setWaterSplashFx] = useState([]);
+  const [poisonGustFx, setPoisonGustFx] = useState([]);
+  const [resurrectFx, setResurrectFx] = useState([]);
+  const [showItemsPanel, setShowItemsPanel] = useState(false);
+  const [healTargetMode, setHealTargetMode] = useState(null);
+  const [hoveredGearUnitId, setHoveredGearUnitId] = useState(null);
+  const logRef = useRef(null);
+  const actionProcessed = useRef(null);
+  const introStarted = useRef(false);
+  const aiProcessing = useRef(false);
+  const battleContainerRef = useRef(null);
+  const containerHeightRef = useRef(600);
+
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminPaused, setAdminPaused] = useState(false);
+  const [adminOverrides, setAdminOverrides] = useState(() => adminConfig.getEffectPositions());
+  const [adminDragging, setAdminDragging] = useState(null);
+  const adminDragStart = useRef(null);
+  const [bearFormOverride, setBearFormOverride] = useState(() => adminConfig.getBearFormOverride());
+  const getUnitTransformOverride = useCallback((unit) => {
+    if (!unit || !unit.raceId || !unit.classId) return { offsetX: 0, offsetY: 0, scale: 1.0 };
+    let formId = 'base';
+    if (unit.classId === 'worge' && unit.bearForm && unit.eliteForm) formId = 'elite_bear';
+    else if (unit.classId === 'worge' && unit.bearForm) formId = 'worge';
+    else if (unit.classId === 'warrior' && unit.demonBlade) formId = 'demon_blade';
+    else if (unit.classId === 'mage' && unit.mageTransform) formId = 'mage_transform';
+    else if (unit.eliteForm) formId = 'elite';
+    return adminConfig.getTransformOverride(unit.raceId, unit.classId, formId);
+  }, []);
+  const spriteLayout = adminConfig.getSpriteLayout();
+  const actionBarLayout = adminConfig.getActionBar();
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === '`' || e.key === '~') {
+        setAdminMode(prev => {
+          if (!prev) setAdminPaused(true);
+          else setAdminPaused(false);
+          return !prev;
+        });
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const handleAdminDragStart = useCallback((effectKey, e) => {
+    e.stopPropagation();
+    setAdminDragging(effectKey);
+    adminDragStart.current = { y: e.clientY, startOffset: adminOverrides[effectKey].offsetY };
+  }, [adminOverrides]);
+
+  const handleAdminDragMove = useCallback((e) => {
+    if (!adminDragging || !adminDragStart.current) return;
+    const dy = e.clientY - adminDragStart.current.y;
+    setAdminOverrides(prev => ({
+      ...prev,
+      [adminDragging]: { ...prev[adminDragging], offsetY: adminDragStart.current.startOffset + dy },
+    }));
+  }, [adminDragging]);
+
+  const handleAdminDragEnd = useCallback(() => {
+    setAdminDragging(null);
+    adminDragStart.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (!adminDragging) return;
+    window.addEventListener('mousemove', handleAdminDragMove);
+    window.addEventListener('mouseup', handleAdminDragEnd);
+    return () => {
+      window.removeEventListener('mousemove', handleAdminDragMove);
+      window.removeEventListener('mouseup', handleAdminDragEnd);
+    };
+  }, [adminDragging, handleAdminDragMove, handleAdminDragEnd]);
+
+  useEffect(() => {
+    if (adminMode) {
+      adminConfig.saveEffectPositions(adminOverrides);
+    }
+  }, [adminOverrides, adminMode]);
+
+  React.useLayoutEffect(() => {
+    const el = battleContainerRef.current;
+    if (el) containerHeightRef.current = el.clientHeight || 600;
+  });
+  useEffect(() => {
+    const el = battleContainerRef.current;
+    if (!el) return;
+    const update = () => { containerHeightRef.current = el.clientHeight || 600; };
+    update();
+    if (typeof ResizeObserver !== 'undefined') {
+      const obs = new ResizeObserver(update);
+      obs.observe(el);
+      return () => obs.disconnect();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (adminMode) {
+      adminConfig.saveBearFormOverride(bearFormOverride);
+    }
+  }, [bearFormOverride, adminMode]);
+
+  const phase = battleState?.phase;
+  const spd = autoBattleEnabled ? 1 : 1.25;
+  useEffect(() => { if (phase !== 'player_turn') { setShowItemsPanel(false); setHealTargetMode(null); } }, [phase]);
+  const isBoss = battleState?.isBoss;
+  const isTraining = battleState?.isTraining;
+  const isArena = battleState?.isArena;
+  const dungeonProgress = useGameStore(s => s.dungeonProgress);
+  const isDungeon = dungeonProgress !== null;
+  const dungeonTheme = dungeonProgress?.theme || 'default';
+  const dungeonNode = dungeonProgress?.currentNode;
+  const dungeonTotal = dungeonProgress?.totalNodes;
+  const isDungeonBoss = isDungeon && dungeonNode === (dungeonTotal || 5) - 1;
+  const getDungeonBg = () => {
+    if (dungeonTheme === 'lava') return isDungeonBoss ? '/backgrounds/lava_boss_walkup.png' : '/backgrounds/lava_dungeon_path.png';
+    if (dungeonTheme === 'void') return isDungeonBoss ? '/backgrounds/portal_arena.png' : '/backgrounds/purple_dungeon.png';
+    return isDungeonBoss ? '/backgrounds/scene_field.png' : '/backgrounds/scene_dungeon.png';
+  };
+  const bgImage = isArena ? `${BB}/arena.png` : isDungeon ? getDungeonBg() : (locationBackgrounds[currentLocation] || (isTraining ? `${BB}/castle_arena.jpg` : `${BB}/battle_arena_default.png`));
+  const bgGradient = !bgImage ? (zoneGradients[currentLocation] || zoneGradients.default) : null;
+
+  const currentUnitId = battleTurnOrder[battleCurrentTurn];
+  const currentUnit = battleUnits.find(u => u.id === currentUnitId);
+  const playerUnit = battleUnits.find(u => u.id === 'player');
+
+  const playerTeam = useMemo(() => battleUnits.filter(u => u.team === 'player'), [battleUnits]);
+  const enemyTeam = useMemo(() => battleUnits.filter(u => u.team === 'enemy'), [battleUnits]);
+
+  const isPlayerTurn = phase === 'player_turn' && !adminPaused;
+  const currentCls = currentUnit?.classId ? classDefinitions[currentUnit.classId] : null;
+
+  const displayedAbilities = useMemo(() => {
+    if (!currentCls || !currentUnit) return [];
+    const allAbilities = currentUnit.abilities || currentCls.abilities;
+    const abilityMap = {};
+    for (const ab of allAbilities) {
+      abilityMap[ab.id] = ab;
+    }
+    const loadout = currentUnit.abilityLoadout;
+    if (loadout && loadout.length > 0) {
+      return loadout.map(id => abilityMap[id]).filter(Boolean);
+    }
+    return allAbilities.slice(0, 5);
+  }, [currentCls, currentUnit?.abilities, currentUnit?.abilityLoadout]);
+
+  useEffect(() => {
+    setBgm('battle');
+    return () => setBgm('ambient');
+  }, []);
+
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [battleLog]);
+
+  useEffect(() => {
+    if (phase === 'intro' && !introStarted.current) {
+      introStarted.current = true;
+      setTimeout(() => {
+        setIntroComplete(true);
+        setTimeout(() => advanceTurn(), 300);
+      }, 1000);
+    }
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === 'ai_turn' && introComplete && !aiProcessing.current && !adminPaused) {
+      aiProcessing.current = true;
+      const timer = setTimeout(() => {
+        processAIAction();
+        aiProcessing.current = false;
+      }, autoBattleEnabled ? 400 : 600);
+      return () => { clearTimeout(timer); aiProcessing.current = false; };
+    }
+  }, [phase, battleCurrentTurn, introComplete, adminPaused]);
+
+  useEffect(() => {
+    if (autoBattleEnabled && phase === 'player_turn' && introComplete && !adminPaused) {
+      const timer = setTimeout(() => {
+        autoAttack();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoBattleEnabled, phase, battleCurrentTurn, introComplete, adminPaused]);
+
+  useEffect(() => {
+    if (phase === 'victory') playVictory();
+    if (phase === 'defeat') playDefeat();
+  }, [phase]);
+
+  // Track units transitioning to death for dissolve animation
+  const prevAnimsRef = useRef({});
+  useEffect(() => {
+    const prev = prevAnimsRef.current;
+    Object.entries(unitAnims).forEach(([id, anim]) => {
+      if (anim === 'death' && prev[id] !== 'death') {
+        setDyingUnits(p => ({ ...p, [id]: true }));
+        setTimeout(() => setDyingUnits(p => { const n = { ...p }; delete n[id]; return n; }), 900);
+      }
+    });
+    prevAnimsRef.current = { ...unitAnims };
+  }, [unitAnims]);
+
+  const bodyY = useCallback((unit) => {
+    if (!unit?.position) return 50;
+    const isBossUnit = unit.team === 'enemy' && unit.isBoss;
+    const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
+    const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+    const spriteData = getUnitSprite(unit);
+    const adminScale = spriteData?.scale || 1;
+    const tOvr = getUnitTransformOverride(unit);
+    const tScale = tOvr.scale || 1;
+    const targetSize = 200;
+    const spriteHeight = targetSize * bossScaleVal * comboScale * adminScale * tScale;
+    const bodyOffsetPx = spriteHeight * 0.38;
+    const containerH = containerHeightRef.current || 600;
+    const offsetPercent = (bodyOffsetPx / containerH) * 100;
+    return unit.position.y - offsetPercent;
+  }, []);
+
+  const addParticle = useCallback((type, x, y, color) => {
+    const id = Date.now() + Math.random();
+    setActiveParticles(prev => [...prev, { id, type, x, y, color }]);
+    setTimeout(() => setActiveParticles(prev => prev.filter(p => p.id !== id)), 1200);
+  }, []);
+
+  const spawnDodgeFlash = useCallback((x, y) => {
+    const id = Date.now() + Math.random();
+    setDodgeFlashes(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setDodgeFlashes(prev => prev.filter(d => d.id !== id)), 700);
+  }, []);
+
+  const spawnCastingFx = useCallback((x, y) => {
+    const id = Date.now() + Math.random();
+    setCastingFx(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setCastingFx(prev => prev.filter(c => c.id !== id)), 2500);
+  }, []);
+
+  const spawnWeaponContact = useCallback((x, y, playCount = 1) => {
+    const id = Date.now() + Math.random();
+    setWeaponContactFx(prev => [...prev, { id, x, y, playCount }]);
+    setTimeout(() => setWeaponContactFx(prev => prev.filter(w => w.id !== id)), playCount * 900 + 200);
+  }, []);
+
+  const spawnSlashImpact = useCallback((x, y, level, color) => {
+    if (x == null || y == null) return;
+    const id = Date.now() + Math.random();
+    setSlashImpactFx(prev => [...prev, { id, x, y, level, color }]);
+    setTimeout(() => setSlashImpactFx(prev => prev.filter(s => s.id !== id)), 500);
+  }, []);
+
+  const spawnFollowUpEffects = useCallback((followUp, x, y, filterOverride, effectSize) => {
+    if (!followUp || !Array.isArray(followUp)) return;
+    followUp.forEach(fu => {
+      const sprite = effectSprites[fu.effect];
+      if (!sprite) return;
+      setTimeout(() => {
+        const fid = Date.now() + Math.random();
+        setHitEffects(prev => [...prev, { id: fid, x, y, sprite, filter: fu.filter || filterOverride || null, size: effectSize }]);
+        const dur = (sprite.frames || 6) * 50 + 200;
+        setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== fid)), dur);
+      }, fu.delay || 0);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!lastAction || lastAction === actionProcessed.current || lastAction === _lastProcessedAction) return;
+    actionProcessed.current = lastAction;
+    _lastProcessedAction = lastAction;
+
+    const { attackerId, targetId, abilityType, abilityName, abilityId, totalDmg, evaded, blocked, isCrit, healAmt, type, consumableType } = lastAction;
+
+    if (type === 'stunned' || type === 'skip') {
+      setTimeout(() => advanceTurn(), 500 * spd);
+      return;
+    }
+
+    if (type === 'defend') {
+      const defender = battleUnits.find(u => u.id === attackerId);
+      if (defender) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: 'block' }));
+        addParticle('heal', defender.position?.x || 30, bodyY(defender), '#60a5fa');
+        setTimeout(() => {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          advanceTurn();
+        }, 700 * spd);
+      } else {
+        setTimeout(() => advanceTurn(), 300 * spd);
+      }
+      return;
+    }
+
+    const attacker = battleUnits.find(u => u.id === attackerId);
+    const target = battleUnits.find(u => u.id === targetId);
+    if (!attacker) { setTimeout(() => advanceTurn(), 200); return; }
+
+    const spriteData = getUnitSprite(attacker);
+    const getAttackAnim = () => {
+      const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
+      if (effectMapping && effectMapping.anim) {
+        const desired = effectMapping.anim;
+        if (desired === 'heal' && spriteData.heal) return 'heal';
+        if (desired === 'block' && spriteData.block) return 'block';
+        if (spriteData[desired]) return desired;
+        if (effectMapping.fallbackAnim && spriteData[effectMapping.fallbackAnim]) return effectMapping.fallbackAnim;
+      }
+      if (spriteData.animOverrides) {
+        const overrideKey = (abilityType === 'heal_over_time') ? 'heal' : abilityType;
+        const override = spriteData.animOverrides[overrideKey];
+        if (override && spriteData[override]) return override;
+      }
+      if (abilityType === 'heal' || abilityType === 'heal_over_time') return spriteData.heal ? 'heal' : spriteData.cast ? 'cast' : 'attack1';
+      if (abilityType === 'buff') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
+      if (abilityType === 'item' || abilityType === 'stance') return spriteData.cast ? 'cast' : spriteData.block ? 'block' : 'attack1';
+      const anims = ['attack1', 'attack2', 'attack3'].filter(a => spriteData[a]);
+      if (anims.length > 2 && (abilityType === 'physical' || abilityType === 'magical')) return anims[Math.floor(Math.random() * anims.length)];
+      if (anims.length > 1) return anims[1];
+      return 'attack1';
+    };
+
+    const getComboAnims = () => {
+      const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
+      if (effectMapping?.comboAnims) {
+        const resolved = effectMapping.comboAnims.map(a => spriteData[a] ? a : (effectMapping.fallbackAnim && spriteData[effectMapping.fallbackAnim] ? effectMapping.fallbackAnim : 'attack1'));
+        return resolved.filter(a => spriteData[a]);
+      }
+      return null;
+    };
+
+    if (abilityType === 'physical' || abilityType === 'magical' || abilityType === 'debuff') {
+      if (lastAction.isAoE && lastAction.aoEHits && lastAction.aoEHits.length > 0) {
+        const isDebuffOnly = abilityType === 'debuff';
+        const ranged = isRangedUnit(attacker) || abilityType === 'magical' || isDebuffOnly;
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        if ((abilityType === 'magical' || isDebuffOnly) && attacker.position) {
+          addParticle('cast', attacker.position.x, bodyY(attacker), isDebuffOnly ? '#a855f7' : getProjectileColor(attacker, abilityName));
+          spawnCastingFx(attacker.position.x, bodyY(attacker) - 12);
+          playMagicCast();
+        }
+        if (!ranged && attacker.position && target?.position) {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : spriteData?.run ? 'run' : 'idle' }));
+          const centerX = target.position.x + (attacker.team === 'player' ? -4 : 4);
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: centerX, y: target.position.y } }));
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() })), 300 * spd);
+        }
+        if (abilityType === 'physical' && !ranged) { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
+
+        const aoEHits = lastAction.aoEHits;
+        const hitDelay = ranged ? 550 : 350;
+        const stagger = 120;
+
+        aoEHits.forEach((hit, idx) => {
+          const hitTarget = battleUnits.find(u => u.id === hit.targetId);
+          if (!hitTarget || !hitTarget.position) return;
+          const delay = hitDelay + idx * stagger;
+
+          setTimeout(() => {
+            if (isDebuffOnly) {
+              addParticle('cast', hitTarget.position.x, bodyY(hitTarget), '#a855f7');
+              setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'hurt' }));
+              const debuffType = lastAction.effectType || 'lower_attack';
+              showBuffFloat(hitTarget, debuffType, abilityName);
+              setTimeout(() => setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'idle' })), 400);
+            } else {
+              showDamageFloat(hitTarget, hit.totalDmg, hit.evaded, hit.blocked, hit.isCrit);
+              if (!hit.evaded && !hit.absorbed) {
+                setUnitAnims(prev => ({ ...prev, [hit.targetId]: 'hurt' }));
+                addParticle('hit', hitTarget.position.x, bodyY(hitTarget), '#ef4444');
+                const hfx = getHitEffect(attacker, abilityName, ranged, abilityId);
+                if (hfx.sprite && hitTarget.position) {
+                  const hid = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: hid, x: hitTarget.position.x, y: bodyY(hitTarget), sprite: hfx.sprite, filter: hfx.filter, size: getUnitEffectSize(hitTarget) }]);
+                  const effectDur = (hfx.sprite.frames || 36) * 30 + 100;
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                  if (hfx.followUp) spawnFollowUpEffects(hfx.followUp, hitTarget.position.x, bodyY(hitTarget), hfx.filter, getUnitEffectSize(hitTarget));
+                }
+                if (hit.isCrit) {
+                  playCrit();
+                  spawnSlashImpact(hitTarget.position.x, bodyY(hitTarget), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                } else {
+                  if (idx === 0) playHurt();
+                  spawnSlashImpact(hitTarget.position.x, bodyY(hitTarget), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+                }
+                if (hitTarget.position) spawnWeaponContact(hitTarget.position.x, bodyY(hitTarget), 1);
+                setTimeout(() => setUnitAnims(prev => ({ ...prev, [hit.targetId]: hitTarget.health > 0 ? 'idle' : 'death' })), 400);
+              } else if (hit.evaded) {
+                if (idx === 0) playDodge();
+                if (hitTarget.position) spawnDodgeFlash(hitTarget.position.x, bodyY(hitTarget));
+              }
+            }
+          }, delay * spd);
+        });
+
+        const totalDuration = hitDelay + aoEHits.length * stagger + 500;
+        setTimeout(() => {
+          if (!ranged) setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+          setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+        }, (totalDuration - 200) * spd);
+        setTimeout(() => advanceTurn(), totalDuration * spd);
+        return;
+      }
+
+      if (!target) { setTimeout(() => advanceTurn(), 200); return; }
+
+      const isDaggerToss = abilityId === 'dagger_toss' || abilityId === 'ws_dagger_stab' || abilityId === 'ws_dagger_slash' || abilityId === 'ws_backstab' || abilityId === 'ws_envenom' || abilityId === 'ws_fan_of_knives';
+
+      if (isDaggerToss && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        playSwordHit();
+        const projId = Date.now();
+        const dx = target.position.x - attacker.position.x;
+        const dy = bodyY(target) - bodyY(attacker);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        setProjectiles(prev => [...prev, {
+          id: projId,
+          startX: attacker.position.x + (attacker.team === 'player' ? 4 : -4),
+          startY: bodyY(attacker),
+          endX: target.position.x,
+          endY: bodyY(target),
+          color: '#94a3b8',
+          angle,
+          phase: 'start',
+          isDagger: true,
+        }]);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setProjectiles(prev => prev.map(p => p.id === projId ? { ...p, phase: 'fly' } : p));
+          });
+        });
+        setTimeout(() => {
+          setProjectiles(prev => prev.filter(p => p.id !== projId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, bodyY(target), '#94a3b8');
+            const hfxR = getHitEffect(attacker, abilityName, false);
+            if (hfxR.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR.sprite, filter: hfxR.filter, size: getUnitEffectSize(target) }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), 800);
+              if (hfxR.followUp) spawnFollowUpEffects(hfxR.followUp, target.position.x, bodyY(target), hfxR.filter, getUnitEffectSize(target));
+            }
+            if (isCrit) { playCrit(); spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId)); } else { playHurt(); spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId)); }
+            spawnWeaponContact(target.position.x, bodyY(target), 1);
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          addParticle('cast', attacker.position.x, bodyY(attacker), '#7c3aed');
+          setTimeout(() => {
+            const blinkX = target.position.x + (attacker.team === 'player' ? -6 : 6);
+            const blinkY = target.position.y;
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: blinkX, y: blinkY } }));
+            addParticle('cast', blinkX, bodyY(target), '#7c3aed');
+            const teleId1 = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: teleId1, x: blinkX, y: bodyY(target), sprite: effectSprites.magickaHit, size: getUnitEffectSize(target) }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId1)), 1200);
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'attack1' }));
+            playSwordHit();
+            addParticle('hit', target.position.x, bodyY(target), '#c084fc');
+          }, 350 * spd);
+          setTimeout(() => {
+            addParticle('cast', attacker.position.x, bodyY(attacker), '#7c3aed');
+            const teleId2 = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: teleId2, x: attacker.position.x, y: bodyY(attacker), sprite: effectSprites.magickaHit, size: getUnitEffectSize(attacker) }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== teleId2)), 1200);
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+            setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' }));
+          }, 700 * spd);
+        }, 450 * spd);
+        setTimeout(() => advanceTurn(), 1400 * spd);
+        return;
+      }
+
+      const effectMap = getAbilityEffect(attacker.classId, abilityName, abilityId);
+      const hasSpriteProjectile = !!effectMap?.spriteProjectile;
+      const ranged = isRangedUnit(attacker) || abilityType === 'magical' || hasSpriteProjectile;
+
+      if (abilityType === 'magical' && attacker.position) {
+        addParticle('cast', attacker.position.x, bodyY(attacker), getProjectileColor(attacker, abilityName));
+        spawnCastingFx(attacker.position.x, bodyY(attacker) - 12);
+        playMagicCast();
+      }
+
+      if (ranged && isFireballAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const fbId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = bodyY(attacker);
+        setFireballFx(prev => [...prev, { id: fbId, startX, startY, endX: target.position.x, endY: bodyY(target), phase: 'start' }]);
+        setTimeout(() => {
+          setFireballFx(prev => prev.map(f => f.id === fbId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setFireballFx(prev => prev.map(f => f.id === fbId ? { ...f, phase: 'fly' } : f));
+        }, 500 * spd);
+        setTimeout(() => {
+          setFireballFx(prev => prev.filter(f => f.id !== fbId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, bodyY(target), '#f97316');
+            const exId = Date.now() + Math.random();
+            const scatterAngles = [
+              Math.random() * 40 - 20,
+              120 + Math.random() * 40 - 20,
+              240 + Math.random() * 40 - 20,
+            ];
+            setFireExplosionFx(prev => [...prev, { id: exId, x: target.position.x, y: bodyY(target), angles: scatterAngles }]);
+            setTimeout(() => setFireExplosionFx(prev => prev.filter(e => e.id !== exId)), 2500);
+            const hfxR2 = getHitEffect(attacker, abilityName, true);
+            if (hfxR2.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR2.sprite, filter: hfxR2.filter, size: getUnitEffectSize(target) }]);
+              const effectDur = (hfxR2.sprite.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxR2.followUp) spawnFollowUpEffects(hfxR2.followUp, target.position.x, bodyY(target), hfxR2.filter, getUnitEffectSize(target));
+            }
+            if (isCrit) {
+              playCrit();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('spell') }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 1000 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1500 * spd);
+      } else if (ranged && isIceStormAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const iceId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = bodyY(attacker);
+        setIceStormFx(prev => [...prev, { id: iceId, startX, startY, endX: target.position.x, endY: bodyY(target), phase: 'start' }]);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.map(f => f.id === iceId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.map(f => f.id === iceId ? { ...f, phase: 'fly' } : f));
+        }, 550 * spd);
+        setTimeout(() => {
+          setIceStormFx(prev => prev.filter(f => f.id !== iceId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, bodyY(target), '#60a5fa');
+            addParticle('cast', target.position.x, bodyY(target), '#93c5fd');
+            addParticle('cast', target.position.x + 2, bodyY(target) - 1, '#bfdbfe');
+            const hfxIce = getHitEffect(attacker, abilityName, true);
+            if (hfxIce.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxIce.sprite, filter: hfxIce.filter || 'hue-rotate(180deg) brightness(1.3)', size: getUnitEffectSize(target) }]);
+              const effectDur = (hfxIce.sprite.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxIce.followUp) spawnFollowUpEffects(hfxIce.followUp, target.position.x, bodyY(target), hfxIce.filter, getUnitEffectSize(target));
+            }
+            if (isCrit) {
+              playCrit();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('spell') }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 1100 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1600 * spd);
+      } else if (ranged && isWaterAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const wId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = bodyY(attacker);
+        setWaterArrowFx(prev => [...prev, { id: wId, startX, startY, endX: target.position.x, endY: bodyY(target), phase: 'start' }]);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.map(f => f.id === wId ? { ...f, phase: 'rise' } : f));
+        }, 50);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.map(f => f.id === wId ? { ...f, phase: 'fly' } : f));
+        }, 450 * spd);
+        setTimeout(() => {
+          setWaterArrowFx(prev => prev.filter(f => f.id !== wId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, bodyY(target), '#22d3ee');
+            const splashAngles = Array.from({ length: 5 }, () => Math.random() * 360);
+            const splId = Date.now() + Math.random();
+            setWaterSplashFx(prev => [...prev, { id: splId, x: target.position.x, y: bodyY(target), angles: splashAngles }]);
+            setTimeout(() => setWaterSplashFx(prev => prev.filter(e => e.id !== splId)), 2000);
+            addParticle('cast', target.position.x, bodyY(target), '#06b6d4');
+            const hfxW = getHitEffect(attacker, abilityName, true);
+            if (hfxW.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxW.sprite, filter: hfxW.filter || 'hue-rotate(160deg) brightness(1.3)', size: getUnitEffectSize(target) }]);
+              const effectDur = (hfxW.sprite.frames || 36) * 30 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxW.followUp) spawnFollowUpEffects(hfxW.followUp, target.position.x, bodyY(target), hfxW.filter, getUnitEffectSize(target));
+            }
+            if (isCrit) {
+              playCrit();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('spell') }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 950 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1500 * spd);
+      } else if (ranged && isPoisonGustAbility(abilityName) && attacker.position && target.position) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        const pgId = Date.now() + Math.random();
+        const startX = attacker.position.x + (attacker.team === 'player' ? 4 : -4);
+        const startY = bodyY(attacker);
+        setPoisonGustFx(prev => [...prev, { id: pgId, startX, startY, endX: target.position.x, endY: bodyY(target), phase: 'start' }]);
+        setTimeout(() => {
+          setPoisonGustFx(prev => prev.map(f => f.id === pgId ? { ...f, phase: 'fly' } : f));
+        }, 50);
+        setTimeout(() => {
+          setPoisonGustFx(prev => prev.filter(f => f.id !== pgId));
+          showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+          if (!evaded) {
+            setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+            addParticle('hit', target.position.x, bodyY(target), '#22c55e');
+            if (target.position && effectSprites.windProjectile) {
+              const wpId = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: wpId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windProjectile, filter: 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== wpId)), 500);
+              if (effectSprites.windHit) {
+                setTimeout(() => {
+                  const whId = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: whId, x: target.position.x, y: bodyY(target), sprite: effectSprites.windHit, filter: 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== whId)), 400);
+                }, 300);
+              }
+            }
+            const hfxP = getHitEffect(attacker, abilityName, true);
+            if (hfxP.sprite && target.position) {
+              const hid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxP.sprite, filter: hfxP.filter || 'hue-rotate(90deg) saturate(2)', size: getUnitEffectSize(target) }]);
+              const effectDur = (hfxP.sprite.frames || 18) * 35 + 100;
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+              if (hfxP.followUp) spawnFollowUpEffects(hfxP.followUp, target.position.x, bodyY(target), hfxP.filter || 'hue-rotate(90deg) saturate(2)', getUnitEffectSize(target));
+            }
+            if (isCrit) {
+              playCrit();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+              if (target.position) {
+                const critId = Date.now() + Math.random();
+                setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('spell') }]);
+                setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+              }
+            } else {
+              playHurt();
+              spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+            }
+          } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+        }, 600 * spd);
+        setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 700 * spd);
+        setTimeout(() => advanceTurn(), 1200 * spd);
+      } else if (ranged) {
+        setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+        setTimeout(() => {
+          if (attacker.position && target.position) {
+            const projId = Date.now();
+            const color = getProjectileColor(attacker, abilityName);
+            const beamSrc = getBeamTrail(attacker, abilityName);
+            const spriteProj = effectMap?.spriteProjectile || null;
+            const dx = target.position.x - attacker.position.x;
+            const dy = bodyY(target) - bodyY(attacker);
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            setProjectiles(prev => [...prev, {
+              id: projId,
+              startX: attacker.position.x + (attacker.team === 'player' ? 4 : -4),
+              startY: bodyY(attacker),
+              endX: target.position.x,
+              endY: bodyY(target),
+              color,
+              beamSrc: spriteProj ? null : beamSrc,
+              spriteProjectile: spriteProj,
+              angle,
+              phase: 'start',
+              isElectric: isElectricAbility(abilityName),
+            }]);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                setProjectiles(prev => prev.map(p => p.id === projId ? { ...p, phase: 'fly' } : p));
+              });
+            });
+            setTimeout(() => {
+              setProjectiles(prev => prev.filter(p => p.id !== projId));
+              showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+              if (!evaded) {
+                setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+                addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+                const hfxR3 = getHitEffect(attacker, abilityName, true);
+                if (hfxR3.sprite && target.position) {
+                  const hid = Date.now() + Math.random();
+                  setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR3.sprite, filter: hfxR3.filter, size: getUnitEffectSize(target) }]);
+                  const effectDur = (hfxR3.sprite.frames || 36) * 30 + 100;
+                  setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                  if (hfxR3.followUp) spawnFollowUpEffects(hfxR3.followUp, target.position.x, bodyY(target), hfxR3.filter, getUnitEffectSize(target));
+                }
+                if (isCrit) {
+                  playCrit();
+                  spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                  if (target.position) {
+                    const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                    const critId = Date.now() + Math.random();
+                    setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect(critType) }]);
+                    setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                  }
+                } else {
+                  playHurt();
+                  spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+                }
+              } else {
+                playDodge();
+                if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+              }
+              setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+            }, 500 * spd);
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600 * spd);
+        }, 250 * spd);
+        setTimeout(() => advanceTurn(), 1300 * spd);
+      } else {
+        const effectMapping = getAbilityEffect(attacker.classId, abilityName, abilityId);
+        const isLeap = effectMapping?.moveType === 'leap';
+        const isShadowstep = effectMapping?.moveType === 'shadowstep';
+
+        if (isShadowstep && attacker.position && target.position) {
+          const isPlayer = attacker.team === 'player';
+          const frontX = target.position.x + (isPlayer ? -10 : 10);
+          const behindX = target.position.x + (isPlayer ? 10 : -10);
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : spriteData?.run ? 'run' : 'idle' }));
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: target.position.y } }));
+
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+            playSwordHit();
+            if (target.position) {
+              addParticle('hit', target.position.x - 2, bodyY(target), '#a78bfa');
+              addParticle('hit', target.position.x + 2, bodyY(target), '#c4b5fd');
+            }
+          }, 350 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: behindX, y: target.position.y } }));
+            if (target.position) {
+              addParticle('hit', target.position.x + 3, bodyY(target) - 2, '#a78bfa');
+              addParticle('hit', target.position.x - 1, bodyY(target) + 1, '#818cf8');
+            }
+            playSwordHit();
+          }, 700 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: target.position.y } }));
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+              const hfxSS = getHitEffect(attacker, abilityName, false);
+              if (hfxSS.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxSS.sprite, filter: hfxSS.filter, size: getUnitEffectSize(target) }]);
+                const effectDur = (hfxSS.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxSS.followUp) spawnFollowUpEffects(hfxSS.followUp, target.position.x, bodyY(target), hfxSS.filter, getUnitEffectSize(target));
+              }
+              if (isCrit) {
+                playCrit();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                if (target.position) {
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('melee') }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+              }
+              if (target.position) spawnWeaponContact(target.position.x, bodyY(target), 2);
+            } else {
+              playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+            }
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
+          }, 1050 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          }, 1400 * spd);
+          setTimeout(() => advanceTurn(), 1800 * spd);
+          return;
+        }
+
+        if (isLeap && attacker.position && target.position) {
+          const frontX = target.position.x + (attacker.team === 'player' ? -8 : 8);
+          const frontY = target.position.y;
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : spriteData?.run ? 'run' : 'idle' }));
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: frontX, y: frontY } }));
+
+          setTimeout(() => {
+            const arcX = (frontX + target.position.x) / 2;
+            const arcY = target.position.y - 18;
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: arcX, y: arcY } }));
+          }, 250 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => ({ ...prev, [attackerId]: { x: target.position.x, y: target.position.y } }));
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+            playSwordHit();
+            if (target.position) {
+              addParticle('hit', target.position.x - 3, bodyY(target) + 2, '#8B4513');
+              addParticle('hit', target.position.x + 3, bodyY(target) + 2, '#8B4513');
+              addParticle('hit', target.position.x, bodyY(target) + 4, '#a0522d');
+            }
+          }, 450 * spd);
+
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+              const hfxLeap = getHitEffect(attacker, abilityName, false);
+              if (hfxLeap.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target) + 2, sprite: hfxLeap.sprite, filter: hfxLeap.filter, size: getUnitEffectSize(target) }]);
+                const effectDur = (hfxLeap.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxLeap.followUp) spawnFollowUpEffects(hfxLeap.followUp, target.position.x, bodyY(target) + 2, hfxLeap.filter, getUnitEffectSize(target));
+              }
+              if (isCrit) {
+                playCrit();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                if (target.position) {
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect('melee') }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+              }
+              if (target.position) spawnWeaponContact(target.position.x, bodyY(target), 2);
+            } else {
+              playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+            }
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400 * spd);
+          }, 650 * spd);
+
+          setTimeout(() => {
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+          }, 1000 * spd);
+          setTimeout(() => advanceTurn(), 1400 * spd);
+          return;
+        }
+
+        if (abilityType === 'physical') { attacker.classId === 'ranger' ? playBowShot() : playSwordHit(); }
+        const melee = !ranged;
+        if (melee && attacker.position && target.position) {
+          setUnitAnims(prev => ({ ...prev, [attackerId]: spriteData?.walk ? 'walk' : spriteData?.run ? 'run' : 'idle' }));
+        }
+        if (attacker.position && target.position) {
+          const dashX = target.position.x + (attacker.team === 'player' ? -8 : 8);
+          const dashY = target.position.y;
+          setDashPositions(prev => ({ ...prev, [attackerId]: { x: dashX, y: dashY } }));
+        }
+        const combo = getComboAnims();
+        if (combo && combo.length > 1) {
+          combo.forEach((anim, i) => {
+            setTimeout(() => {
+              setUnitAnims(prev => ({ ...prev, [attackerId]: anim }));
+              if (i > 0 && target.position) {
+                addParticle('hit', target.position.x + (Math.random() - 0.5) * 4, bodyY(target), '#ef4444');
+                attacker.classId === 'ranger' ? playBowShot() : playSwordHit();
+              }
+            }, 300 + i * 250);
+          });
+          const comboEnd = 300 + combo.length * 250;
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+              const hfxR4 = getHitEffect(attacker, abilityName, false);
+              if (hfxR4.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR4.sprite, filter: hfxR4.filter, size: getUnitEffectSize(target) }]);
+                const effectDur = (hfxR4.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxR4.followUp) spawnFollowUpEffects(hfxR4.followUp, target.position.x, bodyY(target), hfxR4.filter, getUnitEffectSize(target));
+              }
+              if (isCrit) {
+                playCrit();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+                if (target.position) {
+                  const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect(critType) }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+              }
+              if (target.position) spawnWeaponContact(target.position.x, bodyY(target), combo.length);
+            } else {
+              playDodge();
+              if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+            }
+            setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
+          }, comboEnd);
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+            setDashPositions(prev => { const n = { ...prev }; delete n[attackerId]; return n; });
+          }, comboEnd + 300);
+          setTimeout(() => advanceTurn(), comboEnd + 600);
+        } else {
+          setTimeout(() => {
+            setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+          }, 300);
+          setTimeout(() => {
+            showDamageFloat(target, totalDmg, evaded, blocked, isCrit);
+            if (!evaded) {
+              setUnitAnims(prev => ({ ...prev, [targetId]: 'hurt' }));
+              if (target.position) addParticle('hit', target.position.x, bodyY(target), '#ef4444');
+              const hfxR5 = getHitEffect(attacker, abilityName, false);
+              if (hfxR5.sprite && target.position) {
+                const hid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR5.sprite, filter: hfxR5.filter, size: getUnitEffectSize(target) }]);
+                const effectDur = (hfxR5.sprite.frames || 36) * 30 + 100;
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), effectDur);
+                if (hfxR5.followUp) spawnFollowUpEffects(hfxR5.followUp, target.position.x, bodyY(target), hfxR5.filter, getUnitEffectSize(target));
+              }
+              if (isCrit) {
+                playCrit();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'large', getSlashColor(abilityType, abilityName, attacker.classId));
+                if (target.position) {
+                  const critType = abilityType === 'magical' ? 'spell' : 'melee';
+                  const critId = Date.now() + Math.random();
+                  setCritFx(prev => [...prev, { id: critId, x: target.position.x, y: bodyY(target), ...getRandomCritEffect(critType) }]);
+                  setTimeout(() => setCritFx(prev => prev.filter(c => c.id !== critId)), 1500);
+                }
+              } else {
+                playHurt();
+                spawnSlashImpact(target?.position?.x, bodyY(target), 'small', getSlashColor(abilityType, abilityName, attacker.classId));
+              }
+              if (target.position) spawnWeaponContact(target.position.x, bodyY(target), 1);
+            } else {
+            playDodge();
+            if (target.position) spawnDodgeFlash(target.position.x, bodyY(target));
+          }
+          setTimeout(() => setUnitAnims(prev => ({ ...prev, [targetId]: target.health > 0 ? 'idle' : 'death' })), 400);
+        }, 500);
+        setTimeout(() => {
+          setDashPositions(prev => ({ ...prev, [attackerId]: null }));
+          setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' }));
+        }, 800);
+        setTimeout(() => advanceTurn(), 1300);
+        }
+      }
+    } else {
+      setUnitAnims(prev => ({ ...prev, [attackerId]: getAttackAnim() }));
+      const hfxR6 = getHitEffect(attacker, abilityName, false);
+      if ((consumableType === 'resurrect' || abilityType === 'resurrect') && target && target.position) {
+        const rezId = Date.now() + Math.random();
+        setResurrectFx(prev => [...prev, { id: rezId, x: target.position.x, y: bodyY(target) }]);
+        setTimeout(() => {
+          setUnitAnims(prev => ({ ...prev, [targetId]: 'idle' }));
+        }, 400);
+        setTimeout(() => {
+          setResurrectFx(prev => prev.filter(r => r.id !== rezId));
+        }, 1200);
+        if (healAmt) showHealFloat(target, healAmt);
+        addParticle('heal', target.position.x, bodyY(target));
+        addParticle('cast', target.position.x, bodyY(target), '#22c55e');
+        playHeal();
+      } else if (healAmt && target) {
+        showHealFloat(target, healAmt);
+        if (target.position) addParticle('heal', target.position.x, bodyY(target));
+        if (hfxR6.sprite && target.position) {
+          const hid = Date.now() + Math.random();
+          setHitEffects(prev => [...prev, { id: hid, x: target.position.x, y: bodyY(target), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(target) }]);
+          setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+          if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, target.position.x, bodyY(target), hfxR6.filter, getUnitEffectSize(target));
+          if (hfxR6.postHeal && target.position) {
+            setTimeout(() => {
+              const phid = Date.now() + Math.random();
+              setHitEffects(prev => [...prev, { id: phid, x: target.position.x, y: bodyY(target), sprite: hfxR6.postHeal, size: getUnitEffectSize(target) }]);
+              setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
+            }, 400);
+          }
+        }
+        playHeal();
+      } else if (abilityType === 'heal_over_time') {
+        playHeal();
+        if (attacker.position) {
+          addParticle('heal', attacker.position.x, bodyY(attacker));
+          if (hfxR6.sprite) {
+            const hid = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: hid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(attacker) }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, attacker.position.x, bodyY(attacker), hfxR6.filter, getUnitEffectSize(attacker));
+            if (hfxR6.postHeal && attacker.position) {
+              setTimeout(() => {
+                const phid = Date.now() + Math.random();
+                setHitEffects(prev => [...prev, { id: phid, x: attacker.position.x, y: bodyY(attacker), sprite: hfxR6.postHeal, size: getUnitEffectSize(attacker) }]);
+                setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== phid)), (hfxR6.postHeal.frames || 7) * 60 + 100);
+              }, 400);
+            }
+          }
+        }
+      } else {
+        playBuff();
+        const isSelfBuff = attackerId === targetId;
+        const effectUnit = isSelfBuff ? attacker : (target || attacker);
+        if (effectUnit?.position) {
+          addParticle('cast', effectUnit.position.x, bodyY(effectUnit), '#6ee7b7');
+          if (hfxR6.sprite) {
+            const hid = Date.now() + Math.random();
+            setHitEffects(prev => [...prev, { id: hid, x: effectUnit.position.x, y: bodyY(effectUnit), sprite: hfxR6.sprite, filter: hfxR6.filter, size: getUnitEffectSize(effectUnit) }]);
+            setTimeout(() => setHitEffects(prev => prev.filter(e => e.id !== hid)), (hfxR6.sprite.frames || 16) * 35 + 100);
+            if (hfxR6.followUp) spawnFollowUpEffects(hfxR6.followUp, effectUnit.position.x, bodyY(effectUnit), hfxR6.filter, getUnitEffectSize(effectUnit));
+          }
+        }
+      }
+      setTimeout(() => setUnitAnims(prev => ({ ...prev, [attackerId]: 'idle' })), 600);
+      setTimeout(() => advanceTurn(), 900);
+    }
+
+    if (lastAction.effectType && abilityType !== 'debuff') {
+      const effectTarget = battleUnits.find(u => u.id === targetId);
+      if (effectTarget?.position && !lastAction.evaded) {
+        setTimeout(() => {
+          showBuffFloat(effectTarget, lastAction.effectType, abilityName);
+        }, 600);
+      }
+    }
+  }, [lastAction]);
+
+  const showDamageFloat = useCallback((target, totalDmg, evaded, blocked, isCrit) => {
+    if (!target?.position) return;
+    const id = Date.now() + Math.random();
+    let text, color, numValue, numColor, label;
+    if (evaded) { text = 'DODGE!'; color = '#6ee7b7'; }
+    else if (blocked) { label = 'BLOCK'; numValue = totalDmg; numColor = 'orange'; color = '#3b82f6'; }
+    else if (isCrit) { label = 'CRIT'; numValue = totalDmg; numColor = 'yellow'; color = '#fbbf24'; }
+    else { numValue = totalDmg; numColor = 'red'; color = '#ef4444'; }
+    setFloatingDmg(prev => [...prev, { id, text, color, numValue, numColor, label, x: target.position.x, y: bodyY(target) - 8 }]);
+    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1800);
+
+    if (isCrit || totalDmg > 30) {
+      const intensity = isCrit && totalDmg > 60 ? 'heavy' : isCrit ? 'medium' : totalDmg > 50 ? 'medium' : 'light';
+      window.dispatchEvent(new CustomEvent('game-screen-shake', { detail: { intensity } }));
+    }
+    if (!evaded && targetId) {
+      setUnitFlashes(prev => ({ ...prev, [targetId]: true }));
+      setTimeout(() => setUnitFlashes(prev => { const n = { ...prev }; delete n[targetId]; return n; }), 350);
+    }
+  }, []);
+
+  const showHealFloat = useCallback((target, healAmt) => {
+    if (!target?.position) return;
+    const id = Date.now() + Math.random();
+    setFloatingDmg(prev => [...prev, { id, numValue: healAmt, numColor: 'green', label: '+', color: '#22c55e', x: target.position.x, y: bodyY(target) - 8 }]);
+    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1500);
+  }, []);
+
+  const showBuffFloat = useCallback((target, effectType, abilityName) => {
+    if (!target?.position) return;
+    const id = Date.now() + Math.random();
+    const info = BUFF_LABELS[effectType];
+    if (!info) return;
+    const label = info.text;
+    const color = info.color;
+    setFloatingDmg(prev => [...prev, { id, text: label, color, isBuff: true, x: target.position.x, y: bodyY(target) - 16 }]);
+    setTimeout(() => setFloatingDmg(prev => prev.filter(f => f.id !== id)), 1600);
+  }, []);
+
+  const handleAbility = useCallback((abilityId) => {
+    if (phase !== 'player_turn') return;
+    const allAbilities = currentUnit?.abilities || (currentUnit?.classId ? classDefinitions[currentUnit.classId]?.abilities : []) || [];
+    const ability = allAbilities.find(a => a.id === abilityId);
+    if (ability && ability.type === 'heal' && playerTeam.filter(u => u.alive).length > 1) {
+      setHealTargetMode(abilityId);
+      return;
+    }
+    useAbility(abilityId);
+  }, [phase, useAbility, currentUnit, playerTeam]);
+
+  const handleHealTarget = useCallback((targetId) => {
+    if (!healTargetMode) return;
+    useAbility(healTargetMode, targetId);
+    setHealTargetMode(null);
+  }, [healTargetMode, useAbility]);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') {
+        const loot = useGameStore.getState().pendingLoot;
+        if (loot && loot.length > 0) {
+          e.preventDefault();
+          useGameStore.getState().clearPendingLoot();
+          return;
+        }
+        if (phase === 'victory' || phase === 'defeat' || phase === 'fled') {
+          e.preventDefault();
+          if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+          else returnToWorld();
+          return;
+        }
+        if (phase === 'missionRoundComplete') {
+          e.preventDefault();
+          useGameStore.getState().advanceMissionRound();
+          return;
+        }
+        return;
+      }
+      if (phase !== 'player_turn') return;
+      const num = parseInt(e.key);
+      if (healTargetMode) {
+        const aliveAllies = playerTeam.filter(u => u.alive);
+        if (num >= 1 && num <= aliveAllies.length) {
+          handleHealTarget(aliveAllies[num - 1].id);
+        }
+        if (e.key === 'Escape') setHealTargetMode(null);
+        return;
+      }
+      if (!currentUnit) return;
+      const tryAbility = (ability) => {
+        if (!ability) return;
+        const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+        const noMana = (ability.manaCost || 0) > currentUnit.mana;
+        const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+        if (!onCd && !noMana && !noStamina) handleAbility(ability.id);
+      };
+      if (e.key === '1') { autoAttack(); return; }
+      if (e.key === '2') { tryAbility(displayedAbilities[0]); return; }
+      if (e.key === '3') { tryAbility(displayedAbilities[1]); return; }
+      if (e.key === '4') { tryAbility(displayedAbilities[2]); return; }
+      if (e.key === '5') { tryAbility(displayedAbilities[3]); return; }
+      if (e.key === '6') { defendTurn(); return; }
+      if (e.key === '7') { skipTurn(); return; }
+      if (e.key === '8') { fleeBattle(); return; }
+      const qwerMap = { q: 4, w: 5, e: 6, r: 7 };
+      const bar2Idx = qwerMap[e.key.toLowerCase()];
+      if (bar2Idx !== undefined) { tryAbility(displayedAbilities[bar2Idx]); return; }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [phase, displayedAbilities, currentUnit, handleAbility, healTargetMode, handleHealTarget, playerTeam, battleState, returnToWorld, returnFromTraining, autoAttack, defendTurn, skipTurn, fleeBattle]);
+
+  if (!battleState || battleUnits.length === 0) return null;
+
+  const isVictory = phase === 'victory';
+  const isDefeat = phase === 'defeat';
+  const isFled = phase === 'fled';
+  const isMissionRoundComplete = phase === 'missionRoundComplete';
+
+  return (
+    <div ref={battleContainerRef} style={{
+      width: '100%', height: '100%',
+      background: 'var(--bg)', position: 'relative', overflow: 'hidden',
+    }}>
+      {/* ═══ LAYER 1: BACKGROUND ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.BACKGROUND}>
+        {bgImage && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: '120%', backgroundPosition: 'center 75%',
+            opacity: 0.7,
+          }} />
+        )}
+        {!bgImage && bgGradient && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            background: bgGradient,
+          }}>
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%',
+              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', top: '60%', left: 0, right: 0, height: '2px',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.04) 80%, transparent 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%)',
+            }} />
+          </div>
+        )}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'linear-gradient(180deg, rgba(11,16,32,0.3) 0%, rgba(11,16,32,0.15) 40%, rgba(11,16,32,0.4) 100%)',
+        }} />
+      </BattleLayer>
+
+      {/* ═══ LAYER 2: EFFECTS_BACK (ambient particles, casting FX behind units) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.EFFECTS_BACK}>
+        <AmbientParticles />
+        {activeParticles.filter(p => p.type === 'cast').map(p => (
+          <CastingParticles key={p.id} x={p.x} y={p.y} color={p.color} />
+        ))}
+        {castingFx.map(c => (
+          <CastingSpriteEffect key={c.id} x={c.x} y={c.y} />
+        ))}
+      </BattleLayer>
+
+      {/* ═══ LAYERS 3+4: UNITS (all units, Y-sorted for depth) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.UNITS_BACK} interactive>
+
+        {battleUnits.map((unit, idx) => {
+          if (!unit.position) return null;
+
+          if (unit.isTotem) {
+            if (!unit.alive) return null;
+            const totemSprite = totemSpriteMap[unit.totemType];
+            if (!totemSprite) return null;
+            const totemDef = TOTEM_DEFINITIONS[unit.totemType];
+            const totemScale = 2.5;
+            const fw = totemSprite.frameWidth || 32;
+            const fh = totemSprite.frameHeight || 32;
+            return (
+              <div
+                key={unit.id}
+                style={{
+                  position: 'absolute',
+                  left: `${unit.position.x}%`,
+                  top: `${unit.position.y}%`,
+                  transform: 'translate(-50%, -100%)',
+                  zIndex: Math.floor(unit.position.y) + 1,
+                  pointerEvents: 'none',
+                  animation: 'unitSlideIn 0.5s ease forwards',
+                }}
+              >
+                <div style={{
+                  position: 'relative',
+                  filter: `drop-shadow(0 0 6px ${totemDef?.color || '#fff'}60)`,
+                }}>
+                  <SpriteAnimation
+                    spriteData={totemSprite}
+                    animation="idle"
+                    scale={totemScale}
+                    flip={unit.team === 'enemy'}
+                    speed={160}
+                    loop={true}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: -6,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: fw * totemScale * 0.8,
+                    height: 4,
+                    borderRadius: 2,
+                    background: '#222',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${(unit.health / unit.maxHealth) * 100}%`,
+                      height: '100%',
+                      background: totemDef?.color || '#22c55e',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    top: -16,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.6rem',
+                    color: totemDef?.color || '#fff',
+                    fontFamily: 'Cinzel, serif',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 0 4px #000, 0 1px 2px #000',
+                  }}>
+                    {unit.name}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (unit.isCompanion) {
+            if (!unit.alive) return null;
+            const compSprite = companionSpriteMap[unit.companionType];
+            if (!compSprite) return null;
+            const compDef = COMPANION_DEFINITIONS[unit.companionType];
+            const compScale = 2.8;
+            const compFw = compSprite.frameWidth || 32;
+            const compAnim = unitAnims[unit.id] || 'idle';
+            return (
+              <div
+                key={unit.id}
+                style={{
+                  position: 'absolute',
+                  left: `${unit.position.x}%`,
+                  top: `${unit.position.y}%`,
+                  transform: 'translate(-50%, -100%)',
+                  zIndex: Math.floor(unit.position.y) + 1,
+                  pointerEvents: 'none',
+                  animation: 'unitSlideIn 0.5s ease forwards',
+                }}
+              >
+                <div style={{
+                  position: 'relative',
+                  filter: `drop-shadow(0 0 8px ${compDef?.color || '#fff'}80)`,
+                }}>
+                  <SpriteAnimation
+                    spriteData={compSprite}
+                    animation={compAnim}
+                    scale={compScale}
+                    flip={unit.team === 'enemy'}
+                    speed={140}
+                    loop={true}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: -6,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: compFw * compScale * 0.8,
+                    height: 5,
+                    borderRadius: 2,
+                    background: '#111',
+                    border: `1px solid ${compDef?.color || '#555'}40`,
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${(unit.health / unit.maxHealth) * 100}%`,
+                      height: '100%',
+                      background: compDef?.color || '#22c55e',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    top: -18,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '0.55rem',
+                    color: compDef?.color || '#fff',
+                    fontFamily: 'Cinzel, serif',
+                    whiteSpace: 'nowrap',
+                    textShadow: '0 0 4px #000, 0 1px 2px #000',
+                    letterSpacing: '0.04em',
+                  }}>
+                    {unit.name}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const dash = dashPositions[unit.id];
+          const posX = dash ? dash.x : unit.position.x;
+          const posY = dash ? dash.y : unit.position.y;
+          const spriteData = getUnitSprite(unit);
+          const anim = unitAnims[unit.id] || 'idle';
+          const isCurrentTurnUnit = currentUnit?.id === unit.id;
+          const isSelected = selectedTargetId === unit.id;
+          const isEnemyClickable = unit.team === 'enemy' && unit.alive && isPlayerTurn;
+          const flipSprite = spriteData?.facesLeft ? unit.team === 'player' : unit.team === 'enemy';
+          const introDelay = introComplete ? 0 : (idx * 100);
+          const baseFrameSize = spriteData?.frameHeight || spriteData?.frameWidth || 100;
+          const targetDisplaySize = 200;
+          const isBossUnit = unit.team === 'enemy' && unit.isBoss;
+          const bossScaleVal = isBossUnit ? (unit.bossScale || 1.6) : 1;
+          const comboScale = BATTLE_SCALE_OVERRIDES[`${unit.raceId}_${unit.classId}`] || 1;
+          const adminScale = spriteData?.scale || 1;
+          const transformOvr = getUnitTransformOverride(unit);
+          const transformScale = transformOvr.scale || 1;
+          const comboOffset = {
+            x: transformOvr.offsetX || 0,
+            y: transformOvr.offsetY || 0,
+          };
+          const spriteScale = (targetDisplaySize / baseFrameSize) * bossScaleVal * comboScale * adminScale * transformScale;
+
+          const spriteSize = Math.round(baseFrameSize * spriteScale);
+          const hitW = Math.round(spriteSize * 0.5);
+          const hitH = Math.round(spriteSize * 0.75);
+
+          return (
+            <div
+              key={unit.id}
+              onClick={() => isEnemyClickable && setSelectedTarget(unit.id)}
+              style={{
+                position: 'absolute',
+                left: `calc(${posX}% + ${comboOffset.x}px)`,
+                top: `calc(${posY}% + ${comboOffset.y}px)`,
+                transform: 'translate(-50%, -100%)',
+                transition: dash ? 'left 0.3s ease-out, top 0.3s ease-out' : 'left 0.5s ease, top 0.5s ease',
+                cursor: isEnemyClickable ? 'pointer' : 'default',
+                opacity: introComplete ? (anim === 'death' ? 0 : 1) : 0,
+                animation: introComplete ? 'none' : `unitSlideIn 0.6s ease ${introDelay}ms forwards`,
+                zIndex: Math.floor(posY),
+                pointerEvents: (unit.alive && anim !== 'death') ? 'auto' : 'none',
+                width: hitW,
+                height: hitH,
+                overflow: 'visible',
+                outline: 'none',
+                border: 'none',
+              }}
+            >
+              {isCurrentTurnUnit && unit.alive && (
+                <div style={{
+                  position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+                  width: 0, height: 0,
+                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                  borderTop: `8px solid ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'}`,
+                  animation: 'pulse 1s infinite',
+                  filter: `drop-shadow(0 0 4px ${unit.team === 'player' ? 'var(--accent)' : 'var(--danger)'})`,
+                  zIndex: 15,
+                }} />
+              )}
+
+
+              {/* Turn glow ring */}
+              {isCurrentTurnUnit && unit.alive && (
+                <div style={{
+                  position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%)',
+                  width: 56, height: 16, borderRadius: '50%',
+                  animation: `${unit.team === 'player' ? 'turnGlow' : 'turnGlowEnemy'} 1.5s ease-in-out infinite`,
+                  pointerEvents: 'none', zIndex: 0,
+                }} />
+              )}
+
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 0,
+                height: 0,
+                overflow: 'visible',
+                filter: anim === 'hurt'
+                  ? 'brightness(2) sepia(1) saturate(10) hue-rotate(-10deg) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
+                  : isCurrentTurnUnit && unit.alive
+                      ? `drop-shadow(0 0 8px ${unit.team === 'player' ? 'rgba(110,231,183,0.6)' : 'rgba(239,68,68,0.6)'})`
+                      : 'none',
+                transition: 'filter 0.15s',
+                animation: unitFlashes[unit.id]
+                  ? 'hitFlash 0.35s ease-out'
+                  : dyingUnits[unit.id]
+                    ? 'deathDissolve 0.8s ease-out forwards'
+                    : anim === 'hurt'
+                      ? 'hurtBlink 0.15s ease-in-out 3'
+                      : 'none',
+              }}>
+                <SpriteAnimation
+                  spriteData={spriteData}
+                  animation={anim}
+                  scale={spriteScale}
+                  flip={flipSprite}
+                  speed={autoBattleEnabled ? 150 : 188}
+                  loop={anim === 'idle' || anim === 'walk'}
+                  equipmentOverlays={unit.team === 'player' ? buildEquipmentOverlays(heroRoster.find(h => h.id === unit.id), TIERS) : null}
+                />
+              </div>
+
+              {unit.alive && unit.stunned && (
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('stun', e) : undefined}
+                  title={adminMode ? `Stun: offsetY=${adminOverrides.stun.offsetY}, size=${adminOverrides.stun.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.nebula}
+                    displaySize={adminOverrides.stun.size}
+                    offsetY={adminOverrides.stun.offsetY}
+                    opacity={adminOverrides.stun.opacity}
+                    filter="drop-shadow(0 0 6px #67e8f9) drop-shadow(0 0 12px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.stun.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#67e8f9', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>STUN y:{adminOverrides.stun.offsetY} s:{adminOverrides.stun.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal && ['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('poison', e) : undefined}
+                  title={adminMode ? `Poison: offsetY=${adminOverrides.poison.offsetY}, size=${adminOverrides.poison.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.magicBubbles}
+                    displaySize={adminOverrides.poison.size}
+                    offsetY={adminOverrides.poison.offsetY}
+                    opacity={adminOverrides.poison.opacity}
+                    filter="drop-shadow(0 0 6px #a3e635) drop-shadow(0 0 10px #65a30d)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.poison.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#a3e635', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>POISON y:{adminOverrides.poison.offsetY} s:{adminOverrides.poison.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.dots || []).some(d => !d.heal && !['Dagger Toss', 'Poison Arrow', 'Envenom', 'Fan of Knives'].includes(d.source)) && (
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('dot', e) : undefined}
+                  title={adminMode ? `DoT: offsetY=${adminOverrides.dot.offsetY}, size=${adminOverrides.dot.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.fire}
+                    displaySize={adminOverrides.dot.size}
+                    offsetY={adminOverrides.dot.offsetY}
+                    opacity={adminOverrides.dot.opacity}
+                    filter="drop-shadow(0 0 6px #f97316) drop-shadow(0 0 10px #ef4444)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.dot.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#f97316', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>DOT y:{adminOverrides.dot.offsetY} s:{adminOverrides.dot.size}</div>}
+                </div>
+              )}
+
+              {unit.alive && (unit.buffs || []).length > 0 && !unit.stunned && (
+                <div style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, overflow: 'visible', pointerEvents: adminMode ? 'auto' : 'none' }}
+                  onMouseDown={adminMode ? (e) => handleAdminDragStart('buff', e) : undefined}
+                  title={adminMode ? `Buff: offsetY=${adminOverrides.buff.offsetY}, size=${adminOverrides.buff.size}` : undefined}
+                >
+                  <LoopingEffectSprite
+                    sprite={effectSprites.blueFire}
+                    displaySize={adminOverrides.buff.size}
+                    offsetY={adminOverrides.buff.offsetY}
+                    opacity={adminOverrides.buff.opacity}
+                    filter="drop-shadow(0 0 4px #38bdf8) drop-shadow(0 0 8px #06b6d4)"
+                  />
+                  {adminMode && <div style={{ position: 'absolute', top: adminOverrides.buff.offsetY - 8, left: '50%', transform: 'translateX(-50%)', fontSize: '0.4rem', color: '#38bdf8', background: 'rgba(0,0,0,0.8)', padding: '1px 3px', borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 50 }}>BUFF y:{adminOverrides.buff.offsetY} s:{adminOverrides.buff.size}</div>}
+                </div>
+              )}
+
+              {isSelected && unit.alive && (
+                <div style={{
+                  position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                  width: 60, height: 16, borderRadius: '50%',
+                  background: 'rgba(239,68,68,0.35)',
+                  border: '2px solid var(--danger)',
+                  boxShadow: '0 0 12px rgba(239,68,68,0.4), inset 0 0 6px rgba(239,68,68,0.2)',
+                  animation: 'pulse 1s infinite',
+                  zIndex: 15,
+                }} />
+              )}
+
+              <div style={{
+                position: 'absolute', bottom: spriteLayout.shadow.offsetY - 2, left: '50%', transform: 'translateX(-50%)',
+                width: spriteLayout.shadow.width + 8, height: spriteLayout.shadow.height + 2, borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 50%, transparent 75%)',
+                zIndex: 1,
+              }} />
+
+              <div
+                onMouseDown={adminMode ? (e) => handleAdminDragStart('nameplate', e) : undefined}
+                style={{
+                position: 'absolute', bottom: spriteLayout.nameplate.offsetY - 20, left: '50%', transform: 'translateX(-50%)',
+                textAlign: 'center',
+                background: isSelected ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.35)', 
+                borderRadius: 4, padding: '2px 5px',
+                minWidth: 55, zIndex: 20,
+                border: isSelected ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                transition: 'all 0.3s ease',
+              }}>
+                <div style={{
+                  fontSize: '0.75rem', fontWeight: 600,
+                  color: unit.id === 'player' ? 'var(--accent)' : (unit.team === 'player' ? '#93c5fd' : '#fca5a5'),
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 90,
+                  marginBottom: 1,
+                }}>
+                  {unit.name}
+                </div>
+                <MiniBar current={unit.health} max={unit.maxHealth} color={unit.team === 'player' ? '#22c55e' : '#ef4444'} height={4} width={50} />
+                <div style={{ display: 'flex', gap: 2, marginTop: 1, justifyContent: 'center' }}>
+                  <MiniBar current={unit.mana} max={unit.maxMana} color="#3b82f6" height={2} width={23} />
+                  <MiniBar current={unit.stamina} max={unit.maxStamina} color="#f59e0b" height={2} width={23} />
+                </div>
+                {unit.team === 'player' && (
+                  <div style={{ marginTop: 1 }}>
+                    <MiniBar 
+                      current={unit.grudge || 0} 
+                      max={100} 
+                      color="#dc2626" 
+                      height={3} 
+                      width={50} 
+                    />
+                    {(unit.grudge || 0) >= 100 && (
+                      <div style={{
+                        fontSize: '0.55rem', color: '#ef4444', fontWeight: 800,
+                        textAlign: 'center', animation: 'pulse 1s infinite',
+                        textShadow: '0 0 4px #ef4444',
+                      }}>GRUDGE!</div>
+                    )}
+                  </div>
+                )}
+                {(unit.buffs?.length > 0 || unit.focusStacks > 0) && (
+                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center', marginTop: 1, flexWrap: 'wrap' }}>
+                    {unit.focusStacks > 0 && (
+                      <span style={{
+                        fontSize: '0.6rem', padding: '0 2px', borderRadius: 2,
+                        background: 'rgba(239,68,68,0.3)', color: '#ef4444',
+                      }}><InlineIcon name="target" size={10} />{unit.focusStacks}</span>
+                    )}
+                    {(unit.buffs || []).slice(0, 3).map((b, i) => (
+                      <span key={i} style={{
+                        fontSize: '0.6rem', padding: '0 2px', borderRadius: 2,
+                        background: 'rgba(110,231,183,0.3)', color: 'var(--accent)',
+                      }}>{b.source?.slice(0, 4)}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </BattleLayer>
+
+      {/* ═══ LAYER 5: IMPACTS (hit effects, slash impacts, dodge flashes, weapon contacts) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.IMPACTS}>
+        {activeParticles.filter(p => p.type === 'hit' || p.type === 'heal').map(p => {
+          if (p.type === 'hit') return <HitParticles key={p.id} x={p.x} y={p.y} color={p.color} />;
+          if (p.type === 'heal') return <HealParticles key={p.id} x={p.x} y={p.y} />;
+          return null;
+        })}
+
+        {hitEffects.map(e => (
+          <EffectSprite key={e.id} x={e.x} y={e.y} sprite={e.sprite} filter={e.filter} size={e.size} />
+        ))}
+
+        {critFx.map(c => (
+          <GrowingEffectSprite key={c.id} x={c.x} y={c.y} sprite={c.sprite} filter={c.filter} />
+        ))}
+
+        {slashImpactFx.map(s => (
+          <StackedSlashImpact key={s.id} x={s.x} y={s.y} level={s.level} color={s.color} />
+        ))}
+
+        {dodgeFlashes.map(d => (
+          <DodgeFlashSprite key={d.id} x={d.x} y={d.y} />
+        ))}
+
+        {weaponContactFx.map(w => (
+          <WeaponContactSprite key={w.id} x={w.x} y={w.y} playCount={w.playCount} />
+        ))}
+      </BattleLayer>
+
+      {/* ═══ LAYER 6: EFFECTS_FRONT (beams, projectiles, fireballs, explosions, damage numbers) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.EFFECTS_FRONT}>
+        {projectiles.map(p => (
+          <div key={p.id} style={{
+            position: 'absolute',
+            left: `${p.phase === 'fly' ? p.endX : p.startX}%`,
+            top: `${p.phase === 'fly' ? p.endY : p.startY}%`,
+            transition: 'left 0.45s ease-in, top 0.45s ease-in',
+            transform: `translate(-50%, -50%) rotate(${p.angle || 0}deg)`,
+            zIndex: BATTLE.ACTION_BAR,
+            pointerEvents: 'none',
+          }}>
+            {p.isDagger ? (
+              <div style={{ position: 'relative', width: 24, height: 10 }}>
+                <div style={{
+                  position: 'absolute', top: 1, left: 0,
+                  width: 16, height: 3,
+                  background: 'linear-gradient(90deg, #64748b, #cbd5e1, #e2e8f0)',
+                  borderRadius: 1,
+                  boxShadow: '0 0 6px rgba(148,163,184,0.8), 0 0 12px rgba(148,163,184,0.4)',
+                }} />
+                <div style={{
+                  position: 'absolute', top: -1, left: 12,
+                  width: 0, height: 0,
+                  borderLeft: '8px solid #e2e8f0',
+                  borderTop: '4px solid transparent',
+                  borderBottom: '4px solid transparent',
+                  filter: 'drop-shadow(0 0 4px rgba(226,232,240,0.6))',
+                }} />
+                <div style={{
+                  position: 'absolute', top: -2, left: 5,
+                  width: 2, height: 9,
+                  background: '#94a3b8',
+                  borderRadius: 1,
+                }} />
+                <div style={{
+                  position: 'absolute', top: -1, left: -4,
+                  width: 6, height: 2,
+                  background: 'linear-gradient(90deg, #475569, #64748b)',
+                  borderRadius: 1,
+                  transform: 'rotate(-10deg)',
+                }} />
+                <div style={{
+                  position: 'absolute', top: 3, left: -4,
+                  width: 6, height: 2,
+                  background: 'linear-gradient(90deg, #475569, #64748b)',
+                  borderRadius: 1,
+                  transform: 'rotate(10deg)',
+                }} />
+              </div>
+            ) : p.spriteProjectile ? (
+              <SpriteProjectileTrail spriteData={p.spriteProjectile} />
+            ) : p.isElectric ? (
+              <ThunderProjectileSprite />
+            ) : p.beamSrc ? (
+              <img src={p.beamSrc} alt="" style={{
+                width: 120, height: 20,
+                filter: `drop-shadow(0 0 8px ${p.color})`,
+                opacity: 0.9,
+              }} />
+            ) : (
+              <div style={{
+                width: 14, height: 14,
+                borderRadius: '50%',
+                background: `radial-gradient(circle, ${p.color}, ${p.color}88, transparent)`,
+                boxShadow: `0 0 12px ${p.color}, 0 0 24px ${p.color}66, 0 0 4px #fff`,
+              }} />
+            )}
+          </div>
+        ))}
+
+        {fireballFx.map(fb => (
+          <FireballProjectile key={fb.id} startX={fb.startX} startY={fb.startY} endX={fb.endX} endY={fb.endY} phase={fb.phase} />
+        ))}
+
+        {fireExplosionFx.map(ex => (
+          <FireballExplosion key={ex.id} x={ex.x} y={ex.y} angles={ex.angles} />
+        ))}
+
+        {iceStormFx.map(ice => (
+          <IceStormProjectile key={ice.id} startX={ice.startX} startY={ice.startY} endX={ice.endX} endY={ice.endY} phase={ice.phase} />
+        ))}
+
+        {waterArrowFx.map(w => (
+          <WaterArrowProjectile key={w.id} startX={w.startX} startY={w.startY} endX={w.endX} endY={w.endY} phase={w.phase} />
+        ))}
+
+        {waterSplashFx.map(s => (
+          <WaterSplashExplosion key={s.id} x={s.x} y={s.y} angles={s.angles} />
+        ))}
+
+        {poisonGustFx.map(pg => (
+          <PoisonGustProjectile key={pg.id} startX={pg.startX} startY={pg.startY} endX={pg.endX} endY={pg.endY} phase={pg.phase} />
+        ))}
+
+        {resurrectFx.map(r => (
+          <ResurrectEffect key={r.id} x={r.x} y={r.y} />
+        ))}
+
+        {floatingDmg.map(f => {
+          const hasSprite = f.numValue !== undefined && f.numValue !== null;
+          const isHeal = f.numColor === 'green';
+          const isCrit = f.label === 'CRIT';
+          const isBlock = f.label === 'BLOCK';
+          const isBuff = f.isBuff;
+          const isMiss = f.text && (f.text.toString().includes('MISS') || f.text.toString().includes('DODGE'));
+          const animName = isCrit ? 'dmgCritPop' : isHeal ? 'healPop' : isBuff ? 'buffPop' : 'dmgPop';
+          const animDur = isCrit ? '1.8s' : isBuff ? '1.6s' : '1.4s';
+          const spriteScale = isCrit ? 3.5 : isBlock ? 2.8 : isHeal ? 2.8 : 2.5;
+
+          if (hasSprite) {
+            return (
+              <div key={f.id} style={{
+                position: 'absolute',
+                left: `${f.x}%`, top: `${f.y}%`,
+                transform: 'translate(-50%, -50%)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+                animation: `${animName} ${animDur} ease forwards`,
+                pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
+                filter: `drop-shadow(0 0 6px ${f.color}) drop-shadow(0 2px 3px rgba(0,0,0,0.8))`,
+              }}>
+                {f.label && (
+                  <div style={{
+                    color: f.color, fontWeight: 900,
+                    fontSize: isCrit ? '1rem' : '0.85rem',
+                    fontFamily: "'Cinzel', serif",
+                    textShadow: `0 0 8px ${f.color}, 0 1px 3px rgba(0,0,0,0.9)`,
+                    letterSpacing: 2, marginBottom: -2,
+                  }}>{f.label}</div>
+                )}
+                <SpriteNumber value={f.numValue} color={f.numColor} scale={spriteScale} />
+              </div>
+            );
+          }
+
+          return (
+            <div key={f.id} style={{
+              position: 'absolute',
+              left: `${f.x}%`, top: `${f.y}%`,
+              color: f.color, fontWeight: 900,
+              fontSize: isBuff ? '1.1rem' : isMiss ? '1.1rem' : '1.1rem',
+              textShadow: isBuff
+                ? `0 0 10px ${f.color}, 0 0 20px ${f.color}88, 0 2px 4px rgba(0,0,0,0.9)`
+                : `0 0 8px ${f.color}, 0 2px 4px rgba(0,0,0,0.8)`,
+              animation: `${animName} ${animDur} ease forwards`,
+              pointerEvents: 'none', zIndex: BATTLE.RESULT_OVERLAY,
+              fontFamily: "'Cinzel', serif",
+              letterSpacing: isBuff ? 3 : 0,
+              textTransform: 'uppercase',
+            }}>
+              {f.text}
+            </div>
+          );
+        })}
+      </BattleLayer>
+
+      {/* ═══ LAYER 7: FOREGROUND (victory/defeat overlays, vignettes) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.FOREGROUND} interactive>
+        {(isVictory || isDefeat || isFled) && (
+          <>
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: BATTLE.DAMAGE_NUMBERS - 1,
+              background: isVictory
+                ? 'radial-gradient(ellipse at center, transparent 30%, rgba(255,215,0,0.08) 60%, rgba(0,0,0,0.6) 100%)'
+                : isFled
+                ? 'radial-gradient(ellipse at center, transparent 20%, rgba(180,160,60,0.08) 50%, rgba(0,0,0,0.6) 100%)'
+                : 'radial-gradient(ellipse at center, transparent 20%, rgba(200,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%)',
+              animation: 'vignetteFadeIn 0.8s ease forwards',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%',
+              textAlign: 'center',
+              animation: isVictory ? 'victoryBanner 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'defeatBanner 0.8s ease forwards',
+              zIndex: BATTLE.DAMAGE_NUMBERS,
+              backgroundImage: (isDefeat && !isFled) ? 'linear-gradient(135deg, rgba(11,16,32,0.92), rgba(30,0,0,0.88)), url(/backgrounds/wc_gold.png)' : undefined,
+              background: (isDefeat && !isFled) ? undefined : isFled ? 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(30,25,5,0.9))' : 'linear-gradient(135deg, rgba(11,16,32,0.95), rgba(20,15,5,0.9))',
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              padding: '28px 48px', borderRadius: 16,
+              border: `2px solid ${isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)'}`,
+              backdropFilter: 'blur(10px)',
+              boxShadow: isVictory
+                ? '0 0 40px rgba(255,215,0,0.2), 0 0 80px rgba(255,215,0,0.1), inset 0 0 30px rgba(255,215,0,0.05)'
+                : isFled
+                ? '0 0 40px rgba(251,191,36,0.15), 0 0 80px rgba(0,0,0,0.4)'
+                : '0 0 40px rgba(239,68,68,0.2), 0 0 80px rgba(0,0,0,0.5)',
+            }}>
+              <div className="font-cinzel" style={{
+                fontSize: '2.2rem',
+                color: isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)',
+                textShadow: isVictory
+                  ? '0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2), 0 2px 4px rgba(0,0,0,0.5)'
+                  : isFled
+                  ? '0 0 20px rgba(251,191,36,0.4), 0 2px 4px rgba(0,0,0,0.5)'
+                  : '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2), 0 2px 4px rgba(0,0,0,0.5)',
+                letterSpacing: 4,
+              }}>
+                {isVictory ? 'VICTORY!' : isFled ? 'ESCAPED!' : 'DEFEAT'}
+              </div>
+              {isVictory && (
+                <div style={{
+                  marginTop: 10, display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'center',
+                  animation: 'fadeIn 0.5s ease 0.4s both',
+                }}>
+                  <AnimatedCounter
+                    value={battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.xpReward || 0), 0)}
+                    label="XP"
+                    color="var(--accent)"
+                    delay={500}
+                  />
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '1.2rem' }}>|</span>
+                  <AnimatedCounter
+                    value={Math.floor(battleUnits.filter(u => u.team === 'enemy').reduce((s, e) => s + (e.goldReward || 0), 0) * 0.1)}
+                    label="Gold"
+                    color="var(--gold)"
+                    delay={800}
+                  />
+                </div>
+              )}
+              {isFled && (
+                <div style={{
+                  color: '#fcd34d', marginTop: 10, fontSize: '1.05rem',
+                  animation: 'fadeIn 0.5s ease 0.5s both',
+                }}>
+                  You escaped with your life!
+                </div>
+              )}
+              {isDefeat && !isFled && (
+                <div style={{
+                  color: 'var(--muted)', marginTop: 10, fontSize: '1.05rem',
+                  animation: 'fadeIn 0.5s ease 0.5s both',
+                }}>
+                  Recover at 50% HP, lose 10% gold.
+                </div>
+              )}
+              <div style={{
+                display: 'flex', gap: 10, marginTop: 18, justifyContent: 'center',
+                animation: 'fadeIn 0.5s ease 0.6s both',
+              }}>
+                {isVictory && currentLocation && !battleState?.isTraining && (
+                  <button onClick={() => startBattle(currentLocation)} style={{
+                    background: 'linear-gradient(135deg, var(--accent), #10b981)',
+                    border: 'none', borderRadius: 10, padding: '10px 20px',
+                    color: '#0b1020', fontWeight: 700, cursor: 'pointer', fontSize: '1.1rem',
+                    transition: 'all 0.2s', boxShadow: '0 0 15px rgba(110,231,183,0.3)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 25px rgba(110,231,183,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(110,231,183,0.3)'; }}
+                  >Fight Again</button>
+                )}
+                <button onClick={() => {
+                  if (battleState?.isTraining) returnFromTraining(battleState.trainingRound);
+                  else returnToWorld();
+                }} style={{
+                  background: (isDefeat && !isFled) ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(239,68,68,0.1))' : isFled ? 'linear-gradient(135deg, rgba(251,191,36,0.3), rgba(251,191,36,0.1))' : 'var(--border)',
+                  border: (isDefeat && !isFled) ? '2px solid var(--danger)' : isFled ? '2px solid #fbbf24' : 'none',
+                  borderRadius: 10, padding: '10px 20px',
+                  color: (isDefeat && !isFled) ? 'var(--danger)' : isFled ? '#fbbf24' : 'var(--text)',
+                  fontWeight: 600, cursor: 'pointer', fontSize: '1.1rem',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  {battleState?.isTraining ? 'Continue' : isFled ? 'Return to Safety' : (isDefeat ? 'Retreat & Recover' : 'Return to World')}
+                  <span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: 6 }}>[Space]</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </BattleLayer>
+
+      {/* ═══ LAYER 8: UI (header, party frames, enemy frames, action bar, admin, log) ═══ */}
+      <BattleLayer z={BATTLE_LAYERS.UI} interactive>
+      <div style={{
+        position: 'absolute', bottom: 160, right: 16, zIndex: 50,
+      }}>
+        <button onClick={toggleAutoBattle} style={{
+          background: autoBattleEnabled
+            ? 'linear-gradient(135deg, rgba(251,191,36,0.4), rgba(245,158,11,0.2))'
+            : 'rgba(0,0,0,0.5)',
+          border: `2px solid ${autoBattleEnabled ? '#f59e0b' : '#4a4a5a'}`,
+          borderRadius: 10, padding: '8px 14px',
+          color: autoBattleEnabled ? '#fbbf24' : '#888',
+          cursor: 'pointer', fontSize: '0.9rem', fontWeight: 800,
+          letterSpacing: '0.08em',
+          backdropFilter: 'blur(4px)',
+          boxShadow: autoBattleEnabled ? '0 0 16px rgba(251,191,36,0.3), 0 0 32px rgba(251,191,36,0.1)' : 'none',
+          transition: 'all 0.3s',
+          display: 'flex', alignItems: 'center', gap: 6,
+          animation: autoBattleEnabled ? 'pulse 2s infinite' : 'none',
+        }}>
+          <span style={{ fontSize: '1rem' }}>{autoBattleEnabled ? <InlineIcon name="battle" size={14} /> : <InlineIcon name="target" size={14} />}</span>
+          AUTO {autoBattleEnabled ? 'ON' : 'OFF'}
+        </button>
+      </div>
+
+      {adminMode && (
+        <div style={{
+          position: 'absolute', top: 8, right: 8, zIndex: BATTLE.ADMIN_CONTROLS,
+          background: 'rgba(0,0,0,0.92)', border: '2px solid #f59e0b',
+          borderRadius: 10, padding: '10px 14px', width: 220,
+          backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ color: '#f59e0b', fontWeight: 800, fontSize: '0.7rem', letterSpacing: '0.1em' }}>ADMIN MODE</span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button onClick={() => setAdminPaused(p => !p)} style={{
+                background: adminPaused ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)',
+                border: `1px solid ${adminPaused ? '#ef4444' : '#22c55e'}`,
+                color: adminPaused ? '#ef4444' : '#22c55e',
+                borderRadius: 4, padding: '2px 6px', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer',
+              }}>{adminPaused ? '⏸ PAUSED' : '▶ PLAYING'}</button>
+              <button onClick={() => { setAdminMode(false); setAdminPaused(false); }} style={{
+                background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                color: '#ccc', borderRadius: 4, padding: '2px 6px', fontSize: '0.5rem', cursor: 'pointer',
+              }}>✕</button>
+            </div>
+          </div>
+          <div style={{ fontSize: '0.45rem', color: '#888', marginBottom: 6 }}>Drag effects on characters to reposition. Use sliders to resize.</div>
+          {Object.entries(adminOverrides).map(([key, val]) => (
+            <div key={key} style={{ marginBottom: 6, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#ddd', fontSize: '0.55rem', fontWeight: 600, textTransform: 'uppercase' }}>{key}</span>
+                <span style={{ color: '#888', fontSize: '0.45rem' }}>Y:{val.offsetY}{val.size !== undefined ? ` S:${val.size}` : ''}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>Y</span>
+                <input type="range" min={-80} max={20} value={val.offsetY}
+                  onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], offsetY: parseInt(e.target.value) } }))}
+                  style={{ flex: 1, height: 8, accentColor: '#f59e0b' }}
+                />
+              </div>
+              {val.size !== undefined && (
+                <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>S</span>
+                  <input type="range" min={8} max={80} value={val.size}
+                    onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], size: parseInt(e.target.value) } }))}
+                    style={{ flex: 1, height: 8, accentColor: '#3b82f6' }}
+                  />
+                </div>
+              )}
+              {val.opacity !== undefined && (
+                <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '0.4rem', width: 8 }}>O</span>
+                  <input type="range" min={10} max={100} value={Math.round(val.opacity * 100)}
+                    onChange={(e) => setAdminOverrides(prev => ({ ...prev, [key]: { ...prev[key], opacity: parseInt(e.target.value) / 100 } }))}
+                    style={{ flex: 1, height: 8, accentColor: '#a78bfa' }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+          {battleUnits.some(u => u.classId === 'worge' && u.bearForm && u.alive) && (
+            <div style={{ marginTop: 6, borderTop: '1px solid rgba(168,85,247,0.3)', paddingTop: 6 }}>
+              <div style={{ color: '#c084fc', fontWeight: 800, fontSize: '0.55rem', letterSpacing: '0.08em', marginBottom: 4 }}>BEAR FORM</div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>X</span>
+                <input type="range" min={-60} max={60} value={bearFormOverride.offsetX || 0}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, offsetX: parseInt(e.target.value) }))}
+                  style={{ flex: 1, height: 8, accentColor: '#c084fc' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{bearFormOverride.offsetX || 0}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>Y</span>
+                <input type="range" min={-60} max={60} value={bearFormOverride.offsetY || 0}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, offsetY: parseInt(e.target.value) }))}
+                  style={{ flex: 1, height: 8, accentColor: '#c084fc' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{bearFormOverride.offsetY || 0}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 2, alignItems: 'center' }}>
+                <span style={{ color: '#c084fc', fontSize: '0.4rem', width: 10 }}>S</span>
+                <input type="range" min={30} max={250} value={Math.round((bearFormOverride.scale || 1) * 100)}
+                  onChange={(e) => setBearFormOverride(prev => ({ ...prev, scale: parseInt(e.target.value) / 100 }))}
+                  style={{ flex: 1, height: 8, accentColor: '#a855f7' }}
+                />
+                <span style={{ color: '#888', fontSize: '0.4rem', width: 18, textAlign: 'right' }}>{Math.round((bearFormOverride.scale || 1) * 100)}%</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                <button onClick={() => { setBearFormOverride({ offsetX: 0, offsetY: 0, scale: 1.0 }); adminConfig.resetBearFormOverride(); }} style={{
+                  flex: 1, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)',
+                  color: '#c084fc', borderRadius: 3, padding: '2px 0', fontSize: '0.45rem', cursor: 'pointer',
+                }}>Reset</button>
+              </div>
+            </div>
+          )}
+          <button onClick={() => {
+            adminConfig.saveEffectPositions(adminOverrides);
+            adminConfig.saveBearFormOverride(bearFormOverride);
+            const allData = { effects: adminOverrides, bearForm: bearFormOverride };
+            const json = JSON.stringify(allData, null, 2);
+            navigator.clipboard.writeText(json).then(() => alert('Saved & copied!')).catch(() => alert('Saved!'));
+          }} style={{
+            width: '100%', background: 'rgba(251,191,36,0.15)', border: '1px solid #f59e0b',
+            color: '#f59e0b', borderRadius: 4, padding: '3px 0', fontSize: '0.5rem', fontWeight: 700, cursor: 'pointer', marginTop: 4,
+          }}><InlineIcon name="scroll" size={12} /> Save & Copy</button>
+          <div style={{ fontSize: '0.4rem', color: '#666', marginTop: 4, textAlign: 'center' }}>Press ~ to toggle | Changes auto-saved</div>
+        </div>
+      )}
+
+      {/* === ARPG OVERLAY: Battle Log (upper-left, fading) === */}
+      <div ref={logRef} style={{
+        position: 'absolute', top: 28, left: 10, width: 260,
+        zIndex: BATTLE.HEADER, pointerEvents: 'none',
+        display: 'flex', flexDirection: 'column', gap: 1,
+        padding: '4px 6px',
+      }}>
+        {battleLog.length > 0 && battleLog.slice(-5).map((msg, i, arr) => (
+          <div key={i} style={{
+            color: 'rgba(226,232,240,0.85)',
+            fontSize: '0.6rem', lineHeight: 1.3,
+            fontFamily: "'Jost', sans-serif",
+            textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7)',
+            opacity: 0.3 + (i / arr.length) * 0.7,
+            transition: 'opacity 0.3s',
+          }}>{msg}</div>
+        ))}
+      </div>
+
+      {/* === ARPG OVERLAY: Party Frames (left side) === */}
+      <div style={{
+        position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+        zIndex: BATTLE.HEADER, pointerEvents: 'auto',
+        display: 'flex', flexDirection: 'column', gap: 4,
+      }}>
+        {playerTeam.map(unit => {
+          const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
+          const isCurrentTurn = unit.id === currentUnitId;
+          const grudgePct = Math.min(100, unit.grudge || 0);
+          const mpPct = unit.maxMana > 0 ? Math.round((unit.mana / unit.maxMana) * 100) : 0;
+          const spPct = unit.maxStamina > 0 ? Math.round((unit.stamina / unit.maxStamina) * 100) : 0;
+          const turnIdx = battleTurnOrder.indexOf(unit.id);
+          const totalUnits = battleTurnOrder.length;
+          const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
+          return (
+            <div key={unit.id}
+              onMouseEnter={e => showTooltip(`${unit.name}\nHP: ${unit.health}/${unit.maxHealth}\nMP: ${unit.mana}/${unit.maxMana} (${mpPct}%)\nSP: ${unit.stamina}/${unit.maxStamina} (${spPct}%)\nGrudge: ${Math.round(grudgePct)}%`, e)}
+              onMouseMove={e => updateTooltipPosition(e)}
+              onMouseLeave={() => hideTooltip()}
+              style={{
+                opacity: unit.alive ? 1 : 0.35,
+                background: isCurrentTurn ? 'rgba(110,231,183,0.1)' : 'rgba(0,0,0,0.5)',
+                border: isCurrentTurn ? '1px solid rgba(110,231,183,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 6,
+                padding: '5px 8px',
+                backdropFilter: 'blur(6px)',
+                minWidth: 140,
+                transition: 'all 0.3s',
+                boxShadow: isCurrentTurn ? '0 0 10px rgba(110,231,183,0.2)' : '0 2px 6px rgba(0,0,0,0.4)',
+              }}>
+              <div style={{
+                fontSize: '0.7rem', fontWeight: 700,
+                color: isCurrentTurn ? '#6ee7b7' : '#e2e8f0',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                marginBottom: 4,
+                display: 'flex', alignItems: 'center', gap: 4,
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+              }}>
+                <span>{unit.name}</span>
+                {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: '#6ee7b7', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                {grudgePct >= 100 && <InlineIcon name="fire" size={10} />}
+              </div>
+              <BattleStatBar label="HP" current={unit.health} max={unit.maxHealth} color="#22c55e" bright="#5dd98a" />
+              <BattleStatBar label="MP" current={unit.mana} max={unit.maxMana} color="#3b82f6" bright="#6da8ff" />
+              <BattleStatBar label="SP" current={unit.stamina} max={unit.maxStamina} color="#f59e0b" bright="#fbbf24" />
+              <ActionTimerBar progress={actionProgress} width={'100%'} height={3} isActive={isCurrentTurn} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* === ARPG OVERLAY: Enemy Frames (right side) === */}
+      {enemyTeam.length > 0 && (
+        <div style={{
+          position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+          zIndex: BATTLE.HEADER, pointerEvents: 'auto',
+          display: 'flex', flexDirection: 'column', gap: 4,
+        }}>
+          {enemyTeam.map(unit => {
+            const hpPct = Math.round((unit.health / unit.maxHealth) * 100);
+            const isCurrentTurn = unit.id === currentUnitId;
+            const turnIdx = battleTurnOrder.indexOf(unit.id);
+            const totalUnits = battleTurnOrder.length;
+            const actionProgress = totalUnits > 0 ? Math.max(0, Math.min(100, ((totalUnits - turnIdx) / totalUnits) * 100)) : 0;
+            return (
+              <div key={unit.id}
+                onMouseEnter={e => showTooltip(`${unit.name}${unit.isBoss ? ' (Boss)' : ''}\nHP: ${unit.health}/${unit.maxHealth}`, e)}
+                onMouseMove={e => updateTooltipPosition(e)}
+                onMouseLeave={() => hideTooltip()}
+                style={{
+                  opacity: unit.alive ? 1 : 0.35,
+                  background: isCurrentTurn ? 'rgba(239,68,68,0.1)' : 'rgba(0,0,0,0.5)',
+                  border: isCurrentTurn ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 6,
+                  padding: '5px 8px',
+                  backdropFilter: 'blur(6px)',
+                  minWidth: 140,
+                  transition: 'all 0.3s',
+                  textAlign: 'right',
+                  boxShadow: isCurrentTurn ? '0 0 10px rgba(239,68,68,0.2)' : '0 2px 6px rgba(0,0,0,0.4)',
+                }}>
+                <div style={{
+                  fontSize: '0.7rem', fontWeight: 700,
+                  color: isCurrentTurn ? '#fca5a5' : '#e8a0a0',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  marginBottom: 4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4,
+                  textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                }}>
+                  {isCurrentTurn && <span style={{ fontSize: '0.5rem', color: '#ef4444', animation: 'pulse 1s infinite', fontWeight: 800 }}>ACT</span>}
+                  <span>{unit.name}</span>
+                </div>
+                <BattleStatBar label="HP" current={unit.health} max={unit.maxHealth} color="#ef4444" bright="#f87171" />
+                <ActionTimerBar progress={actionProgress} width={'100%'} height={3} isActive={isCurrentTurn} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* === ARPG OVERLAY: Bottom Action Bar === */}
+      <div style={{
+        position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
+        zIndex: BATTLE.HEADER, pointerEvents: 'auto',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+      }}>
+        {/* Items popup */}
+        {showItemsPanel && (() => {
+          const consumables = inventory.filter(i => i.slot === 'consumable');
+          const grouped = {};
+          consumables.forEach(c => {
+            const key = c.templateId || c.consumableType;
+            if (!grouped[key]) grouped[key] = { ...c, count: 0, items: [] };
+            grouped[key].count++;
+            grouped[key].items.push(c);
+          });
+          return (
+            <div style={{
+              marginBottom: 4, zIndex: 50,
+              background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(74,222,128,0.3)',
+              borderRadius: 6, padding: 6, backdropFilter: 'blur(6px)',
+              display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center',
+            }}>
+              {Object.values(grouped).map(group => {
+                const isRezzy = group.consumableType === 'resurrect';
+                const deadAlly = isRezzy ? battleUnits.find(u => u.team === 'player' && !u.alive) : null;
+                const disabled = isRezzy && !deadAlly;
+                return (
+                  <button key={group.templateId || group.consumableType} onClick={() => {
+                    if (disabled) return;
+                    const item = group.items[0];
+                    if (isRezzy) { useConsumable(item.id, deadAlly.id); setShowItemsPanel(false); }
+                    else { const allyTarget = battleUnits.find(u => u.id === selectedTargetId && u.team === 'player' && u.alive); useConsumable(item.id, allyTarget ? allyTarget.id : currentUnitId); setShowItemsPanel(false); }
+                  }}
+                  style={{
+                    background: disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.1)',
+                    border: `1px solid ${disabled ? 'rgba(100,100,100,0.2)' : 'rgba(74,222,128,0.25)'}`,
+                    borderRadius: 4, padding: '3px 6px', cursor: disabled ? 'not-allowed' : 'pointer',
+                    color: disabled ? 'rgba(150,150,150,0.5)' : '#86efac',
+                    fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3,
+                    transition: 'all 0.15s', opacity: disabled ? 0.5 : 1,
+                  }}
+                  onMouseEnter={e => { showTooltip(disabled ? 'No fallen allies to revive' : group.description, e); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.25)'; }}
+                  onMouseMove={e => updateTooltipPosition(e)}
+                  onMouseLeave={e => { hideTooltip(); if (!disabled) e.currentTarget.style.background = 'rgba(74,222,128,0.1)'; }}
+                  >
+                    {(() => { const ip = getIconPlacement('battleActionIcons'); return <InlineIcon name={group.icon} size={ip.iconSize} style={{ marginRight: 0, transform: `translate(${ip.offsetX}px, ${ip.offsetY}px)` }} />; })()}
+                    <span>{group.name}</span>
+                    <span style={{ color: '#4ade80', fontSize: '0.6rem' }}>x{group.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* Heal target selector */}
+        {healTargetMode && (
+          <div style={{
+            marginBottom: 4, zIndex: 50, background: 'rgba(0,0,0,0.9)', border: '1px solid #22c55e',
+            borderRadius: 6, padding: 8, minWidth: 280, backdropFilter: 'blur(6px)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 6, color: '#22c55e', fontSize: '0.75rem', fontWeight: 700 }}>
+              <InlineIcon name="heart" size={10} /> Choose ally to heal
+            </div>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {playerTeam.filter(u => u.alive).map((ally, idx) => {
+                const hpPct = Math.round((ally.health / ally.maxHealth) * 100);
+                const hpColor = hpPct > 60 ? '#22c55e' : hpPct > 30 ? '#f59e0b' : '#ef4444';
+                return (
+                  <button key={ally.id} onClick={() => handleHealTarget(ally.id)}
+                    style={{
+                      background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: 4, padding: '3px 8px',
+                      cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.3)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.15)'; }}
+                  >
+                    <div style={{ color: '#e8dcc8', fontSize: '0.7rem', fontWeight: 700 }}>{idx + 1}. {ally.name}</div>
+                    <div style={{ color: hpColor, fontSize: '0.6rem' }}>{ally.health}/{ally.maxHealth}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Victory/Defeat banner */}
+        {isVictory || isDefeat || isFled ? (
+          <div className="font-cinzel" style={{
+            textAlign: 'center', padding: '8px 24px',
+            color: isVictory ? 'var(--gold)' : isFled ? '#fbbf24' : 'var(--danger)',
+            fontSize: '1.4rem', fontWeight: 800,
+            textShadow: isVictory
+              ? '0 0 20px rgba(250,172,71,0.4), 0 2px 4px rgba(0,0,0,0.8)'
+              : '0 0 20px rgba(239,68,68,0.4), 0 2px 4px rgba(0,0,0,0.8)',
+            letterSpacing: '0.1em',
+          }}>
+            {isVictory ? 'VICTORY' : isFled ? 'ESCAPED' : 'DEFEATED'}
+          </div>
+        ) : isPlayerTurn && currentUnit ? (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+          }}>
+            {/* Row position controls */}
+            {(() => {
+              if (!currentUnit || currentUnit.team !== 'player') return null;
+              const currentRow = currentUnit.row || 'battle';
+              const rowCfg = PLAYER_ROWS[currentRow];
+              const adjacent = getAdjacentRows(currentUnit);
+              const rows = ['protection', 'battle', 'back'];
+              const currentIdx = rows.indexOf(currentRow);
+              const canForward = currentIdx > 0 && adjacent.includes(rows[currentIdx - 1]);
+              const canBack = currentIdx < rows.length - 1 && adjacent.includes(rows[currentIdx + 1]);
+              const forwardRow = canForward ? PLAYER_ROWS[rows[currentIdx - 1]] : null;
+              const backRow = canBack ? PLAYER_ROWS[rows[currentIdx + 1]] : null;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button disabled={!canForward} onClick={() => canForward && moveRow('forward')}
+                    style={{
+                      width: 18, height: 18, borderRadius: 3,
+                      background: canForward ? 'rgba(59,130,246,0.3)' : 'rgba(40,40,50,0.3)',
+                      border: `1px solid ${canForward ? 'rgba(59,130,246,0.5)' : 'rgba(50,50,60,0.3)'}`,
+                      color: canForward ? '#93c5fd' : '#444',
+                      cursor: canForward ? 'pointer' : 'not-allowed',
+                      fontSize: '0.6rem', fontWeight: 900, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', opacity: canForward ? 1 : 0.4,
+                    }}
+                    onMouseEnter={e => { if (forwardRow) showTooltip(`Move to ${forwardRow.name}`, e); }}
+                    onMouseMove={e => updateTooltipPosition(e)}
+                    onMouseLeave={() => hideTooltip()}
+                  >{'\u25C0'}</button>
+                  <span className="font-cinzel" style={{ fontSize: '0.4rem', color: 'rgba(212,169,106,0.7)', fontWeight: 700, letterSpacing: 1, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                    <InlineIcon name={rowCfg?.icon || 'crossed_swords'} size={7} /> {rowCfg?.name || 'Battle'}
+                  </span>
+                  <button disabled={!canBack} onClick={() => canBack && moveRow('back')}
+                    style={{
+                      width: 18, height: 18, borderRadius: 3,
+                      background: canBack ? 'rgba(245,158,11,0.3)' : 'rgba(40,40,50,0.3)',
+                      border: `1px solid ${canBack ? 'rgba(245,158,11,0.5)' : 'rgba(50,50,60,0.3)'}`,
+                      color: canBack ? '#fcd34d' : '#444',
+                      cursor: canBack ? 'pointer' : 'not-allowed',
+                      fontSize: '0.6rem', fontWeight: 900, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', opacity: canBack ? 1 : 0.4,
+                    }}
+                    onMouseEnter={e => { if (backRow) showTooltip(`Move to ${backRow.name}`, e); }}
+                    onMouseMove={e => updateTooltipPosition(e)}
+                    onMouseLeave={() => hideTooltip()}
+                  >{'\u25B6'}</button>
+                </div>
+              );
+            })()}
+
+            {/* ═══ BAR 1: Main Action Bar ═══ */}
+            <div style={{
+              display: 'flex', alignItems: 'flex-end', gap: 3,
+              padding: '4px 10px 2px',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%)',
+              border: '1px solid rgba(197,160,89,0.2)',
+              borderRadius: 5,
+              boxShadow: '0 -2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(197,160,89,0.08)',
+              backdropFilter: 'blur(6px)',
+            }}>
+              {(() => {
+                const bar1Abilities = displayedAbilities.slice(0, 4);
+                const bar1Slots = [
+                  { id: 'attack', action: autoAttack, icon: UI_ICONS.actionAttack, label: 'Attack', color: '#ef4444', isSprite: true, key: '1' },
+                  ...bar1Abilities.map((ab, i) => ({ id: ab.id, ability: ab, label: ab.name, color: '#d4a96a', isAbility: true, key: String(i + 2) })),
+                  ...(bar1Abilities.length < 4 ? Array.from({ length: 4 - bar1Abilities.length }, (_, i) => ({ id: `empty_${i}`, label: '—', color: '#333', isEmpty: true, key: String(bar1Abilities.length + i + 2) })) : []),
+                  { id: 'defend', action: defendTurn, icon: UI_ICONS.actionDefend, label: 'Defend', color: '#60a5fa', isSprite: true, key: '6' },
+                  { id: 'skip', action: skipTurn, icon: 'moon', label: 'Skip', color: '#94a3b8', key: '7' },
+                  { id: 'flee', action: fleeBattle, icon: UI_ICONS.actionFlee, label: 'Flee', color: '#fbbf24', isSprite: true, key: '8' },
+                ];
+
+                return bar1Slots.map((btn, idx) => {
+                  if (btn.isEmpty) {
+                    return (
+                      <div key={btn.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40, opacity: 0.3 }}>
+                          <div style={{ position: 'absolute', inset: '13%', background: 'rgba(15,12,8,0.9)', borderRadius: 2 }} />
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'saturate(0.3)' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.3)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3 }}>{btn.key}</span>
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.25rem', color: '#333', fontWeight: 600, lineHeight: 1 }}>—</span>
+                      </div>
+                    );
+                  }
+
+                  if (btn.isAbility) {
+                    const ability = btn.ability;
+                    const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                    const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                    const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+                    const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
+                    const disabled = onCd || noMana || noStamina || alreadyTransformed;
+                    return (
+                      <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40, opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+                          <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                            background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                            border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: disabled ? 'inset 0 0 5px rgba(0,0,0,0.8)' : 'inset 0 0 6px rgba(0,0,0,0.7), 0 0 4px rgba(212,169,106,0.1)',
+                          }}
+                            onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP: ${ability.staminaCost}` : ''}${onCd ? `\nCD: ${currentUnit.cooldowns[ability.id]}` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
+                          >
+                            <AbilityIcon ability={ability} size={18} />
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: disabled ? 'saturate(0.3)' : 'none' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{btn.key}</span>
+                          {onCd && (
+                            <div style={{ position: 'absolute', top: -2, right: -2, zIndex: 4, background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515', width: 11, height: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', fontWeight: 700, color: '#e8c8c8' }}>{currentUnit.cooldowns[ability.id]}</div>
+                          )}
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.25rem', color: disabled ? '#444' : '#d4a96a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: 42, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 2px rgba(0,0,0,0.8)' }}>{ability.name}</span>
+                      </div>
+                    );
+                  }
+
+                  const isSep = idx === 5;
+                  return (
+                    <React.Fragment key={btn.id}>
+                      {isSep && <div style={{ width: 1, height: 32, background: 'linear-gradient(180deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 2px', alignSelf: 'center' }} />}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 40, height: 40 }}>
+                          <button onClick={btn.action} style={{
+                            background: 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                            border: 'none', padding: 0, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: `inset 0 0 6px rgba(0,0,0,0.7), 0 0 3px ${btn.color}25`,
+                          }}
+                            onMouseEnter={e => { showTooltip(btn.label, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                          >
+                            {btn.isSprite ? <SpriteIcon src={btn.icon} size={14} scale={2} /> : <InlineIcon name={btn.icon} size={16} />}
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{btn.key}</span>
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.28rem', color: btn.color, fontWeight: 600, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{btn.label}</span>
+                      </div>
+                    </React.Fragment>
+                  );
+                });
+              })()}
+
+              {/* Items button */}
+              {(() => {
+                const consumables = inventory.filter(i => i.slot === 'consumable');
+                if (consumables.length === 0) return null;
+                return (
+                  <>
+                    <div style={{ width: 1, height: 32, background: 'linear-gradient(180deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 2px', alignSelf: 'center' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <div style={{ position: 'relative', width: 40, height: 40 }}>
+                        <button onClick={() => setShowItemsPanel(!showItemsPanel)} style={{
+                          background: showItemsPanel ? 'linear-gradient(145deg, rgba(20,60,30,0.95), rgba(15,40,20,0.98))' : 'linear-gradient(145deg, rgba(35,28,18,0.95), rgba(20,16,10,0.98))',
+                          border: 'none', padding: 0, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                          boxShadow: showItemsPanel ? '0 0 6px rgba(74,222,128,0.3), inset 0 0 5px rgba(0,0,0,0.5)' : 'inset 0 0 6px rgba(0,0,0,0.7)',
+                        }}
+                          onMouseEnter={e => { showTooltip(`Items (${consumables.length})`, e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}
+                          onMouseMove={e => updateTooltipPosition(e)}
+                          onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = 'brightness(1)'; }}
+                        >
+                          <SpriteIcon src={UI_ICONS.actionItem} size={14} scale={2} />
+                        </button>
+                        <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto' }} />
+                      </div>
+                      <span className="font-cinzel" style={{ fontSize: '0.28rem', color: '#86efac', fontWeight: 600, lineHeight: 1, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>Items</span>
+                    </div>
+                  </>
+                );
+              })()}
+
+              {/* Grudge button */}
+              {(currentUnit.grudge || 0) >= 100 && (
+                <>
+                  <div style={{ width: 1, height: 32, background: 'linear-gradient(180deg, transparent, rgba(239,68,68,0.3), transparent)', margin: '0 2px', alignSelf: 'center' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                    <div style={{ position: 'relative', width: 40, height: 40 }}>
+                      <button onClick={useGrudge} style={{
+                        background: 'linear-gradient(145deg, rgba(80,15,15,0.95), rgba(50,10,10,0.98))',
+                        border: 'none', padding: 0, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                        boxShadow: '0 0 10px rgba(239,68,68,0.4), inset 0 0 5px rgba(0,0,0,0.5)',
+                        animation: 'pulse 1s infinite',
+                      }}
+                        onMouseEnter={e => { showTooltip('GRUDGE REVENGE\nUnleash stored rage!', e); e.currentTarget.parentElement.style.transform = 'scale(1.12)'; }}
+                        onMouseMove={e => updateTooltipPosition(e)}
+                        onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; }}
+                      >
+                        <InlineIcon name="fire" size={16} />
+                      </button>
+                      <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'drop-shadow(0 0 3px rgba(239,68,68,0.4))' }} />
+                    </div>
+                    <span className="font-cinzel" style={{ fontSize: '0.28rem', color: '#fca5a5', fontWeight: 600, lineHeight: 1, textShadow: '0 0 4px #ef4444' }}>Revenge</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* ═══ BAR 2: Class Abilities (Q W E R) ═══ */}
+            {(() => {
+              const bar2Abilities = displayedAbilities.slice(4);
+              if (bar2Abilities.length === 0 && displayedAbilities.length <= 4) return null;
+              const keyLabels = ['Q', 'W', 'E', 'R'];
+              return (
+                <div style={{
+                  display: 'flex', alignItems: 'flex-end', gap: 3,
+                  padding: '3px 10px 2px',
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 100%)',
+                  border: '1px solid rgba(138,100,60,0.2)',
+                  borderRadius: 5,
+                  boxShadow: '0 -1px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(138,100,60,0.06)',
+                  backdropFilter: 'blur(6px)',
+                  marginTop: -1,
+                }}>
+                  <span className="font-cinzel" style={{ fontSize: '0.24rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700, alignSelf: 'center', marginRight: 4, textShadow: '0 1px 2px rgba(0,0,0,0.9)', letterSpacing: 1 }}>CLASS</span>
+                  {keyLabels.map((keyLabel, idx) => {
+                    const ability = bar2Abilities[idx];
+                    if (!ability) {
+                      return (
+                        <div key={`bar2_empty_${idx}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                          <div style={{ position: 'relative', width: 36, height: 36, opacity: 0.25 }}>
+                            <div style={{ position: 'absolute', inset: '13%', background: 'rgba(15,12,8,0.9)', borderRadius: 2 }} />
+                            <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: 'saturate(0.3)' }} />
+                            <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.3)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3 }}>{keyLabel}</span>
+                          </div>
+                          <span className="font-cinzel" style={{ fontSize: '0.22rem', color: '#333', fontWeight: 600, lineHeight: 1 }}>—</span>
+                        </div>
+                      );
+                    }
+                    const onCd = (currentUnit.cooldowns[ability.id] || 0) > 0;
+                    const noMana = (ability.manaCost || 0) > currentUnit.mana;
+                    const noStamina = (ability.staminaCost || 0) > currentUnit.stamina;
+                    const alreadyTransformed = (ability.isDemonBlade && currentUnit.demonBlade);
+                    const disabled = onCd || noMana || noStamina || alreadyTransformed;
+                    return (
+                      <div key={ability.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        <div style={{ position: 'relative', width: 36, height: 36, opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+                          <button onClick={() => !disabled && handleAbility(ability.id)} style={{
+                            background: disabled ? 'linear-gradient(145deg, rgba(20,18,15,0.95), rgba(12,10,8,0.98))' : 'linear-gradient(145deg, rgba(30,24,15,0.95), rgba(18,14,9,0.98))',
+                            border: 'none', padding: 0, cursor: disabled ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s', position: 'absolute', inset: '13%', borderRadius: 2, zIndex: 1,
+                            boxShadow: disabled ? 'inset 0 0 5px rgba(0,0,0,0.8)' : 'inset 0 0 6px rgba(0,0,0,0.7), 0 0 4px rgba(138,100,60,0.15)',
+                          }}
+                            onMouseEnter={e => { showTooltip(`${ability.name}\n${ability.description}${ability.manaCost ? `\nMP: ${ability.manaCost}` : ''}${ability.staminaCost ? `\nSP: ${ability.staminaCost}` : ''}${onCd ? `\nCD: ${currentUnit.cooldowns[ability.id]}` : ''}`, e); if (!disabled) { e.currentTarget.parentElement.style.transform = 'scale(1.12)'; e.currentTarget.parentElement.style.filter = 'brightness(1.3)'; }}}
+                            onMouseMove={e => updateTooltipPosition(e)}
+                            onMouseLeave={e => { hideTooltip(); e.currentTarget.parentElement.style.transform = 'scale(1)'; e.currentTarget.parentElement.style.filter = disabled ? 'none' : 'brightness(1)'; }}
+                          >
+                            <AbilityIcon ability={ability} size={16} />
+                          </button>
+                          <img src="/ui/skill-slot-frame.png" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2, imageRendering: 'auto', filter: disabled ? 'saturate(0.3)' : 'none' }} />
+                          <span style={{ position: 'absolute', top: '6%', left: '10%', fontSize: '0.28rem', color: 'rgba(200,180,120,0.5)', fontWeight: 700, fontFamily: "'Cinzel', serif", zIndex: 3, textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>{keyLabel}</span>
+                          {onCd && (
+                            <div style={{ position: 'absolute', top: -2, right: -2, zIndex: 4, background: '#8b3030', borderRadius: '50%', border: '1px solid #4a1515', width: 10, height: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', fontWeight: 700, color: '#e8c8c8' }}>{currentUnit.cooldowns[ability.id]}</div>
+                          )}
+                        </div>
+                        <span className="font-cinzel" style={{ fontSize: '0.22rem', color: disabled ? '#444' : '#c8965a', fontWeight: 600, lineHeight: 1, textAlign: 'center', maxWidth: 38, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: disabled ? 'none' : '0 1px 2px rgba(0,0,0,0.8)' }}>{ability.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Target indicator */}
+            {!healTargetMode && selectedTargetId && (
+              <div style={{ fontSize: '0.4rem', color: 'rgba(239,68,68,0.7)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                Target: {battleUnits.find(u => u.id === selectedTargetId)?.name || '—'}
+              </div>
+            )}
+
+            {currentUnit && currentUnit.team === 'player' && (
+              <div style={{
+                display: 'flex', gap: 8, alignItems: 'center',
+                background: 'rgba(0,0,0,0.5)', borderRadius: 4, padding: '4px 10px',
+                backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <span style={{ fontSize: '0.55rem', color: '#6ee7b7', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.9)', minWidth: 40 }}>{currentUnit.name}</span>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 80 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#5dd98a', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>HP</span>
+                  <div style={{ width: 80, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.health/currentUnit.maxHealth)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #5dd98a, #22c55e)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(34,197,94,0.4)' }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 60 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#6da8ff', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>MP</span>
+                  <div style={{ width: 60, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.mana/currentUnit.maxMana)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #6da8ff, #3b82f6)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(59,130,246,0.4)' }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 60 }}>
+                  <span style={{ fontSize: '0.5rem', color: '#fbbf24', fontWeight: 700, fontFamily: "'Cinzel', serif" }}>SP</span>
+                  <div style={{ width: 60, height: 7, background: 'rgba(0,0,0,0.6)', borderRadius: 4, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0,Math.min(100,(currentUnit.stamina/currentUnit.maxStamina)*100))}%`, borderRadius: 4, background: 'linear-gradient(180deg, #fbbf24, #f59e0b)', transition: 'width 0.4s', boxShadow: '0 0 6px rgba(245,158,11,0.4)' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : !isVictory && !isDefeat && !isFled && (
+          <div className="font-cinzel" style={{
+            color: currentUnit?.team === 'enemy' ? '#fca5a5' : '#93c5fd',
+            fontSize: '0.85rem', fontWeight: 700,
+            animation: 'pulse 1s infinite', textAlign: 'center',
+            padding: '6px 16px',
+            background: 'rgba(0,0,0,0.4)', borderRadius: 4,
+            backdropFilter: 'blur(4px)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+          }}>
+            {currentUnit?.name || 'Processing'}{phase === 'animating' ? ' attacks...' : ' is acting...'}
+          </div>
+        )}
+      </div>
+      </BattleLayer>
+    </div>
+  );
+}
+
+export default function BattleScreen() {
+  return (
+    <BattleErrorBoundary>
+      <BattleScreenInner />
+    </BattleErrorBoundary>
+  );
+}

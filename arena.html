@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRUDA Arena | Grudge Warlords</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/lifecraft" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a12;--bg2:#12121f;--bg3:#1a1a2e;--bg4:#16213e;
+  --red:#e94560;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;
+  --platinum:#70d6ff;--diamond:#b9f2ff;--legend:#ff6b6b;
+  --text:#e0e0e0;--dim:#888;--border:#2a2a3e;
+}
+body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;min-height:100vh}
+h1,h2,h3,h4{font-family:'Cinzel',serif}
+
+.arena-wrap{max-width:1200px;margin:0 auto;padding:20px}
+
+.arena-header{text-align:center;padding:40px 20px 30px;position:relative}
+.arena-header h1{font-size:clamp(28px,5vw,48px);color:var(--red);text-shadow:0 0 30px rgba(233,69,96,0.4);letter-spacing:3px}
+.arena-header .subtitle{color:var(--dim);font-size:14px;margin-top:8px;letter-spacing:2px;text-transform:uppercase}
+.arena-header .live-dot{display:inline-block;width:8px;height:8px;background:#4caf50;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.stats-bar{display:flex;justify-content:center;gap:30px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin:20px 0;flex-wrap:wrap}
+.stat-item{text-align:center}
+.stat-item .val{font-size:24px;font-weight:700;color:var(--red);font-family:'Cinzel',serif}
+.stat-item .label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+.tabs{display:flex;gap:4px;margin:20px 0;border-bottom:2px solid var(--border)}
+.tab{padding:10px 24px;cursor:pointer;color:var(--dim);font-weight:600;font-size:14px;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;font-family:'Jost',sans-serif}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+
+.filter-row{display:flex;gap:10px;margin:12px 0;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:6px 16px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;transition:all 0.2s;font-family:'Jost',sans-serif}
+.filter-btn:hover{border-color:var(--red);color:var(--text)}
+.filter-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.team-grid{display:grid;gap:12px;margin-top:16px}
+
+.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;transition:border-color 0.2s,transform 0.2s}
+.team-card:hover{border-color:var(--red);transform:translateY(-1px)}
+.team-card.ranked{border-left:3px solid var(--red)}
+.team-card.unranked{border-left:3px solid var(--dim);opacity:0.8}
+
+.team-rank{text-align:center;min-width:50px}
+.team-rank .pos{font-size:22px;font-weight:900;font-family:'Cinzel',serif}
+.team-rank .pos.gold-rank{color:var(--gold)}
+.team-rank .pos.silver-rank{color:var(--silver)}
+.team-rank .pos.bronze-rank{color:var(--bronze)}
+.team-rank .pos.default-rank{color:var(--dim)}
+
+.team-info h3{font-size:16px;color:var(--text);margin-bottom:4px}
+.team-info .heroes-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.hero-tag{font-size:11px;padding:3px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--dim)}
+.hero-tag .lvl{color:var(--red);font-weight:600}
+.team-info .status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-left:8px}
+.status-badge.ranked{background:rgba(233,69,96,0.2);color:var(--red)}
+.status-badge.unranked{background:rgba(136,136,136,0.2);color:var(--dim)}
+
+.team-stats{text-align:right;min-width:100px}
+.team-stats .record{font-size:18px;font-weight:700;font-family:'Cinzel',serif}
+.team-stats .record .w{color:#4caf50}
+.team-stats .record .l{color:var(--red)}
+.team-stats .winrate{font-size:11px;color:var(--dim);margin-top:2px}
+.team-stats .battles{font-size:11px;color:var(--dim)}
+
+.lb-table{width:100%;border-collapse:collapse;margin-top:16px}
+.lb-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--red);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-family:'Cinzel',serif}
+.lb-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px}
+.lb-table tr:hover{background:var(--bg3)}
+.lb-table .rank-cell{font-weight:900;font-family:'Cinzel',serif;font-size:16px}
+.rank-badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.rank-bronze{background:rgba(205,127,50,0.2);color:var(--bronze)}
+.rank-silver{background:rgba(192,192,192,0.2);color:var(--silver)}
+.rank-gold{background:rgba(255,215,0,0.2);color:var(--gold)}
+.rank-platinum{background:rgba(112,214,255,0.2);color:var(--platinum)}
+.rank-diamond{background:rgba(185,242,255,0.2);color:var(--diamond)}
+.rank-legend{background:rgba(255,107,107,0.2);color:var(--legend)}
+
+.recent-battle{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px}
+.recent-battle .result-icon{font-size:20px;min-width:30px;text-align:center}
+.recent-battle .battle-info{flex:1}
+.recent-battle .battle-info .names{font-weight:600;font-size:14px}
+.recent-battle .battle-info .time{font-size:11px;color:var(--dim);margin-top:2px}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-state h3{color:var(--text);margin-bottom:8px;font-size:20px}
+.empty-state p{font-size:14px;max-width:400px;margin:0 auto}
+.empty-state .cta{display:inline-block;margin-top:20px;padding:10px 24px;background:var(--red);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;transition:background 0.2s}
+.empty-state .cta:hover{background:#d63050}
+
+.pagination{display:flex;justify-content:center;gap:8px;margin-top:20px}
+.page-btn{padding:6px 14px;border:1px solid var(--border);background:var(--bg2);color:var(--dim);border-radius:4px;cursor:pointer;font-size:13px;font-family:'Jost',sans-serif}
+.page-btn:hover{border-color:var(--red);color:var(--text)}
+.page-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+.page-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+.discord-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;background:#5865F2;border-radius:8px;margin:20px 0;color:#fff;font-size:14px}
+.discord-bar a{color:#fff;font-weight:700;text-decoration:none;padding:6px 16px;background:rgba(255,255,255,0.2);border-radius:4px;transition:background 0.2s}
+.discord-bar a:hover{background:rgba(255,255,255,0.3)}
+
+.loading{text-align:center;padding:40px;color:var(--dim)}
+.loading .spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.site-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-bottom:2px solid rgba(139,0,0,0.4);padding:0 20px;display:flex;align-items:center;gap:20px;height:56px;}
+.site-nav-logo{height:40px;margin-right:8px;}
+.site-nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.site-nav-link{font-family:'LifeCraft',serif;font-size:1.1rem;color:#c0a060;text-decoration:none;padding:6px 16px;border-radius:6px;transition:all 0.2s;letter-spacing:1px;}
+.site-nav-link:hover{color:#ffd700;background:rgba(255,215,0,0.08);}
+.site-nav-link.active{color:#ffd700;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);}
+
+@media(max-width:600px){
+  .team-card{grid-template-columns:1fr;gap:8px}
+  .team-rank{display:flex;align-items:center;gap:10px}
+  .team-stats{text-align:left}
+  .stats-bar{gap:16px}
+  .lb-table{font-size:12px}
+  .lb-table th,.lb-table td{padding:6px 8px}
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="/"><img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" class="site-nav-logo"></a>
+  <div class="site-nav-links">
+    <a href="/compendium.html" class="site-nav-link">Compendium</a>
+    <a href="/hero-codex.html" class="site-nav-link">Hero Codex</a>
+    <a href="/arena.html" class="site-nav-link active">Arena</a>
+    <a href="/" class="site-nav-link">Play Game</a>
+  </div>
+</nav>
+
+<div class="arena-wrap">
+  <div class="arena-header">
+    <h1>GRUDA ARENA</h1>
+    <div class="subtitle"><span class="live-dot"></span>LIVE PvP RANKED BATTLES</div>
+  </div>
+
+  <div class="discord-bar">
+    <svg width="20" height="15" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.4.2a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.4 37.4 0 0 0 25.4.3a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 5a.2.2 0 0 0-.1.1C1.5 18.7-.9 32 .3 45.1v.1a58.8 58.8 0 0 0 17.9 9 .2.2 0 0 0 .3-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.8 38.8 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0 42 42 0 0 0 35.6 0 .2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .3 36.4 36.4 0 0 1-5.5 2.7.2.2 0 0 0-.1.3 47.2 47.2 0 0 0 3.6 5.8.2.2 0 0 0 .3.1A58.6 58.6 0 0 0 71 45.2v-.1C72.4 30.1 68.4 17 60.2 5a.2.2 0 0 0-.1 0zM23.7 37a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.3 3.1 6.2 7a6.7 6.7 0 0 1-6.2 7zm23.2 0a6.8 6.8 0 0 1-6.3-7 6.7 6.7 0 0 1 6.3-7c3.4 0 6.4 3.1 6.3 7a6.8 6.8 0 0 1-6.3 7z"/></svg>
+    Join the fight &mdash;
+    <a href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord Server</a>
+  </div>
+
+  <div id="stats-bar" class="stats-bar">
+    <div class="stat-item"><div class="val" id="stat-teams">-</div><div class="label">Arena Teams</div></div>
+    <div class="stat-item"><div class="val" id="stat-ranked">-</div><div class="label">Ranked</div></div>
+    <div class="stat-item"><div class="val" id="stat-battles">-</div><div class="label">Battles</div></div>
+    <div class="stat-item"><div class="val" id="stat-players">-</div><div class="label">Players</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="lobby">Lobby</button>
+    <button class="tab" data-tab="leaderboard">Leaderboard</button>
+    <button class="tab" data-tab="recent">Recent Battles</button>
+  </div>
+
+  <div id="panel-lobby" class="panel active">
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">All Teams</button>
+      <button class="filter-btn" data-filter="ranked">Ranked</button>
+      <button class="filter-btn" data-filter="unranked">Unranked</button>
+    </div>
+    <div id="lobby-content" class="team-grid">
+      <div class="loading"><div class="spinner"></div><br>Loading arena...</div>
+    </div>
+    <div id="lobby-pagination" class="pagination"></div>
+  </div>
+
+  <div id="panel-leaderboard" class="panel">
+    <div id="leaderboard-content">
+      <div class="loading"><div class="spinner"></div><br>Loading leaderboard...</div>
+    </div>
+  </div>
+
+  <div id="panel-recent" class="panel">
+    <div id="recent-content">
+      <div class="loading"><div class="spinner"></div><br>Loading battles...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var API = window.location.origin;
+
+  var RACE_NAMES = {
+    human:'Human', elf:'Elf', dwarf:'Dwarf', orc:'Orc', undead:'Undead', demon:'Demon',
+    Human:'Human', Elf:'Elf', Dwarf:'Dwarf', Orc:'Orc', Undead:'Undead', Demon:'Demon'
+  };
+  var CLASS_NAMES = {
+    warrior:'Warrior', mage:'Mage', ranger:'Ranger', cleric:'Cleric',
+    Warrior:'Warrior', Mage:'Mage', Ranger:'Ranger', Cleric:'Cleric'
+  };
+
+  var currentFilter = 'all';
+  var currentPage = 0;
+
+  function api(path) {
+    return fetch(API + path).then(function(r) {
+      if (!r.ok) throw new Error('API error ' + r.status);
+      return r.json();
+    });
+  }
+
+  function getRankTier(wins) {
+    if (wins >= 100) return { name:'Legend', css:'rank-legend' };
+    if (wins >= 50) return { name:'Diamond', css:'rank-diamond' };
+    if (wins >= 30) return { name:'Platinum', css:'rank-platinum' };
+    if (wins >= 15) return { name:'Gold', css:'rank-gold' };
+    if (wins >= 5) return { name:'Silver', css:'rank-silver' };
+    return { name:'Bronze', css:'rank-bronze' };
+  }
+
+  function getRankPosClass(i) {
+    if (i === 0) return 'gold-rank';
+    if (i === 1) return 'silver-rank';
+    if (i === 2) return 'bronze-rank';
+    return 'default-rank';
+  }
+
+  function timeAgo(ts) {
+    var diff = Date.now() - ts;
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function escHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function loadStats() {
+    api('/api/arena/stats').then(function(arena) {
+      document.getElementById('stat-teams').textContent = arena.totalTeams;
+      document.getElementById('stat-ranked').textContent = arena.rankedTeams;
+      document.getElementById('stat-battles').textContent = arena.totalBattles;
+    }).catch(function() {});
+    api('/api/public/stats').then(function(pub) {
+      document.getElementById('stat-players').textContent = pub.totalPlayers || 0;
+    }).catch(function() {
+      document.getElementById('stat-players').textContent = '—';
+    });
+  }
+
+  function loadLobby() {
+    var statusParam = currentFilter === 'all' ? '' : '&status=' + currentFilter;
+    api('/api/arena/lobby?page=' + currentPage + '&limit=20' + statusParam).then(function(data) {
+      var el = document.getElementById('lobby-content');
+
+      if (!data.teams || data.teams.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>No Warriors Yet</h3>' +
+            '<p>The arena awaits its first challengers. Submit your war party in-game to appear here!</p>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+          '</div>';
+        document.getElementById('lobby-pagination').innerHTML = '';
+        return;
+      }
+
+      var html = '';
+      data.teams.forEach(function(t, i) {
+        var globalIdx = currentPage * 20 + i + 1;
+        var heroTags = (t.heroSummary || []).map(function(h) {
+          return '<span class="hero-tag"><span class="lvl">Lv.' + h.level + '</span> ' +
+            escHtml(RACE_NAMES[h.raceId] || h.raceId) + ' ' +
+            escHtml(CLASS_NAMES[h.classId] || h.classId) +
+            ' &mdash; ' + escHtml(h.name) + '</span>';
+        }).join('');
+
+        var wr = t.totalBattles > 0 ? Math.round((t.wins / t.totalBattles) * 100) : 0;
+        var tier = getRankTier(t.wins);
+
+        html +=
+          '<div class="team-card ' + t.status + '">' +
+            '<div class="team-rank"><div class="pos ' + getRankPosClass(i + currentPage * 20) + '">#' + globalIdx + '</div></div>' +
+            '<div class="team-info">' +
+              '<h3>' + escHtml(t.ownerName) +
+                '<span class="status-badge ' + t.status + '">' + t.status + '</span>' +
+                ' <span class="rank-badge ' + tier.css + '">' + tier.name + '</span>' +
+              '</h3>' +
+              '<div class="heroes-list">' + heroTags + '</div>' +
+            '</div>' +
+            '<div class="team-stats">' +
+              '<div class="record"><span class="w">' + t.wins + 'W</span> / <span class="l">' + t.losses + 'L</span></div>' +
+              '<div class="winrate">' + wr + '% win rate</div>' +
+              '<div class="battles">' + t.totalBattles + ' battles</div>' +
+            '</div>' +
+          '</div>';
+      });
+      el.innerHTML = html;
+
+      var pagEl = document.getElementById('lobby-pagination');
+      if (data.totalPages > 1) {
+        var pagHtml = '';
+        pagHtml += '<button class="page-btn" ' + (currentPage <= 0 ? 'disabled' : '') +
+          ' onclick="window._arenaPage(' + (currentPage - 1) + ')">&laquo;</button>';
+        for (var p = 0; p < data.totalPages && p < 10; p++) {
+          pagHtml += '<button class="page-btn ' + (p === currentPage ? 'active' : '') +
+            '" onclick="window._arenaPage(' + p + ')">' + (p + 1) + '</button>';
+        }
+        pagHtml += '<button class="page-btn" ' + (currentPage >= data.totalPages - 1 ? 'disabled' : '') +
+          ' onclick="window._arenaPage(' + (currentPage + 1) + ')">&raquo;</button>';
+        pagEl.innerHTML = pagHtml;
+      } else {
+        pagEl.innerHTML = '';
+      }
+    }).catch(function(err) {
+      document.getElementById('lobby-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not reach the arena server. Please try again later.</p></div>';
+    });
+  }
+
+  window._arenaPage = function(p) {
+    currentPage = Math.max(0, p);
+    loadLobby();
+  };
+
+  function loadLeaderboard() {
+    api('/api/arena/leaderboard?limit=50').then(function(data) {
+      var el = document.getElementById('leaderboard-content');
+      if (!data.leaderboard || data.leaderboard.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>Leaderboard Empty</h3>' +
+            '<p>No battles have been fought yet. Be the first to claim glory!</p>' +
+            '<a class="cta" href="https://discord.gg/KmAC5aXs84" target="_blank">Join Discord to Play</a>' +
+          '</div>';
+        return;
+      }
+
+      var html =
+        '<table class="lb-table"><thead><tr>' +
+        '<th>#</th><th>Warlord</th><th>Heroes</th><th>Record</th><th>Win Rate</th><th>Rank</th>' +
+        '</tr></thead><tbody>';
+
+      data.leaderboard.forEach(function(t) {
+        var tier = getRankTier(t.wins);
+        var heroNames = (t.heroes || []).map(function(h) {
+          return escHtml(h.name) + ' <span style="color:var(--dim);font-size:11px;">(Lv.' + h.level + ')</span>';
+        }).join(', ');
+
+        html +=
+          '<tr>' +
+            '<td class="rank-cell" style="color:' +
+              (t.rank === 1 ? 'var(--gold)' : t.rank === 2 ? 'var(--silver)' : t.rank === 3 ? 'var(--bronze)' : 'var(--dim)') +
+              '">' + t.rank + '</td>' +
+            '<td><strong>' + escHtml(t.ownerName) + '</strong></td>' +
+            '<td>' + heroNames + '</td>' +
+            '<td><span style="color:#4caf50">' + t.wins + 'W</span> / <span style="color:var(--red)">' + t.losses + 'L</span></td>' +
+            '<td>' + t.winRate + '%</td>' +
+            '<td><span class="rank-badge ' + tier.css + '">' + tier.name + '</span></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }).catch(function() {
+      document.getElementById('leaderboard-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not load leaderboard.</p></div>';
+    });
+  }
+
+  function loadRecent() {
+    api('/api/arena/stats').then(function(data) {
+      var el = document.getElementById('recent-content');
+      var battles = data.recentBattles || [];
+
+      if (battles.length === 0) {
+        el.innerHTML =
+          '<div class="empty-state">' +
+            '<h3>No Battles Yet</h3>' +
+            '<p>The arena is quiet... for now.</p>' +
+          '</div>';
+        return;
+      }
+
+      var html = '';
+      battles.forEach(function(b) {
+        var won = b.result === 'team_won';
+        html +=
+          '<div class="recent-battle">' +
+            '<div class="result-icon">' + (won ? '&#9876;' : '&#9760;') + '</div>' +
+            '<div class="battle-info">' +
+              '<div class="names">' +
+                '<span style="color:' + (won ? '#4caf50' : 'var(--red)') + '">' +
+                  escHtml(b.challengerName) +
+                '</span>' +
+                ' challenged team ' +
+                '<span style="color:var(--dim)">' + escHtml(b.teamId).slice(0, 20) + '...</span>' +
+              '</div>' +
+              '<div class="time">' +
+                (won ? 'Defender held' : 'Challenger defeated') +
+                ' &bull; ' + timeAgo(b.timestamp) +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      });
+      el.innerHTML = html;
+    }).catch(function() {
+      document.getElementById('recent-content').innerHTML =
+        '<div class="empty-state"><h3>Connection Error</h3><p>Could not load recent battles.</p></div>';
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      var panel = document.getElementById('panel-' + tab.dataset.tab);
+      if (panel) panel.classList.add('active');
+
+      if (tab.dataset.tab === 'leaderboard') loadLeaderboard();
+      if (tab.dataset.tab === 'recent') loadRecent();
+    });
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      currentPage = 0;
+      loadLobby();
+    });
+  });
+
+  loadStats();
+  loadLobby();
+
+  setInterval(function() {
+    loadStats();
+    var activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+      if (activeTab.dataset.tab === 'lobby') loadLobby();
+      else if (activeTab.dataset.tab === 'leaderboard') loadLeaderboard();
+      else if (activeTab.dataset.tab === 'recent') loadRecent();
+    }
+  }, 30000);
+
+})();
+</script>
+
+</div>
+
+<footer style="text-align:center;padding:30px 20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;color:#888;font-size:0.85rem;">
+  <img src="/images/grudge_rpg_logo.png" alt="Grudge Warlords" style="height:32px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">
+  <div style="display:flex;gap:20px;justify-content:center;margin-bottom:12px;">
+    <a href="/compendium.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Compendium</a>
+    <a href="/hero-codex.html" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Hero Codex</a>
+    <a href="/arena.html" style="color:#ffd700;text-decoration:none;font-family:'LifeCraft',serif;">Arena</a>
+    <a href="/" style="color:#c0a060;text-decoration:none;font-family:'LifeCraft',serif;">Play Game</a>
+  </div>
+  &copy; 2026 Grudge Warlords. All rights reserved.
+</footer>
+
+</body>
+</html>
