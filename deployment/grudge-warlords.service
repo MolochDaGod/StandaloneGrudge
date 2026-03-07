@@ -1,0 +1,25 @@
+[Unit]
+Description=Grudge Warlords MMO Server
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/grudge-warlords/current
+Environment="NODE_ENV=production"
+EnvironmentFile=/var/www/grudge-warlords/current/.env
+ExecStart=/usr/bin/node /var/www/grudge-warlords/current/server/index.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/grudge-warlords/server.log
+StandardError=append:/var/log/grudge-warlords/error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/grudge-warlords/current/logs
+
+[Install]
+WantedBy=multi-user.target

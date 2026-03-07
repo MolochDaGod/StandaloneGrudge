@@ -1,106 +1,106 @@
-# GRUDA Wars — Grudge Warlords
+# Grudge Warlords MMO - StandaloneGrudge
 
-Browser-based souls-like MMO RPG built with React + Vite, deployed on Vercel with a serverless Express API and PostgreSQL persistence.
+**Deployment and merge of Unity and Gruda - Complete Infrastructure**
 
-**Live:** [grudgewarlords.com](https://grudgewarlords.com)
+This repository provides a complete production-ready infrastructure for deploying and managing the Grudge Warlords MMO server, including VPS deployment automation, server build management, AI-powered CLI tools, and containerized deployment options.
 
-## Architecture
-
-```
-src/              React client (Vite)
-  components/     UI panels (Arena, DiscordAuth, HeroCodex, AdminGizmo, …)
-  stores/         Zustand game state (gameStore)
-api/index.js      Serverless Express API (Vercel Functions)
-public/           Static assets + discordauth.html OAuth page
-server.js         Local dev server (mirrors api/index.js)
-```
-
-**Stack:** React 19, Zustand, Vite 7, Express (Vercel Serverless), PostgreSQL (Neon), Discord OAuth2, Crossmint Solana wallets
-
-## Authentication
-
-All OAuth state is **stateless** via HMAC-signed tokens — no in-memory session maps, fully compatible with serverless cold starts.
-
-- **Discord OAuth** — `GET /api/discord/login` → Discord authorize → `POST /api/discord/callback`
-- **External OAuth** — `GET /api/external/login` → Discord authorize → `GET /api/external/callback`
-- **Grudge ID** — `POST /api/auth/register`, `POST /api/auth/login`
-- **Puter SSO** — `POST /api/auth/puter`
-- **Session verify** — `POST /api/auth/verify`
-
-Canonical redirect URI: `https://grudgewarlords.com/discordauth`
-
-## API Endpoints
-
-### Arena (PvP)
-- `POST /api/arena/submit` — Post a team (1–3 heroes) to ranked arena
-- `GET /api/arena/lobby` — Browse ranked/unranked teams (paginated)
-- `GET /api/arena/team/:teamId` — Team details + HMAC challenge token
-- `POST /api/arena/battle/simulate` — Server-authoritative battle simulation (requires challenge token)
-- `POST /api/arena/battle/result` — Submit battle result (token-based)
-- `GET /api/arena/rewards/:teamId` — View team rewards
-- `GET /api/arena/stats` — Arena-wide statistics
-- `GET /api/arena/leaderboard` — Global leaderboard
-
-### Public
-- `GET /api/public/profile` — Player profile + heroes (session required)
-- `GET /api/public/leaderboard` — Top 50 arena players
-- `GET /api/public/stats` — Global game stats
-- `POST /api/public/sync` — Full account data sync (session required)
-
-### Wallet
-- `POST /api/wallet/create` — Create Solana wallet via Crossmint (session required)
-- `GET /api/wallet/status` — Check wallet status (session required)
-- `GET /api/wallet/all` — List all wallets (admin)
-
-### Discord Webhooks (admin)
-- `POST /api/discord/webhook/update` — Post game update embed
-- `POST /api/discord/webhook/patch` — Post patch notes embed
-- `POST /api/discord/webhook/challenge` — Post community challenge
-- `POST /api/discord/webhook/custom` — Post custom embed
-
-### Database Admin (API key required)
-Full CRUD for: accounts, characters, inventory, crafted items, islands.
-- `POST /api/db/save-game` — Atomic full-game save
-- `GET /api/db/load-game` — Full-game load
-- `GET /api/db/status` — Database connection check
-
-### System
-- `GET /api/health` — Health check
-- `GET /api/discord/invite` — Generate one-time Discord invite
-
-## Environment Variables
-
-| Variable | Purpose |
-|----------|----------|
-| `GRUDGE_ACCOUNT_DB` | PostgreSQL connection string |
-| `JWT_SECRET` | JWT + HMAC signing key |
-| `DISCORD_CLIENT_ID` | Discord OAuth app ID |
-| `DISCORD_CLIENT_SECRET` | Discord OAuth secret |
-| `DISCORD_BOT_TOKEN` | Bot token for guild joins + invites |
-| `DISCORD_GUILD_ID` | Target guild for auto-join |
-| `DISCORD_GRUDGE_WEBHOOK` | Webhook URL for game notifications |
-| `GAME_API_GRUDA` | Admin API key |
-| `CROSSMINT_SERVER_API_KEY` | Crossmint wallet API |
-
-## Development
+## 🚀 Quick Start
 
 ```bash
+# 1. Install dependencies
 npm install
-npm run dev          # Vite dev server (frontend)
-node server.js       # Local API server
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# 3. Deploy to VPS
+npm run deploy
+
+# Or use the interactive CLI
+npm run cli
 ```
 
-## Deployment
+## 📋 Features
 
-Hosted on **Vercel** with automatic deploys from `main`.
+- ✅ **Automated VPS Deployment** - One-command deployment with backup and rollback
+- ✅ **Server Build Management** - Automated Unity server builds
+- ✅ **AI-Powered CLI** - Interactive management with OpenAI integration
+- ✅ **Docker Support** - Full containerization with Docker Compose
+- ✅ **Production Ready** - Nginx, PM2, logging, monitoring
+- ✅ **Security First** - Environment-based config, firewall, SSL support
+
+## 📚 Documentation
+
+For detailed setup and deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+
+## 🛠️ Available Commands
 
 ```bash
-vercel --prod        # Manual production deploy
+npm run start      # Start the server
+npm run build      # Build Unity server
+npm run deploy     # Deploy to VPS
+npm run cli        # Interactive CLI management
+npm run docker:up  # Start with Docker
 ```
 
-All API routes served as Vercel Serverless Functions via `api/index.js`.
-SPA routing handled by `vercel.json` rewrite rules.
+## 🔧 Configuration
 
-## License
+All configuration is managed through environment variables. Copy `.env.example` to `.env` and configure:
 
-Proprietary — Grudge Studio © 2026. All rights reserved.
+- VPS connection details
+- Database credentials
+- Unity server settings
+- AI API keys (optional)
+- Security settings
+
+## 📦 What's Included
+
+```
+├── scripts/              # Deployment and build scripts
+│   ├── deploy-to-vps.sh # VPS deployment automation
+│   ├── build-server.sh  # Unity server build
+│   └── grudge-cli.js    # AI-powered CLI tool
+├── deployment/          # VPS setup and service management
+│   ├── setup-vps.sh     # Initial VPS configuration
+│   ├── restart-services.sh
+│   └── nginx.conf       # Nginx reverse proxy config
+├── server/              # Node.js server
+├── docker-compose.yml   # Docker orchestration
+├── Dockerfile           # Container definition
+├── ecosystem.config.js  # PM2 process management
+└── .env.example         # Environment template
+```
+
+## 🤖 AI CLI Assistant
+
+The included CLI tool provides AI-powered assistance for server management:
+
+```bash
+npm run cli
+> ai how do I optimize server performance?
+> deploy
+> status
+> logs 100
+```
+
+## 🐳 Docker Deployment
+
+Deploy the entire stack with Docker:
+
+```bash
+docker-compose up -d
+```
+
+Includes: Game server, PostgreSQL, Redis, and Nginx.
+
+## 📖 Support
+
+- Full documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
+- Issues: [GitHub Issues](https://github.com/MolochDaGod/StandaloneGrudge/issues)
+
+## ⚔️ May your grudges be eternal!
+
+---
+
+*For detailed deployment instructions, troubleshooting, and advanced configuration, see [DEPLOYMENT.md](DEPLOYMENT.md)*
