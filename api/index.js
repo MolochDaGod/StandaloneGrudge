@@ -266,6 +266,9 @@ const ALLOWED_ORIGINS = [
   'https://public-fawn-nine.vercel.app',
   'https://grudgestudio.com',
   'https://www.grudgestudio.com',
+  'https://grudge-platform.vercel.app',
+  'https://grudgeplatform.com',
+  'https://www.grudgeplatform.com',
 ];
 
 app.use((req, res, next) => {
