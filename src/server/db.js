@@ -105,6 +105,7 @@ export async function initDatabase() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS grudge_id VARCHAR(64) UNIQUE;
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state JSONB DEFAULT NULL;
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state_updated_at TIMESTAMPTZ;
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS password_hash VARCHAR(256);
 
       CREATE TABLE IF NOT EXISTS arena_teams (
         team_id TEXT PRIMARY KEY,

@@ -178,6 +178,26 @@ app.post('/api/discord/callback', async (req, res) => {
       }
     }
 
+    // Upsert account to DB so record exists immediately on login
+    const avatarUrl = user.avatar
+      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+      : null;
+    try {
+      const { query: dbQuery } = await import('./src/server/db.js');
+      await dbQuery(
+        `INSERT INTO accounts (discord_id, username, email, avatar_url, last_login)
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (discord_id) DO UPDATE SET
+           username = EXCLUDED.username,
+           email = COALESCE(EXCLUDED.email, accounts.email),
+           avatar_url = COALESCE(EXCLUDED.avatar_url, accounts.avatar_url),
+           updated_at = NOW(), last_login = NOW()`,
+        [user.id, user.username, user.email || null, avatarUrl]
+      );
+    } catch (dbErr) {
+      console.error('[Discord] Account upsert failed (non-fatal):', dbErr.message);
+    }
+
     res.json({
       success: true,
       user: {
@@ -1022,6 +1042,129 @@ app.post('/api/auth/extension', async (req, res) => {
   });
 });
 
+// ── Password Utilities (scrypt — no extra deps) ──────────────────────────────
+
+function generateGrudgeAccountId() {
+  const now = new Date();
+  const ts = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(now.getHours()).padStart(2, '0') +
+    String(now.getMinutes()).padStart(2, '0') +
+    String(now.getSeconds()).padStart(2, '0');
+  const rand = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return `GRD-${ts}-${rand}`;
+}
+
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(password, salt, 64, (err, buf) => {
+      if (err) reject(err);
+      else resolve(`${salt}:${buf.toString('hex')}`);
+    });
+  });
+}
+
+async function verifyPassword(password, stored) {
+  const [salt, hash] = stored.split(':');
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(password, salt, 64, (err, buf) => {
+      if (err) reject(err);
+      else {
+        try {
+          resolve(crypto.timingSafeEqual(buf, Buffer.from(hash, 'hex')));
+        } catch { resolve(false); }
+      }
+    });
+  });
+}
+
+// ── Grudge ID / Username Auth ─────────────────────────────────────────────────
+
+app.post('/api/auth/register', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+  if (username.length < 3 || username.length > 24) return res.status(400).json({ error: 'Username must be 3–24 chars' });
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Alphanumeric and _ only' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 chars' });
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const existing = await dbQuery('SELECT id FROM accounts WHERE LOWER(username) = $1 AND password_hash IS NOT NULL', [username.toLowerCase()]);
+    if (existing.rows[0]) return res.status(409).json({ error: 'Username already taken' });
+
+    const grudgeId = generateGrudgeAccountId();
+    const pwHash = await hashPassword(password);
+    const result = await dbQuery(
+      `INSERT INTO accounts (username, password_hash, grudge_id, last_login)
+       VALUES ($1, $2, $3, NOW()) RETURNING id, username, grudge_id`,
+      [username, pwHash, grudgeId]
+    );
+    const acc = result.rows[0];
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+
+    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
+  } catch (err) {
+    console.error('[Auth] Register error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const result = await dbQuery(
+      'SELECT id, username, grudge_id, password_hash FROM accounts WHERE LOWER(username) = $1 AND password_hash IS NOT NULL',
+      [username.toLowerCase()]
+    );
+    const acc = result.rows[0];
+    if (!acc) return res.status(401).json({ error: 'Invalid username or password' });
+
+    const valid = await verifyPassword(password, acc.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Invalid username or password' });
+
+    await dbQuery('UPDATE accounts SET last_login = NOW(), updated_at = NOW() WHERE id = $1', [acc.id]);
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+
+    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
+  } catch (err) {
+    console.error('[Auth] Login error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/puter', async (req, res) => {
+  const { puterUsername, puterUuid } = req.body;
+  if (!puterUsername) return res.status(400).json({ error: 'puterUsername required' });
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const grudgeId = generateGrudgeAccountId();
+    const result = await dbQuery(
+      `INSERT INTO accounts (username, grudge_id, last_login)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (username) DO UPDATE SET
+         last_login = NOW(), updated_at = NOW()
+       RETURNING id, username, grudge_id`,
+      [puterUsername, grudgeId]
+    );
+    const acc = result.rows[0];
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+
+    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
+  } catch (err) {
+    console.error('[Auth] Puter error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 function requireSession(req, res, next) {
   const token = req.headers['x-session-token'] || req.body?.sessionToken;
   if (!token) return res.status(401).json({ error: 'Session token required' });
@@ -1184,19 +1327,33 @@ app.post('/api/studio/sync/push', requireSession, async (req, res) => {
 app.post('/api/studio/sync/pull', requireSession, async (req, res) => {
   try {
     const { query: dbQuery } = await import('./src/server/db.js');
+    // Support both Discord and username-based accounts
     const discordId = req.session.discordId;
+    const accountId = req.session.accountId;
 
-    const result = await dbQuery(
-      'SELECT game_state, game_state_updated_at FROM accounts WHERE discord_id = $1',
-      [discordId]
-    );
+    let result;
+    if (discordId) {
+      result = await dbQuery(
+        'SELECT game_state, game_state_updated_at FROM accounts WHERE discord_id = $1',
+        [discordId]
+      );
+    } else if (accountId) {
+      result = await dbQuery(
+        'SELECT game_state, game_state_updated_at FROM accounts WHERE id = $1',
+        [accountId]
+      );
+    } else {
+      return res.json({ data: null, source: 'empty' });
+    }
 
     if (!result.rows[0] || !result.rows[0].game_state) {
       return res.json({ data: null, source: 'empty' });
     }
 
+    // Wrap in { gameState } so TitleScreen's completePuterAuth / handleDiscordContinue
+    // can check pull.data.gameState consistently
     res.json({
-      data: result.rows[0].game_state,
+      data: { gameState: result.rows[0].game_state },
       timestamp: result.rows[0].game_state_updated_at
         ? new Date(result.rows[0].game_state_updated_at).getTime()
         : null,

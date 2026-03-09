@@ -180,6 +180,7 @@ export default function TitleScreen() {
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [cloudRestore, setCloudRestore] = useState(null); // { data, source }
+  const [discordSession, setDiscordSession] = useState(null); // existing Discord session
 
   const toggleMute = () => {
     const next = !muted;
@@ -190,6 +191,12 @@ export default function TitleScreen() {
   useEffect(() => {
     setBgm('intro');
     const t1 = setTimeout(() => setFadeClass(true), 200);
+
+    // Check for existing Discord session in localStorage
+    try {
+      const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+      if (s.type === 'discord' && s.username) setDiscordSession(s);
+    } catch {}
 
     if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
       window.puter.auth.getUser().then(u => {
@@ -299,6 +306,25 @@ export default function TitleScreen() {
         window.location.href = data.url;
       }
     } catch {}
+    setDiscordLoading(false);
+  };
+
+  // Continue with an already-authenticated Discord session
+  const handleDiscordContinue = async () => {
+    setDiscordLoading(true);
+    try {
+      const pull = await pullSave();
+      if (pull.success && pull.data && pull.data.gameState) {
+        const localSave = localStorage.getItem('grudge-warlords-storage');
+        if (localSave) {
+          setCloudRestore({ data: pull.data.gameState, source: pull.source });
+          setDiscordLoading(false);
+          return;
+        }
+        localStorage.setItem('grudge-warlords-storage', JSON.stringify({ state: pull.data.gameState, version: 4 }));
+      }
+    } catch {}
+    setScreen('intro');
     setDiscordLoading(false);
   };
 
@@ -433,12 +459,13 @@ export default function TitleScreen() {
           )}
 
           <LoginButton
-            label="LOGIN WITH DISCORD"
-            sublabel="Sync community & leaderboards"
-            onClick={handleDiscordLogin}
+            label={discordSession ? `CONTINUE AS ${discordSession.username.toUpperCase()}` : 'LOGIN WITH DISCORD'}
+            sublabel={discordSession ? 'Discord account linked' : 'Sync community & leaderboards'}
+            onClick={discordSession ? handleDiscordContinue : handleDiscordLogin}
             variant="discord"
+            active={!!discordSession}
             disabled={discordLoading}
-            icon={<DiscordSvg size={22} color="#7289da" />}
+            icon={<DiscordSvg size={22} color={discordSession ? '#6ee7b7' : '#7289da'} />}
             delay={0.45}
           />
 
