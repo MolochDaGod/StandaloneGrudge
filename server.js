@@ -1150,6 +1150,64 @@ app.post('/api/public/sync', requireSession, async (req, res) => {
   }
 });
 
+// ── Grudge Studio Cloud Sync ─────────────────────────────────────────────────
+// Called by src/services/cloudSync.js (pushSave / pullSave)
+
+app.post('/api/studio/sync/push', requireSession, async (req, res) => {
+  try {
+    const { gameState } = req.body;
+    if (!gameState) return res.status(400).json({ error: 'gameState required' });
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const discordId = req.session.discordId;
+    const username = req.session.username;
+    const gold = typeof gameState.gold === 'number' ? gameState.gold : null;
+
+    await dbQuery(
+      `INSERT INTO accounts (discord_id, username, game_state, game_state_updated_at, last_login)
+       VALUES ($1, $2, $3, NOW(), NOW())
+       ON CONFLICT (discord_id) DO UPDATE SET
+         game_state = EXCLUDED.game_state,
+         game_state_updated_at = NOW(),
+         gold = COALESCE($4, accounts.gold),
+         updated_at = NOW(),
+         last_login = NOW()`,
+      [discordId, username, JSON.stringify(gameState), gold]
+    );
+
+    res.json({ success: true, timestamp: Date.now() });
+  } catch (err) {
+    console.error('[StudioSync] Push error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/studio/sync/pull', requireSession, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import('./src/server/db.js');
+    const discordId = req.session.discordId;
+
+    const result = await dbQuery(
+      'SELECT game_state, game_state_updated_at FROM accounts WHERE discord_id = $1',
+      [discordId]
+    );
+
+    if (!result.rows[0] || !result.rows[0].game_state) {
+      return res.json({ data: null, source: 'empty' });
+    }
+
+    res.json({
+      data: result.rows[0].game_state,
+      timestamp: result.rows[0].game_state_updated_at
+        ? new Date(result.rows[0].game_state_updated_at).getTime()
+        : null,
+      source: 'db',
+    });
+  } catch (err) {
+    console.error('[StudioSync] Pull error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 if (!isProd) {
   function scanDir(dir, baseUrl, category) {
     const results = [];
@@ -1265,13 +1323,9 @@ app.use((err, req, res, next) => {
 (async () => {
   const connected = await testConnection();
   if (connected) await initDatabase();
-<<<<<<< HEAD
-  await startBot();
-=======
   // Test suite DB connection (crafting/inventory integration)
   await testSuiteConnection();
-  await startBot(arenaTeams, arenaBattles);
->>>>>>> f3c986c (feat: Warlord-Crafting-Suite DB integration — crafting, inventory, resources, professions)
+  await startBot();
 })();
 
 const server = app.listen(PORT, '0.0.0.0', () => {
