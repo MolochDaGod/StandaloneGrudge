@@ -192,6 +192,45 @@ const commands = [
   new SlashCommandBuilder()
     .setName('help')
     .setDescription('Show all available bot commands'),
+  // ── Management Commands ──
+  new SlashCommandBuilder()
+    .setName('services')
+    .setDescription('Check health of all Grudge Studio services'),
+  new SlashCommandBuilder()
+    .setName('wallet')
+    .setDescription('View your Solana wallet info'),
+  new SlashCommandBuilder()
+    .setName('grudgeid')
+    .setDescription('View your Grudge ID and cross-platform link status'),
+  new SlashCommandBuilder()
+    .setName('admin')
+    .setDescription('Admin tools (restricted)')
+    .addSubcommand(sub =>
+      sub.setName('lookup')
+        .setDescription('Look up a player')
+        .addStringOption(opt => opt.setName('query').setDescription('Username, Discord ID, or Grudge ID').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('gold')
+        .setDescription('Give or remove gold from a player')
+        .addStringOption(opt => opt.setName('player').setDescription('Username or Grudge ID').setRequired(true))
+        .addIntegerOption(opt => opt.setName('amount').setDescription('Amount (negative to remove)').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('announce')
+        .setDescription('Send a webhook announcement to Discord')
+        .addStringOption(opt =>
+          opt.setName('type').setDescription('Announcement type').setRequired(true)
+            .addChoices(
+              { name: 'Update', value: 'update' },
+              { name: 'Patch Notes', value: 'patch' },
+              { name: 'Event', value: 'event' },
+              { name: 'Milestone', value: 'milestone' },
+            )
+        )
+        .addStringOption(opt => opt.setName('title').setDescription('Announcement title').setRequired(true))
+        .addStringOption(opt => opt.setName('message').setDescription('Announcement body').setRequired(true))
+    ),
 ];
 
 async function registerCommands() {
@@ -694,11 +733,245 @@ async function handleLink(interaction) {
   }
 }
 
+// ── Management: /services ───────────────────────────────────────────────────
+const ECOSYSTEM_SERVICES = [
+  { name: 'Grudge Warlords', url: 'https://grudgewarlords.com/api/discord/login', emoji: '🏴' },
+  { name: 'Grudge Platform', url: 'https://grudge-platform.vercel.app/api/health', emoji: '⚔️' },
+  { name: 'Crafting Suite', url: 'https://warlord-crafting-suite.vercel.app', emoji: '🔨' },
+  { name: 'GDevelop Assistant', url: 'https://gdevelop-assistant.vercel.app', emoji: '🎮' },
+  { name: 'Nexus Hub', url: 'https://grudachain.grudgestudio.com', emoji: '⚓' },
+  { name: 'GRUDA Legion', url: 'https://gruda-legion-production.up.railway.app/health', emoji: '🤖' },
+  { name: 'App Gallery', url: 'https://grudachain-app-gallery.vercel.app', emoji: '🖼️' },
+];
+
+async function handleServices(interaction) {
+  await interaction.deferReply();
+  const results = await Promise.all(ECOSYSTEM_SERVICES.map(async (svc) => {
+    const start = Date.now();
+    try {
+      const res = await fetch(svc.url, { method: 'GET', signal: AbortSignal.timeout(8000) });
+      const ms = Date.now() - start;
+      return { ...svc, ok: res.ok || res.type === 'opaque', ms, status: res.status };
+    } catch (e) {
+      return { ...svc, ok: false, ms: Date.now() - start, error: e.message };
+    }
+  }));
+
+  const online = results.filter(r => r.ok).length;
+  const lines = results.map(r =>
+    `${r.ok ? '🟢' : '🔴'} ${r.emoji} **${r.name}** — ${r.ok ? `${r.ms}ms` : r.error || 'offline'}`
+  ).join('\n');
+
+  const embed = new EmbedBuilder()
+    .setTitle('📡 Grudge Studio — Service Health')
+    .setColor(online === results.length ? COLORS.success : online > 0 ? COLORS.gold : COLORS.danger)
+    .setDescription(lines)
+    .addFields(
+      { name: 'Status', value: `${online}/${results.length} services online`, inline: true },
+      { name: 'Checked', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+    )
+    .setFooter({ text: 'Grudge Studio Ecosystem' })
+    .setTimestamp();
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
+// ── Management: /wallet ─────────────────────────────────────────────────────
+async function handleWallet(interaction) {
+  try {
+    const result = await query('SELECT * FROM accounts WHERE discord_id = $1', [interaction.user.id]);
+    if (!result.rows[0]) {
+      return interaction.reply({ content: '❌ No linked account. Log in with Discord in-game first.', ephemeral: true });
+    }
+    const account = result.rows[0];
+
+    const embed = new EmbedBuilder()
+      .setTitle('💰 Your Wallet')
+      .setColor(COLORS.gold)
+      .setDescription(`Wallet for **${account.username}**`)
+      .addFields(
+        { name: '💳 Address', value: account.wallet_address ? `\`${account.wallet_address}\`` : '*No wallet yet — one will be created on next login*', inline: false },
+        { name: '⛓️ Chain', value: account.wallet_chain || 'Solana', inline: true },
+        { name: '💰 Gold', value: `${(account.gold || 0).toLocaleString()}`, inline: true },
+        { name: '👑 Premium', value: account.premium ? 'Yes' : 'No', inline: true },
+      )
+      .setFooter({ text: 'Grudge Warlords • Powered by Crossmint' })
+      .setTimestamp();
+
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  } catch (err) {
+    console.error('[Bot] Wallet error:', err.message);
+    return interaction.reply({ content: 'Could not load wallet. Try again later.', ephemeral: true });
+  }
+}
+
+// ── Management: /grudgeid ───────────────────────────────────────────────────
+async function handleGrudgeId(interaction) {
+  try {
+    const result = await query('SELECT * FROM accounts WHERE discord_id = $1', [interaction.user.id]);
+    if (!result.rows[0]) {
+      return interaction.reply({ content: '❌ No linked account. Log in with Discord in-game first.', ephemeral: true });
+    }
+    const account = result.rows[0];
+    const charCount = await query('SELECT COUNT(*) as count FROM characters WHERE account_id = $1', [account.id]);
+    const islandCount = await query('SELECT COUNT(*) as count FROM islands WHERE account_id = $1', [account.id]);
+
+    const embed = new EmbedBuilder()
+      .setTitle('🆔 Your Grudge ID')
+      .setColor(COLORS.primary)
+      .setDescription(`\`${account.grudge_id || 'Not assigned'}\`\n\n*Your Grudge ID is your cross-platform identity across all Grudge Studio services.*`)
+      .addFields(
+        { name: '👤 Username', value: account.username || 'Unknown', inline: true },
+        { name: '🎮 Grudge Username', value: account.grudge_username || '*Not set*', inline: true },
+        { name: '🔗 Discord', value: `<@${interaction.user.id}>`, inline: true },
+        { name: '🗡️ Heroes', value: `${charCount.rows[0]?.count || 0}`, inline: true },
+        { name: '🏝️ Islands', value: `${islandCount.rows[0]?.count || 0}`, inline: true },
+        { name: '💳 Wallet', value: account.wallet_address ? `\`${account.wallet_address.slice(0, 8)}...\`` : 'None', inline: true },
+        { name: '📅 Created', value: account.created_at ? `<t:${Math.floor(new Date(account.created_at).getTime() / 1000)}:D>` : 'Unknown', inline: true },
+        { name: '📅 Last Login', value: account.last_login ? `<t:${Math.floor(new Date(account.last_login).getTime() / 1000)}:R>` : 'Never', inline: true },
+      )
+      .setFooter({ text: 'Use this Grudge ID to link accounts on grudgeplatform.com' })
+      .setTimestamp();
+
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  } catch (err) {
+    console.error('[Bot] GrudgeId error:', err.message);
+    return interaction.reply({ content: 'Could not load Grudge ID. Try again later.', ephemeral: true });
+  }
+}
+
+// ── Management: /admin ──────────────────────────────────────────────────────
+const ADMIN_DISCORD_IDS = [
+  '339541454052474880', // Add your Discord user ID(s) here
+];
+
+function isAdmin(interaction) {
+  // Check by Discord ID or by server admin permission
+  return ADMIN_DISCORD_IDS.includes(interaction.user.id)
+    || interaction.memberPermissions?.has('Administrator');
+}
+
+async function handleAdmin(interaction) {
+  if (!isAdmin(interaction)) {
+    return interaction.reply({ content: '🔒 Admin commands are restricted.', ephemeral: true });
+  }
+
+  const sub = interaction.options.getSubcommand();
+
+  if (sub === 'lookup') {
+    const q = interaction.options.getString('query');
+    try {
+      const result = await query(
+        `SELECT * FROM accounts WHERE discord_id = $1 OR username ILIKE $2 OR grudge_id = $3 OR grudge_username ILIKE $2 LIMIT 1`,
+        [q, q, q]
+      );
+      if (!result.rows[0]) {
+        return interaction.reply({ content: `❌ No account found for "${q}"`, ephemeral: true });
+      }
+      const a = result.rows[0];
+      const chars = await query('SELECT COUNT(*) as count, MAX(level) as max FROM characters WHERE account_id = $1', [a.id]);
+      const teams = await query('SELECT COUNT(*) as count, SUM(wins) as wins FROM arena_teams WHERE owner_id = $1', [String(a.id)]);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🔍 Admin Lookup: ${a.username}`)
+        .setColor(COLORS.info)
+        .addFields(
+          { name: 'ID', value: `${a.id}`, inline: true },
+          { name: 'Grudge ID', value: a.grudge_id || 'None', inline: true },
+          { name: 'Discord', value: a.discord_id ? `<@${a.discord_id}>` : 'None', inline: true },
+          { name: 'Email', value: a.email || 'None', inline: true },
+          { name: 'Auth Type', value: a.auth_type || 'Unknown', inline: true },
+          { name: 'Premium', value: a.premium ? '✅' : '❌', inline: true },
+          { name: 'Gold', value: `${(a.gold || 0).toLocaleString()}`, inline: true },
+          { name: 'Resources', value: `${(a.resources || 0).toLocaleString()}`, inline: true },
+          { name: 'Wallet', value: a.wallet_address || 'None', inline: true },
+          { name: 'Heroes', value: `${chars.rows[0]?.count || 0} (max lv.${chars.rows[0]?.max || 0})`, inline: true },
+          { name: 'Arena Teams', value: `${teams.rows[0]?.count || 0} (${teams.rows[0]?.wins || 0} wins)`, inline: true },
+          { name: 'Created', value: a.created_at ? `<t:${Math.floor(new Date(a.created_at).getTime() / 1000)}:f>` : '?', inline: true },
+        )
+        .setFooter({ text: 'Admin Lookup • Grudge Studio' })
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    } catch (err) {
+      console.error('[Bot] Admin lookup error:', err.message);
+      return interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+    }
+  }
+
+  if (sub === 'gold') {
+    const playerQuery = interaction.options.getString('player');
+    const amount = interaction.options.getInteger('amount');
+    try {
+      const result = await query(
+        `SELECT * FROM accounts WHERE username ILIKE $1 OR grudge_id = $2 LIMIT 1`,
+        [playerQuery, playerQuery]
+      );
+      if (!result.rows[0]) {
+        return interaction.reply({ content: `❌ Player "${playerQuery}" not found`, ephemeral: true });
+      }
+      const a = result.rows[0];
+      await query('UPDATE accounts SET gold = GREATEST(0, gold + $1) WHERE id = $2', [amount, a.id]);
+      const newGold = Math.max(0, (a.gold || 0) + amount);
+
+      const action = amount >= 0 ? `gave **${amount}** gold to` : `removed **${Math.abs(amount)}** gold from`;
+      return interaction.reply({
+        content: `✅ ${action} **${a.username}** — new balance: **${newGold.toLocaleString()}g**`,
+        ephemeral: true,
+      });
+    } catch (err) {
+      console.error('[Bot] Admin gold error:', err.message);
+      return interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+    }
+  }
+
+  if (sub === 'announce') {
+    const type = interaction.options.getString('type');
+    const title = interaction.options.getString('title');
+    const message = interaction.options.getString('message');
+    const webhookUrl = process.env.DISCORD_GRUDGE_WEBHOOK;
+
+    if (!webhookUrl) {
+      return interaction.reply({ content: '❌ Webhook not configured (DISCORD_GRUDGE_WEBHOOK)', ephemeral: true });
+    }
+
+    try {
+      const typeColors = { update: COLORS.info, patch: COLORS.purple, event: COLORS.fire, milestone: COLORS.gold };
+      const color = typeColors[type] || COLORS.gold;
+      const typeLabel = { update: '🆕 Game Update', patch: '🔧 Patch Notes', event: '🎉 Event', milestone: '🏆 Milestone' };
+
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'Grudge Warlords',
+          avatar_url: 'https://grudgewarlords.com/icons/logo.png',
+          embeds: [{
+            title: `${typeLabel[type] || type}: ${title}`,
+            description: message,
+            color,
+            footer: { text: 'Grudge Warlords | grudgewarlords.com' },
+            timestamp: new Date().toISOString(),
+          }],
+        }),
+      });
+
+      return interaction.reply({ content: `✅ Announcement sent: **${title}**`, ephemeral: true });
+    } catch (err) {
+      console.error('[Bot] Announce error:', err.message);
+      return interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+    }
+  }
+
+  return interaction.reply({ content: 'Unknown admin subcommand.', ephemeral: true });
+}
+
+// ── Help (updated) ──────────────────────────────────────────────────────────
 function handleHelp(interaction) {
   const embed = new EmbedBuilder()
     .setTitle('⚔️ Grudge Warlords Bot Commands')
     .setColor(COLORS.primary)
-    .setDescription('All commands available for Grudge Warlords:')
+    .setDescription('All commands for Grudge Warlords & Grudge Studio:')
     .addFields(
       { name: '🎮 Gameplay', value: [
         '`/play` — Launch the game',
@@ -710,6 +983,8 @@ function handleHelp(interaction) {
         '`/characters [player]` — View hero roster',
         '`/hero [slot] [player]` — Detailed hero card',
         '`/link` — Check Discord account link',
+        '`/grudgeid` — View your Grudge ID & cross-platform info',
+        '`/wallet` — View your Solana wallet',
       ].join('\n'), inline: false },
       { name: '🏟️ Arena', value: [
         '`/leaderboard [limit]` — Arena rankings',
@@ -719,11 +994,15 @@ function handleHelp(interaction) {
         '`/world` — World map overview',
         '`/world zone:name` — Zone details',
         '`/world region:name` — Region zones',
-        '`/lore` — Game story',
-        '`/lore topic:Races` — Race lore',
-        '`/lore topic:Classes` — Class lore',
-        '`/lore topic:The Void King` — Final boss',
-        '`/lore topic:The Gods` — God fights',
+        '`/lore [topic]` — Game story, races, classes, gods',
+      ].join('\n'), inline: false },
+      { name: '📡 Platform', value: [
+        '`/services` — Health check all Grudge Studio services',
+      ].join('\n'), inline: false },
+      { name: '🔒 Admin', value: [
+        '`/admin lookup <query>` — Look up any player',
+        '`/admin gold <player> <amount>` — Give/remove gold',
+        '`/admin announce <type> <title> <message>` — Send announcement',
       ].join('\n'), inline: false },
     )
     .setFooter({ text: 'Grudge Warlords • Grudge Studio' })
@@ -789,6 +1068,18 @@ export async function startBot(arenaTeams, arenaBattles) {
           break;
         case 'help':
           await handleHelp(interaction);
+          break;
+        case 'services':
+          await handleServices(interaction);
+          break;
+        case 'wallet':
+          await handleWallet(interaction);
+          break;
+        case 'grudgeid':
+          await handleGrudgeId(interaction);
+          break;
+        case 'admin':
+          await handleAdmin(interaction);
           break;
         default:
           await interaction.reply({ content: 'Unknown command.', ephemeral: true });
