@@ -191,6 +191,21 @@ export default function TitleScreen() {
     setBgm('intro');
     const t1 = setTimeout(() => setFadeClass(true), 200);
 
+    // Check for existing Discord session (set by DiscordAuth.jsx after OAuth callback)
+    try {
+      const existingSession = JSON.parse(localStorage.getItem('grudge-session') || '{}');
+      const hasToken = !!localStorage.getItem('grudge_session_token');
+      if (existingSession.type === 'discord' && hasToken && existingSession.loginTime) {
+        // Session exists and is recent (within 7 days)
+        const age = Date.now() - existingSession.loginTime;
+        if (age < 7 * 24 * 60 * 60 * 1000) {
+          setAutoChecked(true);
+          setScreen('intro');
+          return () => clearTimeout(t1);
+        }
+      }
+    } catch {}
+
     if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
       window.puter.auth.getUser().then(u => {
         setPuterUser(u);

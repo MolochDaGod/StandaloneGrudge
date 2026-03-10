@@ -37,9 +37,24 @@ export default function DiscordAuth() {
         if (data.sessionToken) {
           localStorage.setItem('grudge_session_token', data.sessionToken);
         }
+        // Store session in same format as Puter/Guest for TitleScreen compatibility
+        const session = {
+          type: 'discord',
+          username: data.user.globalName || data.user.username,
+          discordId: data.user.id,
+          grudgeId: data.user.grudgeId || null,
+          accountId: data.user.accountId || null,
+          loginTime: Date.now(),
+        };
+        localStorage.setItem('grudge-session', JSON.stringify(session));
         localStorage.setItem('discordUser', JSON.stringify(data.user));
         setStatus('success');
         window.history.replaceState({}, '', '/discordauth');
+
+        // Auto-redirect to game after brief success display
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
       })
       .catch(err => {
         setError(err.message);
@@ -183,12 +198,15 @@ export default function DiscordAuth() {
               </a>
             )}
 
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ color: '#6b7280', fontSize: '0.75rem', animation: 'pulse 1.5s infinite' }}>
+                Entering the Realm...
+              </div>
               <a href="/" style={{
                 color: '#d4a96a', fontSize: '0.85rem', textDecoration: 'none',
                 borderBottom: '1px solid rgba(212,169,106,0.3)',
               }}>
-                Return to Game
+                Enter Now
               </a>
             </div>
           </div>
