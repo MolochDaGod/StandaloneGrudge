@@ -7,6 +7,7 @@ import OpenFieldScene from './OpenFieldScene';
 import PortalScene from './PortalScene';
 import BossWalkupScene from './BossWalkupScene';
 import AirshipScene from './AirshipScene';
+import HomeIslandScene from './HomeIslandScene';
 
 export default function SceneView() {
   const currentScene = useGameStore(s => s.currentScene);
@@ -19,6 +20,7 @@ export default function SceneView() {
     case 'portal': return <PortalScene />;
     case 'boss_walkup': return <BossWalkupScene />;
     case 'airship': return <AirshipScene />;
+    case 'island': return <HomeIslandScene />;
     default: return <CampScene />;
   }
 }

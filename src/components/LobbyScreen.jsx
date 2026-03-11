@@ -12,6 +12,8 @@ import adminConfig from '../utils/adminConfig';
 import GrudgeOnlinePage from './GrudgeOnlinePage';
 import HeroCodexTab from './HeroCodexTab';
 import { pullSave, forcePush, getLastSync, isLoggedIn as cloudIsLoggedIn } from '../services/cloudSync';
+import { launchCraftingSuite } from '../utils/craftingSuiteSSO';
+import { linkAccount } from '../services/craftingApi';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -33,10 +35,31 @@ export default function LobbyScreen() {
   }, []);
 
   const hasExistingSave = playerName && playerName.length > 0;
+  const suiteLinked = useGameStore(s => s.suiteLinked);
+  const linkSuiteAccount = useGameStore(s => s.linkSuiteAccount);
 
   useEffect(() => {
     setBgm('intro');
   }, []);
+
+  // Auto-link Crafting Suite account on lobby mount (if logged in and not already linked)
+  useEffect(() => {
+    if (suiteLinked) return;
+    const discordUser = (() => { try { return JSON.parse(localStorage.getItem('discordUser') || 'null'); } catch { return null; } })();
+    if (!discordUser?.id) return;
+    linkAccount(discordUser.id).then(result => {
+      if (result.success && result.linked) {
+        linkSuiteAccount({
+          accountId: result.accountId,
+          grudgeId: result.grudgeId,
+          gold: result.gold,
+          gbux: result.gbux,
+          accountXp: result.accountXp,
+        });
+        console.log('[Suite] Auto-linked crafting account:', result.grudgeId);
+      }
+    }).catch(() => {});
+  }, [suiteLinked]);
 
   const handleContinue = () => {
     if (hasExistingSave) {
@@ -442,6 +465,8 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
           subtitle={walletState.loading ? 'Loading...' : walletState.hasWallet ? <>SOL &bull; {walletState.wallet?.address?.slice(0, 6)}...{walletState.wallet?.address?.slice(-4)}</> : 'Create your Solana wallet'}
           cardStyle={cardStyle}
         />
+
+        <CraftingSuiteCard cardStyle={cardStyle} />
       </div>
 
       <HeroSlideshow />
@@ -3175,6 +3200,42 @@ function CreditsTab({ panelStyle }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function CraftingSuiteCard({ cardStyle }) {
+  const [launching, setLaunching] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleLaunch = async () => {
+    setLaunching(true);
+    setError(null);
+    const result = await launchCraftingSuite();
+    setLaunching(false);
+    if (!result.success) {
+      setError(result.error);
+      // Clear error after a few seconds
+      setTimeout(() => setError(null), 4000);
+    }
+  };
+
+  return (
+    <>
+      <WarRoomCard
+        onClick={handleLaunch}
+        borderColor="rgba(59,130,246,0.3)"
+        hoverBorderColor="rgba(59,130,246,0.6)"
+        hoverShadow="0 0 24px rgba(59,130,246,0.2), 0 8px 32px rgba(0,0,0,0.4)"
+        bgImage="/backgrounds/crafting_forge.png"
+        tagColor="rgba(59,130,246,0.7)"
+        tag={launching ? 'CONNECTING...' : 'CRAFTING'}
+        titleColor="#3b82f6"
+        title="Crafting Suite"
+        subtitle={error || 'Inventory, crafting & professions'}
+        cardStyle={cardStyle}
+        disabled={launching}
+      />
+    </>
   );
 }
 

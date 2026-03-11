@@ -129,6 +129,11 @@ export default function CampScene() {
           <span style={{ color: '#fbbf24', fontSize: '1rem', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)', fontFamily: "'LifeCraft', 'Cinzel', serif" }}>
             {gold} Gold
           </span>
+          <button onClick={() => { exitScene(); useGameStore.getState().enterScene('island', 'world'); }} style={{
+            background: 'rgba(0,200,100,0.15)', border: '1px solid #00ff88', borderRadius: 8,
+            padding: '4px 12px', color: '#00ff88', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
+            backdropFilter: 'blur(4px)', fontFamily: "'LifeCraft', 'Cinzel', serif",
+          }}>🏝️ Island</button>
           <button onClick={() => setShowSellPanel(!showSellPanel)} style={{
             background: 'rgba(0,0,0,0.6)', border: '1px solid #fbbf24', borderRadius: 8,
             padding: '4px 12px', color: '#fbbf24', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,

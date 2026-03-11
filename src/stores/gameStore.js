@@ -482,6 +482,14 @@ const useGameStore = create(persist((set, get) => ({
   sceneReturnTo: null,
   dungeonProgress: null,
 
+  // ── Home Island State ──
+  islandBuildings: [],       // { id, type, gridX, gridY, level, hp, maxHp }
+  islandHeroes: [],          // { heroId, buildingId, deployedAt }
+  islandTerrain: null,       // generated once, persisted
+  islandResources: { gold: 0, wood: 0, stone: 0, ore: 0, food: 0, crystals: 0 },
+  islandLastTick: Date.now(),
+  islandBuildingNextId: 1,
+
   // ── Warlord-Crafting-Suite Integration State ──
   suiteLinked: false,
   suiteAccountId: null,
@@ -3751,6 +3759,191 @@ const useGameStore = create(persist((set, get) => ({
 
   setSuiteSyncError: (error) => set({ suiteSyncError: error }),
 
+  // ── Home Island Actions ──
+
+  generateIslandTerrain: (seed) => {
+    const W = 140, H = 110;
+    const terrain = [];
+    const cx = W / 2, cy = H / 2, radius = Math.min(cx, cy) * 0.7;
+    for (let y = 0; y < H; y++) {
+      const row = [];
+      for (let x = 0; x < W; x++) {
+        const dx = x - cx, dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const noise = Math.sin(x * 0.1 + seed) * Math.cos(y * 0.1 + seed) * 0.5
+          + Math.sin(x * 0.05) * Math.sin(y * 0.05) * 0.3;
+        const falloff = 1 - (dist / radius);
+        const val = falloff + noise;
+        // 0=water 1=beach 2=grass 3=forest 4=mountain
+        row.push(val < 0 ? 0 : val < 0.1 ? 1 : val < 0.4 ? 2 : val < 0.7 ? 3 : 4);
+      }
+      terrain.push(row);
+    }
+    set({ islandTerrain: terrain });
+    return terrain;
+  },
+
+  placeIslandBuilding: (type, gridX, gridY) => {
+    const state = get();
+    const ISLAND_BUILDINGS = {
+      camp:     { size: 2, hp: 1000, cost: { gold: 500, wood: 300, stone: 200 }, profession: null,  produces: null },
+      mine:     { size: 1, hp: 200,  cost: { gold: 200, ore: 50 },              profession: 'Miner',    produces: { ore: 5, stone: 3 } },
+      lumber:   { size: 1, hp: 200,  cost: { gold: 200, wood: 100 },            profession: 'Forester', produces: { wood: 8 } },
+      herb:     { size: 1, hp: 150,  cost: { gold: 150, herbs: 30 },            profession: 'Mystic',   produces: { herbs: 6 } },
+      kitchen:  { size: 1, hp: 150,  cost: { gold: 150, food: 50 },             profession: 'Chef',     produces: { food: 10 } },
+      workshop: { size: 1, hp: 200,  cost: { gold: 300, ore: 50, crystals: 20 },profession: 'Engineer', produces: { crystals: 3 } },
+      farm:     { size: 1, hp: 150,  cost: { gold: 150 },                       profession: null,       produces: { food: 10 } },
+    };
+    const config = ISLAND_BUILDINGS[type];
+    if (!config) return { success: false, reason: 'Unknown building type' };
+
+    // Check cost against gold + harvestResources (island uses same economy)
+    if (config.cost.gold && state.gold < (config.cost.gold || 0)) {
+      return { success: false, reason: 'Not enough gold' };
+    }
+    for (const [res, amt] of Object.entries(config.cost)) {
+      if (res === 'gold') continue;
+      if ((state.harvestResources[res] || 0) < amt) {
+        return { success: false, reason: `Not enough ${res}` };
+      }
+    }
+
+    // Deduct resources
+    const newResources = { ...state.harvestResources };
+    let newGold = state.gold;
+    for (const [res, amt] of Object.entries(config.cost)) {
+      if (res === 'gold') { newGold -= amt; continue; }
+      newResources[res] = (newResources[res] || 0) - amt;
+    }
+
+    const building = {
+      id: `island_b_${state.islandBuildingNextId}`,
+      type,
+      gridX,
+      gridY,
+      level: 1,
+      hp: config.hp,
+      maxHp: config.hp,
+    };
+
+    set({
+      islandBuildings: [...state.islandBuildings, building],
+      islandBuildingNextId: state.islandBuildingNextId + 1,
+      gold: newGold,
+      harvestResources: newResources,
+    });
+    return { success: true, building };
+  },
+
+  removeIslandBuilding: (buildingId) => {
+    const state = get();
+    // Unassign any heroes at this building
+    const newHeroes = state.islandHeroes.filter(h => h.buildingId !== buildingId);
+    set({
+      islandBuildings: state.islandBuildings.filter(b => b.id !== buildingId),
+      islandHeroes: newHeroes,
+    });
+  },
+
+  deployHeroToIsland: (heroId) => {
+    const state = get();
+    const hero = state.heroRoster.find(h => h.id === heroId);
+    if (!hero) return { success: false, reason: 'Hero not found' };
+    // Can't deploy if hero is in active party, harvesting at camp, or already on island
+    if (state.activeHeroIds.includes(heroId)) return { success: false, reason: 'Hero is in active party' };
+    if (Object.values(state.activeHarvests).includes(heroId)) return { success: false, reason: 'Hero is harvesting at camp' };
+    if (state.islandHeroes.some(h => h.heroId === heroId)) return { success: false, reason: 'Hero already on island' };
+
+    set({
+      islandHeroes: [...state.islandHeroes, { heroId, buildingId: null, deployedAt: Date.now() }],
+    });
+    return { success: true };
+  },
+
+  recallHeroFromIsland: (heroId) => {
+    const state = get();
+    set({
+      islandHeroes: state.islandHeroes.filter(h => h.heroId !== heroId),
+    });
+  },
+
+  assignHeroToBuilding: (heroId, buildingId) => {
+    const state = get();
+    const entry = state.islandHeroes.find(h => h.heroId === heroId);
+    if (!entry) return;
+    // Make sure building exists
+    if (buildingId && !state.islandBuildings.find(b => b.id === buildingId)) return;
+    // Unassign any other hero from this building
+    const updated = state.islandHeroes.map(h => {
+      if (h.heroId === heroId) return { ...h, buildingId };
+      if (buildingId && h.buildingId === buildingId) return { ...h, buildingId: null };
+      return h;
+    });
+    set({ islandHeroes: updated });
+  },
+
+  tickIslandHarvests: () => {
+    const state = get();
+    const now = Date.now();
+    const elapsed = (now - state.islandLastTick) / 1000;
+    if (elapsed < 1) return;
+
+    const ISLAND_BUILDINGS = {
+      mine:     { produces: { ore: 5, stone: 3 } },
+      lumber:   { produces: { wood: 8 } },
+      herb:     { produces: { herbs: 6 } },
+      kitchen:  { produces: { food: 10 } },
+      workshop: { produces: { crystals: 3 } },
+      farm:     { produces: { food: 10 } },
+    };
+
+    const newRes = { ...state.islandResources };
+    let goldGained = 0;
+
+    state.islandBuildings.forEach(building => {
+      const config = ISLAND_BUILDINGS[building.type];
+      if (!config || !config.produces) return;
+      // Check if a hero is assigned — heroes boost rate, but buildings produce passively at 25%
+      const assignedHero = state.islandHeroes.find(h => h.buildingId === building.id);
+      const hero = assignedHero ? state.heroRoster.find(h => h.id === assignedHero.heroId) : null;
+      const heroMult = hero ? (1 + hero.level * 0.1) : 0.25;
+      // Rate is per-minute, elapsed is seconds
+      const rateScale = (elapsed / 60) * heroMult;
+      for (const [res, rate] of Object.entries(config.produces)) {
+        newRes[res] = floorTo2((newRes[res] || 0) + rate * rateScale);
+      }
+    });
+
+    set({ islandResources: newRes, islandLastTick: now });
+  },
+
+  collectIslandResources: () => {
+    const state = get();
+    const collected = { ...state.islandResources };
+    const total = Object.values(collected).reduce((a, b) => a + Math.floor(b), 0);
+    if (total <= 0) return { success: false, reason: 'Nothing to collect' };
+
+    // Move island resources into main harvestResources + gold
+    const newHarvest = { ...state.harvestResources };
+    let newGold = state.gold;
+    for (const [res, amt] of Object.entries(collected)) {
+      const floored = Math.floor(amt);
+      if (floored <= 0) continue;
+      if (res === 'gold') {
+        newGold += floored;
+      } else if (newHarvest[res] !== undefined) {
+        newHarvest[res] = floorTo2((newHarvest[res] || 0) + floored);
+      }
+    }
+
+    set({
+      harvestResources: newHarvest,
+      gold: newGold,
+      islandResources: { gold: 0, wood: 0, stone: 0, ore: 0, food: 0, crystals: 0 },
+    });
+    return { success: true, total };
+  },
+
   resetGame: () => {
     localStorage.removeItem('grudge-warlords-save');
     const zero = { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 };
@@ -3831,11 +4024,18 @@ const useGameStore = create(persist((set, get) => ({
       suiteProfessions: {},
       suiteCharacters: [],
       suiteSyncError: null,
+      // Reset island state
+      islandBuildings: [],
+      islandHeroes: [],
+      islandTerrain: null,
+      islandResources: { gold: 0, wood: 0, stone: 0, ore: 0, food: 0, crystals: 0 },
+      islandLastTick: Date.now(),
+      islandBuildingNextId: 1,
     });
   },
 }), {
   name: 'grudge-warlords-save',
-  version: 4,
+  version: 5,
   migrate: (persistedState, version) => {
     if (version < 2) {
       const rarityToTier = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
@@ -3904,6 +4104,13 @@ const useGameStore = create(persist((set, get) => ({
       if (!persistedState.zoneStats) persistedState.zoneStats = {};
       if (!persistedState.completedQuests) persistedState.completedQuests = {};
     }
+    if (version < 5) {
+      if (!persistedState.islandBuildings) persistedState.islandBuildings = [];
+      if (!persistedState.islandHeroes) persistedState.islandHeroes = [];
+      if (!persistedState.islandTerrain) persistedState.islandTerrain = null;
+      if (!persistedState.islandResources) persistedState.islandResources = { gold: 0, wood: 0, stone: 0, ore: 0, food: 0, crystals: 0 };
+      if (!persistedState.islandBuildingNextId) persistedState.islandBuildingNextId = 1;
+    }
     return persistedState;
   },
   partialize: (state) => ({
@@ -3950,6 +4157,12 @@ const useGameStore = create(persist((set, get) => ({
     roamingAirship: state.roamingAirship,
     pirateShopInventory: state.pirateShopInventory,
     pirateShopLastRefresh: state.pirateShopLastRefresh,
+    // Home Island
+    islandBuildings: state.islandBuildings,
+    islandHeroes: state.islandHeroes,
+    islandTerrain: state.islandTerrain,
+    islandResources: state.islandResources,
+    islandBuildingNextId: state.islandBuildingNextId,
     // Suite integration
     suiteLinked: state.suiteLinked,
     suiteAccountId: state.suiteAccountId,
@@ -3980,7 +4193,7 @@ const _partialize = (state) => ({
 useGameStore.subscribe((state, prevState) => {
   // Only push if meaningful game state changed (not transient UI like screen)
   if (!cloudIsLoggedIn()) return;
-  const keys = ['heroRoster', 'inventory', 'gold', 'level', 'zoneConquer', 'completedQuests', 'harvestResources', 'victories', 'losses', 'bossesDefeated'];
+  const keys = ['heroRoster', 'inventory', 'gold', 'level', 'zoneConquer', 'completedQuests', 'harvestResources', 'victories', 'losses', 'bossesDefeated', 'islandBuildings', 'islandHeroes'];
   const changed = keys.some(k => state[k] !== prevState[k]);
   if (changed) {
     schedulePush(() => _partialize(useGameStore.getState()));

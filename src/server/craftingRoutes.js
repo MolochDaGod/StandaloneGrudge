@@ -787,6 +787,87 @@ export function registerCraftingRoutes(app) {
   });
 
   // ────────────────────────────────────────────
+  // HOME ISLAND BATCH HARVEST
+  // ────────────────────────────────────────────
+
+  /**
+   * POST /api/crafting/island/tick
+   * Batch-record harvests from home island heroes.
+   * Body: { grudgeId, harvests: [{ characterId, buildingType, materialId, quantity, tier, profession }] }
+   */
+  app.post('/api/crafting/island/tick', requireAuth, requireSuiteDb, async (req, res) => {
+    const client = await getSuiteClient();
+    try {
+      const { grudgeId, harvests } = req.body;
+      if (!grudgeId || !harvests || !Array.isArray(harvests) || harvests.length === 0) {
+        return res.status(400).json({ error: 'grudgeId and non-empty harvests array required' });
+      }
+
+      const account = await resolveAccountByGrudgeId(grudgeId);
+      if (!account) return res.status(404).json({ error: 'Account not found' });
+
+      await client.query('BEGIN');
+
+      const results = [];
+      for (const h of harvests) {
+        const { characterId, buildingType, materialId, quantity = 1, tier = 1, profession } = h;
+        if (!characterId || !materialId || !profession) continue;
+        if (!PROFESSIONS.includes(profession)) continue;
+
+        // Upsert resource
+        const existing = await client.query(
+          `SELECT id, quantity FROM account_resources
+           WHERE account_id = $1 AND resource_type = $2 AND tier = $3`,
+          [account.id, materialId, tier]
+        );
+
+        if (existing.rows[0]) {
+          await client.query(
+            `UPDATE account_resources SET quantity = quantity + $1, updated_at = NOW() WHERE id = $2`,
+            [quantity, existing.rows[0].id]
+          );
+        } else {
+          await client.query(
+            `INSERT INTO account_resources (account_id, grudge_id, resource_type, tier, quantity)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [account.id, grudgeId, materialId, tier, quantity]
+          );
+        }
+
+        // Profession XP
+        const baseXp = 10 * tier;
+        const profXpGained = baseXp * quantity;
+        const profXpCol = `prof_${profession.toLowerCase()}_xp`;
+        await client.query(
+          `UPDATE characters SET ${profXpCol} = ${profXpCol} + $1, updated_at = NOW()
+           WHERE id = $2 AND account_id = $3`,
+          [profXpGained, characterId, account.id]
+        );
+
+        // Log
+        await client.query(
+          `INSERT INTO harvest_log
+           (account_id, character_id, grudge_id, node_type, material_id, tier, quantity, profession_xp_gained, profession)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [account.id, characterId, grudgeId, buildingType || 'island',
+           materialId, tier, quantity, profXpGained, profession]
+        );
+
+        results.push({ characterId, materialId, quantity, profXpGained });
+      }
+
+      await client.query('COMMIT');
+      res.json({ success: true, processed: results.length, results });
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      console.error('[Crafting] Island tick error:', err.message);
+      res.status(500).json({ error: err.message });
+    } finally {
+      client.release();
+    }
+  });
+
+  // ────────────────────────────────────────────
   // SUITE DB STATUS
   // ────────────────────────────────────────────
 

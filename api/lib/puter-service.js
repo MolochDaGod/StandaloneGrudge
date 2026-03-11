@@ -139,6 +139,91 @@ export async function cacheObjectStoreDataset(dataset, data, tokenSource) {
   return kvSet(key, { data, cachedAt: Date.now() }, tokenSource);
 }
 
+// ── Account Linking ─────────────────────────────────────────────────────────
+
+/** Initialise or fetch unified account record from Puter KV */
+export async function accountInit(puterId, puterUsername, tokenSource) {
+  const key = KV_KEYS.account(puterId);
+  const existing = await kvGet(key, tokenSource);
+  if (existing.ok && existing.value && existing.value.puterId) {
+    // Update lastSeenAt
+    const updated = { ...existing.value, lastSeenAt: Date.now(), puterUsername };
+    await kvSet(key, updated, tokenSource);
+    return { ok: true, account: updated, created: false };
+  }
+  // Create new account
+  const account = {
+    puterId,
+    puterUsername,
+    discordId: null,
+    discordUsername: null,
+    grudgeId: null,
+    walletAddress: null,
+    linkedCharacterIds: [],
+    createdAt: Date.now(),
+    lastSeenAt: Date.now(),
+  };
+  const setResult = await kvSet(key, account, tokenSource);
+  if (!setResult.ok) return setResult;
+  return { ok: true, account, created: true };
+}
+
+/** Link a Discord identity to an existing Puter account */
+export async function accountLinkDiscord(puterId, discordId, discordUsername, grudgeId, tokenSource) {
+  const key = KV_KEYS.account(puterId);
+  const existing = await kvGet(key, tokenSource);
+  if (!existing.ok || !existing.value) return { ok: false, error: 'account_not_found' };
+  const updated = {
+    ...existing.value,
+    discordId,
+    discordUsername,
+    grudgeId: grudgeId || existing.value.grudgeId,
+    lastSeenAt: Date.now(),
+  };
+  await kvSet(key, updated, tokenSource);
+  return { ok: true, account: updated };
+}
+
+/** Link character IDs from the Crafting Suite to the account */
+export async function accountLinkCharacters(puterId, characterIds, tokenSource) {
+  const key = KV_KEYS.account(puterId);
+  const existing = await kvGet(key, tokenSource);
+  if (!existing.ok || !existing.value) return { ok: false, error: 'account_not_found' };
+  const merged = [...new Set([...(existing.value.linkedCharacterIds || []), ...characterIds])];
+  const updated = { ...existing.value, linkedCharacterIds: merged, lastSeenAt: Date.now() };
+  await kvSet(key, updated, tokenSource);
+  return { ok: true, account: updated };
+}
+
+/** Get account by Puter ID */
+export async function accountGet(puterId, tokenSource) {
+  return kvGet(KV_KEYS.account(puterId), tokenSource);
+}
+
+// ── Preferences ─────────────────────────────────────────────────────────────
+
+/** Get player preferences */
+export async function prefsGet(accountId, tokenSource) {
+  return kvGet(KV_KEYS.prefs(accountId), tokenSource);
+}
+
+/** Set player preferences */
+export async function prefsSet(accountId, prefs, tokenSource) {
+  return kvSet(KV_KEYS.prefs(accountId), prefs, tokenSource);
+}
+
+// ── Deploy Logs ─────────────────────────────────────────────────────────────
+
+/** Append a deploy log entry */
+export async function deployLogAppend(entry, tokenSource) {
+  const key = 'grudge:deploy:log';
+  const existing = await kvGet(key, tokenSource);
+  const logs = (existing.ok && Array.isArray(existing.value)) ? existing.value : [];
+  logs.unshift({ ...entry, ts: Date.now() });
+  if (logs.length > 100) logs.length = 100; // keep last 100
+  return kvSet(key, logs, tokenSource);
+}
+
 // ── Health Check ────────────────────────────────────────────────────────────
 export async function healthCheck() {
   const token = process.env.PUTER_API_TOKEN;
