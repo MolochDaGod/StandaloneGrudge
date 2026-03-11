@@ -4,7 +4,7 @@ import { raceDefinitions } from './races.js';
 
 export const enemyTemplates = {
   goblin: {
-    name: 'Goblin Scout', icon: 'sword', color: '#84cc16',
+    name: 'Goblin Scout', spriteKey: 'goblin', icon: 'sword', color: '#84cc16',
     baseHealth: 80, baseDamage: 12, baseDefense: 5, baseMana: 20,
     xpReward: 15, goldReward: 8, speed: 14,
     abilities: [
@@ -13,7 +13,7 @@ export const enemyTemplates = {
     ]
   },
   skeleton: {
-    name: 'Skeleton Warrior', icon: 'skull', color: '#d4d4d8',
+    name: 'Skeleton Warrior', spriteKey: 'skeleton', icon: 'skull', color: '#d4d4d8',
     baseHealth: 120, baseDamage: 18, baseDefense: 15, baseMana: 0,
     xpReward: 22, goldReward: 12, speed: 10,
     abilities: [
@@ -22,7 +22,7 @@ export const enemyTemplates = {
     ]
   },
   wolf: {
-    name: 'Dire Wolf', icon: 'wolf', color: '#78716c',
+    name: 'Dire Wolf', spriteKey: 'wolf', icon: 'wolf', color: '#78716c',
     baseHealth: 100, baseDamage: 22, baseDefense: 8, baseMana: 0,
     xpReward: 18, goldReward: 6, speed: 18,
     abilities: [
@@ -31,7 +31,7 @@ export const enemyTemplates = {
     ]
   },
   dark_mage: {
-    name: 'Dark Mage', icon: 'crystal', color: '#7c3aed',
+    name: 'Dark Mage', spriteKey: 'dark_mage', icon: 'crystal', color: '#7c3aed',
     baseHealth: 90, baseDamage: 25, baseDefense: 6, baseMana: 100,
     xpReward: 30, goldReward: 20, speed: 12,
     abilities: [
@@ -41,7 +41,7 @@ export const enemyTemplates = {
     ]
   },
   dark_knight: {
-    name: 'Dark Knight', icon: 'skull', color: '#4a1a6b',
+    name: 'Dark Knight', spriteKey: 'dark_knight', icon: 'skull', color: '#4a1a6b',
     baseHealth: 160, baseDamage: 26, baseDefense: 22, baseMana: 30,
     xpReward: 32, goldReward: 18, speed: 10,
     abilities: [
@@ -51,7 +51,7 @@ export const enemyTemplates = {
     ]
   },
   shadow_warrior: {
-    name: 'Shadow Warrior', icon: 'skull', color: '#1e1b4b',
+    name: 'Shadow Warrior', spriteKey: 'shadow_warrior', icon: 'skull', color: '#1e1b4b',
     baseHealth: 140, baseDamage: 30, baseDefense: 16, baseMana: 40,
     xpReward: 35, goldReward: 20, speed: 14,
     abilities: [
@@ -61,7 +61,7 @@ export const enemyTemplates = {
     ]
   },
   water_priestess_mage: {
-    name: 'Water Priestess', icon: 'ice', color: '#0891b2',
+    name: 'Water Priestess', spriteKey: 'water_priestess_mage', icon: 'ice', color: '#0891b2',
     baseHealth: 110, baseDamage: 20, baseMagicDamage: 32, baseDefense: 12, baseMana: 150,
     xpReward: 38, goldReward: 24, speed: 12,
     abilities: [
@@ -71,7 +71,7 @@ export const enemyTemplates = {
     ]
   },
   orc: {
-    name: 'Orc Berserker', icon: 'sword', color: '#65a30d',
+    name: 'Orc Berserker', spriteKey: 'orc', icon: 'sword', color: '#65a30d',
     baseHealth: 180, baseDamage: 28, baseDefense: 20, baseMana: 0,
     xpReward: 35, goldReward: 18, speed: 8,
     abilities: [
@@ -81,7 +81,7 @@ export const enemyTemplates = {
     ]
   },
   dragon_whelp: {
-    name: 'Dragon Whelp', icon: 'fire', color: '#dc2626',
+    name: 'Dragon Whelp', spriteKey: 'dragon_whelp', icon: 'fire', color: '#dc2626',
     baseHealth: 150, baseDamage: 30, baseDefense: 18, baseMana: 80,
     xpReward: 45, goldReward: 30, speed: 15,
     abilities: [
@@ -91,7 +91,7 @@ export const enemyTemplates = {
     ]
   },
   lich: {
-    name: 'Lich Lord', icon: 'skull', color: '#6366f1',
+    name: 'Lich Lord', spriteKey: 'abyssal_demon', icon: 'skull', color: '#6366f1',
     baseHealth: 700, baseDamage: 40, baseDefense: 22, baseMana: 350,
     xpReward: 120, goldReward: 90, speed: 11,
     isBoss: true,
@@ -106,7 +106,7 @@ export const enemyTemplates = {
     ]
   },
   red_dragon: {
-    name: 'Ignaroth, Flame Terror', icon: 'fire', color: '#dc2626',
+    name: 'Ignaroth, Flame Terror', spriteKey: 'abyssal_demon', icon: 'fire', color: '#dc2626',
     baseHealth: 1100, baseDamage: 58, baseDefense: 38, baseMana: 300,
     xpReward: 400, goldReward: 300, speed: 16,
     isBoss: true,
@@ -121,7 +121,7 @@ export const enemyTemplates = {
     ]
   },
   red_dragon_2: {
-    name: 'Vyraxes, Ember Wyrm', icon: 'fire', color: '#ef4444',
+    name: 'Vyraxes, Ember Wyrm', spriteKey: 'abyssal_demon', icon: 'fire', color: '#ef4444',
     baseHealth: 1000, baseDamage: 62, baseDefense: 35, baseMana: 280,
     xpReward: 400, goldReward: 300, speed: 18,
     isBoss: true,
@@ -136,7 +136,7 @@ export const enemyTemplates = {
     ]
   },
   white_dragon_mother: {
-    name: 'Zephyria, The Dragon Mother', icon: 'fire', color: '#e2e8f0',
+    name: 'Zephyria, The Dragon Mother', spriteKey: 'frost_titan', icon: 'fire', color: '#e2e8f0',
     baseHealth: 2200, baseDamage: 80, baseDefense: 50, baseMana: 500,
     xpReward: 600, goldReward: 500, speed: 17,
     isBoss: true,
@@ -154,7 +154,7 @@ export const enemyTemplates = {
     ]
   },
   fire_worm: {
-    name: 'Fire Worm', icon: 'fire', color: '#f97316',
+    name: 'Fire Worm', spriteKey: 'demon_lord', icon: 'fire', color: '#f97316',
     baseHealth: 180, baseDamage: 32, baseDefense: 18, baseMana: 60,
     xpReward: 45, goldReward: 30, speed: 10,
     abilities: [
@@ -164,7 +164,7 @@ export const enemyTemplates = {
     ]
   },
   demon_lord: {
-    name: 'Infernal Fire Worm', icon: 'fire', color: '#f97316',
+    name: 'Infernal Fire Worm', spriteKey: 'demon_lord', icon: 'fire', color: '#f97316',
     baseHealth: 900, baseDamage: 52, baseDefense: 35, baseMana: 250,
     xpReward: 160, goldReward: 120, speed: 13,
     isBoss: true,
@@ -177,7 +177,7 @@ export const enemyTemplates = {
     ]
   },
   evil_wizard: {
-    name: 'Malachar the Undying', icon: 'crystal', color: '#c026d3',
+    name: 'Malachar the Undying', spriteKey: 'evil_wizard', icon: 'crystal', color: '#c026d3',
     baseHealth: 1400, baseDamage: 65, baseDefense: 35, baseMana: 600,
     xpReward: 350, goldReward: 250, speed: 14,
     isBoss: true,
@@ -194,7 +194,7 @@ export const enemyTemplates = {
     ]
   },
   void_king: {
-    name: 'The Void King', icon: 'crown', color: '#fbbf24',
+    name: 'The Void King', spriteKey: 'void_king', icon: 'crown', color: '#fbbf24',
     baseHealth: 1200, baseDamage: 60, baseDefense: 48, baseMana: 500,
     xpReward: 300, goldReward: 200, speed: 16,
     isBoss: true,
@@ -210,7 +210,7 @@ export const enemyTemplates = {
     ]
   },
   god_odin: {
-    name: 'Odin, The Allfather', icon: 'lightning', color: '#fbbf24',
+    name: 'Odin, The Allfather', spriteKey: 'frost_titan', icon: 'lightning', color: '#fbbf24',
     baseHealth: 1800, baseDamage: 75, baseDefense: 55, baseMana: 600,
     xpReward: 500, goldReward: 400, speed: 18,
     isBoss: true,
@@ -228,7 +228,7 @@ export const enemyTemplates = {
     ]
   },
   god_madra: {
-    name: 'Madra, The Devourer', icon: 'target', color: '#dc2626',
+    name: 'Madra, The Devourer', spriteKey: 'abyssal_demon', icon: 'target', color: '#dc2626',
     baseHealth: 2000, baseDamage: 82, baseDefense: 45, baseMana: 500,
     xpReward: 500, goldReward: 400, speed: 17,
     isBoss: true,
@@ -246,7 +246,7 @@ export const enemyTemplates = {
     ]
   },
   god_omni: {
-    name: 'The Omni, Weaver of Fate', icon: 'sparkle', color: '#a78bfa',
+    name: 'The Omni, Weaver of Fate', spriteKey: 'evil_wizard', icon: 'sparkle', color: '#a78bfa',
     baseHealth: 1600, baseDamage: 70, baseDefense: 60, baseMana: 800,
     xpReward: 500, goldReward: 400, speed: 20,
     isBoss: true,
@@ -264,7 +264,7 @@ export const enemyTemplates = {
     ]
   },
   water_elemental: {
-    name: 'Grand Water Elemental', icon: 'ice', color: '#06b6d4',
+    name: 'Grand Water Elemental', spriteKey: 'water_elemental', icon: 'ice', color: '#06b6d4',
     baseHealth: 550, baseDamage: 50, baseDefense: 38, baseMana: 300,
     xpReward: 175, goldReward: 120, speed: 14,
     isBoss: true,
@@ -278,7 +278,7 @@ export const enemyTemplates = {
     ]
   },
   nature_elemental: {
-    name: 'Grand Nature Elemental', icon: 'nature', color: '#22c55e',
+    name: 'Grand Nature Elemental', spriteKey: 'nature_elemental', icon: 'nature', color: '#22c55e',
     baseHealth: 600, baseDamage: 44, baseDefense: 42, baseMana: 250,
     xpReward: 175, goldReward: 120, speed: 12,
     isBoss: true,
@@ -292,7 +292,7 @@ export const enemyTemplates = {
     ]
   },
   grand_shaman: {
-    name: 'Grand Shaman', icon: 'nature', color: '#16a34a',
+    name: 'Grand Shaman', spriteKey: 'forest_guardian', icon: 'nature', color: '#16a34a',
     baseHealth: 500, baseDamage: 32, baseDefense: 18, baseMana: 200,
     xpReward: 80, goldReward: 55, speed: 11,
     isBoss: true,
@@ -305,7 +305,7 @@ export const enemyTemplates = {
     ]
   },
   canyon_warlord: {
-    name: 'Canyon Warlord', icon: 'crossed_swords', color: '#b91c1c',
+    name: 'Canyon Warlord', spriteKey: 'orc', icon: 'crossed_swords', color: '#b91c1c',
     baseHealth: 650, baseDamage: 38, baseDefense: 28, baseMana: 50,
     xpReward: 95, goldReward: 65, speed: 10,
     isBoss: true,
@@ -318,7 +318,7 @@ export const enemyTemplates = {
     ]
   },
   frost_wyrm: {
-    name: 'Frost Wyrm', icon: 'ice', color: '#38bdf8',
+    name: 'Frost Wyrm', spriteKey: 'frost_titan', icon: 'ice', color: '#38bdf8',
     baseHealth: 750, baseDamage: 42, baseDefense: 30, baseMana: 200,
     xpReward: 110, goldReward: 80, speed: 14,
     isBoss: true,
@@ -332,7 +332,7 @@ export const enemyTemplates = {
     ]
   },
   shadow_beast: {
-    name: 'Shadow Beast', icon: 'skull', color: '#6b21a8',
+    name: 'Shadow Beast', spriteKey: 'eldritch_horror', icon: 'skull', color: '#6b21a8',
     baseHealth: 800, baseDamage: 45, baseDefense: 25, baseMana: 250,
     xpReward: 130, goldReward: 90, speed: 15,
     isBoss: true,
@@ -346,7 +346,7 @@ export const enemyTemplates = {
     ]
   },
   forest_guardian: {
-    name: 'Guardian of the Forest', icon: 'nature', color: '#22c55e',
+    name: 'Guardian of the Forest', spriteKey: 'forest_guardian', icon: 'nature', color: '#22c55e',
     baseHealth: 280, baseDamage: 28, baseDefense: 18, baseMana: 120,
     xpReward: 50, goldReward: 35, speed: 11,
     abilities: [
@@ -356,7 +356,7 @@ export const enemyTemplates = {
     ]
   },
   corrupted_grove_keeper: {
-    name: 'Corrupted Grove Keeper', icon: 'crystal', color: '#16a34a',
+    name: 'Corrupted Grove Keeper', spriteKey: 'corrupted_grove_keeper', icon: 'crystal', color: '#16a34a',
     baseHealth: 600, baseDamage: 35, baseDefense: 20, baseMana: 300,
     xpReward: 100, goldReward: 70, speed: 12,
     isBoss: true,
@@ -370,7 +370,7 @@ export const enemyTemplates = {
     ]
   },
   void_sentinel: {
-    name: 'Void Sentinel', icon: 'crystal', color: '#a855f7',
+    name: 'Void Sentinel', spriteKey: 'evil_wizard', icon: 'crystal', color: '#a855f7',
     baseHealth: 1000, baseDamage: 55, baseDefense: 42, baseMana: 400,
     xpReward: 200, goldReward: 150, speed: 13,
     isBoss: true,
@@ -385,7 +385,7 @@ export const enemyTemplates = {
     ]
   },
   abyssal_demon: {
-    name: 'Abyssal Demon Lord', icon: 'fire', color: '#dc2626',
+    name: 'Abyssal Demon Lord', spriteKey: 'abyssal_demon', icon: 'fire', color: '#dc2626',
     baseHealth: 1600, baseDamage: 72, baseDefense: 40, baseMana: 400,
     xpReward: 400, goldReward: 300, speed: 15,
     isBoss: true,
@@ -401,7 +401,7 @@ export const enemyTemplates = {
     ]
   },
   eldritch_horror: {
-    name: 'The Eldritch Horror', icon: 'chaos', color: '#065f46',
+    name: 'The Eldritch Horror', spriteKey: 'eldritch_horror', icon: 'chaos', color: '#065f46',
     baseHealth: 1800, baseDamage: 68, baseDefense: 35, baseMana: 500,
     xpReward: 450, goldReward: 350, speed: 12,
     isBoss: true,
@@ -418,7 +418,7 @@ export const enemyTemplates = {
     ]
   },
   frost_titan: {
-    name: 'Frost Titan', icon: 'ice', color: '#67e8f9',
+    name: 'Frost Titan', spriteKey: 'frost_titan', icon: 'ice', color: '#67e8f9',
     baseHealth: 1500, baseDamage: 65, baseDefense: 50, baseMana: 350,
     xpReward: 380, goldReward: 280, speed: 10,
     isBoss: true,
@@ -434,7 +434,7 @@ export const enemyTemplates = {
     ]
   },
   flying_eye: {
-    name: 'Flying Eye', icon: 'crystal', color: '#e879f9',
+    name: 'Flying Eye', spriteKey: 'flying_eye', icon: 'crystal', color: '#e879f9',
     baseHealth: 70, baseDamage: 16, baseDefense: 4, baseMana: 40,
     xpReward: 14, goldReward: 7, speed: 19,
     abilities: [
@@ -443,7 +443,7 @@ export const enemyTemplates = {
     ]
   },
   mushroom: {
-    name: 'Poison Mushroom', icon: 'nature', color: '#a3e635',
+    name: 'Poison Mushroom', spriteKey: 'mushroom', icon: 'nature', color: '#a3e635',
     baseHealth: 90, baseDamage: 10, baseDefense: 8, baseMana: 60,
     xpReward: 13, goldReward: 6, speed: 8,
     abilities: [
@@ -452,7 +452,7 @@ export const enemyTemplates = {
     ]
   },
   skeleton_knight: {
-    name: 'Skeleton Knight', icon: 'skull', color: '#a1a1aa',
+    name: 'Skeleton Knight', spriteKey: 'skeleton_knight', icon: 'skull', color: '#a1a1aa',
     baseHealth: 160, baseDamage: 22, baseDefense: 20, baseMana: 0,
     xpReward: 28, goldReward: 15, speed: 9,
     abilities: [
@@ -462,7 +462,7 @@ export const enemyTemplates = {
     ]
   },
   shadow_bat: {
-    name: 'Shadow Bat', icon: 'energy', color: '#7c3aed',
+    name: 'Shadow Bat', spriteKey: 'shadow_bat', icon: 'energy', color: '#7c3aed',
     baseHealth: 55, baseDamage: 14, baseDefense: 3, baseMana: 30,
     xpReward: 12, goldReward: 5, speed: 22,
     abilities: [
@@ -472,7 +472,7 @@ export const enemyTemplates = {
     ]
   },
   imp: {
-    name: 'Cave Imp', icon: 'fire', color: '#16a34a',
+    name: 'Cave Imp', spriteKey: 'imp', icon: 'fire', color: '#16a34a',
     baseHealth: 65, baseDamage: 11, baseDefense: 4, baseMana: 50,
     xpReward: 13, goldReward: 7, speed: 17,
     abilities: [
@@ -482,7 +482,7 @@ export const enemyTemplates = {
     ]
   },
   mimic: {
-    name: 'Mimic', icon: 'shield', color: '#b45309',
+    name: 'Mimic', spriteKey: 'mimic', icon: 'shield', color: '#b45309',
     baseHealth: 200, baseDamage: 26, baseDefense: 22, baseMana: 80,
     xpReward: 40, goldReward: 35, speed: 7,
     abilities: [
@@ -493,7 +493,7 @@ export const enemyTemplates = {
     ]
   },
   crow_knight: {
-    name: 'Crow Knight', icon: 'sword', color: '#1e293b',
+    name: 'Crow Knight', spriteKey: 'crow_knight', icon: 'sword', color: '#1e293b',
     baseHealth: 170, baseDamage: 24, baseDefense: 16, baseMana: 40,
     xpReward: 32, goldReward: 18, speed: 16,
     abilities: [
@@ -504,7 +504,7 @@ export const enemyTemplates = {
     ]
   },
   stone_guardian: {
-    name: 'Stone Guardian', icon: 'shield', color: '#78716c',
+    name: 'Stone Guardian', spriteKey: 'stone_guardian', icon: 'shield', color: '#78716c',
     baseHealth: 250, baseDamage: 20, baseDefense: 30, baseMana: 60,
     xpReward: 38, goldReward: 22, speed: 6,
     abilities: [
@@ -516,7 +516,7 @@ export const enemyTemplates = {
     ]
   },
   desert_snake: {
-    name: 'Sand Viper', icon: 'sword', color: '#d4a017',
+    name: 'Sand Viper', spriteKey: 'desert_snake', icon: 'sword', color: '#d4a017',
     baseHealth: 70, baseDamage: 18, baseDefense: 4, baseMana: 0,
     xpReward: 14, goldReward: 6, speed: 20,
     abilities: [
@@ -525,7 +525,7 @@ export const enemyTemplates = {
     ]
   },
   desert_hyena: {
-    name: 'Desert Hyena', icon: 'wolf', color: '#c2a04e',
+    name: 'Desert Hyena', spriteKey: 'desert_hyena', icon: 'wolf', color: '#c2a04e',
     baseHealth: 110, baseDamage: 20, baseDefense: 8, baseMana: 0,
     xpReward: 18, goldReward: 8, speed: 17,
     abilities: [
@@ -535,7 +535,7 @@ export const enemyTemplates = {
     ]
   },
   desert_scorpio: {
-    name: 'Giant Scorpion', icon: 'shield', color: '#8b4513',
+    name: 'Giant Scorpion', spriteKey: 'desert_scorpio', icon: 'shield', color: '#8b4513',
     baseHealth: 140, baseDamage: 16, baseDefense: 20, baseMana: 0,
     xpReward: 22, goldReward: 12, speed: 10,
     abilities: [
@@ -545,7 +545,7 @@ export const enemyTemplates = {
     ]
   },
   desert_vulture: {
-    name: 'Carrion Vulture', icon: 'energy', color: '#6b4423',
+    name: 'Carrion Vulture', spriteKey: 'desert_vulture', icon: 'energy', color: '#6b4423',
     baseHealth: 85, baseDamage: 22, baseDefense: 6, baseMana: 0,
     xpReward: 16, goldReward: 7, speed: 19,
     abilities: [
@@ -554,7 +554,7 @@ export const enemyTemplates = {
     ]
   },
   desert_mummy: {
-    name: 'Ancient Mummy', icon: 'skull', color: '#8b7355',
+    name: 'Ancient Mummy', spriteKey: 'desert_mummy', icon: 'skull', color: '#8b7355',
     baseHealth: 180, baseDamage: 22, baseDefense: 18, baseMana: 50,
     xpReward: 30, goldReward: 20, speed: 8,
     abilities: [
@@ -565,7 +565,7 @@ export const enemyTemplates = {
     ]
   },
   desert_deceased: {
-    name: 'Risen Corpse', icon: 'skull', color: '#5a4e3a',
+    name: 'Risen Corpse', spriteKey: 'desert_deceased', icon: 'skull', color: '#5a4e3a',
     baseHealth: 130, baseDamage: 19, baseDefense: 12, baseMana: 30,
     xpReward: 24, goldReward: 14, speed: 9,
     abilities: [
@@ -575,7 +575,7 @@ export const enemyTemplates = {
     ]
   },
   giant_fly: {
-    name: 'Giant Fly', icon: 'energy', color: '#4ade80',
+    name: 'Giant Fly', spriteKey: 'giant_fly', icon: 'energy', color: '#4ade80',
     baseHealth: 60, baseDamage: 13, baseDefense: 3, baseMana: 0,
     xpReward: 11, goldReward: 5, speed: 24,
     abilities: [
@@ -585,7 +585,7 @@ export const enemyTemplates = {
     ]
   },
   ice_elemental: {
-    name: 'Ice Elemental', icon: 'ice', color: '#93c5fd',
+    name: 'Ice Elemental', spriteKey: 'ice_elemental', icon: 'ice', color: '#93c5fd',
     baseHealth: 160, baseDamage: 22, baseDefense: 18, baseMana: 120,
     xpReward: 34, goldReward: 20, speed: 11,
     abilities: [
@@ -596,7 +596,7 @@ export const enemyTemplates = {
     ]
   },
   twig_blight: {
-    name: 'Twig Blight', icon: 'nature', color: '#6b8e23',
+    name: 'Twig Blight', spriteKey: 'twig_blight', icon: 'nature', color: '#6b8e23',
     baseHealth: 75, baseDamage: 15, baseDefense: 6, baseMana: 30,
     xpReward: 14, goldReward: 6, speed: 13,
     abilities: [
@@ -606,7 +606,7 @@ export const enemyTemplates = {
     ]
   },
   mimic_chest: {
-    name: 'Chest Mimic', icon: 'shield', color: '#92400e',
+    name: 'Chest Mimic', spriteKey: 'mimic_chest', icon: 'shield', color: '#92400e',
     baseHealth: 220, baseDamage: 28, baseDefense: 24, baseMana: 60,
     xpReward: 42, goldReward: 40, speed: 6,
     abilities: [
@@ -617,7 +617,7 @@ export const enemyTemplates = {
     ]
   },
   fire_elemental: {
-    name: 'Fire Elemental', icon: 'fire', color: '#f97316',
+    name: 'Fire Elemental', spriteKey: 'fire_elemental', icon: 'fire', color: '#f97316',
     baseHealth: 140, baseDamage: 28, baseDefense: 10, baseMana: 100,
     xpReward: 32, goldReward: 18, speed: 14,
     abilities: [
