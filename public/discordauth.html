@@ -239,9 +239,21 @@ h1,h2,h3{font-family:'Cinzel',serif}
       return r.json();
     })
     .then(function(data) {
-      if (data.sessionToken && data.user) {
+    if (data.sessionToken && data.user) {
         localStorage.setItem(SESSION_KEY, data.sessionToken);
         localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+
+        // Also store under the keys the React SPA expects
+        localStorage.setItem('grudge_session_token', data.sessionToken);
+        localStorage.setItem('grudge-session', JSON.stringify({
+          type: 'discord',
+          username: data.user.globalName || data.user.username,
+          discordId: data.user.id,
+          accountId: data.user.accountId || null,
+          grudgeId: data.user.grudgeId || null,
+          loginTime: Date.now()
+        }));
+        localStorage.setItem('discordUser', JSON.stringify(data.user));
 
         setStatus('success', 'Logged in as ' + data.user.username + '!');
         showUser(data.user, data.sessionToken, data.guildJoined || false);

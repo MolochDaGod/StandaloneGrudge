@@ -1234,8 +1234,14 @@ app.post('/api/auth/register', async (req, res) => {
     );
     const acc = result.rows[0];
 
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+    const sessionToken = createJWT({
+      accountId: acc.id,
+      grudgeId: acc.grudge_id,
+      username: acc.username,
+      authType: 'grudge',
+    });
+    // Keep in-memory for backward compat
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
 
     res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
@@ -1261,8 +1267,13 @@ app.post('/api/auth/login', async (req, res) => {
 
     await dbQuery('UPDATE accounts SET last_login = NOW(), updated_at = NOW() WHERE id = $1', [acc.id]);
 
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+    const sessionToken = createJWT({
+      accountId: acc.id,
+      grudgeId: acc.grudge_id,
+      username: acc.username,
+      authType: 'grudge',
+    });
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
 
     res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
@@ -1287,8 +1298,13 @@ app.post('/api/auth/puter', async (req, res) => {
     );
     const acc = result.rows[0];
 
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, createdAt: Date.now() });
+    const sessionToken = createJWT({
+      accountId: acc.id,
+      grudgeId: acc.grudge_id,
+      username: acc.username,
+      authType: 'puter',
+    });
+    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
 
     res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
@@ -1872,6 +1888,54 @@ app.get('/api/studio/character/:id/full', requireSession, async (req, res) => {
     });
   } catch (err) {
     console.error('[Studio] Character full error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/studio/character/:id/sync
+ * Sync hero state from GrudgeWars back to the Crafting Suite character.
+ * Body: { level, experience, attributes, currentHealth, currentMana, currentStamina }
+ */
+app.post('/api/studio/character/:id/sync', requireSession, async (req, res) => {
+  try {
+    const charId = req.params.id;
+    const { discordId } = req.session;
+    const { suiteQuery, isConnected } = await import('./src/server/suiteDb.js');
+    if (!isConnected()) return res.status(503).json({ error: 'Suite DB not available' });
+
+    // Verify ownership
+    const accResult = await suiteQuery('SELECT id FROM accounts WHERE discord_id = $1', [discordId]);
+    if (!accResult.rows[0]) return res.status(404).json({ error: 'Account not found' });
+    const accountId = accResult.rows[0].id;
+
+    const charCheck = await suiteQuery('SELECT id FROM characters WHERE id = $1 AND account_id = $2', [charId, accountId]);
+    if (!charCheck.rows[0]) return res.status(404).json({ error: 'Character not found or not owned' });
+
+    const { level, experience, attributes, currentHealth, currentMana, currentStamina } = req.body;
+    const updates = [];
+    const params = [];
+    let idx = 1;
+
+    if (level !== undefined) { updates.push(`level = $${idx++}`); params.push(level); }
+    if (experience !== undefined) { updates.push(`experience = $${idx++}`); params.push(experience); }
+    if (attributes !== undefined) { updates.push(`attribute_points = $${idx++}`); params.push(JSON.stringify(attributes)); }
+    if (currentHealth !== undefined) { updates.push(`current_health = $${idx++}`); params.push(currentHealth); }
+    if (currentMana !== undefined) { updates.push(`current_mana = $${idx++}`); params.push(currentMana); }
+    if (currentStamina !== undefined) { updates.push(`current_stamina = $${idx++}`); params.push(currentStamina); }
+
+    if (updates.length === 0) return res.json({ success: true, changed: false });
+
+    updates.push(`updated_at = NOW()`);
+    params.push(charId, accountId);
+    await suiteQuery(
+      `UPDATE characters SET ${updates.join(', ')} WHERE id = $${idx++} AND account_id = $${idx++}`,
+      params
+    );
+
+    res.json({ success: true, changed: true });
+  } catch (err) {
+    console.error('[Studio] Character sync error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

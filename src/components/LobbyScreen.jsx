@@ -2404,6 +2404,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const setPlayerName = useGameStore(s => s.setPlayerName);
   const resetGame = useGameStore(s => s.resetGame);
   const setScreen = useGameStore(s => s.setScreen);
+  const importWcsHero = useGameStore(s => s.importWcsHero);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [exportCopied, setExportCopied] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -2413,10 +2414,28 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const [discordLoading, setDiscordLoading] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | synced | error
   const [lastSyncTime, setLastSyncTime] = useState(() => getLastSync()?.timestamp || null);
+  const [wcsCharacters, setWcsCharacters] = useState(null); // null = not loaded, [] = empty
+  const [wcsLoading, setWcsLoading] = useState(false);
+  const [importStatus, setImportStatus] = useState({}); // { [charId]: 'importing'|'done'|'error'|'duplicate' }
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.puter?.auth?.isSignedIn?.()) {
       window.puter.auth.getUser().then(u => setPuterUser(u)).catch(() => {});
+    }
+    // Fetch WCS characters if we have a session token
+    const token = localStorage.getItem('grudge_session_token');
+    if (token && !wcsCharacters) {
+      setWcsLoading(true);
+      fetch('/api/studio/characters', {
+        headers: { 'X-Session-Token': token },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.characters) setWcsCharacters(data.characters);
+          else setWcsCharacters([]);
+        })
+        .catch(() => setWcsCharacters([]))
+        .finally(() => setWcsLoading(false));
     }
   }, []);
 
@@ -2730,6 +2749,109 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
           </div>
         </div>
       )}
+
+      {/* Crafting Suite Characters */}
+      <div style={{ ...panelStyle }}>
+        {sectionTitle('Crafting Suite Characters')}
+        {wcsLoading && (
+          <div style={{ color: 'var(--muted)', fontSize: '0.8rem', padding: '8px 0' }}>Loading characters...</div>
+        )}
+      {!wcsLoading && wcsCharacters && wcsCharacters.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {wcsCharacters.map(c => {
+              const alreadyImported = heroRoster.some(h => h.id === `wcs_${c.id}`);
+              const status = importStatus[c.id];
+              return (
+                <div key={c.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+                  background: alreadyImported ? 'rgba(110,231,183,0.06)' : 'rgba(250,172,71,0.06)',
+                  border: `1px solid ${alreadyImported ? 'rgba(110,231,183,0.2)' : 'rgba(250,172,71,0.15)'}`,
+                  borderRadius: 8,
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 4,
+                    background: 'linear-gradient(135deg, rgba(250,172,71,0.2), rgba(219,99,49,0.15))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.6rem', fontWeight: 700, color: '#FAAC47',
+                  }}>
+                    {c.level || 1}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#e2e8f0', fontSize: '0.8rem', fontWeight: 600 }}>{c.name}</div>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.6rem' }}>
+                      {c.raceId} {c.classId} {c.profession ? `• ${c.profession}` : ''}
+                    </div>
+                  </div>
+                  {alreadyImported ? (
+                    <span style={{ color: '#6ee7b7', fontSize: '0.6rem', fontWeight: 600 }}>In Roster</span>
+                  ) : (
+                    <button
+                      disabled={status === 'importing'}
+                      onClick={() => {
+                        setImportStatus(prev => ({ ...prev, [c.id]: 'importing' }));
+                        try {
+                          const result = importWcsHero(c);
+                          if (result.success) {
+                            setImportStatus(prev => ({ ...prev, [c.id]: 'done' }));
+                          } else {
+                            setImportStatus(prev => ({ ...prev, [c.id]: result.reason === 'already_imported' ? 'duplicate' : 'error' }));
+                          }
+                        } catch {
+                          setImportStatus(prev => ({ ...prev, [c.id]: 'error' }));
+                        }
+                      }}
+                      style={{
+                        background: status === 'done' ? 'rgba(110,231,183,0.15)' : 'rgba(250,172,71,0.15)',
+                        border: `1px solid ${status === 'done' ? 'rgba(110,231,183,0.4)' : 'rgba(250,172,71,0.4)'}`,
+                        borderRadius: 6, padding: '4px 10px', cursor: status === 'importing' ? 'wait' : 'pointer',
+                        color: status === 'done' ? '#6ee7b7' : '#FAAC47',
+                        fontSize: '0.65rem', fontWeight: 600, fontFamily: "'Jost', sans-serif",
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {status === 'done' ? 'Imported ✓' : status === 'duplicate' ? 'Already In' : status === 'importing' ? '...' : 'Import Hero'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!wcsLoading && wcsCharacters && wcsCharacters.length === 0 && (
+          <div style={{ color: 'var(--muted)', fontSize: '0.75rem', padding: '4px 0' }}>No characters found in Crafting Suite</div>
+        )}
+        {!wcsLoading && !wcsCharacters && !isDiscordConnected && (
+          <div style={{ color: 'var(--muted)', fontSize: '0.75rem', padding: '4px 0' }}>Link Discord to see your Crafting Suite characters</div>
+        )}
+        <button
+          onClick={async () => {
+            const token = localStorage.getItem('grudge_session_token');
+            if (token) {
+              try {
+                const res = await fetch('/api/crafting/sso-token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+                });
+                const data = await res.json();
+                if (data.redirectUrl) {
+                  window.open(data.redirectUrl, '_blank', 'noopener,noreferrer');
+                  return;
+                }
+              } catch { /* fall through to plain URL */ }
+            }
+            window.open('https://warlord-crafting-suite.vercel.app', '_blank', 'noopener,noreferrer');
+          }}
+          style={{
+            marginTop: 10, display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(250,172,71,0.1)', border: '1px solid rgba(250,172,71,0.3)',
+            borderRadius: 8, color: '#FAAC47', padding: '8px 16px', cursor: 'pointer',
+            fontSize: '0.75rem', fontFamily: "'Jost', sans-serif", fontWeight: 600,
+            width: '100%', justifyContent: 'center',
+          }}
+        >
+          Open Crafting Suite
+        </button>
+      </div>
 
       <div style={{ ...panelStyle }}>
         {sectionTitle('Campaign Stats')}

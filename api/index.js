@@ -565,8 +565,9 @@ app.post('/api/discord/callback', async (req, res) => {
 
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
-      console.error('Token exchange failed:', err);
-      return res.status(400).json({ error: 'Token exchange failed' });
+      console.error(`[Discord] Token exchange failed (${tokenRes.status}):`, err);
+      console.error(`[Discord] client_id used: ${DISCORD_CLIENT_ID?.slice(0, 6)}...  redirect_uri: ${redirectUri}`);
+      return res.status(400).json({ error: 'Token exchange failed', detail: `Discord returned ${tokenRes.status}` });
     }
 
     const tokenData = await tokenRes.json();
@@ -598,15 +599,22 @@ app.post('/api/discord/callback', async (req, res) => {
       `INSERT INTO accounts (discord_id, username, email, avatar_url, auth_type, last_login)
        VALUES ($1, $2, $3, $4, 'discord', NOW())
        ON CONFLICT (discord_id) DO UPDATE SET
-         username = EXCLUDED.username, email = EXCLUDED.email,
-         avatar_url = EXCLUDED.avatar_url, updated_at = NOW(), last_login = NOW()
+         username = EXCLUDED.username,
+         email = COALESCE(EXCLUDED.email, accounts.email),
+         avatar_url = COALESCE(EXCLUDED.avatar_url, accounts.avatar_url),
+         updated_at = NOW(), last_login = NOW()
        RETURNING *`,
       [user.id, user.username, user.email, user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null]
     );
     const account = accountResult.rows[0];
 
+    // Assign Grudge ID + auto-create wallet (matches server.js behavior)
+    const grudgeId = await ensureGrudgeId(account.id);
+    const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
+
     const jwt = createJWT({
       accountId: account.id,
+      grudgeId,
       discordId: user.id,
       username: user.username,
       authType: 'discord',
@@ -616,14 +624,17 @@ app.post('/api/discord/callback', async (req, res) => {
       success: true,
       user: {
         id: user.id,
+        accountId: account.id,
         username: user.username,
         discriminator: user.discriminator,
         avatar: user.avatar,
         email: user.email,
         globalName: user.global_name,
+        grudgeId,
       },
       guildJoined,
       sessionToken: jwt,
+      wallet: wallet || undefined,
     });
   } catch (err) {
     console.error('Discord callback error:', err);

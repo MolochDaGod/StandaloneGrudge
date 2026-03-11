@@ -456,11 +456,11 @@ const useGameStore = create(persist((set, get) => ({
   shopLastRefresh: 0,
   pendingLoot: [],
   harvestNodes: [
-    { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', baseRate: 3, unlockLevel: 1 },
-    { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', baseRate: 2, unlockLevel: 2 },
-    { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', baseRate: 2, unlockLevel: 3 },
-    { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', baseRate: 1, unlockLevel: 5 },
-    { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', baseRate: 1, unlockLevel: 8 },
+    { id: 'gold_mine', name: 'Gold Mine', icon: 'pickaxe', resource: 'gold', baseRate: 1.5, unlockLevel: 1 },
+    { id: 'herb_garden', name: 'Herb Garden', icon: 'nature', resource: 'herbs', baseRate: 1, unlockLevel: 2 },
+    { id: 'lumber_yard', name: 'Lumber Yard', icon: 'wood', resource: 'wood', baseRate: 1, unlockLevel: 3 },
+    { id: 'ore_vein', name: 'Ore Vein', icon: 'ore', resource: 'ore', baseRate: 0.5, unlockLevel: 5 },
+    { id: 'crystal_cave', name: 'Crystal Cave', icon: 'diamond', resource: 'crystals', baseRate: 0.5, unlockLevel: 8 },
   ],
   activeHarvests: {},
   heroExpeditions: {},
@@ -687,6 +687,103 @@ const useGameStore = create(persist((set, get) => ({
         screen: 'world',
       });
     }
+  },
+
+  importWcsHero: (wcsChar) => {
+    const state = get();
+    const heroId = `wcs_${wcsChar.id}`;
+
+    // Prevent duplicate imports
+    if (state.heroRoster.some(h => h.id === heroId)) {
+      return { success: false, reason: 'already_imported' };
+    }
+
+    // Validate race/class — fall back to human/warrior if WCS uses unknown values
+    const validRaces = Object.keys(raceDefinitions);
+    const validClasses = Object.keys(classDefinitions);
+    const raceId = validRaces.includes(wcsChar.raceId) ? wcsChar.raceId : 'human';
+    const classId = validClasses.includes(wcsChar.classId) ? wcsChar.classId : 'warrior';
+
+    // Build attribute points from WCS data or compute from class+race defaults
+    const zero = { Strength: 0, Vitality: 0, Endurance: 0, Dexterity: 0, Agility: 0, Intellect: 0, Wisdom: 0, Tactics: 0 };
+    const wcsAttrs = wcsChar.attributes || {};
+    const hasAttrs = Object.values(wcsAttrs).some(v => v > 0);
+    let attributePoints;
+    if (hasAttrs) {
+      attributePoints = { ...zero };
+      Object.entries(wcsAttrs).forEach(([key, val]) => {
+        if (attributePoints[key] !== undefined) attributePoints[key] = val;
+      });
+    } else {
+      // Compute from class starting attrs + race bonuses + level-up points
+      const classDef = classDefinitions[classId];
+      const raceDef = raceDefinitions[raceId];
+      attributePoints = { ...(classDef?.startingAttributes || zero) };
+      if (raceDef) {
+        Object.entries(raceDef.bonuses).forEach(([attr, val]) => {
+          if (attributePoints[attr] !== undefined) attributePoints[attr] += val;
+        });
+      }
+    }
+
+    const level = Math.max(1, wcsChar.level || 1);
+    const stats = calculateStats(attributePoints, level);
+    const equip = getStartingEquipment(classId);
+
+    const hero = {
+      id: heroId,
+      name: wcsChar.name || 'WCS Hero',
+      raceId,
+      classId,
+      level,
+      namedHeroId: null,
+      attributePoints,
+      baseAttributePoints: { ...attributePoints },
+      currentHealth: Math.floor(stats.health),
+      currentMana: Math.floor(stats.mana),
+      currentStamina: Math.floor(stats.stamina),
+      unspentPoints: Math.max(0, POINTS_PER_LEVEL * (level - 1)),
+      skillPoints: Math.max(0, level),
+      unlockedSkills: {},
+      equipment: equip,
+      abilityLoadout: getDefaultLoadout(classId, equip?.weapon?.weaponType),
+      source: 'wcs',
+      wcsCharacterId: wcsChar.id,
+    };
+
+    const newRoster = [...state.heroRoster, hero];
+    const newMaxSlots = Math.max(state.maxHeroSlots, newRoster.length);
+    const newActiveIds = state.activeHeroIds.length < 3
+      ? [...state.activeHeroIds, heroId]
+      : state.activeHeroIds;
+
+    set({
+      heroRoster: newRoster,
+      activeHeroIds: newActiveIds,
+      maxHeroSlots: newMaxSlots,
+    });
+    return { success: true, heroId };
+  },
+
+  syncWcsHeroes: () => {
+    const state = get();
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('grudge_session_token') : null;
+    if (!token) return;
+    const wcsHeroes = state.heroRoster.filter(h => h.source === 'wcs' && h.wcsCharacterId);
+    if (wcsHeroes.length === 0) return;
+    wcsHeroes.forEach(hero => {
+      fetch(`/api/studio/character/${hero.wcsCharacterId}/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+        body: JSON.stringify({
+          level: hero.level,
+          attributes: hero.attributePoints,
+          currentHealth: hero.currentHealth,
+          currentMana: hero.currentMana,
+          currentStamina: hero.currentStamina,
+        }),
+      }).catch(() => {});
+    });
   },
 
   setActiveHeroes: (heroIds) => {
@@ -2223,11 +2320,12 @@ const useGameStore = create(persist((set, get) => ({
         heroRoster: updatedRoster,
         completedMissions,
         activeMission: null,
-        battleLog: log.slice(-12),
+      battleLog: log.slice(-12),
         playerHealth: playerUnit ? playerUnit.health : state.playerHealth,
         playerMana: playerUnit ? playerUnit.mana : state.playerMana,
         playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
       });
+      get().syncWcsHeroes();
       return;
     }
 
@@ -2304,6 +2402,7 @@ const useGameStore = create(persist((set, get) => ({
         playerMana: playerUnit ? playerUnit.mana : state.playerMana,
         playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
       });
+      get().syncWcsHeroes();
       return;
     }
 
@@ -2373,6 +2472,7 @@ const useGameStore = create(persist((set, get) => ({
         playerMana: playerUnit ? playerUnit.mana : state.playerMana,
         playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
       });
+      get().syncWcsHeroes();
       return;
     }
 
@@ -2543,6 +2643,7 @@ const useGameStore = create(persist((set, get) => ({
       playerStamina: playerUnit ? playerUnit.stamina : state.playerStamina,
       eventBonusRewards: null,
     });
+    get().syncWcsHeroes();
 
     if (leveledUp) {
       const stats = get().getStats();
@@ -3163,6 +3264,23 @@ const useGameStore = create(persist((set, get) => ({
         zoneConquer[zoneId] = floorTo2(Math.min(100, current + harvestConquerGain));
         conquerChanged = true;
       }
+    }
+
+    // Camp income: idle heroes (not active, not harvesting, not on expedition) generate passive resources
+    const busyHeroIds = new Set([
+      ...state.activeHeroIds,
+      ...Object.values(state.activeHarvests),
+      ...Object.keys(state.heroExpeditions || {}),
+      ...(state.islandHeroes || []).map(h => h.heroId),
+    ]);
+    const idleHeroes = state.heroRoster.filter(h => !busyHeroIds.has(h.id));
+    if (idleHeroes.length > 0) {
+      const campResTypes = ['herbs', 'wood', 'ore'];
+      idleHeroes.forEach(hero => {
+        const campRate = 0.15 * (1 + hero.level * 0.05);
+        const res = campResTypes[Math.floor(Date.now() / 60000 + hero.id.charCodeAt(0)) % campResTypes.length];
+        newResources[res] = floorTo2((newResources[res] || 0) + campRate * elapsed);
+      });
     }
 
     const updates = { lastHarvestTick: now, harvestResources: newResources };

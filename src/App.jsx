@@ -84,6 +84,28 @@ function GameApp() {
     } else if (!initialScreen && path !== '/' && !SLUG_TO_SCREEN[path]) {
       window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
     }
+
+    // Verify JWT on app load — if expired, clear session so TitleScreen shows login
+    const token = localStorage.getItem('grudge_session_token');
+    if (token) {
+      fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionToken: token }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.valid) {
+            // JWT expired or invalid — clear session
+            localStorage.removeItem('grudge_session_token');
+            localStorage.removeItem('grudge-session');
+            if (screen !== 'title') setScreen('title');
+          }
+        })
+        .catch(() => {
+          // Network error — don't clear session, let the user play offline
+        });
+    }
   }, []);
 
   const SCREEN_TITLES = {
@@ -244,16 +266,15 @@ function GameApp() {
     opacity: (transitioning && transitionType !== 'none') ? 0 : undefined,
   };
 
-  const sessionUsername = (() => {
+  const sessionData = (() => {
     try {
-      const s = JSON.parse(localStorage.getItem('grudge-session') || '{}');
-      return s.puterUsername || s.username || (s.type === 'guest' ? 'Guest' : null);
-    } catch { return null; }
+      return JSON.parse(localStorage.getItem('grudge-session') || '{}');
+    } catch { return {}; }
   })();
+  const sessionUsername = sessionData.puterUsername || sessionData.username || (sessionData.type === 'guest' ? 'Guest' : null);
+  const sessionGrudgeId = sessionData.grudgeId || null;
   const showUserBadge = sessionUsername && screen !== 'title' && screen !== 'loading';
-  const sessionType = (() => {
-    try { return JSON.parse(localStorage.getItem('grudge-session') || '{}').type || 'guest'; } catch { return 'guest'; }
-  })();
+  const sessionType = sessionData.type || 'guest';
 
 
   return (
@@ -268,34 +289,52 @@ function GameApp() {
           {renderScreen()}
         </div>
         {showUserBadge && (
-          <div style={{
-            position: 'absolute', top: 8, left: 10, zIndex: 10510,
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: 'rgba(0,0,0,0.55)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 6, padding: '4px 10px 4px 6px',
-            pointerEvents: 'none',
-            animation: 'fadeIn 0.5s ease 0.3s both',
-          }}>
+          <div
+            onClick={() => setScreen('account')}
+            style={{
+              position: 'absolute', top: 8, left: 10, zIndex: 10510,
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(0,0,0,0.55)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 6, padding: '4px 10px 4px 6px',
+              cursor: 'pointer',
+              animation: 'fadeIn 0.5s ease 0.3s both',
+              transition: 'border-color 0.2s, background 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(250,172,71,0.3)'; e.currentTarget.style.background = 'rgba(0,0,0,0.7)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'rgba(0,0,0,0.55)'; }}
+          >
             <div style={{
               width: 16, height: 16, borderRadius: 3,
               background: sessionType === 'puter'
                 ? 'linear-gradient(135deg, #DB6331, #FAAC47)'
                 : sessionType === 'discord'
                   ? '#5865F2'
-                  : 'rgba(255,255,255,0.15)',
+                  : sessionType === 'grudge'
+                    ? 'linear-gradient(135deg, #DB6331, #FAAC47)'
+                    : 'rgba(255,255,255,0.15)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.5rem', fontWeight: 800, color: '#fff',
               overflow: 'hidden',
             }}>
-              {sessionType === 'puter' ? <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 14, height: 14, objectFit: 'contain' }} /> : sessionType === 'discord' ? 'D' : '\u2022'}
+              {(sessionType === 'puter' || sessionType === 'grudge') ? <img src="/sprites/ui/grudge_logo.png" alt="G" style={{ width: 14, height: 14, objectFit: 'contain' }} /> : sessionType === 'discord' ? 'D' : '\u2022'}
             </div>
-            <span style={{
-              color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: 500,
-              fontFamily: "'Jost', sans-serif", letterSpacing: 0.5,
-            }}>
-              {sessionUsername}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{
+                color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: 500,
+                fontFamily: "'Jost', sans-serif", letterSpacing: 0.5, lineHeight: 1.2,
+              }}>
+                {sessionUsername}
+              </span>
+              {sessionGrudgeId && (
+                <span style={{
+                  color: 'rgba(255,255,255,0.25)', fontSize: '0.5rem', fontWeight: 400,
+                  fontFamily: "'Jost', sans-serif", letterSpacing: 0.5, lineHeight: 1,
+                }}>
+                  {sessionGrudgeId}
+                </span>
+              )}
+            </div>
           </div>
         )}
         <div id="game-ui-portal" style={{
