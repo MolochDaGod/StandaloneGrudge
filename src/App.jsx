@@ -28,9 +28,10 @@ import GameTooltipRenderer from './components/GameTooltip';
 import GameContextMenuRenderer from './components/GameContextMenu';
 import { HERO_CREATE_MODAL } from './constants/layers';
 import GameContainer from './components/GameContainer';
+import StudioPortal from './components/StudioPortal';
 
 const SCREEN_SLUGS = {
-  title: '/',
+  title: '/play',
   intro: '/intro',
   lobby: '/war-room',
   create: '/create-character',
@@ -82,7 +83,7 @@ function GameApp() {
       skipPushRef.current = true;
       setScreen(initialScreen);
     } else if (!initialScreen && path !== '/' && !SLUG_TO_SCREEN[path]) {
-      window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/');
+    window.history.replaceState(null, '', SCREEN_SLUGS[screen] || '/play');
     }
 
     // Verify JWT on app load — if expired, clear session so TitleScreen shows login
@@ -392,6 +393,7 @@ export default function App() {
     return null;
   }
   if (path === '/discordauth') return <DiscordAuth />;
+  if (path === '/') return <StudioPortal />;
 
   return (
     <GameContainer>
