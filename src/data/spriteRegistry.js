@@ -191,7 +191,7 @@ function buildRegistry() {
       'Racalvin the Pirate King',
       'secret', 'named',
       ['secret', 'named', 'pirate', 'racalvin', 'barbarian', 'worge'],
-      racalvinSprite, 'pirate-grunt'
+      racalvinSprite, 'pirate-captain'
     ));
   }
 
