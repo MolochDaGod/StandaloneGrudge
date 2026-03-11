@@ -107,6 +107,8 @@ export async function initDatabase() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS password_hash VARCHAR(256);
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS auth_type VARCHAR(32) DEFAULT 'discord';
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS puter_uuid VARCHAR(128);
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state JSONB DEFAULT NULL;
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state_updated_at TIMESTAMPTZ;
 
       CREATE TABLE IF NOT EXISTS arena_teams (
         team_id TEXT PRIMARY KEY,

@@ -180,6 +180,7 @@ export default function TitleScreen() {
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [cloudRestore, setCloudRestore] = useState(null); // { data, source }
+  const [discordSession, setDiscordSession] = useState(null); // existing Discord session
 
   const toggleMute = () => {
     const next = !muted;
@@ -195,8 +196,10 @@ export default function TitleScreen() {
     try {
       const existingSession = JSON.parse(localStorage.getItem('grudge-session') || '{}');
       const hasToken = !!localStorage.getItem('grudge_session_token');
+      // Set discordSession for UI display
+      if (existingSession.type === 'discord' && existingSession.username) setDiscordSession(existingSession);
       if (existingSession.type === 'discord' && hasToken && existingSession.loginTime) {
-        // Session exists and is recent (within 7 days)
+        // Session exists and is recent (within 7 days) — auto-navigate
         const age = Date.now() - existingSession.loginTime;
         if (age < 7 * 24 * 60 * 60 * 1000) {
           setAutoChecked(true);
@@ -314,6 +317,25 @@ export default function TitleScreen() {
         window.location.href = data.url;
       }
     } catch {}
+    setDiscordLoading(false);
+  };
+
+  // Continue with an already-authenticated Discord session
+  const handleDiscordContinue = async () => {
+    setDiscordLoading(true);
+    try {
+      const pull = await pullSave();
+      if (pull.success && pull.data && pull.data.gameState) {
+        const localSave = localStorage.getItem('grudge-warlords-storage');
+        if (localSave) {
+          setCloudRestore({ data: pull.data.gameState, source: pull.source });
+          setDiscordLoading(false);
+          return;
+        }
+        localStorage.setItem('grudge-warlords-storage', JSON.stringify({ state: pull.data.gameState, version: 4 }));
+      }
+    } catch {}
+    setScreen('intro');
     setDiscordLoading(false);
   };
 
@@ -448,12 +470,13 @@ export default function TitleScreen() {
           )}
 
           <LoginButton
-            label="LOGIN WITH DISCORD"
-            sublabel="Sync community & leaderboards"
-            onClick={handleDiscordLogin}
+            label={discordSession ? `CONTINUE AS ${discordSession.username.toUpperCase()}` : 'LOGIN WITH DISCORD'}
+            sublabel={discordSession ? 'Discord account linked' : 'Sync community & leaderboards'}
+            onClick={discordSession ? handleDiscordContinue : handleDiscordLogin}
             variant="discord"
+            active={!!discordSession}
             disabled={discordLoading}
-            icon={<DiscordSvg size={22} color="#7289da" />}
+            icon={<DiscordSvg size={22} color={discordSession ? '#6ee7b7' : '#7289da'} />}
             delay={0.45}
           />
 

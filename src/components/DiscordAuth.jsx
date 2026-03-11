@@ -48,6 +48,13 @@ export default function DiscordAuth() {
         };
         localStorage.setItem('grudge-session', JSON.stringify(session));
         localStorage.setItem('discordUser', JSON.stringify(data.user));
+        // Set grudge-session so cloudSync.isLoggedIn() returns true
+        localStorage.setItem('grudge-session', JSON.stringify({
+          type: 'discord',
+          grudgeId: data.user.id,
+          discordId: data.user.id,
+          username: data.user.username,
+        }));
         setStatus('success');
         window.history.replaceState({}, '', '/discordauth');
 
