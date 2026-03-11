@@ -80,7 +80,11 @@ function verifyPassword(password, hash) {
     const [salt, key] = hash.split(':');
     crypto.scrypt(password, salt, 64, (err, derivedKey) => {
       if (err) reject(err);
-      else resolve(derivedKey.toString('hex') === key);
+      else {
+        try {
+          resolve(crypto.timingSafeEqual(derivedKey, Buffer.from(key, 'hex')));
+        } catch { resolve(false); }
+      }
     });
   });
 }
@@ -204,6 +208,8 @@ async function ensureDB() {
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS auth_type VARCHAR(32) DEFAULT 'discord';
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS grudge_id VARCHAR(32) UNIQUE;
       ALTER TABLE accounts ADD COLUMN IF NOT EXISTS puter_uuid VARCHAR(128);
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state JSONB;
+      ALTER TABLE accounts ADD COLUMN IF NOT EXISTS game_state_updated_at TIMESTAMPTZ;
     `);
     // Create unique index on grudge_username where not null
     await dbQuery(`
@@ -1502,7 +1508,7 @@ app.get('/api/wallet/all', requireAdmin, async (req, res) => {
 app.get('/api/discord/invite', async (req, res) => {
   try {
     const botToken = env('DISCORD_BOT_TOKEN') || env('GAME_API_GRUDA');
-    const BETA_CHANNEL_ID = '1381760000946470987';
+    const BETA_CHANNEL_ID = env('DISCORD_BETA_CHANNEL_ID') || '1394826401311625306';
     if (!botToken) throw new Error('Bot token not configured');
     const inviteRes = await fetch(`https://discord.com/api/v10/channels/${BETA_CHANNEL_ID}/invites`, { method: 'POST', headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ max_age: 86400, max_uses: 1, unique: true }) });
     if (!inviteRes.ok) throw new Error('Invite creation failed');

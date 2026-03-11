@@ -31,6 +31,10 @@ const ALLOWED_ORIGINS = [
   'https://www.grudgeplatform.com',
   'https://molochdagod.github.io',
   'https://warlord-crafting-suite.vercel.app',
+  'https://grudgestudio.com',
+  'https://www.grudgestudio.com',
+  'https://grudge-platform.vercel.app',
+  'https://public-fawn-nine.vercel.app',
   'https://grudge-crafting.puter.site',
   'https://grudge-studio-app.puter.site',
 ];
@@ -70,7 +74,7 @@ app.use(express.json({ limit: '1mb' }));
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
-const BETA_CHANNEL_ID = '1394826401311625306';
+const BETA_CHANNEL_ID = process.env.DISCORD_BETA_CHANNEL_ID || '1394826401311625306';
 
 const pendingStates = new Map();
 const activeSessions = new Map();
@@ -187,9 +191,7 @@ function getPublicOrigin(req) {
   // Fallback: check platform-specific env vars
   const domain = process.env.VERCEL_URL 
     || process.env.RAILWAY_PUBLIC_DOMAIN 
-    || process.env.RENDER_EXTERNAL_URL
-    || process.env.REPLIT_DOMAINS 
-    || process.env.REPLIT_DEV_DOMAIN;
+    || process.env.RENDER_EXTERNAL_URL;
 
   if (domain) {
     const cleanDomain = domain.replace(/^https?:\/\//, '');
@@ -283,26 +285,6 @@ app.post('/api/discord/callback', async (req, res) => {
       for (const [k, v] of activeSessions) {
         if (v.createdAt < cutoff) activeSessions.delete(k);
       }
-    }
-
-    // Upsert account to DB so record exists immediately on login
-    const avatarUrl = user.avatar
-      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-      : null;
-    try {
-      const { query: dbQuery } = await import('./src/server/db.js');
-      await dbQuery(
-        `INSERT INTO accounts (discord_id, username, email, avatar_url, last_login)
-         VALUES ($1, $2, $3, $4, NOW())
-         ON CONFLICT (discord_id) DO UPDATE SET
-           username = EXCLUDED.username,
-           email = COALESCE(EXCLUDED.email, accounts.email),
-           avatar_url = COALESCE(EXCLUDED.avatar_url, accounts.avatar_url),
-           updated_at = NOW(), last_login = NOW()`,
-        [user.id, user.username, user.email || null, avatarUrl]
-      );
-    } catch (dbErr) {
-      console.error('[Discord] Account upsert failed (non-fatal):', dbErr.message);
     }
 
     res.json({
@@ -2014,39 +1996,8 @@ app.post('/api/studio/crafting/claim', requireSession, async (req, res) => {
   }
 });
 
-/**
- * POST /api/studio/sync/push
- * Push full game state snapshot to Puter KV.
- * Body: { accountId, gameState }
- */
-app.post('/api/studio/sync/push', requireSession, async (req, res) => {
-  try {
-    const { accountId, gameState } = req.body;
-    if (!accountId || !gameState) return res.status(400).json({ error: 'accountId and gameState required' });
-    const result = await syncPush(accountId, gameState, req);
-    res.json(result);
-  } catch (err) {
-    console.error('[Studio] Sync push error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-/**
- * POST /api/studio/sync/pull
- * Pull game state from Puter KV.
- * Body: { accountId }
- */
-app.post('/api/studio/sync/pull', requireSession, async (req, res) => {
-  try {
-    const { accountId } = req.body;
-    if (!accountId) return res.status(400).json({ error: 'accountId required' });
-    const result = await syncPull(accountId, req);
-    res.json(result);
-  } catch (err) {
-    console.error('[Studio] Sync pull error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
+// NOTE: /api/studio/sync/push and /pull are handled by the DB-backed routes above (lines ~1456/1484).
+// Puter KV sync is available via /api/studio/puter/push and /api/studio/puter/pull if needed.
 
 /**
  * GET /api/studio/saves

@@ -262,8 +262,6 @@ function getDomain() {
   return process.env.VERCEL_URL 
     || process.env.RAILWAY_PUBLIC_DOMAIN 
     || process.env.RENDER_EXTERNAL_URL
-    || process.env.REPLIT_DOMAINS 
-    || process.env.REPLIT_DEV_DOMAIN 
     || 'grudgewarlords.com';
 }
 
