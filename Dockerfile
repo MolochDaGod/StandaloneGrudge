@@ -1,7 +1,7 @@
 # Grudge Warlords MMO - Production Dockerfile
 # Multi-stage build for optimized server deployment
 
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies needed for builds
 RUN apk add --no-cache \
@@ -18,7 +18,7 @@ COPY package*.json ./
 RUN if [ -f package.json ]; then npm ci --production; fi
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
