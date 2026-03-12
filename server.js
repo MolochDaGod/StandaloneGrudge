@@ -14,6 +14,7 @@ import {
   syncPush, syncPull, kvGet, kvSet, kvList, prefsGet, prefsSet,
   healthCheck as puterHealthCheck, deployLogAppend,
 } from './api/lib/puter-service.js';
+import * as S3 from './api/lib/s3.js';
 
 const __filename_server = fileURLToPath(import.meta.url);
 const __dirname_server = path.dirname(__filename_server);
@@ -1999,6 +2000,59 @@ app.post('/api/studio/crafting/claim', requireSession, async (req, res) => {
 // NOTE: /api/studio/sync/push and /pull are handled by the DB-backed routes above (lines ~1456/1484).
 // Puter KV sync is available via /api/studio/puter/push and /api/studio/puter/pull if needed.
 
+// ── Studio: User Archive ─────────────────────────────────────────────────────
+import { archiveSnapshot, listArchives, restoreArchive } from './api/lib/puter-service.js';
+
+app.post('/api/studio/archive', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    const current = await syncPull(accountId, puterToken);
+    if (!current.ok || !current.value) {
+      return res.status(404).json({ error: 'No save data to archive' });
+    }
+
+    const result = await archiveSnapshot(accountId, current.value, req.body.reason || 'manual', puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] Create error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/studio/archives', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    const result = await listArchives(accountId, puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] List error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/studio/archive/restore', requireSession, async (req, res) => {
+  try {
+    const { timestamp } = req.body;
+    if (!timestamp) return res.status(400).json({ error: 'timestamp required' });
+
+    const accountId = req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    const result = await restoreArchive(accountId, timestamp, puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] Restore error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /**
  * GET /api/studio/saves
  * List all save keys for the player.
@@ -2036,6 +2090,93 @@ app.get('/api/studio/health', async (req, res) => {
 });
 
 console.log('[Server] Studio Hub bridge routes registered');
+
+// ── S3 Asset Storage ────────────────────────────────────────────────────────
+(function registerS3Routes() {
+  const adminCheck = (req, res, next) => {
+    const auth = req.headers['x-admin-token'];
+    const tok = (process.env.GAME_API_GRUDA || '').trim();
+    if (!auth || !tok || auth !== tok) return res.status(403).json({ error: 'Unauthorized' });
+    next();
+  };
+
+  app.get('/api/assets/status', async (req, res) => {
+    if (!S3.isConfigured()) return res.json({ configured: false });
+    try {
+      await S3.list('', 1);
+      res.json({ configured: true, reachable: true, bucket: process.env.BUCKET_NAME });
+    } catch (err) {
+      res.json({ configured: true, reachable: false, error: err.message });
+    }
+  });
+
+  app.get('/api/assets/list', adminCheck, async (req, res) => {
+    try {
+      const { prefix = '', max = '1000', token } = req.query;
+      const result = await S3.list(prefix, Math.min(parseInt(max) || 1000, 1000), token || undefined);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/assets/url/{*key}', async (req, res) => {
+    try {
+      const key = req.params.key;
+      if (!key) return res.status(400).json({ error: 'key required' });
+      const url = await S3.presignedDownloadUrl(key);
+      res.json({ url, key, expiresIn: 3600 });
+    } catch (err) {
+      res.status(err.name === 'NoSuchKey' ? 404 : 500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/assets/presign', adminCheck, async (req, res) => {
+    try {
+      const { key, contentType = 'application/octet-stream', expiresIn = 3600 } = req.body;
+      if (!key) return res.status(400).json({ error: 'key required' });
+      const result = await S3.presignedUploadUrl(key, contentType, Math.min(expiresIn, 86400));
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/assets/meta/{*key}', async (req, res) => {
+    try {
+      const key = req.params.key;
+      if (!key) return res.status(400).json({ error: 'key required' });
+      const meta = await S3.head(key);
+      res.json(meta);
+    } catch (err) {
+      res.status(err.name === 'NotFound' ? 404 : 500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/assets/copy', adminCheck, async (req, res) => {
+    try {
+      const { source, dest } = req.body;
+      if (!source || !dest) return res.status(400).json({ error: 'source and dest required' });
+      const result = await S3.copy(source, dest);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/assets/{*key}', adminCheck, async (req, res) => {
+    try {
+      const key = req.params.key;
+      if (!key) return res.status(400).json({ error: 'key required' });
+      await S3.remove(key);
+      res.json({ deleted: true, key });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  console.log('[Server] S3 asset routes registered');
+})();
 
 registerDbRoutes(app);
 registerWalletRoutes(app, requireSession);

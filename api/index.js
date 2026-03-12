@@ -7,6 +7,7 @@ import { DATASETS, fetchDataset, searchAll, getCacheStats, clearCache, puterKvMa
 import * as UUID from './lib/uuid-service.js';
 import { listAgents, getAgentInfo, queryAgent } from './lib/ai-agents.js';
 import * as Puter from './lib/puter-service.js';
+import * as S3 from './lib/s3.js';
 
 const { Pool } = pg;
 
@@ -1781,6 +1782,62 @@ app.post('/api/studio/sync/pull', requireSession, async (req, res) => {
   }
 });
 
+// ── Studio: User Archive ─────────────────────────────────────────────────────
+
+/** POST /api/studio/archive — Create a manual snapshot of current game state */
+app.post('/api/studio/archive', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.accountId || req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    // Read current save to snapshot it
+    const current = await Puter.syncPull(accountId, puterToken);
+    if (!current.ok || !current.value) {
+      return res.status(404).json({ error: 'No save data to archive' });
+    }
+
+    const result = await Puter.archiveSnapshot(accountId, current.value, req.body.reason || 'manual', puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] Create error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** GET /api/studio/archives — List available snapshots */
+app.get('/api/studio/archives', requireSession, async (req, res) => {
+  try {
+    const accountId = req.session.accountId || req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    const result = await Puter.listArchives(accountId, puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] List error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** POST /api/studio/archive/restore — Restore from a snapshot */
+app.post('/api/studio/archive/restore', requireSession, async (req, res) => {
+  try {
+    const { timestamp } = req.body;
+    if (!timestamp) return res.status(400).json({ error: 'timestamp required' });
+
+    const accountId = req.session.accountId || req.session.discordId;
+    const puterToken = req.headers['x-puter-token'];
+    if (!puterToken) return res.status(400).json({ error: 'X-Puter-Token required' });
+
+    const result = await Puter.restoreArchive(accountId, timestamp, puterToken);
+    res.json(result);
+  } catch (err) {
+    console.error('[Archive] Restore error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Studio: Cache ObjectStore → Puter KV ────────────────────────────────────
 app.post('/api/studio/cache/objectstore', async (req, res) => {
   const { datasets } = req.body; // array of dataset names, or omit for all
@@ -1803,6 +1860,90 @@ app.post('/api/studio/cache/objectstore', async (req, res) => {
     }
   }
   res.json({ cached: Object.values(results).filter(v => v === 'cached').length, total: targets.length, results });
+});
+
+// ── S3 Asset Storage ────────────────────────────────────────────────────────
+
+/** GET /api/assets/status — Check if S3 bucket is configured and reachable */
+app.get('/api/assets/status', async (req, res) => {
+  if (!S3.isConfigured()) return res.json({ configured: false });
+  try {
+    const result = await S3.list('', 1);
+    res.json({ configured: true, reachable: true, bucket: process.env.BUCKET_NAME });
+  } catch (err) {
+    res.json({ configured: true, reachable: false, error: err.message });
+  }
+});
+
+/** GET /api/assets/list?prefix=sprites/&max=100&token=... — List objects */
+app.get('/api/assets/list', requireAdmin, async (req, res) => {
+  try {
+    const { prefix = '', max = '1000', token } = req.query;
+    const result = await S3.list(prefix, Math.min(parseInt(max) || 1000, 1000), token || undefined);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** GET /api/assets/url/:key — Presigned download URL for an asset */
+app.get('/api/assets/url/{*key}', async (req, res) => {
+  try {
+    const key = req.params.key;
+    if (!key) return res.status(400).json({ error: 'key required' });
+    const url = await S3.presignedDownloadUrl(key);
+    res.json({ url, key, expiresIn: 3600 });
+  } catch (err) {
+    res.status(err.name === 'NoSuchKey' ? 404 : 500).json({ error: err.message });
+  }
+});
+
+/** POST /api/assets/presign — Get presigned upload URL (admin) */
+app.post('/api/assets/presign', requireAdmin, async (req, res) => {
+  try {
+    const { key, contentType = 'application/octet-stream', expiresIn = 3600 } = req.body;
+    if (!key) return res.status(400).json({ error: 'key required' });
+    const result = await S3.presignedUploadUrl(key, contentType, Math.min(expiresIn, 86400));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** GET /api/assets/meta/:key — Object metadata (head) */
+app.get('/api/assets/meta/{*key}', async (req, res) => {
+  try {
+    const key = req.params.key;
+    if (!key) return res.status(400).json({ error: 'key required' });
+    const meta = await S3.head(key);
+    res.json(meta);
+  } catch (err) {
+    res.status(err.name === 'NotFound' ? 404 : 500).json({ error: err.message });
+  }
+});
+
+/** POST /api/assets/copy — Copy object within bucket (admin) */
+app.post('/api/assets/copy', requireAdmin, async (req, res) => {
+  try {
+    const { source, dest } = req.body;
+    if (!source || !dest) return res.status(400).json({ error: 'source and dest required' });
+    const result = await S3.copy(source, dest);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** DELETE /api/assets/:key — Delete an asset (admin) */
+app.delete('/api/assets/{*key}', requireAdmin, async (req, res) => {
+  try {
+    const key = req.params.key;
+    if (!key) return res.status(400).json({ error: 'key required' });
+    await S3.remove(key);
+    res.json({ deleted: true, key });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default app;

@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "private": true,
   "engines": {
-"node": "20.x"
+    "node": "20.x"
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5000",
@@ -19,6 +19,8 @@
     "export:skills": "node scripts/export-skill-trees.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1007.0",
+    "@aws-sdk/s3-request-presigner": "^3.1007.0",
     "express": "^5.2.1",
     "framer-motion": "^12.34.0",
     "pg": "^8.18.0",

@@ -23,6 +23,8 @@ export const KV_KEYS = {
   save:        (id) => `grudge:save:${id}`,
   prefs:       (id) => `grudge:prefs:${id}`,
   asset:       (id) => `grudge:studio:assets:${id}`,
+  archive:     (id, ts) => `grudge:archive:${id}:${ts}`,
+  archiveIndex:(id) => `grudge:archive:${id}:index`,
 };
 
 // ── Resolve auth token ──────────────────────────────────────────────────────
@@ -115,20 +117,120 @@ export async function kvList(pattern, tokenSource) {
 
 // ── Game Save Sync ──────────────────────────────────────────────────────────
 
+const ARCHIVE_INTERVAL = 10;  // auto-archive every N pushes
+const ARCHIVE_MAX = 15;       // keep last N snapshots
+const ARCHIVE_COOLDOWN = 4 * 3600 * 1000; // min 4h between auto-archives
+
 /** Push full game state to Puter KV (called from /api/studio/sync/push) */
 export async function syncPush(accountId, gameState, tokenSource) {
   const key = KV_KEYS.save(accountId);
+  const prevVersion = gameState._syncMeta?.version || 0;
+  const newVersion = prevVersion + 1;
   const payload = {
     ...gameState,
-    _syncMeta: { pushedAt: Date.now(), version: gameState._syncMeta?.version ? gameState._syncMeta.version + 1 : 1 },
+    _syncMeta: { pushedAt: Date.now(), version: newVersion },
   };
-  return kvSet(key, payload, tokenSource);
+  const result = await kvSet(key, payload, tokenSource);
+
+  // Auto-archive every N pushes (non-blocking)
+  if (result.ok && newVersion % ARCHIVE_INTERVAL === 0) {
+    archiveSnapshot(accountId, payload, 'auto', tokenSource).catch(() => {});
+  }
+
+  return result;
 }
 
 /** Pull game state from Puter KV */
 export async function syncPull(accountId, tokenSource) {
   const key = KV_KEYS.save(accountId);
   return kvGet(key, tokenSource);
+}
+
+// ── Versioned Archive ───────────────────────────────────────────────────────
+
+/** Create a timestamped snapshot of user game state */
+export async function archiveSnapshot(accountId, gameState, reason = 'manual', tokenSource) {
+  const token = resolveToken(tokenSource);
+  if (!token) return { ok: false, error: 'no_puter_token' };
+
+  // Load existing index
+  const indexKey = KV_KEYS.archiveIndex(accountId);
+  const indexResult = await kvGet(indexKey, token);
+  const index = (indexResult.ok && Array.isArray(indexResult.value)) ? indexResult.value : [];
+
+  // Cooldown check for auto-archives
+  if (reason === 'auto' && index.length > 0) {
+    const lastTs = index[0]?.ts || 0;
+    if (Date.now() - lastTs < ARCHIVE_COOLDOWN) return { ok: true, skipped: true, reason: 'cooldown' };
+  }
+
+  // Write the snapshot
+  const ts = Date.now();
+  const snapshotKey = KV_KEYS.archive(accountId, ts);
+  const snapshot = {
+    ...gameState,
+    _archiveMeta: { ts, reason, version: gameState._syncMeta?.version || 0 },
+  };
+  const writeResult = await kvSet(snapshotKey, snapshot, token);
+  if (!writeResult.ok) return writeResult;
+
+  // Update index (newest first)
+  index.unshift({ ts, reason, version: snapshot._archiveMeta.version });
+
+  // Prune old snapshots beyond ARCHIVE_MAX
+  const pruned = [];
+  while (index.length > ARCHIVE_MAX) {
+    const old = index.pop();
+    // Fire-and-forget delete of old snapshot data
+    kvDel(KV_KEYS.archive(accountId, old.ts), token).catch(() => {});
+    pruned.push(old.ts);
+  }
+
+  await kvSet(indexKey, index, token);
+
+  return { ok: true, ts, reason, totalSnapshots: index.length, pruned: pruned.length };
+}
+
+/** List available archive snapshots for a user */
+export async function listArchives(accountId, tokenSource) {
+  const indexKey = KV_KEYS.archiveIndex(accountId);
+  const result = await kvGet(indexKey, tokenSource);
+  if (!result.ok) return result;
+  return { ok: true, snapshots: Array.isArray(result.value) ? result.value : [] };
+}
+
+/** Restore game state from an archive snapshot */
+export async function restoreArchive(accountId, timestamp, tokenSource) {
+  const token = resolveToken(tokenSource);
+  if (!token) return { ok: false, error: 'no_puter_token' };
+
+  // Read the snapshot
+  const snapshotKey = KV_KEYS.archive(accountId, timestamp);
+  const snapshotResult = await kvGet(snapshotKey, token);
+  if (!snapshotResult.ok || !snapshotResult.value) {
+    return { ok: false, error: 'snapshot_not_found' };
+  }
+
+  // Archive current state before overwriting (safety net)
+  const currentResult = await kvGet(KV_KEYS.save(accountId), token);
+  if (currentResult.ok && currentResult.value) {
+    await archiveSnapshot(accountId, currentResult.value, 'pre-restore', token);
+  }
+
+  // Write snapshot as current save
+  const restored = {
+    ...snapshotResult.value,
+    _syncMeta: {
+      ...snapshotResult.value._syncMeta,
+      pushedAt: Date.now(),
+      restoredFrom: timestamp,
+    },
+  };
+  delete restored._archiveMeta;
+  const writeResult = await kvSet(KV_KEYS.save(accountId), restored, token);
+  if (!writeResult.ok) return writeResult;
+
+  return { ok: true, restoredFrom: timestamp, version: restored._syncMeta?.version };
 }
 
 // ── ObjectStore → Puter KV caching ─────────────────────────────────────────

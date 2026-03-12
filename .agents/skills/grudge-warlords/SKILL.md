@@ -32,6 +32,11 @@ Single Express server auto-detects mode via `NODE_ENV`:
 | `DISCORD_GRUDGE_WEBHOOK` | Webhook URL for arena broadcasts |
 | `GAME_API_GRUDA` | Admin token / fallback bot token |
 | `GRUDGE_ACCOUNT_DB` | Neon PostgreSQL connection string |
+| `BUCKET_NAME` | S3 bucket identifier (Railway Object Storage) |
+| `BUCKET_REGION` | S3 region (default: us-east-1) |
+| `BUCKET_ENDPOINT` | S3-compatible endpoint URL |
+| `BUCKET_ACCESS_KEY` | S3 access key ID |
+| `BUCKET_SECRET_KEY` | S3 secret access key |
 
 ### Workflows
 1. **Discord API Server** — `node server.js` (Express + Discord bot)
@@ -127,6 +132,67 @@ Events: `login`, `logout`, `sync`, `error` via `.on()` / `.off()`
 | POST | `/api/discord/webhook/lore` | Admin | Send lore entry |
 | POST | `/api/discord/webhook/tip` | Admin | Send gameplay tip |
 | POST | `/api/discord/webhook/custom` | Admin | Send custom embed |
+
+### S3 Asset Storage
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/assets/status` | No | Check if S3 bucket is configured and reachable |
+| GET | `/api/assets/list?prefix=&max=` | Admin | List objects by prefix (paginated) |
+| GET | `/api/assets/url/:key` | No | Get presigned download URL (1h expiry) |
+| GET | `/api/assets/meta/:key` | No | Get object metadata (size, type, lastModified) |
+| POST | `/api/assets/presign` | Admin | Get presigned upload URL for client-side upload |
+| POST | `/api/assets/copy` | Admin | Copy object within bucket |
+| DELETE | `/api/assets/:key` | Admin | Delete an asset |
+
+#### S3 Module (`api/lib/s3.js`)
+Lazy-init S3Client using Railway-injected `BUCKET_*` env vars. Works with any S3-compatible provider (Railway, R2, MinIO, AWS).
+- `forcePathStyle: true` for Railway/R2 compatibility
+- Presigned URLs for both upload and download (no proxy needed)
+- `isConfigured()` check for graceful degradation when bucket isn't set up
+
+#### Railway Bucket: `grudge-assets`
+Connected to 5 Railway services via `${{grudge-assets.*}}` variable references:
+- grudge-studio-backend, GDevelopAssistant, ObjectStore, Warlord-Crafting-Suite, grudge-warlords
+
+#### S3 Bucket Organization
+```
+grudge-assets/
+  sprites/          # 2D sprite sheets
+  backgrounds/      # battle/scene backgrounds
+  icons/            # weapon/armor/ability icons
+  audio/            # SFX files
+  models/           # 3D GLB/GLTF
+  vfx/              # effect sprite sheets
+  exports/v1/       # ObjectStore JSON datasets (mirrors api/v1/*.json)
+  ugc/              # user-generated content (avatars, screenshots)
+```
+
+#### ObjectStore Resolution Order
+`object-store.js` fetches datasets in this priority: Memory cache → S3 (`exports/v1/`) → GitHub Pages → Stale cache.
+`resolveAssetUrl(path)` returns S3 presigned URL if asset exists in bucket, else GitHub Pages URL.
+
+#### Migration Script
+`node scripts/migrate-objectstore-to-s3.js [--dry-run] [--prefix sprites] [--objectstore /path]`
+Uploads ObjectStore binary assets and JSON data to S3 bucket. Skips existing files with matching sizes.
+
+### Puter KV User Archive System
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/studio/archive` | Session+Puter | Create manual snapshot of current game save |
+| GET | `/api/studio/archives` | Session+Puter | List available archive snapshots |
+| POST | `/api/studio/archive/restore` | Session+Puter | Restore from a snapshot (auto-archives current first) |
+
+#### Archive Behavior (`puter-service.js`)
+- Auto-archives every 10 `syncPush` calls (with 4h cooldown between auto-archives)
+- Keeps last 15 snapshots per user, prunes oldest automatically
+- KV keys: `grudge:archive:<id>:<timestamp>` (data), `grudge:archive:<id>:index` (index)
+- `restoreArchive()` auto-creates a `pre-restore` snapshot before overwriting current save
+- Reasons tracked: `auto`, `manual`, `pre-restore`
+
+#### Data Layer Architecture
+- **PostgreSQL (Neon)** — Source of truth: accounts, characters, inventory, arena, leaderboard
+- **Puter KV** — User archive: game save snapshots, preferences, offline restore
+- **S3 (grudge-assets)** — Binary assets: sprites, audio, models, UGC, shared across all users
 
 ## Arena & Leaderboard System
 

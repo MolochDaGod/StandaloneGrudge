@@ -1,10 +1,13 @@
 /**
  * ObjectStore — Grudge Studio Unified Game Data Layer
- * Fetches JSON datasets from GitHub Pages, caches in-memory (5-min TTL),
- * and provides standardised Puter KV keys for client-side caching.
+ * Fetches JSON datasets from GitHub Pages (primary) or S3 bucket (fallback),
+ * caches in-memory (5-min TTL), and provides standardised Puter KV keys for
+ * client-side caching.
  *
- * Source: https://molochdagod.github.io/ObjectStore
+ * Resolution order: Memory cache → S3 (exports/) → GitHub Pages → Stale cache
  */
+
+import * as S3 from './s3.js';
 
 const OBJECT_STORE_BASE = 'https://molochdagod.github.io/ObjectStore';
 
@@ -27,18 +30,46 @@ export async function fetchDataset(name) {
   const cached = cache.get(name);
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
 
+  // 1. Try S3 bucket first (faster if migrated)
+  if (S3.isConfigured()) {
+    try {
+      const s3Key = `exports/v1/${name}.json`;
+      const resp = await S3.download(s3Key);
+      const text = await resp.Body.transformToString();
+      const data = JSON.parse(text);
+      cache.set(name, { data, ts: Date.now(), source: 's3' });
+      return data;
+    } catch {
+      // S3 miss — fall through to GitHub Pages
+    }
+  }
+
+  // 2. GitHub Pages (original source)
   const url = `${OBJECT_STORE_BASE}/api/v1/${name}.json`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status} for ${name}`);
     const data = await res.json();
-    cache.set(name, { data, ts: Date.now() });
+    cache.set(name, { data, ts: Date.now(), source: 'github' });
     return data;
   } catch (err) {
-    // Stale cache fallback
+    // 3. Stale cache fallback
     if (cached) return cached.data;
     throw err;
   }
+}
+
+/** Resolve a binary asset URL — returns S3 presigned URL or GitHub Pages URL */
+export async function resolveAssetUrl(assetPath) {
+  // Try S3 first
+  if (S3.isConfigured()) {
+    try {
+      await S3.head(assetPath);
+      return await S3.presignedDownloadUrl(assetPath);
+    } catch { /* not in S3 */ }
+  }
+  // Fallback to GitHub Pages
+  return `${OBJECT_STORE_BASE}/${assetPath}`;
 }
 
 // ── Cross-resource search ───────────────────────────────────────────────────
