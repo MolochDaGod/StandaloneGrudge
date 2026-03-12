@@ -107,6 +107,26 @@ const NAMED_WEAPON_ICONS = {
   'lightning-tome':'weapons/lightning_tome_sprite.png',
   'nature-tome':'weapons/nature_tome_sprite.png',
   'arcane-tome':'weapons/arcane_tome_sprite.png',
+
+  // ── Nature / Worge staves ─────────────────────────────────────────────────
+  'verdant-wrath':     'weapons/nature_tome_sprite.png',
+  'thorn-grudge':      'weapons/nature_tome_sprite.png',
+  'wild-oathbreaker':  'weapons/nature_tome_sprite.png',
+  'grove-guardian':     'weapons/nature_tome_sprite.png',
+  'blossom-fury':      'weapons/nature_tome_sprite.png',
+  'root-warden':       'weapons/nature_tome_sprite.png',
+
+  // ── Arcane / General staves ───────────────────────────────────────────────
+  'arcane-fury':       'weapons/arcane_tome_sprite.png',
+  'thunder-spire':     'weapons/lightning_tome_sprite.png',
+  'redemption-staff':  'weapons/holy_tome_sprite.png',
+
+  // ── Named tomes ───────────────────────────────────────────────────────────
+  'crimson-inferno-tome':  'weapons/fire_tome_sprite.png',
+  'blazewrath-grimoire':   'weapons/fire_tome_sprite.png',
+  'frozen-glacier-tome':   'weapons/frost_tome_sprite.png',
+  'ancient-verdant-tome':  'weapons/nature_tome_sprite.png',
+  'radiant-dawn-tome':     'weapons/holy_tome_sprite.png',
 };
 
 /**

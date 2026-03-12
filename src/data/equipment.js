@@ -371,6 +371,26 @@ const weaponTemplates = [
   { id: 'ember_lexicon', name: 'Ember Lexicon', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 6, mana: 20, criticalChance: 4 } },
   { id: 'ironsoul_grimoire', name: 'Ironsoul Grimoire', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 4, mana: 30, defense: 3, resistance: 4 } },
   { id: 'duskbound_tome', name: 'Duskbound Tome', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 7, mana: 15, cooldownReduction: 3 } },
+
+  // ── Nature / Worge staves ─────────────────────────────────────────────────
+  { id: 'verdant_wrath', name: 'Verdant Wrath', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 4, mana: 25, healthRegen: 2, health: 15 } },
+  { id: 'thorn_grudge', name: 'Thorn Grudge', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 7, mana: 20, criticalChance: 3 } },
+  { id: 'wild_oathbreaker', name: 'Wild Oathbreaker', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 5, mana: 25, defense: 3, resistance: 3 } },
+  { id: 'grove_guardian', name: 'Grove Guardian', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 4, mana: 30, healthRegen: 2, manaRegen: 1 } },
+  { id: 'blossom_fury', name: 'Blossom Fury', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 6, mana: 20, criticalChance: 4, criticalDamage: 5 } },
+  { id: 'root_warden', name: 'Root Warden', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 5, mana: 25, defense: 4, health: 20 } },
+
+  // ── Arcane / General staves ───────────────────────────────────────────────
+  { id: 'arcane_fury', name: 'Arcane Fury', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 7, mana: 20, armorPenetration: 2 } },
+  { id: 'thunder_spire', name: 'Thunder Spire', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 6, mana: 20, criticalDamage: 6, criticalChance: 3 } },
+  { id: 'redemption_staff', name: 'Redemption Staff', slot: 'weapon', weaponType: 'staff', icon: 'staff', classReq: ['mage', 'worge'], stats: { magicDamage: 4, mana: 30, healthRegen: 3, resistance: 3 } },
+
+  // ── Named tomes ───────────────────────────────────────────────────────────
+  { id: 'crimson_inferno_tome', name: 'Crimson Inferno Tome', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 6, mana: 20, drainHealth: 2, criticalChance: 3 } },
+  { id: 'blazewrath_grimoire', name: 'Blazewrath Grimoire', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 7, mana: 15, drainHealth: 3 } },
+  { id: 'frozen_glacier_tome', name: 'Frozen Glacier Tome', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 5, mana: 25, defense: 3, resistance: 3 } },
+  { id: 'ancient_verdant_tome', name: 'Ancient Verdant Tome', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 4, mana: 30, healthRegen: 2, manaRegen: 1 } },
+  { id: 'radiant_dawn_tome', name: 'Radiant Dawn Tome', slot: 'weapon', weaponType: 'tome', icon: 'book', classReq: ['mage'], stats: { magicDamage: 5, mana: 25, healthRegen: 2, resistance: 3 } },
 ];
 
 const offhandTemplates = [
