@@ -8,7 +8,7 @@
  *   Manual "Sync Now" button in Account tab
  */
 
-const API_BASE = '';  // same-origin
+import { API_BASE } from '../utils/apiBase.js';
 
 // ── Token Helpers ───────────────────────────────────────────────────────────
 

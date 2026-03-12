@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import SpriteAnimation from './SpriteAnimation';
 import { spriteSheets, raceClassSpriteMap, namedHeroes, effectSprites } from '../data/spriteMap';
+import { API_BASE } from '../utils/apiBase.js';
 
 const TABS = [
   { id: 'scanner', label: 'Scanner', color: '#22c55e' },
@@ -64,7 +65,7 @@ export default function AdminMaker() {
 
   const doScan = useCallback(() => {
     setScanLoading(true);
-    fetch('/api/assets/scan')
+    fetch(`${API_BASE}/api/assets/scan`)
       .then(r => r.json())
       .then(d => { setAssets(d); setScanLoading(false); })
       .catch(() => setScanLoading(false));

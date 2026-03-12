@@ -3,6 +3,7 @@ import useGameStore from '../stores/gameStore';
 import { setBgm, getMusicMuted, setMusicMuted } from '../utils/audioManager';
 import { EssentialIcon } from '../data/uiSprites';
 import { pullSave } from '../services/cloudSync';
+import { API_BASE } from '../utils/apiBase.js';
 
 function TitleParticles() {
   const canvasRef = useRef(null);
@@ -232,7 +233,7 @@ export default function TitleScreen() {
       const token = localStorage.getItem('grudge_session_token');
       if (token) {
         try {
-          const verifyRes = await fetch('/api/auth/verify', {
+          const verifyRes = await fetch(`${API_BASE}/api/auth/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sessionToken: token }),
@@ -274,7 +275,7 @@ export default function TitleScreen() {
   const completePuterAuth = async (user) => {
     let grudgeId = null;
     try {
-      const r = await fetch('/api/auth/puter', {
+      const r = await fetch(`${API_BASE}/api/auth/puter`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ puterUsername: user.username, puterUuid: user.uuid || null }),
@@ -345,7 +346,7 @@ export default function TitleScreen() {
     if (!formUsername || !formPassword) { setFormError('Enter username and password'); return; }
     setFormLoading(true); setFormError('');
     try {
-      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
       const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: formUsername, password: formPassword }) });
       const data = await r.json();
       if (!r.ok) { setFormError(data.error || 'Failed'); setFormLoading(false); return; }
@@ -360,7 +361,7 @@ export default function TitleScreen() {
   const handleDiscordLogin = async () => {
     setDiscordLoading(true);
     try {
-      const res = await fetch('/api/discord/login');
+      const res = await fetch(`${API_BASE}/api/discord/login`);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;

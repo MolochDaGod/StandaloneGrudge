@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../utils/apiBase.js';
 
 export default function DiscordAuth() {
   const [status, setStatus] = useState('loading');
@@ -20,7 +21,7 @@ export default function DiscordAuth() {
     sessionStorage.removeItem('discord_oauth_state');
 
     setStatus('exchanging');
-    fetch('/api/discord/callback', {
+    fetch(`${API_BASE}/api/discord/callback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, state: returnedState }),
@@ -64,7 +65,7 @@ export default function DiscordAuth() {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch('/api/discord/login');
+      const res = await fetch(`${API_BASE}/api/discord/login`);
       const data = await res.json();
       if (data.state) sessionStorage.setItem('discord_oauth_state', data.state);
       window.location.href = data.url;

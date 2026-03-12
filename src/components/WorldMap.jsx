@@ -27,6 +27,7 @@ import { needsCutscene, needsLoreCutscene } from '../data/zoneCutscenes';
 import RegionWalkCutscene from './RegionWalkCutscene';
 import { needsRegionWalk } from '../data/regionWalkData';
 import { RankBadgeInline } from './RankBadge';
+import { API_BASE } from '../utils/apiBase.js';
 
 const bossMapSprites = {
   nature_elemental: { glow: 'rgba(0,255,80,0.5)', terrain: '/backgrounds/verdant_plains.png', shape: 'archway', effect: 'vines', color1: '#0f4', color2: '#084' },
@@ -4014,7 +4015,7 @@ export default function WorldMap() {
               <button onClick={async () => {
                 const activeHeroes = heroRoster.filter(h => activeHeroIds.includes(h.id));
                 const token = await encodeGrudaShare(activeHeroes);
-                const url = `/api/play/gruda.html?s=${token}`;
+                const url = `${API_BASE}/api/play/gruda.html?s=${token}`;
                 window.open(url, '_blank');
               }} style={{
                 background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(251,191,36,0.1))',
@@ -4068,7 +4069,7 @@ export default function WorldMap() {
                   const discordUser = JSON.parse(localStorage.getItem('discordUser') || 'null');
                   const ownerId = discordUser?.id || `local_${heroRoster[0]?.id || Date.now()}`;
                   const ownerName = discordUser?.globalName || discordUser?.username || heroRoster[0]?.name || 'Unknown';
-                  const res = await fetch('/api/arena/submit', {
+                  const res = await fetch(`${API_BASE}/api/arena/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ownerId, ownerName, heroes: heroSnapshots, shareToken: token }),

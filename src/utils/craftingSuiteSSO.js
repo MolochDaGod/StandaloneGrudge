@@ -5,6 +5,8 @@
  * already authenticated.
  */
 
+import { API_BASE } from './apiBase.js';
+
 const CRAFTING_SUITE_FALLBACK = 'https://grudge-crafting.puter.site';
 
 /**
@@ -23,7 +25,7 @@ export async function launchCraftingSuite({ characterId, route } = {}) {
   }
 
   try {
-    const res = await fetch('/api/crafting/sso-token', {
+    const res = await fetch(`${API_BASE}/api/crafting/sso-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

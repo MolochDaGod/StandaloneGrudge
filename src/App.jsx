@@ -29,6 +29,7 @@ import GameContextMenuRenderer from './components/GameContextMenu';
 import { HERO_CREATE_MODAL } from './constants/layers';
 import GameContainer from './components/GameContainer';
 import StudioPortal from './components/StudioPortal';
+import { API_BASE } from './utils/apiBase.js';
 
 const SCREEN_SLUGS = {
   title: '/play',
@@ -89,7 +90,7 @@ function GameApp() {
     // Verify JWT on app load — if expired, clear session so TitleScreen shows login
     const token = localStorage.getItem('grudge_session_token');
     if (token) {
-      fetch('/api/auth/verify', {
+      fetch(`${API_BASE}/api/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionToken: token }),

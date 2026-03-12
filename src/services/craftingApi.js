@@ -5,7 +5,9 @@
  * and error normalization.
  */
 
-const API_BASE = '/api/crafting';
+import { API_BASE as SITE_BASE } from '../utils/apiBase.js';
+
+const API_BASE = SITE_BASE + '/api/crafting';
 
 // ── Auth helpers ──
 

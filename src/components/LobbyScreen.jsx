@@ -14,6 +14,7 @@ import HeroCodexTab from './HeroCodexTab';
 import { pullSave, forcePush, getLastSync, isLoggedIn as cloudIsLoggedIn } from '../services/cloudSync';
 import { launchCraftingSuite } from '../utils/craftingSuiteSSO';
 import { linkAccount } from '../services/craftingApi';
+import { API_BASE } from '../utils/apiBase.js';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -356,7 +357,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
       setWalletState({ loading: false, hasWallet: false, wallet: null, error: null, creating: false });
       return;
     }
-    fetch('/api/wallet/status', { headers: { 'x-session-token': sessionToken } })
+    fetch(`${API_BASE}/api/wallet/status`, { headers: { 'x-session-token': sessionToken } })
       .then(r => r.json())
       .then(data => {
         setWalletState({ loading: false, hasWallet: data.hasWallet, wallet: data.wallet || null, error: null, creating: false });
@@ -369,7 +370,7 @@ function MainTab({ hasExistingSave, onContinue, onNewGame, playerName, playerLev
     if (!sessionToken) return;
     setWalletState(s => ({ ...s, creating: true, error: null }));
     try {
-      const res = await fetch('/api/wallet/create', {
+      const res = await fetch(`${API_BASE}/api/wallet/create`, {
         method: 'POST',
         headers: { 'x-session-token': sessionToken, 'Content-Type': 'application/json' },
       });
@@ -2426,7 +2427,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
     const token = localStorage.getItem('grudge_session_token');
     if (token && !wcsCharacters) {
       setWcsLoading(true);
-      fetch('/api/studio/characters', {
+      fetch(`${API_BASE}/api/studio/characters`, {
         headers: { 'X-Session-Token': token },
       })
         .then(r => r.ok ? r.json() : null)
@@ -2461,7 +2462,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
   const handleDiscordLogin = async () => {
     setDiscordLoading(true);
     try {
-      const res = await fetch('/api/discord/login');
+      const res = await fetch(`${API_BASE}/api/discord/login`);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -2480,7 +2481,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
       // Auth with backend to get/create Grudge ID
       let grudgeId = null;
       try {
-        const r = await fetch('/api/auth/puter', {
+        const r = await fetch(`${API_BASE}/api/auth/puter`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ puterUsername: user.username, puterUuid: user.uuid || null }),
@@ -2828,7 +2829,7 @@ function AccountTab({ session, panelStyle, hasExistingSave }) {
             const token = localStorage.getItem('grudge_session_token');
             if (token) {
               try {
-                const res = await fetch('/api/crafting/sso-token', {
+                const res = await fetch(`${API_BASE}/api/crafting/sso-token`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
                 });
@@ -2956,7 +2957,7 @@ function DiscordTab({ panelStyle }) {
   const verifyAdmin = async () => {
     setVerifying(true);
     try {
-      const res = await fetch('/api/discord/webhook/verify', {
+      const res = await fetch(`${API_BASE}/api/discord/webhook/verify`, {
         headers: { 'x-admin-token': adminToken },
       });
       const data = await res.json();
@@ -2995,7 +2996,7 @@ function DiscordTab({ panelStyle }) {
           payload[key] = payload[key].split('\n').filter(l => l.trim());
         }
       });
-      const res = await fetch(`/api/discord/webhook/${webhookType}`, {
+      const res = await fetch(`${API_BASE}/api/discord/webhook/${webhookType}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
         body: JSON.stringify(payload),

@@ -14,6 +14,7 @@ import { getSavedBattleRow, getSavedBattleColumn } from '../utils/battlePosition
 import { adminConfig } from '../utils/adminConfig';
 import { TOTEM_DEFINITIONS, COMPANION_DEFINITIONS, namedHeroes } from '../data/spriteMap';
 import { schedulePush, isLoggedIn as cloudIsLoggedIn } from '../services/cloudSync';
+import { API_BASE } from '../utils/apiBase.js';
 
 function floorTo2(n) { return Math.floor(n * 100) / 100; }
 
@@ -2336,7 +2337,7 @@ const useGameStore = create(persist((set, get) => ({
 
       // Fire-and-forget: report result to API (challenger won = defender's team lost)
       const { arenaTeamId, arenaChallengeToken, arenaOwnerName } = state.battleState;
-      fetch('/api/arena/battle/result', {
+      fetch(`${API_BASE}/api/arena/battle/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teamId: arenaTeamId, challengeToken: arenaChallengeToken, result: 'team_lost', challengerName: state.playerName }),
@@ -2664,7 +2665,7 @@ const useGameStore = create(persist((set, get) => ({
     // Report arena challenge loss to API (challenger lost = defender's team won)
     if (state.battleState?.isArenaChallenge) {
       const { arenaTeamId, arenaChallengeToken } = state.battleState;
-      fetch('/api/arena/battle/result', {
+      fetch(`${API_BASE}/api/arena/battle/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teamId: arenaTeamId, challengeToken: arenaChallengeToken, result: 'team_won', challengerName: state.playerName }),

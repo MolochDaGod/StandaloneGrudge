@@ -3,6 +3,7 @@ import PortalHeader from './portal/PortalHeader';
 import GameCard from './portal/GameCard';
 import QuickLinks from './portal/QuickLinks';
 import HeroPreview from './portal/HeroPreview';
+import { API_BASE } from '../utils/apiBase.js';
 
 const DiscordSvg = ({ size = 20, color = 'currentColor' }) => (
   <svg width={size} height={Math.round(size * 0.77)} viewBox="0 0 71 55" fill={color}>
@@ -41,7 +42,7 @@ export default function StudioPortal() {
   const handleDiscordLogin = async () => {
     setDiscordLoading(true);
     try {
-      const res = await fetch('/api/discord/login');
+      const res = await fetch(`${API_BASE}/api/discord/login`);
       const data = await res.json();
       if (data.url) window.location.href = data.url;
     } catch {}
@@ -53,7 +54,7 @@ export default function StudioPortal() {
     if (!formUsername || !formPassword) { setFormError('Enter username and password'); return; }
     setFormLoading(true); setFormError('');
     try {
-      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const endpoint = isRegister ? `${API_BASE}/api/auth/register` : `${API_BASE}/api/auth/login`;
       const r = await fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: formUsername, password: formPassword }),

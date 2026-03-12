@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RankBadge, { RankBadgeInline, getRankForWins } from './RankBadge';
 import { InlineIcon } from '../data/uiSprites';
 import { classDefinitions } from '../data/classes';
+import { API_BASE } from '../utils/apiBase.js';
 
 export default function GrudaLeaderboard({ onClose }) {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -11,8 +12,8 @@ export default function GrudaLeaderboard({ onClose }) {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/arena/leaderboard?limit=20').then(r => r.json()),
-      fetch('/api/arena/stats').then(r => r.json()),
+      fetch(`${API_BASE}/api/arena/leaderboard?limit=20`).then(r => r.json()),
+      fetch(`${API_BASE}/api/arena/stats`).then(r => r.json()),
     ]).then(([lb, st]) => {
       setLeaderboard(lb.leaderboard || []);
       setStats(st);
