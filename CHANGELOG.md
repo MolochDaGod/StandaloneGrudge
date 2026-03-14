@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-03-14] — Favicon Fixes & Pre-Deploy Check
+
+### Fixed
+- **favicon.ico 404 on all pages** — Vercel SPA rewrite was catching `/favicon.ico` and returning HTML
+- Added `favicon` to `vercel.json` rewrite exclusion pattern
+- Added `<link rel="icon" href="/favicon.ico">` + PNG + apple-touch-icon to all 7 HTML files
+  - `index.html`, `arena.html` (root + public), `compendium.html`, `hero-codex.html`, `discordauth.html`, `api/play/gruda.html`
+
+### Added
+- **`scripts/check-favicons.ps1`** — Pre-deploy check that validates:
+  - `favicon.ico` exists in `public/`
+  - Every HTML `<head>` has a `rel="icon"` link
+  - `vercel.json` rewrites exclude `favicon`
+- `npm run check:favicons` and `npm run predeploy` scripts in `package.json`
+
 ## [2026-02-22b] — Env Var Sanitization
 
 ### Fixed

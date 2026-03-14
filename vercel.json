@@ -10,7 +10,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/((?!api|assets|sprites|backgrounds|images|map_nodes|sounds|fonts).*)",
+      "source": "/((?!api|assets|sprites|backgrounds|images|map_nodes|sounds|fonts|favicon).*)",
       "destination": "/index.html"
     }
   ],
