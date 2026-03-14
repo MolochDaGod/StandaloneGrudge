@@ -14,6 +14,7 @@
     "dev:server": "node server.js",
     "dev:all": "concurrently \"npm run dev:server\" \"npm run dev\"",
     "build": "vite build",
+    "build:vercel": "vite build",
     "start": "node server.js",
     "preview": "vite preview",
     "export:skills": "node scripts/export-skill-trees.js"
