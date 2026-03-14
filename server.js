@@ -9,6 +9,7 @@ import { registerWalletRoutes } from './src/server/walletRoutes.js';
 import { registerCraftingRoutes } from './src/server/craftingRoutes.js';
 import { testSuiteConnection } from './src/server/suiteDb.js';
 import { startBot, addUserToGuild } from './src/server/discordBot.js';
+import { vpsLogin, vpsRegister, vpsPuter, vpsVerifyToken, upsertLocalGameAccount, extractVpsUser } from './src/server/vpsAuth.js';
 import {
   accountInit, accountLinkDiscord, accountLinkCharacters, accountGet,
   syncPush, syncPull, kvGet, kvSet, kvList, prefsGet, prefsSet,
@@ -78,7 +79,6 @@ const DISCORD_BOT_TOKEN_VAL = process.env.DISCORD_BOT_TOKEN;
 const BETA_CHANNEL_ID = process.env.DISCORD_BETA_CHANNEL_ID || '1394826401311625306';
 
 const pendingStates = new Map();
-const activeSessions = new Map();
 
 // ── JWT Auth ────────────────────────────────────────────────────────────────
 const JWT_SECRET = () => process.env.JWT_SECRET || process.env.GAME_API_GRUDA || 'grudge-default-secret';
@@ -108,19 +108,6 @@ function verifyJWT(token) {
   } catch { return null; }
 }
 
-// ── Grudge ID Generator ─────────────────────────────────────────────────────
-function generateGrudgeId() {
-  return `GRUDGE-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-}
-
-async function ensureGrudgeId(accountId) {
-  const { query: dbQuery } = await import('./src/server/db.js');
-  const result = await dbQuery('SELECT grudge_id FROM accounts WHERE id = $1', [accountId]);
-  if (result.rows[0]?.grudge_id) return result.rows[0].grudge_id;
-  const grudgeId = generateGrudgeId();
-  await dbQuery('UPDATE accounts SET grudge_id = $1 WHERE id = $2', [grudgeId, accountId]);
-  return grudgeId;
-}
 
 // ── Auto Wallet Creation (Crossmint) ────────────────────────────────────────
 async function ensureWallet(account) {
@@ -147,33 +134,6 @@ async function ensureWallet(account) {
   }
 }
 
-// ── Discord Account Upsert ──────────────────────────────────────────────────
-async function upsertDiscordAccount(user) {
-  const { query: dbQuery } = await import('./src/server/db.js');
-  const result = await dbQuery(
-    `INSERT INTO accounts (discord_id, username, email, avatar_url, auth_type, last_login)
-     VALUES ($1, $2, $3, $4, 'discord', NOW())
-     ON CONFLICT (discord_id) DO UPDATE SET
-       username = EXCLUDED.username,
-       email = COALESCE(EXCLUDED.email, accounts.email),
-       avatar_url = COALESCE(EXCLUDED.avatar_url, accounts.avatar_url),
-       last_login = NOW(),
-       updated_at = NOW()
-     RETURNING *`,
-    [user.id, user.username, user.email || null, user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : null]
-  );
-  const account = result.rows[0];
-  const grudgeId = await ensureGrudgeId(account.id);
-  const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
-  const jwt = createJWT({
-    accountId: account.id,
-    grudgeId,
-    discordId: account.discord_id,
-    username: account.username,
-    authType: 'discord',
-  });
-  return { account, grudgeId, wallet, jwt };
-}
 
 function getPublicOrigin(req) {
   // Check for configured public URL first
@@ -269,24 +229,22 @@ app.post('/api/discord/callback', async (req, res) => {
       console.error('Auto guild join failed:', joinErr.message);
     }
 
-    // Upsert account into DB, assign grudge_id, provision wallet, generate JWT
-    const { account, grudgeId, wallet, jwt } = await upsertDiscordAccount(user);
-
-    // Keep in-memory session for backward compat
-    activeSessions.set(jwt, {
-      discordId: user.id,
+    // Upsert local game account row (for FK relationships to characters/inventory)
+    const account = await upsertLocalGameAccount({
+      grudgeId: null, // will be generated if new
       username: user.username,
-      accountId: account.id,
-      grudgeId,
-      createdAt: Date.now(),
+      discordId: user.id,
     });
+    const grudgeId = account.grudge_id;
+    const wallet = await ensureWallet({ ...account, grudge_id: grudgeId });
 
-    if (activeSessions.size > 5000) {
-      const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      for (const [k, v] of activeSessions) {
-        if (v.createdAt < cutoff) activeSessions.delete(k);
-      }
-    }
+    // Issue JWT with VPS-compatible payload using shared JWT_SECRET
+    const sessionToken = createJWT({
+      grudge_id: grudgeId,
+      username: account.username,
+      discord_id: user.id,
+      wallet_address: account.wallet_address || null,
+    });
 
     res.json({
       success: true,
@@ -301,7 +259,7 @@ app.post('/api/discord/callback', async (req, res) => {
         grudgeId,
       },
       guildJoined,
-      sessionToken: jwt,
+      sessionToken,
       wallet: wallet || undefined,
     });
   } catch (err) {
@@ -1098,225 +1056,126 @@ app.get('/api/arena/leaderboard', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify', (req, res) => {
+// ── Auth: Verify (VPS proxy) ────────────────────────────────────────────────
+app.post('/api/auth/verify', async (req, res) => {
   const { sessionToken } = req.body;
   if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
 
-  // Try JWT first
+  // Try local JWT verification first (shared JWT_SECRET)
   const jwtPayload = verifyJWT(sessionToken);
   if (jwtPayload) {
     return res.json({
       valid: true,
       accountId: jwtPayload.accountId,
-      discordId: jwtPayload.discordId,
+      discordId: jwtPayload.discordId || jwtPayload.discord_id,
       username: jwtPayload.username,
-      grudgeId: jwtPayload.grudgeId,
+      grudgeId: jwtPayload.grudgeId || jwtPayload.grudge_id,
     });
   }
 
-  // Fallback to in-memory sessions
-  const session = activeSessions.get(sessionToken);
-  if (!session) return res.status(401).json({ error: 'Invalid or expired session' });
-  const age = Date.now() - session.createdAt;
-  if (age > 7 * 24 * 60 * 60 * 1000) {
-    activeSessions.delete(sessionToken);
-    return res.status(401).json({ error: 'Session expired' });
-  }
-  res.json({
-    valid: true,
-    discordId: session.discordId,
-    username: session.username,
-    grudgeId: session.grudgeId,
-  });
-});
-
-app.post('/api/auth/extension', async (req, res) => {
-  const { sessionToken } = req.body;
-  if (!sessionToken) return res.status(400).json({ error: 'sessionToken required' });
-  const session = activeSessions.get(sessionToken);
-  if (!session) return res.status(401).json({ error: 'Invalid session' });
-  const age = Date.now() - session.createdAt;
-  if (age > 7 * 24 * 60 * 60 * 1000) {
-    activeSessions.delete(sessionToken);
-    return res.status(401).json({ error: 'Session expired' });
-  }
-  const extensionToken = crypto.randomBytes(32).toString('hex');
-
-  activeSessions.set(extensionToken, {
-    discordId: session.discordId,
-    username: session.username,
-    createdAt: Date.now(),
-    isExtension: true,
-  });
-
-  res.json({
-    extensionToken,
-    discordId: session.discordId,
-    username: session.username,
-    expiresIn: '7d',
-  });
-});
-
-// ── Password Utilities (scrypt — no extra deps) ──────────────────────────────
-
-function generateGrudgeAccountId() {
-  const now = new Date();
-  const ts = now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, '0') +
-    String(now.getDate()).padStart(2, '0') +
-    String(now.getHours()).padStart(2, '0') +
-    String(now.getMinutes()).padStart(2, '0') +
-    String(now.getSeconds()).padStart(2, '0');
-  const rand = crypto.randomBytes(4).toString('hex').toUpperCase();
-  return `GRD-${ts}-${rand}`;
-}
-
-async function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  return new Promise((resolve, reject) => {
-    crypto.scrypt(password, salt, 64, (err, buf) => {
-      if (err) reject(err);
-      else resolve(`${salt}:${buf.toString('hex')}`);
-    });
-  });
-}
-
-async function verifyPassword(password, stored) {
-  const [salt, hash] = stored.split(':');
-  return new Promise((resolve, reject) => {
-    crypto.scrypt(password, salt, 64, (err, buf) => {
-      if (err) reject(err);
-      else {
-        try {
-          resolve(crypto.timingSafeEqual(buf, Buffer.from(hash, 'hex')));
-        } catch { resolve(false); }
-      }
-    });
-  });
-}
-
-// ── Grudge ID / Username Auth ─────────────────────────────────────────────────
-
-app.post('/api/auth/register', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-  if (username.length < 3 || username.length > 24) return res.status(400).json({ error: 'Username must be 3–24 chars' });
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ error: 'Alphanumeric and _ only' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 chars' });
+  // Fallback to VPS verify
   try {
-    const { query: dbQuery } = await import('./src/server/db.js');
-    const existing = await dbQuery('SELECT id FROM accounts WHERE LOWER(username) = $1 AND password_hash IS NOT NULL', [username.toLowerCase()]);
-    if (existing.rows[0]) return res.status(409).json({ error: 'Username already taken' });
+    const vps = await vpsVerifyToken(sessionToken);
+    if (vps.ok && vps.data.valid) {
+      const p = vps.data.payload || vps.data;
+      return res.json({ valid: true, grudgeId: p.grudge_id, username: p.username, discordId: p.discord_id });
+    }
+    return res.status(401).json({ valid: false, error: 'Invalid or expired token' });
+  } catch {
+    return res.status(401).json({ valid: false, error: 'Invalid or expired session' });
+  }
+});
 
-    const grudgeId = generateGrudgeAccountId();
-    const pwHash = await hashPassword(password);
-    const result = await dbQuery(
-      `INSERT INTO accounts (username, password_hash, grudge_id, last_login)
-       VALUES ($1, $2, $3, NOW()) RETURNING id, username, grudge_id`,
-      [username, pwHash, grudgeId]
-    );
-    const acc = result.rows[0];
+// ── Auth: Register (VPS proxy) ──────────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
+    const vps = await vpsRegister(username, password, email);
+    if (!vps.ok) return res.status(vps.status).json(vps.data);
 
-    const sessionToken = createJWT({
-      accountId: acc.id,
-      grudgeId: acc.grudge_id,
-      username: acc.username,
-      authType: 'grudge',
+    // Sync to local game DB
+    const u = extractVpsUser(vps.data);
+    await upsertLocalGameAccount(u);
+
+    res.status(vps.status).json({
+      success: true,
+      sessionToken: vps.data.token,
+      token: vps.data.token,
+      user: vps.data.user,
+      grudgeId: u.grudgeId,
     });
-    // Keep in-memory for backward compat
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
-
-    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
     console.error('[Auth] Register error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(502).json({ error: 'Auth service unavailable' });
   }
 });
 
+// ── Auth: Login (VPS proxy) ─────────────────────────────────────────────────
 app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
   try {
-    const { query: dbQuery } = await import('./src/server/db.js');
-    const result = await dbQuery(
-      'SELECT id, username, grudge_id, password_hash FROM accounts WHERE LOWER(username) = $1 AND password_hash IS NOT NULL',
-      [username.toLowerCase()]
-    );
-    const acc = result.rows[0];
-    if (!acc) return res.status(401).json({ error: 'Invalid username or password' });
+    const { username, password } = req.body;
+    const vps = await vpsLogin(username, password);
+    if (!vps.ok) return res.status(vps.status).json(vps.data);
 
-    const valid = await verifyPassword(password, acc.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Invalid username or password' });
+    const u = extractVpsUser(vps.data);
+    await upsertLocalGameAccount(u);
 
-    await dbQuery('UPDATE accounts SET last_login = NOW(), updated_at = NOW() WHERE id = $1', [acc.id]);
-
-    const sessionToken = createJWT({
-      accountId: acc.id,
-      grudgeId: acc.grudge_id,
-      username: acc.username,
-      authType: 'grudge',
+    res.json({
+      success: true,
+      sessionToken: vps.data.token,
+      token: vps.data.token,
+      user: vps.data.user,
+      grudgeId: u.grudgeId,
     });
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
-
-    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
     console.error('[Auth] Login error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(502).json({ error: 'Auth service unavailable' });
   }
 });
 
+// ── Auth: Puter (VPS proxy) ─────────────────────────────────────────────────
 app.post('/api/auth/puter', async (req, res) => {
-  const { puterUsername, puterUuid } = req.body;
-  if (!puterUsername) return res.status(400).json({ error: 'puterUsername required' });
   try {
-    const { query: dbQuery } = await import('./src/server/db.js');
-    const grudgeId = generateGrudgeAccountId();
-    const result = await dbQuery(
-      `INSERT INTO accounts (username, grudge_id, last_login)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (username) DO UPDATE SET
-         last_login = NOW(), updated_at = NOW()
-       RETURNING id, username, grudge_id`,
-      [puterUsername, grudgeId]
-    );
-    const acc = result.rows[0];
+    const { puterUsername, puterUuid } = req.body;
+    const vps = await vpsPuter(puterUuid, puterUsername);
+    if (!vps.ok) return res.status(vps.status).json(vps.data);
 
-    const sessionToken = createJWT({
-      accountId: acc.id,
-      grudgeId: acc.grudge_id,
-      username: acc.username,
-      authType: 'puter',
+    const u = extractVpsUser(vps.data);
+    await upsertLocalGameAccount(u);
+
+    res.json({
+      success: true,
+      sessionToken: vps.data.token,
+      token: vps.data.token,
+      user: vps.data.user,
+      grudgeId: u.grudgeId,
     });
-    activeSessions.set(sessionToken, { discordId: null, username: acc.username, accountId: acc.id, grudgeId: acc.grudge_id, createdAt: Date.now() });
-
-    res.json({ success: true, sessionToken, user: { id: acc.id, username: acc.username, grudgeId: acc.grudge_id } });
   } catch (err) {
     console.error('[Auth] Puter error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(502).json({ error: 'Auth service unavailable' });
   }
 });
 
+// ── Session verification middleware ────────────────────────────────────────
 function requireSession(req, res, next) {
   const token = req.headers['x-session-token'] || req.body?.sessionToken;
   if (!token) return res.status(401).json({ error: 'Session token required' });
 
-  // Try JWT first (persistent, survives restarts)
+  // Verify JWT (works for both VPS-issued and locally-issued tokens, same JWT_SECRET)
   const jwtPayload = verifyJWT(token);
   if (jwtPayload) {
-    req.session = jwtPayload;
+    // Normalize VPS snake_case to camelCase for downstream routes
+    req.session = {
+      ...jwtPayload,
+      discordId: jwtPayload.discordId || jwtPayload.discord_id,
+      grudgeId: jwtPayload.grudgeId || jwtPayload.grudge_id,
+      accountId: jwtPayload.accountId || null,
+      username: jwtPayload.username,
+    };
     return next();
   }
 
-  // Fallback to in-memory sessions (legacy)
-  const session = activeSessions.get(token);
-  if (!session) return res.status(401).json({ error: 'Invalid session' });
-  const age = Date.now() - session.createdAt;
-  if (age > 7 * 24 * 60 * 60 * 1000) {
-    activeSessions.delete(token);
-    return res.status(401).json({ error: 'Session expired' });
-  }
-  req.session = session;
-  next();
+  return res.status(401).json({ error: 'Invalid or expired session' });
 }
 
 app.get('/api/public/profile', requireSession, async (req, res) => {

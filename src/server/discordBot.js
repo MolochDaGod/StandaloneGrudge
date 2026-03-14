@@ -738,7 +738,7 @@ const ECOSYSTEM_SERVICES = [
   { name: 'Crafting Suite', url: 'https://warlord-crafting-suite.vercel.app', emoji: '🔨' },
   { name: 'GDevelop Assistant', url: 'https://gdevelop-assistant.vercel.app', emoji: '🎮' },
   { name: 'Nexus Hub', url: 'https://grudachain.grudgestudio.com', emoji: '⚓' },
-  { name: 'GRUDA Legion', url: 'https://gruda-legion-production.up.railway.app/health', emoji: '🤖' },
+  { name: 'GRUDA Legion', url: 'https://api.grudge-studio.com/health', emoji: '🤖' },
   { name: 'App Gallery', url: 'https://grudachain-app-gallery.vercel.app', emoji: '🖼️' },
 ];
 
