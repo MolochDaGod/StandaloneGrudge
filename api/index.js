@@ -291,6 +291,7 @@ const CANONICAL_EXTERNAL_REDIRECT = `${CANONICAL_ORIGIN}/api/external/callback`;
 const ALLOWED_ORIGINS = [
   'https://grudgewarlords.com',
   'https://www.grudgewarlords.com',
+  'https://gdevelop-assistant.vercel.app',
   'https://molochdagod.github.io',
   'https://warlord-crafting-suite.vercel.app',
   'https://public-fawn-nine.vercel.app',

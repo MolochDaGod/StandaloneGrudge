@@ -14,23 +14,26 @@ Cross-project conventions for the Grudge Studio ecosystem.
 ## Identity & Auth
 
 ### The `grudge_id`
-Every player across all Grudge apps is identified by a single `grudge_id` (UUID v4). This ID is:
-- Generated at account creation (in auth-gateway or GrudgeWars)
-- Stored as the primary key on `accounts.grudge_id` in GrudgeWars DB
-- Used as the `userId` in auth-gateway sessions
+Every player across all Grudge apps is identified by a single `grudge_id`. This ID is:
+- Generated at account creation (in each app's auth system)
+- Stored on `accounts.grudge_id` in each app's DB
 - The key for cross-origin player lookups via `/api/public/player-summary/:grudgeId`
 
 ### Session Tokens
-- Auth-gateway issues JWT tokens stored in `localStorage` under `grudge_auth_token`.
-- GrudgeWars issues its own `grudge_session_token` for cloud sync.
-- Cross-origin session linking is done via `POST /api/auth/link-studio` which associates the auth-gateway `userId` with a GrudgeWars account.
+- Each app issues JWT tokens stored in `localStorage` under `grudge_auth_token`.
+- GrudgeWars also issues `grudge_session_token` for cloud sync.
+- Cross-service token verification: GGE's `grudgeJwt.ts` middleware falls back to `POST GRUDGE_BACKEND_URL/auth/verify` if local JWT verification fails, enabling grudge-backend tokens to work across apps.
 
 ### Auth Methods
-All projects support the same login methods through the auth-gateway:
-1. **Discord OAuth** — redirect to `auth.grudgestudio.com/?return=<url>`
-2. **Username/password** — POST to `auth.grudgestudio.com/api/login` or `/api/register`
-3. **Guest** — POST to `auth.grudgestudio.com/api/guest` with a `deviceId`
-4. **Puter** — GrudgeWars-only, via `window.puter.auth.signIn()`
+All Grudge apps support these login methods (direct DB, no external gateway):
+1. **Discord OAuth** — `/api/auth/discord` + callback
+2. **GitHub OAuth** — `/api/auth/github` + callback
+3. **Google OAuth** — `/api/auth/google` + callback
+4. **Username/password** — `POST /api/login` or `/api/register`
+5. **Guest** — `POST /api/guest`
+6. **Puter** — `POST /api/auth/puter`
+7. **Wallet (Solana)** — `POST /api/auth/wallet`
+8. **Phone/SMS** — `POST /api/auth/phone` (requires Twilio)
 
 ### localStorage Keys
 Use the `grudge_` prefix for all keys:
@@ -49,11 +52,14 @@ Endpoints under `/api/public/*` require no authentication and are CORS-open to a
 Endpoints under `/api/auth/*`, `/api/sync/*`, `/api/arena/*`, etc. require a valid session token in the `Authorization` header: `Bearer <token>`.
 
 ### CORS
-When adding a new Grudge app that needs to call GrudgeWars APIs, add its origin to `ALLOWED_ORIGINS` in `api/index.js`. Current allowed origins:
+When adding a new Grudge app that needs to call GrudgeWars APIs, add its origin to `ALLOWED_ORIGINS` in both `server.js` and `api/index.js`. Current allowed origins:
 - `https://grudgewarlords.com`
-- `https://public-fawn-nine.vercel.app`
+- `https://gdevelop-assistant.vercel.app`
+- `https://warlord-crafting-suite.vercel.app`
 - `https://grudgestudio.com` / `https://www.grudgestudio.com`
+- `https://grudgeplatform.com`
 - `http://localhost:*` (dev)
+- `*.puter.com` / `*.puter.site` (Puter apps)
 
 ### API Client Pattern
 Each consuming project should have a typed API client (see `src/lib/grudge-warlords-api.ts` in the public repo):
@@ -109,12 +115,14 @@ All active projects deploy to Vercel:
 
 ## Adding a New Grudge App
 
-1. Set up auth using the auth-gateway (`useAuth()` pattern from the public repo)
-2. Add your origin to GrudgeWars `ALLOWED_ORIGINS`
-3. Create a typed API client for any GrudgeWars endpoints you need
-4. Use `grudge_id` as the cross-platform player identifier
-5. Follow the `grudge_` localStorage key prefix convention
-6. Use the shared Tailwind theme tokens for consistent branding
+1. Set up auth using direct DB pattern (see GGE `grudgeAuth.ts` for reference)
+2. Add your origin to GrudgeWars `ALLOWED_ORIGINS` in `server.js` and `api/index.js`
+3. Add your origin to grudge-backend `CORS_ORIGINS` in `.env`
+4. Create a typed API client for any GrudgeWars endpoints you need
+5. Use `grudge_id` as the cross-platform player identifier
+6. Follow the `grudge_` localStorage key prefix convention
+7. Use the shared Tailwind theme tokens for consistent branding
+8. Set `GRUDGE_BACKEND_URL` for cross-service token verification
 
 ---
 
