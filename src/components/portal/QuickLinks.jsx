@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const LINKS = [
+  { label: 'Character Builder', desc: 'Create & manage characters', href: 'https://grudge-builder.vercel.app/character', color: '#DB6331' },
   { label: 'Crafting Suite', desc: 'Forge weapons & armor', href: 'https://warlord-crafting-suite.vercel.app', color: '#FAAC47' },
   { label: 'Object Store', desc: 'Game assets & sprites', href: 'https://molochdagod.github.io/ObjectStore/', color: '#6ee7b7' },
   { label: 'Arena', desc: 'Ranked PvP battles', href: '/play#arena', color: '#3b82f6' },

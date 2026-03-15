@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-03-15b] — Builder Integration + Character Create Refactor
+
+### Added
+- **`src/utils/studioUrls.js`** — Centralized cross-app URLs (Builder, Crafting Suite, ObjectStore) with SSO token forwarding
+- **BUILDER nav button** in LobbyScreen — opens Grudge Builder `/character` page in new tab with session token
+- **Character Builder quick link** in portal QuickLinks component
+- Proper multi-size favicon support: `favicon-32x32.png`, `favicon-16x16.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`
+
+### Changed
+- **CharacterCreate.jsx** — Major refactor/simplification (731 lines reduced)
+- **HeroCreate.jsx** — Major refactor/simplification (571 lines reduced)
+- Legacy versions preserved as `.LEGACY.jsx` files
+- Updated `index.html` favicon links to use sized PNG variants
+- Updated `favicon.ico` with improved icon
+
 ## [2026-03-15] — Weapon Skill Atlas
 
 ### Added

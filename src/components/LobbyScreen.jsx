@@ -15,6 +15,7 @@ import { pullSave, forcePush, getLastSync, isLoggedIn as cloudIsLoggedIn } from 
 import { launchCraftingSuite } from '../utils/craftingSuiteSSO';
 import { linkAccount } from '../services/craftingApi';
 import { API_BASE } from '../utils/apiBase.js';
+import { openBuilder } from '../utils/studioUrls';
 
 export default function LobbyScreen() {
   const setScreen = useGameStore(s => s.setScreen);
@@ -212,6 +213,7 @@ export default function LobbyScreen() {
           }} />
           <NavItem essentialIcon="Gamepad" label="PLAY" active={activeTab === 'main'} onClick={() => setActiveTab('main')} />
           <NavItem essentialIcon="Team" label="CHARACTERS" active={activeTab === 'characters'} onClick={() => setActiveTab('characters')} />
+          <NavItem essentialIcon="Briefcase" label="BUILDER" active={false} onClick={() => openBuilder('/character', { newTab: true })} />
           <NavItem essentialIcon="Briefcase" label="ACCOUNT" active={activeTab === 'account'} onClick={() => setActiveTab('account')} />
           <NavItem essentialIcon="Cloud" label="DISCORD" active={activeTab === 'discord'} onClick={() => setActiveTab('discord')} />
           <NavItem essentialIcon="File" label="CODEX" active={activeTab === 'codex'} onClick={() => setActiveTab('codex')} />
