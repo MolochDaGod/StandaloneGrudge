@@ -87,6 +87,15 @@ Key columns on `accounts`: `grudge_id` (UUID, primary), `puter_uuid`, `wallet_ad
 
 The repo also contains VPS deployment scripts (`scripts/`, `deployment/`), Docker config, and a PM2 ecosystem file from the original standalone server setup. These are retained for reference but the active deployment target is Vercel.
 
+## Standalone Tool Pages
+
+These are static HTML pages served from `public/`, accessible without login:
+
+- **[/weapon-skill-tree.html](https://grudgewarlords.com/weapon-skill-tree.html)** — Weapon Skill Atlas: browse all 17 weapon types, 6 variants each, with mastery trees and combat skill loadouts. Uses real data from `weaponSkillsNew.ts` and icons from ObjectStore CDN.
+- `/arena.html` — Arena browser
+- `/compendium.html` — Game compendium
+- `/hero-codex.html` — Hero codex viewer
+
 ## Related Projects
 
 - **Grudge Studio** (`public-fawn-nine.vercel.app`) — Marketing/studio site, consumes public API

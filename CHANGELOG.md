@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-03-15] — Weapon Skill Atlas
+
+### Added
+- **`weapon-skill-tree.html`** — Standalone weapon skill tree viewer at `/weapon-skill-tree.html`
+  - All 17 weapon types with 6 named variants each (102 total loadouts)
+  - Two tabs: Mastery Tree (passive tiers) and Combat Skills (active loadout)
+  - Real skill icons from `skill_nobg/` and `weapons_full/` CDN paths (ObjectStore)
+  - Real ability data (damage, cooldown, descriptions, effects) from `weaponSkillsNew.ts`
+  - Per-variant named weapon sprites (Nightfang, Doomspire, etc.) from ObjectStore CDN
+  - Rich tooltips with type, power, cooldown, cost, and effect tags
+  - Class badge indicators (Warrior/Mage/Ranger/Worge) per weapon
+  - `CLASS_ICONS` mapped from `abilityIcons.js` (46 class skill icons)
+  - `SKILL_DB` with ~130 entries sourced from `weaponSkillsNew.ts` + `weaponsComplete.ts`
+
 ## [2026-03-14] — Favicon Fixes & Pre-Deploy Check
 
 ### Fixed
