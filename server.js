@@ -1312,11 +1312,13 @@ app.post('/api/studio/sync/push', requireSession, async (req, res) => {
          game_state_updated_at = NOW(),
          gold = COALESCE($4, accounts.gold),
          updated_at = NOW(),
-         last_login = NOW()`,
+         last_login = NOW()
+       RETURNING game_state_updated_at`,
       [discordId, username, JSON.stringify(gameState), gold]
     );
 
-    res.json({ success: true, timestamp: Date.now() });
+    const { game_state_updated_at } = result.rows[0] || {};
+    res.json({ success: true, timestamp: game_state_updated_at });
   } catch (err) {
     console.error('[StudioSync] Push error:', err.message);
     res.status(500).json({ error: err.message });
